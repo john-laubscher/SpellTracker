@@ -140,6 +140,7 @@ export const spellTables = (props) => {
     19: { cantrips: 4 },
     20: { cantrips: 4 },
   };
+  //Will need to add artificer cantrips, and maybe infusions tracker as well)
 };
 
 export default spellTables;
