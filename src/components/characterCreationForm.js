@@ -23,10 +23,10 @@ export const CharacterCreationForm = (props) => {
   });
 
   const subclassKeysArray = Object.keys(subclasses[characterInfo.characterClass]);
-  const spellcastingModArray = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  const keys = Object.keys(subclasses[characterInfo.characterClass]);
-  console.log("Here are keys", keys);
+  //easier to use logic/for loop, or to create this datastructure? Can a for loop have a return like Map?
+  const spellcastingModArray = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
     //include logic to grab the spellcasting_ability directly from the api depending on class?? it's possible, idk if it's efficient enough//
@@ -76,12 +76,22 @@ export const CharacterCreationForm = (props) => {
           })}
         </Select>
       </Box>
-      <Box component="form" noValidate autoComplete="off">
-        <TextField id="character-level" label="Character Level" variant="outlined" />
+      <Box sx={{ minWidth: 120 }}>
+        <InputLabel id="character-level-select-label">Choose your Character Level</InputLabel>
+        <Select labelId="character-level-select-label" id="character-level-select" label="character-level">
+          {characterLevels.map((charLevels, index) => {
+            return (
+              <MenuItem key={charLevels} value={charLevels}>
+                {charLevels}
+              </MenuItem>
+            );
+          })}
+        </Select>
       </Box>
       <Box component="form" noValidate autoComplete="off">
         <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" />
       </Box>
+      {/* add conditional logic for spellcasters vs non spellcasters to adjust the message based onwhich class is chosen or to just have this conditionally render if a spellcasting class */}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="spellcasting-mod-select-label">Your spellcasting ability is xxx. What is your Spellcasting Modifier?</InputLabel>
         <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod">
