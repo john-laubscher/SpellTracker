@@ -9,12 +9,12 @@ import subclasses from "./subClasses";
 export const CharacterCreationForm = (props) => {
   const races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half-Elf", "Half-Orc", "Halfling", "Human", "Tiefling"];
 
-  const characterClasses = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorceror", "Warlock", "Wizard"];
+  const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "",
     race: "",
-    characterClass: "cleric",
+    characterClass: "druid",
     subclass: "",
     level: "",
     hp: "",
@@ -26,7 +26,7 @@ export const CharacterCreationForm = (props) => {
   const spellcastingModArray = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   const keys = Object.keys(subclasses[characterInfo.characterClass]);
-  console.log(keys);
+  console.log("Here are keys", keys);
 
   const handleChange = (event) => {
     //include logic to grab the spellcasting_ability directly from the api depending on class?? it's possible, idk if it's efficient enough//
@@ -54,12 +54,11 @@ export const CharacterCreationForm = (props) => {
       </Box>
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-class-select-label">Choose Your Class</InputLabel>
-        <Select labelId="character-class-select-label" id="class-select" label="CharacterClass">
-          {characterClasses.map((characterClass, index) => {
+        <Select labelId="character-class-select-label" id="class-select" label="CharacterClass" value={characterInfo.characterClass} onChange={handleChange}>
+          {characterClasses.map((charClass, index) => {
             return (
-              // this handleChange isn't running, but it needs to in order to appropriately populate the subclass
-              <MenuItem key={characterClass} value={characterClass} onChange={handleChange}>
-                {characterClass}
+              <MenuItem key={charClass} value={charClass}>
+                {charClass}
               </MenuItem>
             );
           })}
