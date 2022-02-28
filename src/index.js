@@ -2,24 +2,22 @@ import React from "react";
 import ReactDOM from "react-dom";
 // import "./index.css";
 import App from "./App";
+import { BrowserRouter } from "react-router-dom";
 import reportWebVitals from "./reportWebVitals";
-import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider } from "@mui/material/styles";
-import { createTheme } from "@mui/material/styles";
-import { StyledEngineProvider } from "@mui/material/styles";
+// import CssBaseline from "@mui/material/CssBaseline";
+// import { ThemeProvider } from "@mui/material/styles";
+// import { createTheme } from "@mui/material/styles";
+// import { StyledEngineProvider } from "@mui/material/styles";
 // import Demo from "./demo";
 
 // A custom theme for this app
-const theme = createTheme({});
+// const theme = createTheme({});
 
 ReactDOM.render(
   <React.StrictMode>
-    <StyledEngineProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </StyledEngineProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>,
 
   document.getElementById("root")
