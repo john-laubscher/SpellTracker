@@ -11,14 +11,15 @@ export const CharacterCreationForm = (props) => {
 
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
+  //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. Can I put that function in the JSX?
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "",
     race: "",
-    characterClass: "druid",
+    characterClass: "noClass",
     subclass: "",
     level: "",
     hp: "",
-    // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info  b
+    // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
     spellcastingMod: "",
   });
 
@@ -67,9 +68,10 @@ export const CharacterCreationForm = (props) => {
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
         <Select labelId="subclass-select-label" id="subclass-select" label="Subclass">
+          {/* Maybe refactor with an if statement that conditionally renders a string that says "please choose a class first" */}
           {subclassKeysArray.map((subclass, index) => {
             return (
-              <MenuItem key={subclass} value={subclass}>
+              <MenuItem key={subclass} value={subclass} disabled={index === 0}>
                 {subclass}
               </MenuItem>
             );
