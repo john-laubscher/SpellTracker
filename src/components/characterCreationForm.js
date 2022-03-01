@@ -18,7 +18,7 @@ export const CharacterCreationForm = (props) => {
     race: "",
     characterClass: "noClass",
     subclass: "",
-    level: "",
+    characterLevel: "",
     hp: "",
     // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
     spellcastingMod: "",
@@ -26,25 +26,47 @@ export const CharacterCreationForm = (props) => {
 
   const subclassKeysArray = Object.keys(subclasses[characterInfo.characterClass]);
 
+  const renderSubclassDropdown = () => {
+    if (characterInfo.characterClass !== "noClass") {
+      return (
+        <Box sx={{ minWidth: 120 }}>
+          <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
+          <Select labelId="subclass-select-label" id="subclass-select" label="Subclass" name="subclass" onChange={handleChange}>
+            {subclassKeysArray.map((subclass, index) => {
+              return (
+                <MenuItem key={subclass} value={subclass}>
+                  {subclass}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </Box>
+      );
+    }
+  };
+
   //easier to use logic/for loop, or to create this datastructure? Can a for loop have a return like Map?
   const spellcastingModArray = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
     //include logic to grab the spellcasting_ability directly from the api depending on class?? it's possible, idk if it's efficient enough//
+
+    const name = event.target.name;
+
     console.log("is it running?", characterInfo);
-    setCharacterInfo({ characterClass: event.target.value });
+    setCharacterInfo({ ...characterInfo, [name]: event.target.value });
     console.log("Here's characterinfo", characterInfo);
   };
 
   return (
     <div>
       <Box component="form" noValidate autoComplete="off">
-        <TextField id="character-name" label="Character Name" variant="outlined" />
+        <TextField id="character-name" label="Character Name" variant="outlined" name="characterName" onChange={handleChange} />
       </Box>
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="demo-simple-select-label">Choose Your Race</InputLabel>
-        <Select labelId="race-select-label" id="race-select" label="Race">
+        <Select labelId="race-select-label" id="race-select" label="Race" name="race" onChange={handleChange}>
           {races.map((race, index) => {
             return (
               <MenuItem key={race} value={race}>
@@ -56,7 +78,7 @@ export const CharacterCreationForm = (props) => {
       </Box>
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-class-select-label">Choose Your Class</InputLabel>
-        <Select labelId="character-class-select-label" id="class-select" label="CharacterClass" value={characterInfo.characterClass} onChange={handleChange}>
+        <Select labelId="character-class-select-label" id="class-select" label="characterClass" value={characterInfo.characterClass} name="characterClass" onChange={handleChange}>
           {characterClasses.map((charClass, index) => {
             return (
               <MenuItem key={charClass} value={charClass}>
@@ -66,22 +88,10 @@ export const CharacterCreationForm = (props) => {
           })}
         </Select>
       </Box>
-      <Box sx={{ minWidth: 120 }}>
-        <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
-        <Select labelId="subclass-select-label" id="subclass-select" label="Subclass">
-          {/* Maybe refactor with an if statement that conditionally renders a string that says "please choose a class first" */}
-          {subclassKeysArray.map((subclass, index) => {
-            return (
-              <MenuItem key={subclass} value={subclass} disabled={index === 0}>
-                {subclass}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      </Box>
+      {renderSubclassDropdown()}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-level-select-label">Choose your Character Level</InputLabel>
-        <Select labelId="character-level-select-label" id="character-level-select" label="character-level">
+        <Select labelId="character-level-select-label" id="character-level-select" label="character-level" name="characterLevel" onChange={handleChange}>
           {characterLevels.map((charLevels, index) => {
             return (
               <MenuItem key={charLevels} value={charLevels}>
@@ -92,12 +102,12 @@ export const CharacterCreationForm = (props) => {
         </Select>
       </Box>
       <Box component="form" noValidate autoComplete="off">
-        <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" />
+        <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" name="hp" onChange={handleChange} />
       </Box>
       {/* add conditional logic for spellcasters vs non spellcasters to adjust the message based onwhich class is chosen or to just have this conditionally render if a spellcasting class */}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="spellcasting-mod-select-label">Your spellcasting ability is xxx. What is your Spellcasting Modifier?</InputLabel>
-        <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod">
+        <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod" name="spellcastingMod" onChange={handleChange}>
           {spellcastingModArray.map((spellcastingMod, index) => {
             return (
               <MenuItem key={spellcastingMod} value={spellcastingMod}>

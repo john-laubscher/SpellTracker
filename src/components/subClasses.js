@@ -1,6 +1,6 @@
 export const subClasses = {
   // Nesting goes as follows: Class, Subclass, level, ability gained from subclass (name: descritption).
-  noClass: { chooseClassFirst: "" },
+  noClass: "",
   barbarian: {
     ancestralGuardian: {
       3: {
