@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
@@ -6,13 +7,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import subclasses from "./subClasses";
+import Button from "@mui/material/Button";
 
 export const CharacterCreationForm = (props) => {
   const races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half-Elf", "Half-Orc", "Halfling", "Human", "Tiefling"];
 
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
-  //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. Can I put that function in the JSX?
+  //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "",
     race: "",
@@ -25,6 +27,7 @@ export const CharacterCreationForm = (props) => {
   });
 
   const subclassKeysArray = Object.keys(subclasses[characterInfo.characterClass]);
+  const navigate = useNavigate();
 
   const renderSubclassDropdown = () => {
     if (characterInfo.characterClass !== "noClass") {
@@ -117,6 +120,9 @@ export const CharacterCreationForm = (props) => {
           })}
         </Select>
       </Box>
+      <Button variant="contained" onClick={() => navigate("/mainUI")}>
+        Continue
+      </Button>
     </div>
   );
 };
