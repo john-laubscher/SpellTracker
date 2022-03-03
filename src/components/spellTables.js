@@ -1,30 +1,87 @@
-export const spellTables = (props) => {
+export const spellTables = {
   ////prepared spells is spellmod + level //
-  const fullCaster = {
-    1: { first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    2: { first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    3: { first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    4: { first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    5: { first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    6: { first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    7: { first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    8: { first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    9: { first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    10: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-    11: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
-    12: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
-    13: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
-    14: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
-    15: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
-    16: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
-    17: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
-    18: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
-    19: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
-    20: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
-  };
 
-  //prepared spells is spellmod + half level rounded down//
-  const halfCaster = {
+  //Make each class their own separate table: more lines of code, but simplicity in logic and much more easy to find/edit
+  //Full Casters
+  //bard(gets spellsKnown thru separate table)
+  //Cleric  (need to make cantrip table)
+  //Druid: diff cantrip table
+  //Sorc: diff cantrip and spellsKnown table
+  //Wizard: diff cantrip table
+
+  //spells known are same as prepared spells for bards
+  bard: {
+    1: { spellsKnown: 4, cantrips: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { spellsKnown: 5, cantrips: 2, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { spellsKnown: 6, cantrips: 2, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { spellsKnown: 7, cantrips: 3, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { spellsKnown: 8, cantrips: 3, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { spellsKnown: 9, cantrips: 3, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { spellsKnown: 10, cantrips: 3, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { spellsKnown: 11, cantrips: 3, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { spellsKnown: 12, cantrips: 3, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { spellsKnown: 14, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { spellsKnown: 15, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { spellsKnown: 15, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { spellsKnown: 16, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { spellsKnown: 18, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { spellsKnown: 19, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { spellsKnown: 19, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { spellsKnown: 20, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { spellsKnown: 22, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { spellsKnown: 22, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { spellsKnown: 22, cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
+
+  cleric: {
+    1: { cantrips: 3, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { cantrips: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { cantrips: 3, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { cantrips: 4, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { cantrips: 4, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
+
+  druid: {
+    1: { cantrips: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { cantrips: 2, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { cantrips: 2, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { cantrips: 3, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { cantrips: 3, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { cantrips: 3, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { cantrips: 3, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { cantrips: 3, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { cantrips: 3, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
+  //prepared spells is spellmod + half level rounded down: Half-casters
+  //Paladin--have access to all paladin spells, need to prepare every morning
+  //Ranger
+  paladin: {
     1: { first: 0, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     2: { first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     3: { first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
@@ -45,9 +102,55 @@ export const spellTables = (props) => {
     18: { first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     19: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     20: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
-  };
+  },
 
-  const warlock = {
+  ranger: {
+    1: { spellsKnown: 0, first: 0, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { spellsKnown: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { spellsKnown: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { spellsKnown: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { spellsKnown: 4, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { spellsKnown: 4, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { spellsKnown: 5, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { spellsKnown: 5, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { spellsKnown: 6, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { spellsKnown: 6, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { spellsKnown: 7, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    12: { spellsKnown: 7, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    13: { spellsKnown: 8, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    14: { spellsKnown: 8, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    15: { spellsKnown: 9, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    16: { spellsKnown: 9, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    17: { spellsKnown: 10, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    18: { spellsKnown: 10, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    19: { spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    20: { spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+  },
+
+  sorceror: {
+    1: { cantrips: 4, spellsKnown: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { cantrips: 4, spellsKnown: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { cantrips: 4, spellsKnown: 4, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { cantrips: 5, spellsKnown: 5, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { cantrips: 5, spellsKnown: 6, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { cantrips: 5, spellsKnown: 7, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { cantrips: 5, spellsKnown: 8, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { cantrips: 5, spellsKnown: 9, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { cantrips: 5, spellsKnown: 10, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { cantrips: 6, spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { cantrips: 6, spellsKnown: 12, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { cantrips: 6, spellsKnown: 12, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { cantrips: 6, spellsKnown: 13, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { cantrips: 6, spellsKnown: 13, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { cantrips: 6, spellsKnown: 14, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { cantrips: 6, spellsKnown: 14, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { cantrips: 6, spellsKnown: 15, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { cantrips: 6, spellsKnown: 15, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { cantrips: 6, spellsKnown: 15, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { cantrips: 6, spellsKnown: 15, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
+
+  warlock: {
     1: { cantrips: 2, spellsKnown: 2, spellSlots: 1, slotLevel: 5, mysticArcanum: 0 },
     2: { cantrips: 2, spellsKnown: 3, spellSlots: 2, slotLevel: 5, mysticArcanum: 0 },
     3: { cantrips: 2, spellsKnown: 4, spellSlots: 2, slotLevel: 2, mysticArcanum: 0 },
@@ -68,78 +171,32 @@ export const spellTables = (props) => {
     18: { cantrips: 4, spellsKnown: 14, spellSlots: 4, slotLevel: 5, mysticArcanum: 9 },
     19: { cantrips: 4, spellsKnown: 15, spellSlots: 4, slotLevel: 5, mysticArcanum: 9 },
     20: { cantrips: 4, spellsKnown: 15, spellSlots: 4, slotLevel: 5, mysticArcanum: 9 },
-  };
+  },
 
-  //cleric cantrips the same//
-  const wizCantrips = {
-    1: { cantrips: 3 },
-    2: { cantrips: 3 },
-    3: { cantrips: 3 },
-    4: { cantrips: 4 },
-    5: { cantrips: 4 },
-    6: { cantrips: 4 },
-    7: { cantrips: 4 },
-    8: { cantrips: 4 },
-    9: { cantrips: 4 },
-    10: { cantrips: 5 },
-    11: { cantrips: 5 },
-    12: { cantrips: 5 },
-    13: { cantrips: 5 },
-    14: { cantrips: 5 },
-    15: { cantrips: 5 },
-    16: { cantrips: 5 },
-    17: { cantrips: 5 },
-    18: { cantrips: 5 },
-    19: { cantrips: 5 },
-    20: { cantrips: 5 },
-  };
+  //wizards have spellbooks to track all of their known spells
+  wizard: {
+    1: { cantrips: 3, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { cantrips: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { cantrips: 3, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { cantrips: 4, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { cantrips: 4, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { cantrips: 4, first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
 
-  const sorcCantrips = {
-    1: { cantrips: 4, spellsKnown: 2 },
-    2: { cantrips: 4, spellsKnown: 3 },
-    3: { cantrips: 4, spellsKnown: 4 },
-    4: { cantrips: 5, spellsKnown: 5 },
-    5: { cantrips: 5, spellsKnown: 6 },
-    6: { cantrips: 5, spellsKnown: 7 },
-    7: { cantrips: 5, spellsKnown: 8 },
-    8: { cantrips: 5, spellsKnown: 9 },
-    9: { cantrips: 5, spellsKnown: 10 },
-    10: { cantrips: 6, spellsKnown: 11 },
-    11: { cantrips: 6, spellsKnown: 12 },
-    12: { cantrips: 6, spellsKnown: 12 },
-    13: { cantrips: 6, spellsKnown: 13 },
-    14: { cantrips: 6, spellsKnown: 13 },
-    15: { cantrips: 6, spellsKnown: 14 },
-    16: { cantrips: 6, spellsKnown: 14 },
-    17: { cantrips: 6, spellsKnown: 15 },
-    18: { cantrips: 6, spellsKnown: 15 },
-    19: { cantrips: 6, spellsKnown: 15 },
-    20: { cantrips: 6, spellsKnown: 15 },
-  };
-
-  //bard cantrips the same, but diff spells known//
-  const druidCantrips = {
-    1: { cantrips: 2 },
-    2: { cantrips: 2 },
-    3: { cantrips: 2 },
-    4: { cantrips: 3 },
-    5: { cantrips: 3 },
-    6: { cantrips: 3 },
-    7: { cantrips: 3 },
-    8: { cantrips: 3 },
-    9: { cantrips: 3 },
-    10: { cantrips: 4 },
-    11: { cantrips: 4 },
-    12: { cantrips: 4 },
-    13: { cantrips: 4 },
-    14: { cantrips: 4 },
-    15: { cantrips: 4 },
-    16: { cantrips: 4 },
-    17: { cantrips: 4 },
-    18: { cantrips: 4 },
-    19: { cantrips: 4 },
-    20: { cantrips: 4 },
-  };
   //Will need to add artificer cantrips, and maybe infusions tracker as well)
 };
 

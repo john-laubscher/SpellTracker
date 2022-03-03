@@ -123,7 +123,7 @@ export const Classes = {
   },
   paladin: {
     hitDice: "D10",
-    spellcastingAbility: "wisdom",
+    spellcastingAbility: "charisma",
     subclasses: {
       ancients: "",
       conquest: "",
