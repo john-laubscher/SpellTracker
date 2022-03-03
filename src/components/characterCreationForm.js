@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { CharacterInfoContext } from "../Contexts/CharacterInfoContext";
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
@@ -15,16 +16,7 @@ export const CharacterCreationForm = (props) => {
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
   //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
-  const [characterInfo, setCharacterInfo] = useState({
-    characterName: "",
-    race: "",
-    characterClass: "noClass",
-    subclass: "",
-    characterLevel: "",
-    hp: "",
-    // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
-    spellcastingMod: "",
-  });
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const subclassKeysArray = Object.keys(subclasses[characterInfo.characterClass]);
   const navigate = useNavigate();
