@@ -1,13 +1,14 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/CharacterInfoContext";
+import ClassesData from "./ClassesData";
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-import subclasses from "./subClasses";
+import Classes from "./ClassesData";
 import Button from "@mui/material/Button";
 
 export const CharacterCreationForm = (props) => {
@@ -18,7 +19,7 @@ export const CharacterCreationForm = (props) => {
   //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
-  const subclassKeysArray = Object.keys(subclasses[characterInfo.characterClass]);
+  const subclassKeysArray = Object.keys(Classes[characterInfo.characterClass].subclasses);
   const navigate = useNavigate();
 
   const renderSubclassDropdown = () => {
@@ -39,9 +40,29 @@ export const CharacterCreationForm = (props) => {
       );
     }
   };
+  //due to issues with the .keys method, "noClass" is the default class (found in ClassesData.js)
+  const renderSpellModDD = () => {
+    if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
+    } else {
+      return (
+        <Box sx={{ minWidth: 120 }}>
+          <InputLabel id="spellcasting-mod-select-label">Your spellcasting ability is {ClassesData[characterInfo.characterClass].spellcastingAbility}. What is your Spellcasting Modifier?</InputLabel>
+          <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod" name="spellcastingMod" onChange={handleChange}>
+            {spellcastingModArray.map((spellcastingMod, index) => {
+              return (
+                <MenuItem key={spellcastingMod} value={spellcastingMod}>
+                  {spellcastingMod}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </Box>
+      );
+    }
+  };
 
   //easier to use logic/for loop, or to create this datastructure? Can a for loop have a return like Map?
-  const spellcastingModArray = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const spellcastingModArray = [-4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7, +8, +9, +10];
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
@@ -100,18 +121,7 @@ export const CharacterCreationForm = (props) => {
         <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" name="hp" onChange={handleChange} />
       </Box>
       {/* add conditional logic for spellcasters vs non spellcasters to adjust the message based onwhich class is chosen or to just have this conditionally render if a spellcasting class */}
-      <Box sx={{ minWidth: 120 }}>
-        <InputLabel id="spellcasting-mod-select-label">Your spellcasting ability is xxx. What is your Spellcasting Modifier?</InputLabel>
-        <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod" name="spellcastingMod" onChange={handleChange}>
-          {spellcastingModArray.map((spellcastingMod, index) => {
-            return (
-              <MenuItem key={spellcastingMod} value={spellcastingMod}>
-                {spellcastingMod}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      </Box>
+      {renderSpellModDD()}
       <Button variant="contained" onClick={() => navigate("/mainUI")}>
         Continue
       </Button>

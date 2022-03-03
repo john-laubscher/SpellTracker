@@ -9,7 +9,6 @@ export const MainUI = (props) => {
     <div>
       <p>Main UI</p>
       <Header />
-      <p>character name = {characterInfo.characterClass} </p>
       <SpellList />
     </div>
   );
