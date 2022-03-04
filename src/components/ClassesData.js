@@ -6,6 +6,7 @@ export const Classes = {
   },
   barbarian: {
     hitDice: "D12",
+    isSpellCaster: "nonCaster",
     spellcastingAbility: "nonCaster",
     subclasses: {
       ancestralGuardian: {
@@ -40,6 +41,8 @@ export const Classes = {
   },
   bard: {
     hitDice: "D8",
+    // "refer to spellTables" means that spellsKnown is also the same as spells prepared for this class
+    isSpellCaster: "refer to spellTables",
     spellcastingAbility: "charisma",
     subclasses: {
       creation: "",
@@ -54,6 +57,7 @@ export const Classes = {
   },
   cleric: {
     hitDice: "D8",
+    isSpellCaster: "fullCaster",
     spellcastingAbility: "wisdom",
     subclasses: {
       arcana: "",
@@ -78,6 +82,7 @@ export const Classes = {
   },
   druid: {
     hitDice: "D8",
+    isSpellCaster: "fullCaster",
     spellcastingAbility: "wisdom",
     subclasses: {
       dreams: "",
@@ -91,6 +96,7 @@ export const Classes = {
   },
   fighter: {
     hitDice: "D10",
+    isSpellCaster: "nonCaster",
     spellcastingAbility: "nonCaster",
     subclasses: {
       arcaneArcher: "",
@@ -108,6 +114,7 @@ export const Classes = {
   monk: {
     hitDice: "D8",
     spellcastingAbility: "nonCaster",
+    isSpellCaster: "nonCaster",
     subclasses: {
       mercy: "",
       ascendentDragon: "",
@@ -123,6 +130,7 @@ export const Classes = {
   },
   paladin: {
     hitDice: "D10",
+    isSpellCaster: "halfCaster",
     spellcastingAbility: "charisma",
     subclasses: {
       ancients: "",
@@ -138,6 +146,7 @@ export const Classes = {
   },
   ranger: {
     hitDice: "D10",
+    isSpellCaster: "refer to spellTables",
     spellcastingAbility: "wisdom",
     subclasses: {
       beastMaster: "",
@@ -152,6 +161,7 @@ export const Classes = {
   },
   rogue: {
     hitDice: "D8",
+    isSpellCaster: "nonCaster",
     spellcastingAbility: "nonCaster",
     subclasses: {
       arcaneTrickster: "",
@@ -167,6 +177,7 @@ export const Classes = {
   },
   sorceror: {
     hitDice: "D6",
+    isSpellCaster: "refer to spellTables",
     spellcastingAbility: "charisma",
     subclasses: {
       aberrantMind: "",
@@ -181,6 +192,7 @@ export const Classes = {
   },
   warlock: {
     hitDice: "D8",
+    isSpellCaster: "refer to spellTables",
     spellcastingAbility: "charisma",
     subclasses: {
       archfey: "",
@@ -196,6 +208,7 @@ export const Classes = {
   },
   wizard: {
     hitDice: "D6",
+    isSpellCaster: "fullCaster",
     spellcastingAbility: "intelligence",
     subclasses: {
       abjuration: "",
