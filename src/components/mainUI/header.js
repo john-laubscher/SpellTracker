@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
-// import helpers from "../../Helpers/Helpers";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 
@@ -74,9 +73,8 @@ export const Header = (props) => {
           <h3>Spellcasting Modifier: +{characterInfo.spellcastingMod} </h3>
           <h3>Spell Attack Modifier: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]} </h3>
           <h3>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8} </h3>
-          {/* rounding spells prepared */}
           <h3>
-            Spells you can prepare daily from {characterInfo.characterClass} spell list: {0.5 * characterInfo.characterLevel + characterInfo.spellcastingMod}
+            Spells you can prepare daily from {characterInfo.characterClass} spell list: {Math.floor(0.5 * characterInfo.characterLevel + characterInfo.spellcastingMod)}
           </h3>
         </div>
       );
@@ -129,11 +127,8 @@ export const Header = (props) => {
         Hit Dice: {characterInfo.characterName} has {characterInfo.characterLevel} {ClassesData[characterInfo.characterClass].hitDice}
       </h3>
       {determineNoncasters()}
-
-      {/* ---------------spell stuff that non-casters won't need------------ */}
-      {/* need logic for noncasters, half casters, and full casters (warlock is different-use table) (mod+.5 level, or mod+level*/}
       {renderSpellcasterStats()}
-      {/* need logic for druid, paladin, cleric, warlock and special input for spells for a wizard's spellbook */}
+      {/* need logic for special input for spells for a wizard's spellbook */}
 
       {/* -----------------------------class changer that won'tbe part of mainui, just for testing---- */}
       <Button onClick={() => navigate("/")}>Back to Character Creation</Button>

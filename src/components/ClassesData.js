@@ -41,7 +41,7 @@ export const Classes = {
   },
   bard: {
     hitDice: "D8",
-    // "refer to spellTables" means that spellsKnown is also the same as spells prepared for this class
+    // "refer to spellTables" means that spellsKnown is also the same as spells prepared for this class, and is found on spellTables.js
     isSpellCaster: "refer to spellTables",
     spellcastingAbility: "charisma",
     subclasses: {
