@@ -1,6 +1,6 @@
 import "./App.css";
 import axios from 'axios';
-import CharacterCreationForm from "./components/CharacterCreationForm";
+import CharacterCreationForm from "./components/characterCreationForm";
 import { Routes, Route, Link } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
