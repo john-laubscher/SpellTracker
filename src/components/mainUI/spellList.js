@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import axios from 'axios';
 
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
 import ClassesData from "../ClassesData";
@@ -18,7 +19,7 @@ export const SpellList = (props) => {
             <h3>
               {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
-            <p>Add a spell </p>
+            <button onClick={getAllSpells}>Get All Spellsss</button>
           </div>
         );
       }
@@ -34,7 +35,18 @@ export const SpellList = (props) => {
     }
   };
 
-  //   spellLevelKnownRendering("cantrips");
+  const getAllSpells = () => {
+    axios.get('http://localhost:3001/allspells')
+      .then(res => {
+      console.log('front end fetch .then')
+      console.log(res.data)
+      })
+      .catch(error => {
+        console.log('error in getallspells FE')
+      })
+  }
+
+// fetching spells from the api will happen in this file. (Add a spell) will have a link to all spells of that level
 
   //render checkboxes with each spell Level (the amount that they have slots for)
   //add logic for bringing up modal populated with spells of the level you are adding to you spell list, and allowing them to be chosen and stored (context API?)

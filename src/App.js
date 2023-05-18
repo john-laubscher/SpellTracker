@@ -1,4 +1,5 @@
 import "./App.css";
+import axios from 'axios';
 import CharacterCreationForm from "./components/CharacterCreationForm";
 import { Routes, Route, Link } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
@@ -17,6 +18,8 @@ function App() {
     // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
     spellcastingMod: "",
   });
+
+  // Routes
 
   return (
     <div className="App">
