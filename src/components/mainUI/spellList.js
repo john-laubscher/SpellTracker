@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import axios from 'axios';
 
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
@@ -6,18 +6,31 @@ import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+
 export const SpellList = (props) => {
   const { characterInfo } = useContext(CharacterInfoContext);
 
   // used for modal
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
+  useEffect(() => {
+    console.log('spellinfo', characterInfo.spellsPrepared[0])
+  }, [characterInfo]);
+
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
 
+ 
+
+
+
   //need special condition for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
-  const spellLevelKnownRendering = (spellLevel, numericalSpellLevel) => {
+  const renderPCSpells = (spellLevel, numericalSpellLevel) => {
+    console.log('TEST', numericalSpellLevel)
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       if (spellLevel === "cantrips") {
@@ -26,12 +39,13 @@ export const SpellList = (props) => {
             <h3>
               {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
-            <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
-            {isModalOpen ? <AddSpellModal 
-              isModalOpen={isModalOpen} 
-              onClose={toggleModal} 
-              spellLevel={numericalSpellLevel}
-            /> : null}
+              {renderPreparedSpells(numericalSpellLevel)}
+              <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
+              {isModalOpen ? <AddSpellModal 
+                isModalOpen={isModalOpen} 
+                onClose={toggleModal} 
+                spellLevel={numericalSpellLevel}
+              /> : null}
           </div>
         );
       }
@@ -40,6 +54,7 @@ export const SpellList = (props) => {
           <h3>
             {spellLevel} level spell slots: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
           </h3>
+          {renderPreparedSpells(numericalSpellLevel)}
           <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
             {isModalOpen ? <AddSpellModal 
               isModalOpen={isModalOpen} 
@@ -50,6 +65,19 @@ export const SpellList = (props) => {
       );
     } else {
     }
+  };
+
+  const renderPreparedSpells = (numericalSpellLevel) => {
+    console.log('spelllevel', numericalSpellLevel)
+    return (
+      <List>
+        {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
+          <ListItem key={index}>
+            <ListItemText primary={spell.name} />
+          </ListItem>
+        ))}
+      </List>
+    );
   };
 
   // Class and spell level
@@ -72,16 +100,16 @@ export const SpellList = (props) => {
   return (
     <div>
       <p>Spell Tracker Section</p>
-      {spellLevelKnownRendering("cantrips", 0)}
-      {spellLevelKnownRendering("first", 1)}
-      {spellLevelKnownRendering("second", 2)}
-      {spellLevelKnownRendering("third", 3)}
-      {spellLevelKnownRendering("fourth", 4)}
-      {spellLevelKnownRendering("fifth", 5)}
-      {spellLevelKnownRendering("sixth", 6)}
-      {spellLevelKnownRendering("seventh", 7)}
-      {spellLevelKnownRendering("eighth", 8)}
-      {spellLevelKnownRendering("ninth", 9)}
+      {renderPCSpells("cantrips", 0)}
+      {renderPCSpells("first", 1)}
+      {renderPCSpells("second", 2)}
+      {renderPCSpells("third", 3)}
+      {renderPCSpells("fourth", 4)}
+      {renderPCSpells("fifth", 5)}
+      {renderPCSpells("sixth", 6)}
+      {renderPCSpells("seventh", 7)}
+      {renderPCSpells("eighth", 8)}
+      {renderPCSpells("ninth", 9)}
     </div>
   );
 };
