@@ -4,13 +4,20 @@ import axios from 'axios';
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
+import AddSpellModal from "./AddSpellModal"
 
 export const SpellList = (props) => {
   const { characterInfo } = useContext(CharacterInfoContext);
 
+  // used for modal
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
   //need special condition for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
-  const spellLevelKnownRendering = (spellLevel) => {
-    console.log(spellLevel);
+  const spellLevelKnownRendering = (spellLevel, numericalSpellLevel) => {
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       if (spellLevel === "cantrips") {
@@ -19,7 +26,14 @@ export const SpellList = (props) => {
             <h3>
               {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
-            <button onClick={getAllSpells}>Get All Spellsss</button>
+            <button onClick={toggleModal}>{isModalOpen ? 'Close Modal' : 'Open Modal'}</button>
+            {isModalOpen ? <AddSpellModal 
+              isModalOpen={isModalOpen} 
+              onClose={toggleModal} 
+              // spells={characterInfo.spellsPrepared[0]} 
+              spellLevel={numericalSpellLevel}
+            /> : null}
+            <button onClick={() => getAllSpells(numericalSpellLevel)}>Add a spell</button>
           </div>
         );
       }
@@ -28,18 +42,20 @@ export const SpellList = (props) => {
           <h3>
             {spellLevel} level spell slots: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
           </h3>
-          <p>Add a spell </p>
+          <button onClick={() => getAllSpells(numericalSpellLevel)}>Add a spell</button>
         </div>
       );
     } else {
     }
   };
 
-  const getAllSpells = () => {
-    axios.get('http://localhost:3001/allspells')
+  // Class and spell level
+  const getAllSpells = (numericalSpellLevel) => {
+    axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then(res => {
       console.log('front end fetch .then')
       console.log(res.data)
+      console.log("state", characterInfo)
       })
       .catch(error => {
         console.log('error in getallspells FE')
@@ -53,16 +69,16 @@ export const SpellList = (props) => {
   return (
     <div>
       <p>Spell Tracker Section</p>
-      {spellLevelKnownRendering("cantrips")}
-      {spellLevelKnownRendering("first")}
-      {spellLevelKnownRendering("second")}
-      {spellLevelKnownRendering("third")}
-      {spellLevelKnownRendering("fourth")}
-      {spellLevelKnownRendering("fifth")}
-      {spellLevelKnownRendering("sixth")}
-      {spellLevelKnownRendering("seventh")}
-      {spellLevelKnownRendering("eighth")}
-      {spellLevelKnownRendering("ninth")}
+      {spellLevelKnownRendering("cantrips", 0)}
+      {spellLevelKnownRendering("first", 1)}
+      {spellLevelKnownRendering("second", 2)}
+      {spellLevelKnownRendering("third", 3)}
+      {spellLevelKnownRendering("fourth", 4)}
+      {spellLevelKnownRendering("fifth", 5)}
+      {spellLevelKnownRendering("sixth", 6)}
+      {spellLevelKnownRendering("seventh", 7)}
+      {spellLevelKnownRendering("eighth", 8)}
+      {spellLevelKnownRendering("ninth", 9)}
     </div>
   );
 };

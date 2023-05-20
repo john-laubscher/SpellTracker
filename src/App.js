@@ -13,10 +13,10 @@ function App() {
     race: "Dwarf",
     characterClass: "druid",
     subclass: "moon",
-    characterLevel: "10",
-    hp: "100",
+    characterLevel: 10,
+    hp: 100,
     // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
-    spellcastingMod: "2",
+    spellcastingMod: 2,
     spellsPrepared: {
       0:[
         {index: 'dancing-lights', name: 'Dancing Lights', url: '/api/spells/dancing-lights'},
