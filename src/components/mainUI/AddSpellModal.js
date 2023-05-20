@@ -67,8 +67,8 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel }) => {
       <List sx={{ pt: 0 }}>
         {renderSpells()}
         <ListItem disableGutters>
-          <ListItemButton autoFocus>
-            <ListItemText primary="Prepare Spell" />
+          <ListItemButton autoFocus onClick={onClose}>
+            <ListItemText primary="Exit Spell List" />
           </ListItemButton>
         </ListItem>
       </List>

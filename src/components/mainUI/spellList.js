@@ -26,14 +26,12 @@ export const SpellList = (props) => {
             <h3>
               {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
-            <button onClick={toggleModal}>{isModalOpen ? 'Close Modal' : 'Open Modal'}</button>
+            <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
             {isModalOpen ? <AddSpellModal 
               isModalOpen={isModalOpen} 
               onClose={toggleModal} 
-              // spells={characterInfo.spellsPrepared[0]} 
               spellLevel={numericalSpellLevel}
             /> : null}
-            <button onClick={() => getAllSpells(numericalSpellLevel)}>Add a spell</button>
           </div>
         );
       }
@@ -42,7 +40,12 @@ export const SpellList = (props) => {
           <h3>
             {spellLevel} level spell slots: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
           </h3>
-          <button onClick={() => getAllSpells(numericalSpellLevel)}>Add a spell</button>
+          <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
+            {isModalOpen ? <AddSpellModal 
+              isModalOpen={isModalOpen} 
+              onClose={toggleModal} 
+              spellLevel={numericalSpellLevel}
+            /> : null}
         </div>
       );
     } else {
