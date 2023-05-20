@@ -6,9 +6,14 @@ const app = express();
 
 app.use(cors());
 
-app.get('/allspells', (req, res) => {
+// Would it be better to run all the api calls at once and add them to state so they can more quickly swap between spells and use the spell list feature?
+
+app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
+    const numerical_spell_level= req.params.numerical_spell_level;
+    const character_class = req.params.character_class
     console.log('top of endpoint')
-    axios.get('https://www.dnd5eapi.co/api/classes/druid/levels/0/spells')
+    // **************use template literals to dynamical render the class and level of the spell**************
+    axios.get(`https://www.dnd5eapi.co/api/classes/${character_class}/levels/${numerical_spell_level}/spells`)
         .then(response => {
             res.json(response.data)
         })

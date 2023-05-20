@@ -9,14 +9,34 @@ import { CharacterInfoContext } from "./Contexts/CharacterInfoContext";
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [characterInfo, setCharacterInfo] = useState({
-    characterName: "",
-    race: "",
-    characterClass: "noClass",
-    subclass: "",
-    characterLevel: "",
-    hp: "",
+    characterName: "Garetjax",
+    race: "Dwarf",
+    characterClass: "druid",
+    subclass: "moon",
+    characterLevel: "10",
+    hp: "100",
     // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
-    spellcastingMod: "",
+    spellcastingMod: "2",
+    spellsPrepared: {
+      0:[
+        {index: 'dancing-lights', name: 'Dancing Lights', url: '/api/spells/dancing-lights'},
+        {index: 'light', name: 'Light', url: '/api/spells/light'},
+        {index: 'mage-hand', name: 'Mage Hand', url: '/api/spells/mage-hand'}
+      ],
+      1:[
+        {index: 'animal-friendship', name: 'Animal Friendship', url: '/api/spells/animal-friendship'},
+        {index: 'bane', name: 'Bane', url: '/api/spells/bane'},    
+        {index: 'charm-person', name: 'Charm Person', url: '/api/spells/charm-person'}
+      ],
+      2:[],
+      3:[],
+      4:[],
+      5:[],
+      6:[],
+      7:[],
+      8:[],
+      9:[]
+    }
   });
 
   // Routes
