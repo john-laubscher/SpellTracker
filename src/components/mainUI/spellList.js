@@ -13,24 +13,76 @@ import ListItemText from '@mui/material/ListItemText';
 export const SpellList = (props) => {
   const { characterInfo } = useContext(CharacterInfoContext);
 
-  // used for modal
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-
+  // is this doing anything usefull?
   useEffect(() => {
-    console.log('spellinfo', characterInfo.spellsPrepared[0])
   }, [characterInfo]);
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
+  const toggleModal = (spellLevel) => {
+    setSpells(spells => ({
+      ...spells,
+      [spellLevel]: {
+        ...spells[spellLevel],
+        showModal: !spells[spellLevel].showModal
+      }
+    }));
+    console.log('true/false', spells[spellLevel].showModal)
   };
 
- 
+  const [spells, setSpells] = React.useState({
+    0: {showModal: false, availableSpells: []},
+    1: {showModal: false, availableSpells:[]},
+    2: {showModal: false, availableSpells:[]},
+    3: {showModal: false, availableSpells:[]},
+    4: {showModal: false, availableSpells:[]},
+    5: {showModal: false, availableSpells:[]},
+    6: {showModal: false, availableSpells:[]},
+    7: {showModal: false, availableSpells:[]},
+    8: {showModal: false, availableSpells:[]},
+    9: {showModal: false, availableSpells:[]},
+  })
 
+  const renderPrepareSpellsButton = (spellLevel) => {
+    return (
+      <div>
+        <button onClick={() => toggleModal(spellLevel)}>{spells[spellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
+          {spells[spellLevel].showModal ? <AddSpellModal 
+            isModalOpen={spells[spellLevel].showModal} 
+            onClose={() =>toggleModal(spellLevel)} 
+            spellLevel={spellLevel}
+            spells={spells[spellLevel].availableSpells}
+          /> : null}
+      </div>
+    )
+  }
 
-
-  //need special condition for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
+  const renderSpellModal = (spellLevel) => {
+    console.log('spellsState', spells)
+    if (spells[spellLevel].availableSpells.length === 0) {
+      console.log('if statement renderSpellModal')
+      axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
+      .then(res => {
+        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], availableSpells: res.data.results}}));
+        return(
+        <div>
+          {renderPrepareSpellsButton(spellLevel)}
+        </div>
+        )
+      })
+      .catch(error => {
+      });
+    } else {
+      return(
+        <div>
+          {renderPrepareSpellsButton(spellLevel)}
+        </div>
+      )
+    }
+  }
+  
+  //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (spellLevel, numericalSpellLevel) => {
-    console.log('TEST', numericalSpellLevel)
+    // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
+        // Maybe add them to the spell Tables as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       if (spellLevel === "cantrips") {
@@ -40,12 +92,7 @@ export const SpellList = (props) => {
               {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
               {renderPreparedSpells(numericalSpellLevel)}
-              <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
-              {isModalOpen ? <AddSpellModal 
-                isModalOpen={isModalOpen} 
-                onClose={toggleModal} 
-                spellLevel={numericalSpellLevel}
-              /> : null}
+              {renderSpellModal(numericalSpellLevel)}
           </div>
         );
       }
@@ -55,20 +102,14 @@ export const SpellList = (props) => {
             {spellLevel} level spell slots: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
           </h3>
           {renderPreparedSpells(numericalSpellLevel)}
-          <button onClick={toggleModal}>{isModalOpen ? 'Close Spell List' : 'Prepare more spells'}</button>
-            {isModalOpen ? <AddSpellModal 
-              isModalOpen={isModalOpen} 
-              onClose={toggleModal} 
-              spellLevel={numericalSpellLevel}
-            /> : null}
+          {renderSpellModal(numericalSpellLevel)}
         </div>
       );
-    } else {
     }
   };
 
+  //***NEED FEATURE*** */ function to drop spell from spellsPrepared state
   const renderPreparedSpells = (numericalSpellLevel) => {
-    console.log('spelllevel', numericalSpellLevel)
     return (
       <List>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
@@ -80,23 +121,8 @@ export const SpellList = (props) => {
     );
   };
 
-  // Class and spell level
-  const getAllSpells = (numericalSpellLevel) => {
-    axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
-      .then(res => {
-      console.log('front end fetch .then')
-      console.log(res.data)
-      console.log("state", characterInfo)
-      })
-      .catch(error => {
-        console.log('error in getallspells FE')
-      })
-  }
+  //***NEED FEATURE*** render checkboxes with each spell Level (the amount that they have slots for)
 
-// fetching spells from the api will happen in this file. (Add a spell) will have a link to all spells of that level
-
-  //render checkboxes with each spell Level (the amount that they have slots for)
-  //add logic for bringing up modal populated with spells of the level you are adding to you spell list, and allowing them to be chosen and stored (context API?)
   return (
     <div>
       <p>Spell Tracker Section</p>

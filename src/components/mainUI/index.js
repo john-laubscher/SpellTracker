@@ -10,6 +10,7 @@ export const MainUI = (props) => {
       <p>Main UI</p>
       <Header />
       <SpellList />
+      {/* ***NEED FEATURE*** need section for racial and subclass spells */}
     </div>
   );
 };

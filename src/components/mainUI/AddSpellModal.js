@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {useContext} from 'react'
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
-import axios from 'axios';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -10,46 +9,30 @@ import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 
-const AddSpellsModal = ({ isModalOpen, onClose, spellLevel }) => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+// ***NEED FEATURE*** spells need tooltips
+// ***NEED FEATURE*** button to move a spell off of the prepared spells list
+// ***NEED FEATURE*** small success modal that pops up when a spell is added successfully to the list (maybe also closes the addspells modal?)
 
-  React.useEffect(() => {
-    if(isModalOpen) {
-      axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
-      .then(res => {
-        console.log("spell res", res.data.results)
-        setSpells(spells => ({ ...spells, 0: res.data.results}));
-        console.log('state spells', spells)
-      })
-      .catch(error => {
-        console.log(`Error fetching ${spellLevel} level spells:`, error);
-      });
-    }
-  }, [isModalOpen]);
-
-  const [spells, setSpells] = React.useState({
-    0:[],
-    1:[],
-    2:[],
-    3:[],
-    4:[],
-    5:[],
-    6:[],
-    7:[],
-    8:[],
-    9:[],
-  })
+const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const prepareSpell = (spell, spellLevel) => {
-    // This should add the spell to state (preparedSpells)
-    console.log('spell:', spell)
-    console.log('spellLevel', spellLevel)
+    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
+    if(!isSpellAlreadyPrepared) {
+      setCharacterInfo((characterInfo) => ({
+        ...characterInfo,
+        spellsPrepared: {
+          ...characterInfo.spellsPrepared,
+          [spellLevel]: [...characterInfo.spellsPrepared[spellLevel], spell],
+        },
+      }));
+    } else {
+      console.log("You already have that spell prepared")
+    }
   }
 
   const renderSpells = () => {
-    console.log(spells)
-      return spells[0].map((spell, index) => {
-        console.log('spell.name', spell.name)
+      return spells.map((spell, index) => {
         return(
         <ListItem disableGutters>
           <ListItemButton onClick={() => prepareSpell(spell, spellLevel)} key={index}>
