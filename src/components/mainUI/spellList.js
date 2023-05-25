@@ -85,18 +85,6 @@ export const SpellList = (props) => {
         // Maybe add them to the spell Tables as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
-      // refactor this, so if statement only applies to the different wording of the <h3>
-      // if (spellLevel === "cantrips") {
-      //   return (
-      //     <div>
-      //       <h3>
-      //         {spellLevel} known: {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
-      //       </h3>
-      //         {renderPreparedSpells(numericalSpellLevel)}
-      //         {renderSpellModal(numericalSpellLevel)}
-      //     </div>
-      //   );
-      // }
       return (
         <div>
           <h3>
