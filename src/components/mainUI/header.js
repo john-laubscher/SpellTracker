@@ -105,6 +105,8 @@ export const Header = (props) => {
     }
   };
 
+  // ***NEED FEATURE*** TAKE LONG REST (resets hp to max)
+  // ***POSSIBLE FEATURE*** LEVEL UP (take user thru gaining hp based on class, auto increases level, allow PC to choose more spells if appropriate, add feats and access other features, etc.)
   ////This is to help troubleshoot/test with the different classes, won't be part of the header/mainui
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
   const handleChange = (event) => {

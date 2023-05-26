@@ -5,6 +5,7 @@ import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
+import SpellCheckboxes from "./SpellCheckboxes";
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -87,9 +88,14 @@ export const SpellList = (props) => {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       return (
         <div>
-          <h3>
-            {spellLevel} {spellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
-          </h3>
+          <div>
+            <h3>
+              {spellLevel} {spellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
+            </h3>
+            <SpellCheckboxes
+              spellLevel={spellLevel}
+            />
+          </div>
           {renderPreparedSpells(numericalSpellLevel)}
           {renderSpellModal(numericalSpellLevel)}
         </div>
@@ -109,8 +115,6 @@ export const SpellList = (props) => {
       </List>
     );
   };
-
-  //***NEED FEATURE*** render checkboxes with each spell Level (the amount that they have slots for)
 
   return (
     <div>

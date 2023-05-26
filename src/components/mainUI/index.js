@@ -11,6 +11,7 @@ export const MainUI = (props) => {
       <Header />
       <SpellList />
       {/* ***NEED FEATURE*** need section for racial and subclass spells */}
+      {/* ***NEED FEATURE*** section for keeping track of other abilities or items that have limited use that should be tracked*/}
     </div>
   );
 };
