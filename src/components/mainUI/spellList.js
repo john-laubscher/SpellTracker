@@ -43,6 +43,7 @@ export const SpellList = (props) => {
   })
 
   const renderPrepareSpellsButton = (spellLevel) => {
+    // Button doesn't render if server isn't running
     return (
       <div>
         <button onClick={() => toggleModal(spellLevel)}>{spells[spellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
@@ -51,6 +52,7 @@ export const SpellList = (props) => {
             onClose={() =>toggleModal(spellLevel)} 
             spellLevel={spellLevel}
             spells={spells[spellLevel].availableSpells}
+            // Add list of individual spells---should both api calls be in render Spell Modal, or should I split one here and one there?
           /> : null}
       </div>
     )
@@ -59,6 +61,7 @@ export const SpellList = (props) => {
   const renderSpellModal = (spellLevel) => {
     console.log('spellsState', spells)
     if (spells[spellLevel].availableSpells.length === 0) {
+      // This stops the infinite loop, but this function still makes dozens of api calls until it state finally gets filled in
       console.log('if statement renderSpellModal')
       axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
       .then(res => {
@@ -83,7 +86,7 @@ export const SpellList = (props) => {
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (spellLevel, numericalSpellLevel) => {
     // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
-        // Maybe add them to the spell Tables as a possible solution
+        // Maybe add them to the spell Tables with all spells as 0 as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       return (

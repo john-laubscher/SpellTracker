@@ -5,6 +5,8 @@ import { Routes, Route, Link } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
 import { CharacterInfoContext } from "./Contexts/CharacterInfoContext";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
@@ -13,7 +15,7 @@ function App() {
     race: "Dwarf",
     characterClass: "wizard",
     subclass: "abjuration",
-    characterLevel: 9,
+    characterLevel: 1,
     hp: 100,
     // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
     spellcastingMod: 2,
@@ -31,16 +33,21 @@ function App() {
     }
   });
 
+  const theme = createTheme({
+    // Customize your theme as needed
+  });
   // Routes
 
   return (
     <div className="App">
-      <CharacterInfoContext.Provider value={{ characterInfo, setCharacterInfo }}>
-        <Routes>
-          <Route path="/" element={<CharacterCreationForm />}></Route>
-          <Route path="/mainUI" element={<MainUI />}></Route>
-        </Routes>
-      </CharacterInfoContext.Provider>
+       <ThemeProvider theme={theme}>
+        <CharacterInfoContext.Provider value={{ characterInfo, setCharacterInfo }}>
+          <Routes>
+            <Route path="/" element={<CharacterCreationForm />}></Route>
+            <Route path="/mainUI" element={<MainUI />}></Route>
+          </Routes>
+        </CharacterInfoContext.Provider>
+       </ThemeProvider>
     </div>
   );
 }
