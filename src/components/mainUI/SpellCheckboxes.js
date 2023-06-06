@@ -39,8 +39,12 @@ const SpellCheckboxes = ({ spellLevel }) => {
 };
 return (
     <div>
-        <h4>Spell Slots</h4>
-        {renderCheckboxes()}
+        {spellLevel !== 'cantrips' ? (
+          <>
+            <h4>Spell Slots</h4>
+            {renderCheckboxes()}
+          </>
+        ) : null}
     </div>
 )
 };
