@@ -30,16 +30,16 @@ export const SpellList = (props) => {
   };
 
   const [spells, setSpells] = React.useState({
-    0: {showModal: false, availableSpells: []},
-    1: {showModal: false, availableSpells:[]},
-    2: {showModal: false, availableSpells:[]},
-    3: {showModal: false, availableSpells:[]},
-    4: {showModal: false, availableSpells:[]},
-    5: {showModal: false, availableSpells:[]},
-    6: {showModal: false, availableSpells:[]},
-    7: {showModal: false, availableSpells:[]},
-    8: {showModal: false, availableSpells:[]},
-    9: {showModal: false, availableSpells:[]},
+    0: {showModal: false, classSpells: []},
+    1: {showModal: false, classSpells:[]},
+    2: {showModal: false, classSpells:[]},
+    3: {showModal: false, classSpells:[]},
+    4: {showModal: false, classSpells:[]},
+    5: {showModal: false, classSpells:[]},
+    6: {showModal: false, classSpells:[]},
+    7: {showModal: false, classSpells:[]},
+    8: {showModal: false, classSpells:[]},
+    9: {showModal: false, classSpells:[]},
   })
 
   const renderPrepareSpellsButton = (spellLevel) => {
@@ -51,21 +51,18 @@ export const SpellList = (props) => {
             isModalOpen={spells[spellLevel].showModal} 
             onClose={() =>toggleModal(spellLevel)} 
             spellLevel={spellLevel}
-            spells={spells[spellLevel].availableSpells}
-            // Add list of individual spells---should both api calls be in render Spell Modal, or should I split one here and one there?
+            spells={spells[spellLevel].classSpells}
           /> : null}
       </div>
     )
   }
 
   const renderSpellModal = (spellLevel) => {
-    console.log('spellsState', spells)
-    if (spells[spellLevel].availableSpells.length === 0) {
-      // This stops the infinite loop, but this function still makes dozens of api calls until it state finally gets filled in
+    if (spells[spellLevel].classSpells.length === 0) {
       console.log('if statement renderSpellModal')
       axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
       .then(res => {
-        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], availableSpells: res.data.results}}));
+        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], classSpells: res.data.results}}));
         return(
         <div>
           {renderPrepareSpellsButton(spellLevel)}
@@ -95,9 +92,7 @@ export const SpellList = (props) => {
             <h3>
               {spellLevel} {spellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
             </h3>
-            <SpellCheckboxes
-              spellLevel={spellLevel}
-            />
+              <SpellCheckboxes spellLevel={spellLevel}/> 
           </div>
           {renderPreparedSpells(numericalSpellLevel)}
           {renderSpellModal(numericalSpellLevel)}

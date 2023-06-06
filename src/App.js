@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import { CharacterInfoContext } from "./Contexts/CharacterInfoContext";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [characterInfo, setCharacterInfo] = useState({

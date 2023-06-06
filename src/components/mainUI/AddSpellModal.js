@@ -1,6 +1,9 @@
 import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {useContext} from 'react'
 import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
+import axios from 'axios';
+
 
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -18,12 +21,43 @@ import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 
-// ***NEED FEATURE*** spells  modals or popover, or expansion panels
-// ***NEED FEATURE*** button to move a spell off of the prepared spells list
+// ***NEED FEATURE*** spells  modals or popover, or expansion panels  COMPLETED 6/5: could use 
+// ***NEED FEATURE*** button to move a spell off of the prepared spells list and clear all spells
 // ***NEED FEATURE*** small success modal that pops up when a spell is added successfully to the list (maybe also closes the addspells modal?)
+// ***NEED FEATURE*** small modal that pops up when you try to prepare a spell past your max amount prepared
 
 const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  
+  const [spellDetails, setSpellDetails] = useState({});
+
+  useEffect(() => {
+    console.log('USEEFFECT')
+    const fetchSpellDetails = async () => {
+      const spellPromises = spells.map((spell) =>
+        axios.get(`http://localhost:3001/singlespell/${spell.index}`)
+      );
+  
+      try {
+        // Promise.all fetches requests concurrently so we can reduce overall wait time
+        const spellResponses = await Promise.all(spellPromises);
+        const spellDetails = {};
+  
+        spellResponses.forEach((response, index) => {
+          const spellDetail = response.data;
+          const spell = spells[index];
+          spellDetails[spell.index] = spellDetail;
+        });
+  
+        setSpellDetails(spellDetails);
+      } catch (error) {
+        console.log('Error fetching spell details:', error);
+      }
+    };
+
+    fetchSpellDetails();
+    console.log('SPELLDETAILS NEW', spellDetails)
+  }, [spells]);
 
   const prepareSpell = (spell, spellLevel) => {
     const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
@@ -40,61 +74,62 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
     }
   }
 
-
-  // ////////////This should work along with backend, but need to refactor into a modal component or some other option
-  // const renderSpellTooltip = (spellName, spell_index) => {
-  //   console.log('SPELLINDEX FE', spellName)
-  //   axios.get(`http://localhost:3001/singlespell/${spell_index}`)
-  //     .then(res => {    
-  //       console.log('INDIVIDUALSPELL .RES', res)    
-  //     })
-  // }
-
-    // Name, desc, range, components, concentration?, ritual?, casting time, duration,
-
-    const prepareSpellBtnStyle = makeStyles((theme) => ({
-      prepareButton: {
-        fontSize: '14px',
-        padding: '6px 16px',
-        borderRadius: '4px',
-        textTransform: 'none',
-        backgroundColor: '#a881af',
-        color: '#fff',
-        '&:hover': {
-          backgroundColor: '#80669d',
-        },
+  const prepareSpellBtnStyle = makeStyles((theme) => ({
+    prepareButton: {
+      fontSize: '14px',
+      padding: '6px 16px',
+      borderRadius: '4px',
+      textTransform: 'none',
+      backgroundColor: '#a881af',
+      color: '#fff',
+      '&:hover': {
+        backgroundColor: '#80669d',
       },
-    }));
+    },
+  }));
 
   const renderSpells = () => {
     const classes = prepareSpellBtnStyle();
+    console.log('ALLSPELLS', spells)
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
+      // console.log('SPELL', spell)
+      // console.log('spellDetails', spellDetails)
         return(
           <div>
-            <Accordion>
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="panel1a-content"
-                id="panel1a-header" 
-                // ARIA-CONTROLS AND ID SHOULD BE THE DYNAMIC `${SPELL.INDEX}-CONTENT` (ID ENDS WITH HEADER, ARIA-CONTROLS IS CONTENT)
-              >
-                <Typography>{spell.name}</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography>
-                  HERE IS THE ACCORDIAN DESCRIPTION--PUT SPELL INFO HERE
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
             <Button
               variant="contained"
               color="primary"
               className={classes.prepareButton}
               onClick={() => prepareSpell(spell, spellLevel)}
+              // modify prepareSpell function to change and allow it to be unprepared
             >
               Prepare Spell
             </Button>
+            <Accordion>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`${spell.index}-content`}
+                id={`${spell.index}-header`} 
+              >
+                <Typography>{spell.name}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  <p><strong>Range:</strong> {spellDetails[spell.index]?.range}</p>
+                  <p><strong>Duration:</strong> {spellDetails[spell.index]?.duration}</p>
+                  <p><strong>Casting time:</strong> {spellDetails[spell.index]?.casting_time}</p>
+                  <p><strong>Spell components:</strong> {spellDetails[spell.index]?.components.join(', ')}</p>
+                  {spellDetails[spell.index]?.concentration ? (
+                    <p style={{ fontStyle: 'italic' }}><strong>Concentration</strong></p>
+                    ) : null}
+                  {spellDetails[spell.index]?.ritual ? (
+                    <p style={{ fontStyle: 'italic' }}><strong>Ritual</strong></p>
+                    ) : null}
+                  <p>{spellDetails[spell.index]?.desc}</p>
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
           </div>
         )
       })

@@ -6,13 +6,25 @@ const app = express();
 
 app.use(cors());
 
-// Would it be better to run all the api calls at once and add them to state so they can more quickly swap between spells and use the spell list feature?
+app.get('/singlespell/:spell_index', (req, res) => {
+        // const spell_index= 'acid-splash'
+
+    const spell_index= req.params.spell_index
+    console.log('SPELLURL', spell_index)
+    axios.get(`https://www.dnd5eapi.co/api/spells/${spell_index}`)
+        .then(response => {
+            res.json(response.data)
+        })
+        .catch(error => {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+          });
+})
 
 app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
     const numerical_spell_level= req.params.numerical_spell_level;
     const character_class = req.params.character_class
     console.log('top of endpoint')
-    // **************use template literals to dynamical render the class and level of the spell**************
     axios.get(`https://www.dnd5eapi.co/api/classes/${character_class}/levels/${numerical_spell_level}/spells`)
         .then(response => {
             res.json(response.data)
@@ -22,6 +34,9 @@ app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
             res.status(500).send('Internal Server Error');
           });
 })
+
+// function that gets the individual spell 
+    // uses base then url value from the spell list 
 
 // Should my server by 3000 or 3001? 
 // If making changes, be sure to restart server
