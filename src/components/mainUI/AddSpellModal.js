@@ -30,12 +30,9 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
   
-  // const [classSpellsDetails, setclassSpellsDetails] = useState({});
-
   useEffect(() => {
     console.log('USEEFFECT')
     const fetchClassSpellsDetails = async () => {
-      // add if statement about whether state at that spell level is already filled
       const spellPromises = spells.map((spell) =>
         axios.get(`http://localhost:3001/singlespell/${spell.index}`)
       );
@@ -59,8 +56,9 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
         console.log('Error fetching spell details:', error);
       }
     };
-
-    fetchClassSpellsDetails();
+    if (classSpellsDetails[spellLevel].length === 0) {
+      fetchClassSpellsDetails();
+    }
   }, [spells]);
 
   const prepareSpell = (spell, spellLevel) => {
@@ -95,6 +93,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
   const renderSpells = () => {
     const classes = prepareSpellBtnStyle();
     console.log('ALLSPELLS', spells)
+    console.log('STATE', classSpellsDetails)
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
         return(
