@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
+import { CharacterInfoContext } from "../../Contexts/Context";
 import spellTables from "../spellTables"
 
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import {useContext} from 'react'
-import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
+import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import axios from 'axios';
 
 
@@ -21,19 +21,21 @@ import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 
-// ***NEED FEATURE*** spells  modals or popover, or expansion panels  COMPLETED 6/5: could use 
+// ***COMPLETED FEATURE*** spells  modals or popover, or expansion panels  COMPLETED 6/5: could use 
 // ***NEED FEATURE*** button to move a spell off of the prepared spells list and clear all spells
 // ***NEED FEATURE*** small success modal that pops up when a spell is added successfully to the list (maybe also closes the addspells modal?)
 // ***NEED FEATURE*** small modal that pops up when you try to prepare a spell past your max amount prepared
 
 const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
   
-  const [spellDetails, setSpellDetails] = useState({});
+  // const [classSpellsDetails, setclassSpellsDetails] = useState({});
 
   useEffect(() => {
     console.log('USEEFFECT')
-    const fetchSpellDetails = async () => {
+    const fetchClassSpellsDetails = async () => {
+      // add if statement about whether state at that spell level is already filled
       const spellPromises = spells.map((spell) =>
         axios.get(`http://localhost:3001/singlespell/${spell.index}`)
       );
@@ -41,22 +43,24 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
       try {
         // Promise.all fetches requests concurrently so we can reduce overall wait time
         const spellResponses = await Promise.all(spellPromises);
-        const spellDetails = {};
+        const spellsDetails = {};
   
         spellResponses.forEach((response, index) => {
           const spellDetail = response.data;
           const spell = spells[index];
-          spellDetails[spell.index] = spellDetail;
+          spellsDetails[spell.index] = { ...spellDetail};
         });
-  
-        setSpellDetails(spellDetails);
+        console.log('spellsDetails:', spellsDetails)
+        setClassSpellsDetails(classSpellsDetails => ({
+          ...classSpellsDetails,
+          [spellLevel]: spellsDetails
+        }));
       } catch (error) {
         console.log('Error fetching spell details:', error);
       }
     };
 
-    fetchSpellDetails();
-    console.log('SPELLDETAILS NEW', spellDetails)
+    fetchClassSpellsDetails();
   }, [spells]);
 
   const prepareSpell = (spell, spellLevel) => {
@@ -93,8 +97,6 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
     console.log('ALLSPELLS', spells)
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
-      // console.log('SPELL', spell)
-      // console.log('spellDetails', spellDetails)
         return(
           <div>
             <Button
@@ -116,17 +118,17 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
               </AccordionSummary>
               <AccordionDetails>
                 <Typography>
-                  <p><strong>Range:</strong> {spellDetails[spell.index]?.range}</p>
-                  <p><strong>Duration:</strong> {spellDetails[spell.index]?.duration}</p>
-                  <p><strong>Casting time:</strong> {spellDetails[spell.index]?.casting_time}</p>
-                  <p><strong>Spell components:</strong> {spellDetails[spell.index]?.components.join(', ')}</p>
-                  {spellDetails[spell.index]?.concentration ? (
+                  <p><strong>Range:</strong> {classSpellsDetails[spellLevel][spell.index]?.range}</p>
+                  <p><strong>Duration:</strong> {classSpellsDetails[spellLevel][spell.index]?.duration}</p>
+                  <p><strong>Casting time:</strong> {classSpellsDetails[spellLevel][spell.index]?.casting_time}</p>
+                  <p><strong>Spell components:</strong> {classSpellsDetails[spellLevel][spell.index]?.components.join(', ')}</p>
+                  {classSpellsDetails[spellLevel][spell.index]?.concentration ? (
                     <p style={{ fontStyle: 'italic' }}><strong>Concentration</strong></p>
                     ) : null}
-                  {spellDetails[spell.index]?.ritual ? (
+                  {classSpellsDetails[spellLevel][spell.index]?.ritual ? (
                     <p style={{ fontStyle: 'italic' }}><strong>Ritual</strong></p>
                     ) : null}
-                  <p>{spellDetails[spell.index]?.desc}</p>
+                  <p>{classSpellsDetails[spellLevel][spell.index]?.desc}</p>
                 </Typography>
               </AccordionDetails>
             </Accordion>

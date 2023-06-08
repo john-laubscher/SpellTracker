@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { CharacterInfoContext } from "../Contexts/CharacterInfoContext";
+import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
 
 import Box from "@mui/material/Box";

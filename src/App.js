@@ -1,10 +1,9 @@
 import "./App.css";
-import axios from 'axios';
 import CharacterCreationForm from "./components/characterCreationForm";
 import { Routes, Route, Link } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
-import { CharacterInfoContext } from "./Contexts/CharacterInfoContext";
+import { CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
@@ -32,6 +31,19 @@ function App() {
     }
   });
 
+  const [classSpellsDetails, setClassSpellsDetails] = useState({
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+  })
+
   const theme = createTheme({
     // Customize your theme as needed
   });
@@ -41,10 +53,12 @@ function App() {
     <div className="App">
        <ThemeProvider theme={theme}>
         <CharacterInfoContext.Provider value={{ characterInfo, setCharacterInfo }}>
-          <Routes>
-            <Route path="/" element={<CharacterCreationForm />}></Route>
-            <Route path="/mainUI" element={<MainUI />}></Route>
-          </Routes>
+          <ClassSpellsDetailsContext.Provider value={{ classSpellsDetails, setClassSpellsDetails }}>
+            <Routes>
+              <Route path="/" element={<CharacterCreationForm />}></Route>
+              <Route path="/mainUI" element={<MainUI />}></Route>
+            </Routes>
+          </ClassSpellsDetailsContext.Provider>
         </CharacterInfoContext.Provider>
        </ThemeProvider>
     </div>

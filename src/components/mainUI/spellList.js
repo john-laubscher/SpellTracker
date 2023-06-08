@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import axios from 'axios';
 
-import { CharacterInfoContext } from "../../Contexts/CharacterInfoContext";
+import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
