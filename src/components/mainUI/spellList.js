@@ -1,18 +1,17 @@
 import React, { useContext, useEffect } from "react";
 import axios from 'axios';
 
-import { CharacterInfoContext } from "../../Contexts/Context";
+import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
 
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+import SpellAccordian from './SpellAccordian';
 
 export const SpellList = (props) => {
   const { characterInfo } = useContext(CharacterInfoContext);
+  const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
 
   // is this doing anything usefull?
   useEffect(() => {
@@ -57,12 +56,51 @@ export const SpellList = (props) => {
     )
   }
 
+  const fetchClassSpellsDetails = (spellLevel, spells) => {
+    const fetchDetails = async () => {
+
+      const spellPromises = spells.map((spell) =>
+        axios.get(`http://localhost:3001/singlespell/${spell.index}`)
+      );
+  
+      try {
+        // Promise.all fetches requests concurrently so we can reduce overall wait time
+        const spellResponses = await Promise.all(spellPromises);
+        const spellsDetails = {};
+        console.log('HOW OFTEN IS IT RUNNING?')
+        spellResponses.forEach((response, index) => {
+          const spellDetail = response.data;
+          const spell = spells[index];
+
+          spellsDetails[spell.index] = { ...spellDetail};
+        });
+        setClassSpellsDetails(classSpellsDetails => ({
+          ...classSpellsDetails,
+          [spellLevel]: spellsDetails
+        }));
+
+      } catch (error) {
+        console.log('Error fetching spell details:', error);
+      }
+    };
+    if (classSpellsDetails[spellLevel].length === 0) {
+      fetchDetails();
+    }
+  }
+
   const renderSpellModal = (spellLevel) => {
     if (spells[spellLevel].classSpells.length === 0) {
       console.log('if statement renderSpellModal')
       axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
       .then(res => {
-        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], classSpells: res.data.results}}));
+        // get list of class spells into state
+        let fetchedSpellsArr = res.data.results
+        console.log('fetchedspells', fetchedSpellsArr)
+        console.log('SPELLDETAILS-STATE', classSpellsDetails)
+
+        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], classSpells: fetchedSpellsArr}}));
+        // get spell details from list of class spells
+        fetchClassSpellsDetails(spellLevel, fetchedSpellsArr)
         return(
         <div>
           {renderPrepareSpellsButton(spellLevel)}
@@ -85,6 +123,8 @@ export const SpellList = (props) => {
     // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
         // Maybe add them to the spell Tables with all spells as 0 as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
+      // this elseif should keep the functions from running once for each level
+        // - the elements are rendering correctly and the correct number of times, but the renderSpellModal is always running 10 times (once for each spell level)
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
       return (
         <div>
@@ -104,13 +144,14 @@ export const SpellList = (props) => {
   //***NEED FEATURE*** */ function to drop spell from spellsPrepared state
   const renderPreparedSpells = (numericalSpellLevel) => {
     return (
-      <List>
+      <div>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
-          <ListItem key={index}>
-            <ListItemText primary={spell.name} />
-          </ListItem>
+          <SpellAccordian
+            spellLevel={numericalSpellLevel}
+            spell={spell}
+        />
         ))}
-      </List>
+      </div>
     );
   };
 
