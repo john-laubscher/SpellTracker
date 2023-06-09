@@ -10,9 +10,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
 // typically will be used with an array of spells being iterated over, but would work with single spells as long as the classSpellsDetails for that spellLevel is set in state
-const SpellAccordian = (props) => {
-    const spellLevel = props.spellLevel
-    const spell = props.spell
+const SpellAccordian = ({spellLevel, spell}) => {
 
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)
 
