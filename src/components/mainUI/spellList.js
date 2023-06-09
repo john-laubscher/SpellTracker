@@ -141,7 +141,6 @@ export const SpellList = (props) => {
     }
   };
 
-  //***NEED FEATURE*** */ function to drop spell from spellsPrepared state
   const renderPreparedSpells = (numericalSpellLevel) => {
     return (
       <div>

@@ -2,12 +2,9 @@ import React, { useContext, useState } from 'react';
 import { CharacterInfoContext } from "../../Contexts/Context";
 import spellTables from "../spellTables"
 
-
-
 const SpellCheckboxes = ({ spellLevel }) => {
   const [checkedSpells, setCheckedSpells] = useState({});
   const { characterInfo } = useContext(CharacterInfoContext);
-
 
   const spellSlots = spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]
 
@@ -50,5 +47,3 @@ return (
 };
 
 export default SpellCheckboxes;
-
-

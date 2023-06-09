@@ -70,9 +70,7 @@ export const CharacterCreationForm = (props) => {
 
     const name = event.target.name;
 
-    console.log("is it running?", characterInfo);
     setCharacterInfo({ ...characterInfo, [name]: event.target.value });
-    console.log("Here's characterinfo", characterInfo);
   };
 
   return (

@@ -14,12 +14,7 @@ const SpellAccordian = (props) => {
     const spellLevel = props.spellLevel
     const spell = props.spell
 
-    
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)
-    console.log('classSpellsDetails', classSpellsDetails)
-    // console.log('PROPS', spellLevel)
-    // console.log('spell', spellLevel.spell.index)
-    console.log('ID', classSpellsDetails[spellLevel][spell.index]?.range)
 
     return (
         <Accordion>
