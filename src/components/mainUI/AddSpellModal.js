@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {useContext} from 'react'
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import SpellAccordian from './SpellAccordian';
@@ -22,11 +22,15 @@ import Dialog from '@mui/material/Dialog';
 const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
+  const [isClicked, setIsClicked] = useState(false);
+  const [clickedButtons, setClickedButtons] = React.useState([]); // State for tracking clicked buttons
+
+
   
   useEffect(() => {
   }, [spells]);
 
-  const prepareSpell = (spell, spellLevel) => {
+  const togglePreparedSpell = (spell, spellLevel) => {
     const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
     if(!isSpellAlreadyPrepared) {
       setCharacterInfo((characterInfo) => ({
@@ -55,7 +59,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
     }
   }
 
-  const prepareSpellBtnStyle = makeStyles((theme) => ({
+  const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     prepareButton: {
       fontSize: '14px',
       padding: '6px 16px',
@@ -63,17 +67,21 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
       textTransform: 'none',
       backgroundColor: '#a881af',
       color: '#fff',
+      transition: 'background-color 0.5s ease-in-out', // CSS transition for smooth color change
       '&:hover': {
         backgroundColor: '#80669d',
+      },
+      '&.flashAdd': {
+        backgroundColor: 'green',
+      },
+      '&.flashRemove': {
+        backgroundColor: 'red',
       },
     },
   }));
 
   const renderSpells = () => {
-    const classes = prepareSpellBtnStyle();
-    // console.log('ALLSPELLS', spells)
-    // console.log('STATE', classSpellsDetails)
-    // console.log('accordian props', spellLevel)
+    const classes = togglePreparedSpellBtnStyle();
 
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
@@ -82,13 +90,34 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
       const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some(
         (preparedSpell) => preparedSpell.index === spell.index
       );
+
+      const isButtonClicked = clickedButtons.includes(`add-${index}`);
+      const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
+
         return(
-          <div>
+          <div key={index}>
             <Button
+              className={`${classes.prepareButton} ${isButtonClicked ? 'flashAdd' : ''} ${
+                isRemoveClicked ? 'flashRemove' : ''
+              }`}
               variant="contained"
               color="primary"
-              className={classes.prepareButton}
-              onClick={() => prepareSpell(spell, spellLevel)}
+              onClick={() => {
+
+                if (isSpellAlreadyPrepared) {
+                  setClickedButtons([...clickedButtons, `remove-${index}`]); // Add the button to clickedButtons with the "remove-" prefix
+                  togglePreparedSpell(spell, spellLevel);
+                  setTimeout(() => {
+                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`)); // Remove the button from clickedButtons
+                  }, 300); // Reset after 300ms (adjust the duration as needed)
+                } else {
+                  setClickedButtons([...clickedButtons, `add-${index}`]); // Add the button to clickedButtons with the "add-" prefix
+                  togglePreparedSpell(spell, spellLevel);
+                  setTimeout(() => {
+                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `add-${index}`)); // Remove the button from clickedButtons
+                  }, 300); // Reset after 300ms (adjust the duration as needed)
+                }
+              }}
             >
               {isSpellAlreadyPrepared ? 'Unprepare Spell' : 'Prepare Spell'}
             </Button>
