@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect } from 'react';
 
 import SpellAccordian from './SpellAccordian';
-import PrepareSpellButton from './PrepareSpellButton';
+import { PrepareSpellButton } from './PrepareSpellButton';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';

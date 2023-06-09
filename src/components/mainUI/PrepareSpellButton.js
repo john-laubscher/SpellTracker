@@ -5,19 +5,7 @@ import {useContext} from 'react'
 import { useState } from 'react';
 import { makeStyles } from '@mui/styles';
 
-const PrepareSpellButton = ({spell, spellLevel, index}) => {
-
-    const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
-    
-    const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-    const isButtonClicked = clickedButtons.includes(`add-${index}`);
-    const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
-
-    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some(
-        (preparedSpell) => preparedSpell.index === spell.index
-      );
-    
-    const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
+export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     prepareButton: {
         fontSize: '14px',
         padding: '6px 16px',
@@ -37,6 +25,18 @@ const PrepareSpellButton = ({spell, spellLevel, index}) => {
         },
     },
     }));
+
+export const PrepareSpellButton = ({spell, spellLevel, index}) => {
+
+    const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
+    
+    const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+    const isButtonClicked = clickedButtons.includes(`add-${index}`);
+    const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
+
+    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some(
+        (preparedSpell) => preparedSpell.index === spell.index
+      );
 
     const togglePreparedSpell = (spell, spellLevel) => {
         const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
@@ -98,4 +98,3 @@ const PrepareSpellButton = ({spell, spellLevel, index}) => {
     )
 }
 
-export default PrepareSpellButton

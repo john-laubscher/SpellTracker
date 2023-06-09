@@ -1,16 +1,18 @@
 import React, { useContext, useEffect } from "react";
 import axios from 'axios';
 
+import Button from '@mui/material/Button';
+
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
-
+import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellButton";
 import SpellAccordian from './SpellAccordian';
 
 export const SpellList = (props) => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
 
   // is this doing anything usefull?
@@ -41,7 +43,7 @@ export const SpellList = (props) => {
     9: {showModal: false, classSpells:[]},
   })
 
-  const renderPrepareSpellsButton = (spellLevel) => {
+  const showClassSpellsButton = (spellLevel) => {
     // Button doesn't render if server isn't running
     return (
       <div>
@@ -103,7 +105,7 @@ export const SpellList = (props) => {
         fetchClassSpellsDetails(spellLevel, fetchedSpellsArr)
         return(
         <div>
-          {renderPrepareSpellsButton(spellLevel)}
+          {showClassSpellsButton(spellLevel)}
         </div>
         )
       })
@@ -112,11 +114,31 @@ export const SpellList = (props) => {
     } else {
       return(
         <div>
-          {renderPrepareSpellsButton(spellLevel)}
+          {showClassSpellsButton(spellLevel)}
         </div>
       )
     }
   }
+
+  const unprepareAllSpells = () => {
+    setCharacterInfo((prevCharacterInfo) => ({
+      ...prevCharacterInfo,
+      spellsPrepared: {
+        0: [],
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: [],
+        6: [],
+        7: [],
+        8: [],
+        9: [],
+      },
+    }));
+  };
+
+  const classes = togglePreparedSpellBtnStyle();
   
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (spellLevel, numericalSpellLevel) => {
@@ -145,10 +167,18 @@ export const SpellList = (props) => {
     return (
       <div>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
-          <SpellAccordian
-            spellLevel={numericalSpellLevel}
-            spell={spell}
-        />
+          <div>
+
+            <PrepareSpellButton
+              spellLevel={numericalSpellLevel}
+              spell={spell}
+              index={index}
+            />
+            <SpellAccordian
+              spellLevel={numericalSpellLevel}
+              spell={spell}
+            />
+          </div>
         ))}
       </div>
     );
@@ -157,6 +187,14 @@ export const SpellList = (props) => {
   return (
     <div>
       <p>Spell Tracker Section</p>
+      <Button
+        className={classes.prepareButton}
+        variant="contained"
+        color="primary"
+        onClick={unprepareAllSpells}
+      >
+      Unprepare ALL Spells
+    </Button>
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}
