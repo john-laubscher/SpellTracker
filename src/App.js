@@ -15,7 +15,6 @@ function App() {
     subclass: "abjuration",
     characterLevel: 1,
     hp: 100,
-    // spellcastingAbility: "",    ---I think handle this when we are actually making an api call and can use local state a the index to check this info
     spellcastingMod: 2,
     spellsPrepared: {
       0:[],

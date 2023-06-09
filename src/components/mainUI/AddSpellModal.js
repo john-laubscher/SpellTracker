@@ -36,8 +36,22 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
           [spellLevel]: [...characterInfo.spellsPrepared[spellLevel], spell],
         },
       }));
+      // else unprepares the spell
     } else {
-      console.log("You already have that spell prepared")
+      console.log("You un-prepared the spell")
+      setCharacterInfo((characterInfo) => {
+        const updatedSpellsPrepared = characterInfo.spellsPrepared[spellLevel].filter(
+          (preparedSpell) => preparedSpell.index !== spell.index
+        );
+  
+        return {
+          ...characterInfo,
+          spellsPrepared: {
+            ...characterInfo.spellsPrepared,
+            [spellLevel]: updatedSpellsPrepared,
+          },
+        };
+      });
     }
   }
 
@@ -57,14 +71,17 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
 
   const renderSpells = () => {
     const classes = prepareSpellBtnStyle();
-    console.log('ALLSPELLS', spells)
-    console.log('STATE', classSpellsDetails)
-    console.log('accordian props', spellLevel)
+    // console.log('ALLSPELLS', spells)
+    // console.log('STATE', classSpellsDetails)
+    // console.log('accordian props', spellLevel)
 
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
       console.log('accordian props', spell)
 
+      const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some(
+        (preparedSpell) => preparedSpell.index === spell.index
+      );
         return(
           <div>
             <Button
@@ -72,9 +89,8 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
               color="primary"
               className={classes.prepareButton}
               onClick={() => prepareSpell(spell, spellLevel)}
-              // modify prepareSpell function to change and allow it to be unprepared
             >
-              Prepare Spell
+              {isSpellAlreadyPrepared ? 'Unprepare Spell' : 'Prepare Spell'}
             </Button>
             <SpellAccordian
               spellLevel={spellLevel}
