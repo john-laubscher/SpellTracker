@@ -13,12 +13,12 @@ import Dialog from '@mui/material/Dialog';
 
 // ***COMPLETED FEATURE*** spells  modals or popover, or expansion panels  COMPLETED 6/5: could use 
 // ***COMPLETED FEATURE*** button to move a spell off of the prepared spells list 
-// ***NEED FEATURE*** button to clear all spells
-// ***COMPOLETED FEATURE*** button changes color to indicate added successfully to the list, and when one is unprepared (maybe switch wording to drop spell?)
+// ***COMPLETED FEATURE*** button to clear all spells
+// ***COMPLETED FEATURE*** button changes color to indicate added successfully to the list, and when one is unprepared (maybe switch wording to drop spell?)
 // ***NEED FEATURE*** small tooltip that pops up when you try to prepare a spell past your max amount prepared, maybe button shakes too?
 // ***POSSIBLE FEATURE*** maybe have some more evident indication that the spell is already prepared
 
-const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
+const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) => {
 
   useEffect(() => {
   }, [spells]);
@@ -32,11 +32,11 @@ const AddSpellsModal = ({ isModalOpen, onClose, spellLevel, spells }) => {
           <div key={index}>
             <PrepareSpellButton
               spell={spell}
-              spellLevel={spellLevel}
+              numericalSpellLevel={numericalSpellLevel}
               index={index}
             />
             <SpellAccordian
-              spellLevel={spellLevel}
+              numericalSpellLevel={numericalSpellLevel}
               spell={spell}
             />
           </div>

@@ -19,15 +19,15 @@ export const SpellList = (props) => {
   useEffect(() => {
   }, [characterInfo]);
 
-  const toggleModal = (spellLevel) => {
+  const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
       ...spells,
-      [spellLevel]: {
-        ...spells[spellLevel],
-        showModal: !spells[spellLevel].showModal
+      [numericalSpellLevel]: {
+        ...spells[numericalSpellLevel],
+        showModal: !spells[numericalSpellLevel].showModal
       }
     }));
-    console.log('true/false', spells[spellLevel].showModal)
+    console.log('true/false', spells[numericalSpellLevel].showModal)
   };
 
   const [spells, setSpells] = React.useState({
@@ -43,22 +43,22 @@ export const SpellList = (props) => {
     9: {showModal: false, classSpells:[]},
   })
 
-  const showClassSpellsButton = (spellLevel) => {
+  const showClassSpellsButton = (numericalSpellLevel) => {
     // Button doesn't render if server isn't running
     return (
       <div>
-        <button onClick={() => toggleModal(spellLevel)}>{spells[spellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
-          {spells[spellLevel].showModal ? <AddSpellModal 
-            isModalOpen={spells[spellLevel].showModal} 
-            onClose={() =>toggleModal(spellLevel)} 
-            spellLevel={spellLevel}
-            spells={spells[spellLevel].classSpells}
+        <button onClick={() => toggleModal(numericalSpellLevel)}>{spells[numericalSpellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
+          {spells[numericalSpellLevel].showModal ? <AddSpellModal 
+            isModalOpen={spells[numericalSpellLevel].showModal} 
+            onClose={() =>toggleModal(numericalSpellLevel)} 
+            numericalSpellLevel={numericalSpellLevel}
+            spells={spells[numericalSpellLevel].classSpells}
           /> : null}
       </div>
     )
   }
 
-  const fetchClassSpellsDetails = (spellLevel, spells) => {
+  const fetchClassSpellsDetails = (numericalSpellLevel, spells) => {
     const fetchDetails = async () => {
 
       const spellPromises = spells.map((spell) =>
@@ -78,34 +78,34 @@ export const SpellList = (props) => {
         });
         setClassSpellsDetails(classSpellsDetails => ({
           ...classSpellsDetails,
-          [spellLevel]: spellsDetails
+          [numericalSpellLevel]: spellsDetails
         }));
 
       } catch (error) {
         console.log('Error fetching spell details:', error);
       }
     };
-    if (classSpellsDetails[spellLevel].length === 0) {
+    if (classSpellsDetails[numericalSpellLevel].length === 0) {
       fetchDetails();
     }
   }
 
-  const renderSpellModal = (spellLevel) => {
-    if (spells[spellLevel].classSpells.length === 0) {
+  const renderSpellModal = (numericalSpellLevel) => {
+    if (spells[numericalSpellLevel].classSpells.length === 0) {
       console.log('if statement renderSpellModal')
-      axios.get(`http://localhost:3001/allspells/${spellLevel}/${characterInfo.characterClass}`)
+      axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then(res => {
         // get list of class spells into state
         let fetchedSpellsArr = res.data.results
         console.log('fetchedspells', fetchedSpellsArr)
         console.log('SPELLDETAILS-STATE', classSpellsDetails)
 
-        setSpells(spells => ({ ...spells, [spellLevel]: { ...spells[spellLevel], classSpells: fetchedSpellsArr}}));
+        setSpells(spells => ({ ...spells, [numericalSpellLevel]: { ...spells[numericalSpellLevel], classSpells: fetchedSpellsArr}}));
         // get spell details from list of class spells
-        fetchClassSpellsDetails(spellLevel, fetchedSpellsArr)
+        fetchClassSpellsDetails(numericalSpellLevel, fetchedSpellsArr)
         return(
         <div>
-          {showClassSpellsButton(spellLevel)}
+          {showClassSpellsButton(numericalSpellLevel)}
         </div>
         )
       })
@@ -114,7 +114,7 @@ export const SpellList = (props) => {
     } else {
       return(
         <div>
-          {showClassSpellsButton(spellLevel)}
+          {showClassSpellsButton(numericalSpellLevel)}
         </div>
       )
     }
@@ -141,20 +141,20 @@ export const SpellList = (props) => {
   const classes = togglePreparedSpellBtnStyle();
   
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
-  const renderPCSpells = (spellLevel, numericalSpellLevel) => {
+  const renderPCSpells = (textualSpellLevel, numericalSpellLevel) => {
     // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
         // Maybe add them to the spell Tables with all spells as 0 as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
       // this elseif should keep the functions from running once for each level
         // - the elements are rendering correctly and the correct number of times, but the renderSpellModal is always running 10 times (once for each spell level)
-    } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel] !== 0) {
+    } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel] !== 0) {
       return (
         <div>
           <div>
             <h3>
-              {spellLevel} {spellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]}
+              {textualSpellLevel} {textualSpellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel]}
             </h3>
-              <SpellCheckboxes spellLevel={spellLevel}/> 
+              <SpellCheckboxes textualSpellLevel={textualSpellLevel}/> 
           </div>
           {renderPreparedSpells(numericalSpellLevel)}
           {renderSpellModal(numericalSpellLevel)}

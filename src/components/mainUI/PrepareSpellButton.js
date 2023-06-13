@@ -26,7 +26,7 @@ export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     },
     }));
 
-export const PrepareSpellButton = ({spell, spellLevel, index}) => {
+export const PrepareSpellButton = ({spell, numericalSpellLevel, index}) => {
 
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
     
@@ -34,25 +34,25 @@ export const PrepareSpellButton = ({spell, spellLevel, index}) => {
     const isButtonClicked = clickedButtons.includes(`add-${index}`);
     const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
 
-    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some(
+    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel].some(
         (preparedSpell) => preparedSpell.index === spell.index
       );
 
-    const togglePreparedSpell = (spell, spellLevel) => {
-        const isSpellAlreadyPrepared = characterInfo.spellsPrepared[spellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
+    const togglePreparedSpell = (spell, numericalSpellLevel) => {
+        const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
         if(!isSpellAlreadyPrepared) {
           setCharacterInfo((characterInfo) => ({
             ...characterInfo,
             spellsPrepared: {
               ...characterInfo.spellsPrepared,
-              [spellLevel]: [...characterInfo.spellsPrepared[spellLevel], spell],
+              [numericalSpellLevel]: [...characterInfo.spellsPrepared[numericalSpellLevel], spell],
             },
           }));
           // else unprepares the spell
         } else {
           console.log("You un-prepared the spell")
           setCharacterInfo((characterInfo) => {
-            const updatedSpellsPrepared = characterInfo.spellsPrepared[spellLevel].filter(
+            const updatedSpellsPrepared = characterInfo.spellsPrepared[numericalSpellLevel].filter(
               (preparedSpell) => preparedSpell.index !== spell.index
             );
       
@@ -60,7 +60,7 @@ export const PrepareSpellButton = ({spell, spellLevel, index}) => {
               ...characterInfo,
               spellsPrepared: {
                 ...characterInfo.spellsPrepared,
-                [spellLevel]: updatedSpellsPrepared,
+                [numericalSpellLevel]: updatedSpellsPrepared,
               },
             };
           });
@@ -80,13 +80,13 @@ export const PrepareSpellButton = ({spell, spellLevel, index}) => {
 
                 if (isSpellAlreadyPrepared) {
                   setClickedButtons([...clickedButtons, `remove-${index}`]); // Add the button to clickedButtons with the "remove-" prefix
-                  togglePreparedSpell(spell, spellLevel);
+                  togglePreparedSpell(spell, numericalSpellLevel);
                   setTimeout(() => {
                     setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`)); // Remove the button from clickedButtons
                   }, 300); // Reset after 300ms (adjust the duration as needed)
                 } else {
                   setClickedButtons([...clickedButtons, `add-${index}`]); // Add the button to clickedButtons with the "add-" prefix
-                  togglePreparedSpell(spell, spellLevel);
+                  togglePreparedSpell(spell, numericalSpellLevel);
                   setTimeout(() => {
                     setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `add-${index}`)); // Remove the button from clickedButtons
                   }, 300); // Reset after 300ms (adjust the duration as needed)

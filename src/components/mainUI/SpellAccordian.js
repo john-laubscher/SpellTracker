@@ -9,8 +9,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
-// typically will be used with an array of spells being iterated over, but would work with single spells as long as the classSpellsDetails for that spellLevel is set in state
-const SpellAccordian = ({spellLevel, spell}) => {
+// typically will be used with an array of spells being iterated over, but would work with single spells as long as the classSpellsDetails for that numericalSpellLevel is set in state
+const SpellAccordian = ({numericalSpellLevel, spell}) => {
 
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)
 
@@ -25,17 +25,17 @@ const SpellAccordian = ({spellLevel, spell}) => {
               </AccordionSummary>
               <AccordionDetails>
                 <Typography>
-                  <p><strong>Range:</strong> {classSpellsDetails[spellLevel][spell.index]?.range}</p>
-                  <p><strong>Duration:</strong> {classSpellsDetails[spellLevel][spell.index]?.duration}</p>
-                  <p><strong>Casting time:</strong> {classSpellsDetails[spellLevel][spell.index]?.casting_time}</p>
-                  <p><strong>Spell components:</strong> {classSpellsDetails[spellLevel][spell.index]?.components.join(', ')}</p>
-                  {classSpellsDetails[spellLevel][spell.index]?.concentration ? (
+                  <p><strong>Range:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.range}</p>
+                  <p><strong>Duration:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.duration}</p>
+                  <p><strong>Casting time:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.casting_time}</p>
+                  <p><strong>Spell components:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.components.join(', ')}</p>
+                  {classSpellsDetails[numericalSpellLevel][spell.index]?.concentration ? (
                     <p style={{ fontStyle: 'italic' }}><strong>Concentration</strong></p>
                     ) : null}
-                  {classSpellsDetails[spellLevel][spell.index]?.ritual ? (
+                  {classSpellsDetails[numericalSpellLevel][spell.index]?.ritual ? (
                     <p style={{ fontStyle: 'italic' }}><strong>Ritual</strong></p>
                     ) : null}
-                  <p>{classSpellsDetails[spellLevel][spell.index]?.desc}</p>
+                  <p>{classSpellsDetails[numericalSpellLevel][spell.index]?.desc}</p>
                 </Typography>
               </AccordionDetails>
             </Accordion>

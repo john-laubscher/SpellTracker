@@ -2,16 +2,16 @@ import React, { useContext, useState } from 'react';
 import { CharacterInfoContext } from "../../Contexts/Context";
 import spellTables from "../spellTables"
 
-const SpellCheckboxes = ({ spellLevel }) => {
+const SpellCheckboxes = ({ textualSpellLevel }) => {
   const [checkedSpells, setCheckedSpells] = useState({});
   const { characterInfo } = useContext(CharacterInfoContext);
 
-  const spellSlots = spellTables[characterInfo.characterClass][characterInfo.characterLevel][spellLevel]
+  const spellSlots = spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel]
 
-  const handleCheckboxChange = (spellLevel) => {
+  const handleCheckboxChange = (textualSpellLevel) => {
     setCheckedSpells((prevState) => ({
       ...prevState,
-      [spellLevel]: !prevState[spellLevel],
+      [textualSpellLevel]: !prevState[textualSpellLevel],
     }));
   };
 
@@ -19,14 +19,14 @@ const SpellCheckboxes = ({ spellLevel }) => {
     const checkboxes = [];
 
     for (let i = 0; i < spellSlots; i++) {
-      const spellLevel = i + 1;
+      const textualSpellLevel = i + 1;
 
       checkboxes.push(
-        <label key={spellLevel}>
+        <label key={textualSpellLevel}>
           <input
             type="checkbox"
-            checked={checkedSpells[spellLevel]}
-            onChange={() => handleCheckboxChange(spellLevel)}
+            checked={checkedSpells[textualSpellLevel]}
+            onChange={() => handleCheckboxChange(textualSpellLevel)}
           />
         </label>
       );
@@ -36,7 +36,7 @@ const SpellCheckboxes = ({ spellLevel }) => {
 };
 return (
     <div>
-        {spellLevel !== 'cantrips' ? (
+        {textualSpellLevel !== 'cantrips' ? (
           <>
             <h4>Spell Slots</h4>
             {renderCheckboxes()}
