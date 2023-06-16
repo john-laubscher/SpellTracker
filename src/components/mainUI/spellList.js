@@ -47,6 +47,7 @@ export const SpellList = (props) => {
     // Button doesn't render if server isn't running
     return (
       <div>
+        {/* ***NEED FEATURE*** Adjust verbiage based on each class ie: wizards don't prepare spells--they would adjust their spellbook or something like that */}
         <button onClick={() => toggleModal(numericalSpellLevel)}>{spells[numericalSpellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
           {spells[numericalSpellLevel].showModal ? <AddSpellModal 
             isModalOpen={spells[numericalSpellLevel].showModal} 
@@ -97,8 +98,6 @@ export const SpellList = (props) => {
       .then(res => {
         // get list of class spells into state
         let fetchedSpellsArr = res.data.results
-        console.log('fetchedspells', fetchedSpellsArr)
-        console.log('SPELLDETAILS-STATE', classSpellsDetails)
 
         setSpells(spells => ({ ...spells, [numericalSpellLevel]: { ...spells[numericalSpellLevel], classSpells: fetchedSpellsArr}}));
         // get spell details from list of class spells
@@ -168,7 +167,6 @@ export const SpellList = (props) => {
       <div>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
           <div>
-
             <PrepareSpellButton
               spellLevel={numericalSpellLevel}
               spell={spell}

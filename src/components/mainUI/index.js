@@ -1,10 +1,10 @@
 import SpellList from "./spellList";
-import React, { useState, useContext } from "react";
-import { CharacterInfoContext } from "../../Contexts/Context";
+import React from "react";
+
 import Header from "./Header";
 
-export const MainUI = (props) => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+export const MainUI = () => {
+
   return (
     <div>
       <p>Main UI</p>

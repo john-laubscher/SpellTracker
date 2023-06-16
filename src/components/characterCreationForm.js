@@ -19,11 +19,41 @@ export const CharacterCreationForm = (props) => {
   //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
-  const subclassKeysArray = Object.keys(Classes[characterInfo.characterClass].subclasses);
   const navigate = useNavigate();
+
+  const renderWizardSpellCountMod = () => {
+    if (characterInfo.characterClass === 'wizard') {
+      // ***NEED FEATURE*** WHEN USER TRIES TO GO OVER 25, IT SHOULD SHAKE, OR OUTLINE IN RED, AND HAVE A TOOLTIP SAYING HAVE A NUMBER BETWEEN 0 AND 25
+      const handleWizInputChange = (event) => {
+        const value = event.target.value;
+        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 25)) {
+          handleChange(event)
+        };
+        }
+      return (
+        <Box noValidate component="form">
+          <InputLabel> <strong>Number of transcribed spells</strong></InputLabel>
+          <InputLabel>Enter a number between 0 and 25</InputLabel>
+          <TextField
+            type="number"
+            variant="outlined" 
+            name="wizardSpellCountMod"
+            value={characterInfo.wizardSpellCountMod}
+            onChange={handleWizInputChange}
+            inputProps={{
+              min: 0,
+              max: 25,
+            }}
+          />
+        </Box>
+      )
+    }
+  }
 
   const renderSubclassDropdown = () => {
     if (characterInfo.characterClass !== "noClass") {
+
+      const subclassKeysArray = Object.keys(Classes[characterInfo.characterClass].subclasses);
       return (
         <Box sx={{ minWidth: 120 }}>
           <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
@@ -61,17 +91,19 @@ export const CharacterCreationForm = (props) => {
     }
   };
 
-  //easier to use logic/for loop, or to create this datastructure? Can a for loop have a return like Map?
+  //easier to use logic/for loop, or to create this datastructure?
   const spellcastingModArray = [-4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7, +8, +9, +10];
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
-    //include logic to grab the spellcasting_ability directly from the api depending on class?? it's possible, idk if it's efficient enough//
-
-    const name = event.target.name;
-
+    const {name, value} = event.target;
+    if (characterInfo.characterClass === 'wizard') {
+      setCharacterInfo({...characterInfo, [name]: parseInt(value)})
+    }
     setCharacterInfo({ ...characterInfo, [name]: event.target.value });
   };
+
+
 
   return (
     <div>
@@ -103,6 +135,7 @@ export const CharacterCreationForm = (props) => {
         </Select>
       </Box>
       {renderSubclassDropdown()}
+      {renderWizardSpellCountMod()}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-level-select-label">Choose your Character Level</InputLabel>
         <Select labelId="character-level-select-label" id="character-level-select" label="character-level" name="characterLevel" onChange={handleChange}>

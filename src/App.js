@@ -1,21 +1,24 @@
 import "./App.css";
 import CharacterCreationForm from "./components/characterCreationForm";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+// ***NEED FEATURE*** User should be able to enter stats and see them for header 
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "Garetjax",
-    race: "Dwarf",
+    race: "",
+    // default characterClass should be "noClass" rather than empty string
     characterClass: "wizard",
-    subclass: "abjuration",
+    subclass: "bladesinging",
     characterLevel: 1,
     hp: 100,
     spellcastingMod: 2,
+    wizardSpellCountMod: 2,
     spellsPrepared: {
       0:[],
       1:[],
