@@ -1,4 +1,4 @@
-export const Classes = {
+export const ClassesData = {
   // Nesting goes as follows: Class, Subclass, level, ability gained from subclass (name: descritption).
   noClass: {
     subclasses: "",
@@ -228,4 +228,4 @@ export const Classes = {
   },
 };
 
-export default Classes;
+export default ClassesData;

@@ -2,17 +2,17 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
+import { Races, Subraces } from "./RacesData"
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-import Classes from "./ClassesData";
+// import Classes from "./ClassesData";
 import Button from "@mui/material/Button";
 
 export const CharacterCreationForm = (props) => {
-  const races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half-Elf", "Half-Orc", "Halfling", "Human", "Tiefling"];
 
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
@@ -50,10 +50,31 @@ export const CharacterCreationForm = (props) => {
     }
   }
 
+  const renderSubrace = () => {
+    if(characterInfo.race !== "noRace") {
+      console.log('Subraces[characterInfo.characterClass]', Subraces[characterInfo.characterClass])
+
+      return (
+        <Box sx={{ minWidth: 120 }}>
+          <InputLabel id="subclass-select-label">Choose Your Subrace</InputLabel>
+          <Select labelId="subclass-select-label" id="subclass-select" label="Subclass" name="subclass" onChange={handleChange}>
+            {Subraces[characterInfo.race].map((subrace, index) => {
+              return (
+                <MenuItem key={subrace} value={subrace}>
+                  {subrace}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </Box>
+      );
+    }
+  }
+
   const renderSubclassDropdown = () => {
     if (characterInfo.characterClass !== "noClass") {
 
-      const subclassKeysArray = Object.keys(Classes[characterInfo.characterClass].subclasses);
+      const subclassKeysArray = Object.keys(ClassesData[characterInfo.characterClass].subclasses);
       return (
         <Box sx={{ minWidth: 120 }}>
           <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
@@ -70,6 +91,7 @@ export const CharacterCreationForm = (props) => {
       );
     }
   };
+
   //due to issues with the .keys method, "noClass" is the default class (found in ClassesData.js)
   const renderSpellModDD = () => {
     if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
@@ -113,7 +135,7 @@ export const CharacterCreationForm = (props) => {
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="demo-simple-select-label">Choose Your Race</InputLabel>
         <Select labelId="race-select-label" id="race-select" label="Race" name="race" onChange={handleChange}>
-          {races.map((race, index) => {
+          {Races.map((race, index) => {
             return (
               <MenuItem key={race} value={race}>
                 {race}
@@ -122,6 +144,7 @@ export const CharacterCreationForm = (props) => {
           })}
         </Select>
       </Box>
+      {renderSubrace()}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-class-select-label">Choose Your Class</InputLabel>
         <Select labelId="character-class-select-label" id="class-select" label="characterClass" value={characterInfo.characterClass} name="characterClass" onChange={handleChange}>

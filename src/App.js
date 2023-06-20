@@ -11,8 +11,9 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 function App() {
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "Garetjax",
-    race: "",
+    race: "noRace",
     // default characterClass should be "noClass" rather than empty string
+    subrace: "",
     characterClass: "wizard",
     subclass: "bladesinging",
     characterLevel: 1,
