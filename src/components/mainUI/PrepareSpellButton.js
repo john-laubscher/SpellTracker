@@ -26,7 +26,7 @@ export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     },
     }));
 
-export const PrepareSpellButton = ({spell, numericalSpellLevel, index}) => {
+export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
     
@@ -34,12 +34,12 @@ export const PrepareSpellButton = ({spell, numericalSpellLevel, index}) => {
     const isButtonClicked = clickedButtons.includes(`add-${index}`);
     const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
 
-    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel].some(
+    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some(
         (preparedSpell) => preparedSpell.index === spell.index
       );
 
     const togglePreparedSpell = (spell, numericalSpellLevel) => {
-        const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel].some((preparedSpellList) => preparedSpellList.index === spell.index)
+        const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some((preparedSpellList) => preparedSpellList.index === spell.index)
         if(!isSpellAlreadyPrepared) {
           setCharacterInfo((characterInfo) => ({
             ...characterInfo,

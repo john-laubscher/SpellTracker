@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
+import { subRaceSpells } from "../RacesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
@@ -70,12 +71,12 @@ export const SpellList = (props) => {
         // Promise.all fetches requests concurrently so we can reduce overall wait time
         const spellResponses = await Promise.all(spellPromises);
         const spellsDetails = {};
-        console.log('HOW OFTEN IS IT RUNNING?')
+        // console.log('HOW OFTEN IS IT RUNNING?')
         spellResponses.forEach((response, index) => {
-          const spellDetail = response.data;
+          const spellDetails = response.data;
           const spell = spells[index];
 
-          spellsDetails[spell.index] = { ...spellDetail};
+          spellsDetails[spell.index] = { ...spellDetails};
         });
         setClassSpellsDetails(classSpellsDetails => ({
           ...classSpellsDetails,
@@ -93,7 +94,6 @@ export const SpellList = (props) => {
 
   const renderSpellModal = (numericalSpellLevel) => {
     if (spells[numericalSpellLevel].classSpells.length === 0) {
-      console.log('if statement renderSpellModal')
       axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then(res => {
         // get list of class spells into state
@@ -138,9 +138,10 @@ export const SpellList = (props) => {
   };
 
   const classes = togglePreparedSpellBtnStyle();
-  
+  // ***NEED FEATURE--CRITICAL--*** some subrace spells are not in the api, so will need a condition that instead shows a message saying that the description is not available
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (textualSpellLevel, numericalSpellLevel) => {
+    // console.log('NUMERICALSPELLLVL1', numericalSpellLevel)
     // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
         // Maybe add them to the spell Tables with all spells as 0 as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
@@ -162,18 +163,59 @@ export const SpellList = (props) => {
     }
   };
 
+  // const prepareSubraceSpells = () => {
+  //   if (subRaceSpells[characterInfo.race].hasOwnProperty(characterInfo.subrace)) {
+  //     console.log('HERE??')
+  //     // just for prepared spells, not 1x/LR spells
+  //     // shouldn't need to worry about non-caster, they don't have access to the spellList anyway.
+
+  //     // determine if character has access to Level of spell based on characterLevel
+  //     const myCharSpellTable = spellTables[characterInfo.characterClass][characterInfo.characterLevel];
+  //     const subRSpells = subRaceSpells[characterInfo.race][characterInfo.subrace].additionalPreparedSpells;
+  //     let availableSubraceSpells = [];
+
+  //     for (const spellLevel in myCharSpellTable) {
+  //       // this excludes the cantrip and spellsKnown keys in the spellTables.js
+  //       // if the character has access to that spell Level, then the spells are pushed into the array
+  //       if (spellLevel !== 'cantrips' && spellLevel !== 'spellsKnown' && myCharSpellTable[spellLevel] > 0 && subRSpells.hasOwnProperty(spellLevel)) {
+  //         availableSubraceSpells.push(...subRSpells[spellLevel]);
+  //         console.log('availSpells', availableSubraceSpells);
+  //       }
+  //     }
+  //     // fetchSubraceSpells(availableSubraceSpells)
+  //     // if availableSubraceSpell.length > 0, make api call and push into prepared spells
+  //     // continue process for all levels of subrace spells,
+  //     // Then iterate over each item, make the api call, set the spell into characterInfo.spellsPrepared
+
+  //     // Alternatively, make the api call after each one is checked, starting from lowest, and stopping when player doesn't have access to higher level
+  //     console.log('test1: subrace has spells')
+  //   } else {
+  //     console.log('test2: subrace has NO spells')
+
+  //     // The subrace is not present in the object
+  //   }
+  // }
+
+  // const fetchSubraceSpells = (subSpells) => {
+  //   // console.log(characterInfo.spellsPrepared)
+  // }
+
   const renderPreparedSpells = (numericalSpellLevel) => {
+    // prepareSubraceSpells()
+    // console.log('ERROR?', characterInfo.spellsPrepared[numericalSpellLevel])
+    console.log('TEST2 SPELLLVL', numericalSpellLevel)
+    console.log('STATE', characterInfo.spellsPrepared[numericalSpellLevel])
     return (
       <div>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
           <div>
             <PrepareSpellButton
-              spellLevel={numericalSpellLevel}
+              numericalSpellLevel={numericalSpellLevel}
               spell={spell}
               index={index}
             />
             <SpellAccordian
-              spellLevel={numericalSpellLevel}
+              numericalSpellLevel={numericalSpellLevel}
               spell={spell}
             />
           </div>

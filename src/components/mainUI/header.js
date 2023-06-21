@@ -119,7 +119,7 @@ export const Header = () => {
       <h3>Class: {characterInfo.characterClass} </h3>
       <h3>Subclass: {characterInfo.subclass} </h3>
       <h3>Level: {characterInfo.characterLevel} </h3>
-      <h3>Race: {characterInfo.race} </h3>
+      <h3>Subrace, Race: {characterInfo.subrace} {characterInfo.race}</h3>
       <h3>HP: {characterInfo.hp} </h3>
       <h3>
         Hit Dice: {characterInfo.characterName} has {characterInfo.characterLevel} {ClassesData[characterInfo.characterClass].hitDice}

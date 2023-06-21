@@ -56,8 +56,8 @@ export const CharacterCreationForm = (props) => {
 
       return (
         <Box sx={{ minWidth: 120 }}>
-          <InputLabel id="subclass-select-label">Choose Your Subrace</InputLabel>
-          <Select labelId="subclass-select-label" id="subclass-select" label="Subclass" name="subclass" onChange={handleChange}>
+          <InputLabel id="subrace-select-label">Choose Your Subrace</InputLabel>
+          <Select labelId="subrace-select-label" id="subrace-select" label="Subrace" name="subrace" onChange={handleChange}>
             {Subraces[characterInfo.race].map((subrace, index) => {
               return (
                 <MenuItem key={subrace} value={subrace}>
