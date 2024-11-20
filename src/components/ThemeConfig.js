@@ -1,6 +1,8 @@
 // ThemeConfig.js
 import React from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Box } from '@mui/material';
+
 
 // Define your theme here
 const theme = createTheme({
@@ -49,7 +51,7 @@ export const BackgroundWrapper = ({ children }) => {
     return (
       <div
         style={{
-          backgroundImage: "url('/images/parchment-bg.jpg')", // Add your image path
+          backgroundImage: "url('/images/theHunt.jpg')", // Add your image path
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -59,6 +61,23 @@ export const BackgroundWrapper = ({ children }) => {
       >
         {children}
       </div>
+    );
+  };
+
+export const BackgroundOverlay = ({ children }) => {
+    return (
+      <Box
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white (adjust opacity)
+          borderRadius: '8px',
+          padding: '20px',
+          maxWidth: '800px', // Adjust the width as needed
+          margin: '0 auto',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+        }}
+      >     
+        {children}
+      </Box>
     );
   };
 

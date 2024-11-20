@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
-import ThemeConfig, { BackgroundWrapper } from "./components/ThemeConfig";
+import ThemeConfig, { BackgroundWrapper, BackgroundOverlay } from "./components/ThemeConfig";
 
 // ***NEED FEATURE*** User should be able to enter stats and see them for header 
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
@@ -55,7 +55,10 @@ function App() {
             <Routes>
               <Route path="/" element={
                 <BackgroundWrapper>
-                  <CharacterCreationForm />
+                  <BackgroundOverlay>
+                    <CharacterCreationForm />
+
+                  </BackgroundOverlay>
                 </BackgroundWrapper>
               }></Route>
 
