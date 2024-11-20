@@ -10,6 +10,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
 // typically will be used with an array of spells being iterated over, but would work with single spells as long as the classSpellsDetails for that numericalSpellLevel is set in state
+
+// ***NEED CRITICAL FEATURE*** SOME SPELLS ARE NOT IN THE API. NEED TO AT LEAST GIVE THE NAME OF THE SPELL IF THERE IS NOT DESCRIPTION, AND AN ALTERNATIVE MESSAGE 
 const SpellAccordian = ({numericalSpellLevel, spell}) => {
 
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)

@@ -11,6 +11,7 @@ import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
 import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellButton";
 import SpellAccordian from './SpellAccordian';
+import {PrepareSubraceSpells, renderDailySpellsList} from './RacialSpellsList'
 
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
@@ -163,42 +164,7 @@ export const SpellList = (props) => {
     }
   };
 
-  // const prepareSubraceSpells = () => {
-  //   if (subRaceSpells[characterInfo.race].hasOwnProperty(characterInfo.subrace)) {
-  //     console.log('HERE??')
-  //     // just for prepared spells, not 1x/LR spells
-  //     // shouldn't need to worry about non-caster, they don't have access to the spellList anyway.
 
-  //     // determine if character has access to Level of spell based on characterLevel
-  //     const myCharSpellTable = spellTables[characterInfo.characterClass][characterInfo.characterLevel];
-  //     const subRSpells = subRaceSpells[characterInfo.race][characterInfo.subrace].additionalPreparedSpells;
-  //     let availableSubraceSpells = [];
-
-  //     for (const spellLevel in myCharSpellTable) {
-  //       // this excludes the cantrip and spellsKnown keys in the spellTables.js
-  //       // if the character has access to that spell Level, then the spells are pushed into the array
-  //       if (spellLevel !== 'cantrips' && spellLevel !== 'spellsKnown' && myCharSpellTable[spellLevel] > 0 && subRSpells.hasOwnProperty(spellLevel)) {
-  //         availableSubraceSpells.push(...subRSpells[spellLevel]);
-  //         console.log('availSpells', availableSubraceSpells);
-  //       }
-  //     }
-  //     // fetchSubraceSpells(availableSubraceSpells)
-  //     // if availableSubraceSpell.length > 0, make api call and push into prepared spells
-  //     // continue process for all levels of subrace spells,
-  //     // Then iterate over each item, make the api call, set the spell into characterInfo.spellsPrepared
-
-  //     // Alternatively, make the api call after each one is checked, starting from lowest, and stopping when player doesn't have access to higher level
-  //     console.log('test1: subrace has spells')
-  //   } else {
-  //     console.log('test2: subrace has NO spells')
-
-  //     // The subrace is not present in the object
-  //   }
-  // }
-
-  // const fetchSubraceSpells = (subSpells) => {
-  //   // console.log(characterInfo.spellsPrepared)
-  // }
 
   const renderPreparedSpells = (numericalSpellLevel) => {
     // prepareSubraceSpells()
@@ -245,6 +211,9 @@ export const SpellList = (props) => {
       {renderPCSpells("seventh", 7)}
       {renderPCSpells("eighth", 8)}
       {renderPCSpells("ninth", 9)}
+      {/* render subrace spells */}
+      {PrepareSubraceSpells()}
+      {renderDailySpellsList()}
     </div>
   );
 };

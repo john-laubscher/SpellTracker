@@ -26,7 +26,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
   const renderSpells = () => {
 // maybe have them all use checkmarks, and then all at once add to the spell list all at once with a single Prepare Spells button?
     return spells.map((spell, index) => {
-      console.log('accordian props', spell)
+      // console.log('accordian props', spell)
 
         return(
           <div key={index}>

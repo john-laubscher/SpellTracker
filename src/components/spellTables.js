@@ -174,7 +174,7 @@ export const spellTables = {
     20: { cantrips: 4, spellsKnown: 15, spellSlots: 4, slotLevel: "fifth", mysticArcanum: "ninth", first: 0, second: 0, third: 0, fourth: 0, fifth: 4, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
   },
 
-  //wizards have spellbooks to track all of their known spells
+  //wizards have spellbooks to track all of their known spells-- needed feature to build out
   wizard: {
     1: { cantrips: 3, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     2: { cantrips: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
