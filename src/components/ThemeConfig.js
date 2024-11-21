@@ -47,52 +47,6 @@ const theme = createTheme({
   },
 });
 
-// export const BackgroundWrapper = ({ children }) => {
-//     return (
-//       <div
-//         style={{
-//           backgroundImage: "url('/images/theHunt.jpg')", // Add your image path
-//           backgroundSize: "cover",
-//           backgroundPosition: "center",
-//           backgroundRepeat: "no-repeat",
-//           minHeight: "100vh", // Ensure it fills the viewport
-//           padding: "20px",
-//         }}
-//       >
-//        <Box
-//           sx={{
-//             backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white (adjust opacity)
-//             borderRadius: '8px',
-//             padding: '20px',
-//             margin: '0 auto',
-//             maxWidth: '800px', // Adjust the width as needed
-//             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-//           }}
-//         >
-//           {children}
-//         </Box>
-//       </div>
-//     );
-//   };
-
-
-// export const BackgroundOverlay = ({ children }) => {
-//     return (
-//       <Box
-//         sx={{
-//           backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white (adjust opacity)
-//           borderRadius: '8px',
-//           padding: '20px',
-//           maxWidth: '800px', // Adjust the width as needed
-//           margin: '0 auto',
-//           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-//         }}
-//       >     
-//         {children}
-//       </Box>
-//     );
-//   };
-
 export const  MainUIBGPic = "url('/images/dragonCave.jpg')"
 export const CharCreationBGPic = "url('/images/theHunt.jpg')"
 
