@@ -1,7 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "@mui/material/Button";
-import { Tooltip } from '@mui/material';
+import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, Box } from '@mui/material';
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
 
 import { CharacterInfoContext } from "../../Contexts/Context";
@@ -11,6 +12,20 @@ import spellTables from "../spellTables";
 export const Header = () => {
   const { characterInfo } = useContext(CharacterInfoContext);
   const navigate = useNavigate();
+
+  const theme = useTheme(); // Access the theme for styles
+  const spellsFromWizLevel = (characterInfo.characterLevel - 1) * 2 + 6
+
+  const [showDetails, setShowDetails] = useState(false);
+  const [spellData, setSpellData] = useState({
+    totalPreparedSpells: 0,
+    totalWizardSpells: 0,
+    spellcastingAbility: '',
+  });
+
+
+
+  const toggleDetails = () => setShowDetails(!showDetails);
 
   //   const noncasters = ["barbarian", "fighter", "monk", "rogue"];
 
@@ -37,99 +52,162 @@ export const Header = () => {
     20: 6,
   };
 
-  //maybe make "nonCasters" a part of state? Could simplify logic throughout
-  const determineNoncasters = () => {
-    console.log("determineNoncasters");
-    if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
-      console.log("noncaster");
-      return <h3>{characterInfo.characterName} is not a caster</h3>;
-    } else {
-      console.log("caster");
-      return <h3>Spellcasting ability is {ClassesData[characterInfo.characterClass].spellcastingAbility} </h3>;
-    }
+  const formatSpellcastingAbility = (ability) => {
+    const abilityMap = {
+      intelligence: "Int",
+      wisdom: "Wis",
+      charisma: "Cha",
+    };
+    
+    return abilityMap[ability.toLowerCase()] || ability;
   };
 
-  // later on, maybe allow users to hover over to see calculations and labels: ie: DC = 4(spellcastingMod) + 3 (ProficiencyMod) = 7.
-  const renderSpellcasterStats = () => {
-    if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
-    }
+useEffect(() => {
+  // separates the different types of characters to dynamically render relevant info
+  const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
+  
+  if (spellcastingAbility === "nonCaster") {
+    setSpellData(prevState => ({
+      ...prevState,
+      spellcastingAbility: "Non-caster",
+      totalPreparedSpells: 0,  // Non-casters do not prepare spells
+    }));
+  } else if (spellcastingAbility) {
+    setSpellData(prevState => ({
+      ...prevState,
+      spellcastingAbility: formatSpellcastingAbility(spellcastingAbility),
+    }));
+  }
+
+  if (ClassesData[characterInfo.characterClass]?.isSpellCaster) {
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "refer to spellTables") {
-      return (
-        <div>
-          <h3>Spellcasting Modifier: +{characterInfo.spellcastingMod} </h3>
-          <h3>Spell Attack Modifier: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]} </h3>
-          <h3>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8} </h3>
-          <h3>Spells you know and are prepared: {spellTables[characterInfo.characterClass][characterInfo.characterLevel].spellsKnown}</h3>
-        </div>
-      );
+      setSpellData(prevState => ({
+        ...prevState,
+        totalPreparedSpells: spellTables[characterInfo.characterClass][characterInfo.characterLevel].spellsKnown,
+      }));
+    } else if (ClassesData[characterInfo.characterClass].isSpellCaster === "halfCaster") {
+      setSpellData(prevState => ({
+        ...prevState,
+        totalPreparedSpells: Math.floor(0.5 * characterInfo.characterLevel + characterInfo.spellcastingMod),
+      }));
+    } else if (characterInfo.characterClass === "wizard") {
+      {/* Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known), at some point, add a way for them to add spells to this count either with dropdown or button. */}
+      setSpellData(prevState => ({
+        ...prevState,
+        totalWizardSpells: spellsFromWizLevel + parseInt(characterInfo.wizardSpellCountMod),
+        totalPreparedSpells: characterInfo.characterLevel + characterInfo.spellcastingMod,
+      }));
+    } else if (ClassesData[characterInfo.characterClass].isSpellCaster === "fullCaster") {
+      setSpellData(prevState => ({
+        ...prevState,
+        totalPreparedSpells: characterInfo.characterLevel + characterInfo.spellcastingMod,
+      }));
     }
-    //Paladin is only half-caster on this list cuz ranger is "refer to spellTables"
-    if (ClassesData[characterInfo.characterClass].isSpellCaster === "halfCaster") {
-      return (
-        <div>
-          <h3>Spellcasting Modifier: +{characterInfo.spellcastingMod} </h3>
-          <h3>Spell Attack Modifier: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]} </h3>
-          <h3>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8} </h3>
-          <h3>
-            Spells you can prepare daily from {characterInfo.characterClass} spell list: {Math.floor(0.5 * characterInfo.characterLevel + characterInfo.spellcastingMod)}
-          </h3>
-        </div>
-      );
-    }
-    if (characterInfo.characterClass === "wizard") {
-      const spellsFromWizLevel = (characterInfo.characterLevel - 1) * 2 + 6
-      return (
-        <div>
-          <h3>Spellcasting Modifier: +{characterInfo.spellcastingMod} </h3>
-          <h3>Spell Attack Modifier: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]} </h3>
-          <h3>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8} </h3>
-          {/* Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known), at some point, add a way for them to add spells to this count either with dropdown or button. */}
-          {/* (only level related spells) */}
-          <Tooltip placement="top" title= {`Spells from wizard level: ${spellsFromWizLevel}; Transcribed spells: ${characterInfo.wizardSpellCountMod}`}>
-            {/* Not sure why wizardSpellCountMod is being set as a string, but this ensures proper addition */}
-            <h3>Total Spells in Wizard Spell Book: {spellsFromWizLevel + parseInt(characterInfo.wizardSpellCountMod) } </h3>
-          </Tooltip>
-          {/* Total spells includes transcribed spells */}
-          <Tooltip placement="top" title="Does not include cantrips">
-            <h3>Total spells you can prepare daily: {characterInfo.characterLevel + characterInfo.spellcastingMod}</h3>
-          </Tooltip>
-        </div>
-      );
-    }
-    if (ClassesData[characterInfo.characterClass].isSpellCaster === "fullCaster") {
-      return (
-        <div>
-          <h3>Spellcasting Modifier: +{characterInfo.spellcastingMod} </h3>
-          <h3>Spell Attack Modifier: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]} </h3>
-          <h3>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8} </h3>
-          <h3>
-            Spells you can prepare daily from {characterInfo.characterClass} spell list: {characterInfo.characterLevel + characterInfo.spellcastingMod}
-          </h3>
-        </div>
-      );
-    }
-  };
+  }
+}, [characterInfo, ClassesData]);
+
+const determineNoncasters = () => {
+  if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
+    return <Typography variant="h6" sx={theme.typography.body1}>{characterInfo.characterName} is not a caster</Typography>;
+  } else {
+    return <Typography variant="h6" sx={theme.typography.body1}>Spellcasting ability is {spellData.spellcastingAbility}</Typography>;
+  }
+};
 
   // ***NEED FEATURE*** TAKE LONG REST (resets hp to max)
   // ***NEED FEATURE*** LEVEL UP (take user thru gaining hp based on class, auto increases level, allow PC to choose more spells if appropriate, add feats and access other features, etc.)
 
   return (
-    <div>
-      <h1>Name: {characterInfo.characterName} </h1>
-      <h3>Class: {characterInfo.characterClass} </h3>
-      <h3>Subclass: {characterInfo.subclass} </h3>
-      <h3>Level: {characterInfo.characterLevel} </h3>
-      <h3>Subrace, Race: {characterInfo.subrace} {characterInfo.race}</h3>
-      <h3>HP: {characterInfo.hp} </h3>
-      <h3>
-        Hit Dice: {characterInfo.characterName} has {characterInfo.characterLevel} {ClassesData[characterInfo.characterClass].hitDice}
-      </h3>
-      {determineNoncasters()}
-      {renderSpellcasterStats()}
-      {/* need logic for special input for spells for a wizard's spellbook */}
+// Header needs weapon bonuses
+    // Advanced feature is multiple weapons that can be named
+    // Each weapon can have a tooltip description with damage type and other info
+// AC
 
-      <Button onClick={() => navigate("/")}>Back to Character Creation</Button>
-    </div>
+    <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
+      <Grid container sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
+      <Grid item>
+          <IconButton onClick={toggleDetails}>
+            {showDetails ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+          </IconButton>
+        </Grid>
+        <Grid item sx={theme.components.CharacterHeader.styleOverrides.gridItem}>
+          <Typography variant="h5">{characterInfo.characterName}</Typography>
+          <Typography variant="body2">
+            HP: {characterInfo.hp}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} md={6}> 
+            <Card>
+              <CardContent>
+                <div>
+                  <Typography variant="h6" sx={theme.typography.body1}>Spell Attack Mod: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]}</Typography>
+                  <Typography variant="h6" sx={theme.typography.body1}>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}</Typography>
+                </div>
+              </CardContent>
+            </Card>
+        </Grid> 
+      </Grid>
+
+      {/* Expanded Details */}
+      {/* Expanded needs Stats and mods
+      Proficiency bonus
+       */}
+      {showDetails && (
+        <Grid container spacing={2} sx={theme.components.CharacterHeader.styleOverrides.expandedDetails}>
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1">Hit Dice</Typography>
+                <Typography variant="body2">
+                  {characterInfo.characterName} has {characterInfo.characterLevel}{" "}
+                  {ClassesData[characterInfo.characterClass].hitDice}
+                </Typography>
+                <Typography variant="body2">
+                  Level {characterInfo.characterLevel} {characterInfo.characterClass} ({characterInfo.subclass})
+                </Typography>
+                <Typography variant="body2">
+                  Race: {characterInfo.subrace} {characterInfo.race}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid> 
+          <Grid item xs={12} md={6}> 
+            <Card>
+              <CardContent>
+                {determineNoncasters()}
+                <Tooltip placement="top" title="Does not include cantrips">
+                  <Typography variant="h6" sx={theme.typography.body1}>Total Prepared Spells: {spellData.totalPreparedSpells} </Typography>
+                </Tooltip>
+                {characterInfo.characterClass === "wizard" && (
+                  <>
+                    <Tooltip placement="top" title="Does not include cantrips">
+                      <Typography variant="h6" sx={theme.typography.body1}>
+                        Total Wizard Spells: {spellData.totalWizardSpells}
+                      </Typography>
+                    </Tooltip>
+                    <Tooltip placement="top" title={`Spells from wizard level: ${spellsFromWizLevel}; Transcribed spells: ${characterInfo.wizardSpellCountMod}`}>
+                      <Typography variant="h6" sx={theme.typography.body1}>
+                        Total Spells in Wizard Spell Book: {spellsFromWizLevel + parseInt(characterInfo.wizardSpellCountMod)}
+                      </Typography>
+                    </Tooltip>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>         
+          {/* Back Button */}
+          <Grid item xs={12}>
+            <Button
+              variant="outlined"
+              sx={theme.components.CharacterHeader.styleOverrides.backButton}
+              onClick={() => navigate("/")}
+            >
+              Back to Character Creation
+            </Button>
+          </Grid>
+        </Grid>
+      )}
+    </Card>
   );
 };
 

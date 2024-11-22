@@ -8,6 +8,7 @@ import { Box } from '@mui/material';
 const theme = createTheme({
   typography: {
     fontFamily: "'Cinzel', serif",
+    whiteSpace: 'nowrap',
     body1: {
       fontWeight: 400,
       fontSize: "18px",
@@ -17,6 +18,19 @@ const theme = createTheme({
     h6: {
       fontWeight: 700,
       fontSize: "20px",
+    },
+    fontFamily: "'Cinzel', serif",
+    h5: {
+      fontWeight: 700,
+      fontSize: "24px",
+    },
+    body2: {
+      fontWeight: 400,
+      fontSize: "16px",
+    },
+    subtitle1: {
+      fontWeight: 600,
+      fontSize: "18px",
     },
   },
   components: {
@@ -43,6 +57,34 @@ const theme = createTheme({
           },
         },
       },
+    },
+
+    CharacterHeader: {
+        styleOverrides: {
+          root: {
+            margin: "10px 0",
+            padding: "10px",
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
+            borderRadius: "8px",
+          },
+          gridContainer: {
+            alignItems: "center",
+            justifyContent: "space-between",
+          },
+          gridItem: {
+            display: "flex",
+            flexDirection: "column",
+            gap: "5px",
+          },
+          expandedDetails: {
+            marginTop: "10px",
+          },
+          backButton: {
+            marginTop: "10px",
+            textTransform: "none",
+          },
+        },
     },
   },
 });
@@ -72,6 +114,7 @@ export const BackgroundWrapper = ({ children, bgImage }) => {
             borderRadius: '8px',
             padding: '20px',
             maxWidth: '800px', // Adjust the width as needed
+            minWidth: '425px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
           }}
         >

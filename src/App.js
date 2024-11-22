@@ -18,6 +18,7 @@ function App() {
     subclass: "bladesinging",
     characterLevel: 1,
     hp: 100,
+    weaponAttackMod: 4,
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
     spellsPrepared: {
