@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, Box } from '@mui/material';
+import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, TextField  } from '@mui/material';
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
@@ -9,8 +9,9 @@ import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 
+
 export const Header = () => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const navigate = useNavigate();
 
   const theme = useTheme(); // Access the theme for styles
@@ -122,6 +123,8 @@ const determineNoncasters = () => {
     // Advanced feature is multiple weapons that can be named
     // Each weapon can have a tooltip description with damage type and other info
 // AC
+// HP NEEDS TO BE CHANGED AND ABLE TO CHANGE STATE THROUGHOUT A BATTLE
+// Will header eventually need to be moved to top to make room for spell list??
 
     <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
       <Grid container sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
@@ -132,9 +135,19 @@ const determineNoncasters = () => {
         </Grid>
         <Grid item sx={theme.components.CharacterHeader.styleOverrides.gridItem}>
           <Typography variant="h5">{characterInfo.characterName}</Typography>
-          <Typography variant="body2">
-            HP: {characterInfo.hp}
-          </Typography>
+          <TextField
+            className="EditableHP"
+            variant="outlined"
+            label="HP"
+            value={characterInfo.hp}
+            onChange={(e) =>
+              setCharacterInfo((prev) => ({
+                ...prev,
+                hp: parseInt(e.target.value, 10) || 0, // Convert input to number or fallback to 0
+              }))
+            }
+            sx={{ width: "100px" }} // Optional: Adjust size
+          />
         </Grid>
         <Grid item xs={12} md={6}> 
             <Card>

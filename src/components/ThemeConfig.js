@@ -55,6 +55,18 @@ const theme = createTheme({
             borderColor: "#d4af37",
             boxShadow: "0 0 8px #d4af37",
           },
+          "&.EditableHP": {
+            width: "80px",
+            margin: "5px",
+            "& .MuiInputBase-root": {
+              height: "30px",
+              fontSize: "16px",
+            },
+            "& .MuiInputLabel-root": {
+              fontWeight: "bold",
+              fontSize: "20px",
+            },
+          },
         },
       },
     },
@@ -123,6 +135,7 @@ export const BackgroundWrapper = ({ children, bgImage }) => {
       </div>
     );
   };
+
 
 // Wrap the ThemeProvider around children components
 export default function ThemeConfig({ children }) {
