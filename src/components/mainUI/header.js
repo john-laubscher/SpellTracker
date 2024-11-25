@@ -155,6 +155,7 @@ const determineNoncasters = () => {
                 <div>
                   <Typography variant="h6" sx={theme.typography.body1}>Spell Attack Mod: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]}</Typography>
                   <Typography variant="h6" sx={theme.typography.body1}>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}</Typography>
+                  <Typography variant="h6" sx={theme.typography.body1}>Armor Class: {characterInfo.ac}</Typography>
                 </div>
               </CardContent>
             </Card>

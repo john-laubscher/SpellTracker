@@ -21,6 +21,8 @@ export const CharacterCreationForm = (props) => {
   //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
+  // const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
   const navigate = useNavigate();
 
   const renderWizardSpellCountMod = () => {
@@ -128,6 +130,17 @@ export const CharacterCreationForm = (props) => {
   };
 
 
+    const handleStatChange = (statName, newValue) => {
+      setCharacterInfo((prev) => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          [statName]: newValue, // Update only the specific stat
+        },
+      }));
+    };
+
+
 
   return (
     <div>
@@ -173,10 +186,32 @@ export const CharacterCreationForm = (props) => {
           })}
         </Select>
       </Box>
+      {/* CHANGE NEEDED: Change styling */}
       <Box component="form" noValidate autoComplete="off">
         <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" name="hp" onChange={handleChange} />
       </Box>
+      {/* FEATURE NEEDED: Add tooltip to add up AC--can be different for each class or just a general message */}
+      <Box component="form" noValidate autoComplete="off">
+        <TextField id="armor-class" label="Armor Class" variant="outlined" name="armor class" onChange={handleChange} />
+      </Box>
       {/* add conditional logic for spellcasters vs non spellcasters to adjust the message based onwhich class is chosen or to just have this conditionally render if a spellcasting class */}
+      {/* NEEDED: STYLING FOR THIS, NUMBERS AREN'T READABLE */}
+      <Box display="flex" gap={2}>
+        {Object.entries(characterInfo.stats).map(([statName, statValue]) => (
+          <TextField
+            key={statName}
+            label={statName.toUpperCase()}
+            type="number"
+            value={statValue}
+            onChange={(e) =>
+              handleStatChange(statName, parseInt(e.target.value, 10) || 0)
+            }
+            inputProps={{ min: 1, max: 50 }}
+            sx={{ width: "80px" }}
+        />
+      ))}
+    </Box>
+      
       {renderSpellModDD()}
       <Button variant="contained" onClick={() => navigate("/mainUI")}>
         Continue

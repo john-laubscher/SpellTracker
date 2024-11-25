@@ -18,9 +18,18 @@ function App() {
     subclass: "bladesinging",
     characterLevel: 1,
     hp: 100,
+    ac: 17,
     weaponAttackMod: 4,
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
+    stats: {
+      'str': 0,
+      'dex': 0,
+      'con': 0,
+      'int': 0,
+      'wis': 0, 
+      'cha': 0
+    },
     spellsPrepared: {
       0:[],
       1:[],
