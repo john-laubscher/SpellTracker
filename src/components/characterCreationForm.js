@@ -130,15 +130,22 @@ export const CharacterCreationForm = (props) => {
   };
 
 
-    const handleStatChange = (statName, newValue) => {
-      setCharacterInfo((prev) => ({
-        ...prev,
-        stats: {
-          ...prev.stats,
-          [statName]: newValue, // Update only the specific stat
+  const handleStatChange = (statName, newValue) => {
+    setCharacterInfo((prev) => {
+      const newStats = {
+        ...prev.stats,
+        [statName]: {
+          ...prev.stats[statName],
+          value: newValue, // Update only the value of the stat
+          mod: Math.floor((newValue - 10) / 2), // Recalculate the mod based on the new value
         },
-      }));
-    };
+      };
+      return {
+        ...prev,
+        stats: newStats,
+      };
+    });
+  };
 
 
 
@@ -202,7 +209,7 @@ export const CharacterCreationForm = (props) => {
             key={statName}
             label={statName.toUpperCase()}
             type="number"
-            value={statValue}
+            value={statValue.value}
             onChange={(e) =>
               handleStatChange(statName, parseInt(e.target.value, 10) || 0)
             }

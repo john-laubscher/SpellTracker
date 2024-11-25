@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect  } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, TextField  } from '@mui/material';
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -24,7 +24,7 @@ export const Header = () => {
     spellcastingAbility: '',
   });
 
-
+  // const prevStatsRef = useRef(characterInfo.stats);
 
   const toggleDetails = () => setShowDetails(!showDetails);
 
@@ -64,7 +64,10 @@ export const Header = () => {
   };
 
 useEffect(() => {
-  // separates the different types of characters to dynamically render relevant info
+
+  console.log(characterInfo.stats, 'stats')
+
+
   const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
   
   if (spellcastingAbility === "nonCaster") {
@@ -115,6 +118,7 @@ const determineNoncasters = () => {
   }
 };
 
+
   // ***NEED FEATURE*** TAKE LONG REST (resets hp to max)
   // ***NEED FEATURE*** LEVEL UP (take user thru gaining hp based on class, auto increases level, allow PC to choose more spells if appropriate, add feats and access other features, etc.)
 
@@ -153,7 +157,12 @@ const determineNoncasters = () => {
             <Card>
               <CardContent>
                 <div>
-                  <Typography variant="h6" sx={theme.typography.body1}>Spell Attack Mod: +{characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel]}</Typography>
+                  {/* Despite some classes not being spellcasters, we can still render this info, many races or items give non-casters spells or require a DC like monks stunning strike */}
+                  <Typography variant="h6" sx={theme.typography.body1}>
+                    {ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster" 
+                      ? "NonCaster"
+                      : `Spell Attack Mod: + ${ClassesData[characterInfo.characterClass].spellcastingAbility}`}
+                  </Typography>                  
                   <Typography variant="h6" sx={theme.typography.body1}>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}</Typography>
                   <Typography variant="h6" sx={theme.typography.body1}>Armor Class: {characterInfo.ac}</Typography>
                 </div>
@@ -171,10 +180,9 @@ const determineNoncasters = () => {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="subtitle1">Hit Dice</Typography>
                 <Typography variant="body2">
                   {characterInfo.characterName} has {characterInfo.characterLevel}{" "}
-                  {ClassesData[characterInfo.characterClass].hitDice}
+                  {ClassesData[characterInfo.characterClass].hitDice} hit dice
                 </Typography>
                 <Typography variant="body2">
                   Level {characterInfo.characterLevel} {characterInfo.characterClass} ({characterInfo.subclass})
@@ -206,9 +214,33 @@ const determineNoncasters = () => {
                     </Tooltip>
                   </>
                 )}
+                <Typography variant="h6" sx={theme.typography.body1}>
+                  Proficiency Bonus: + {proficiencyBonus[characterInfo.characterLevel]}
+                </Typography>
               </CardContent>
             </Card>
-          </Grid>         
+          </Grid>
+          <Grid item xs={12}>
+            <Card sx={{ border: '1px solid #ccc', padding: '8px', overflowX: 'auto' }}>
+              <CardContent>
+                <Grid container spacing={1} sx={{ textAlign: 'center', justifyContent: 'space-between' }}>
+                  {Object.entries(characterInfo.stats).map(([statName, { value, mod }]) => (
+                    <Grid item key={statName} sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                        {statName.toUpperCase()}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                        {value}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontSize: '1.1rem', color: mod >= 0 ? 'green' : 'red' }}>
+                        {mod >= 0 ? `+${mod}` : mod}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>    
           {/* Back Button */}
           <Grid item xs={12}>
             <Button

@@ -212,7 +212,7 @@ export const SpellList = (props) => {
       {renderPCSpells("eighth", 8)}
       {renderPCSpells("ninth", 9)}
       {/* render subrace spells */}
-      {PrepareSubraceSpells()}
+      {/* {PrepareSubraceSpells()} */}
       {renderDailySpellsList()}
     </div>
   );

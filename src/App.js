@@ -14,7 +14,7 @@ function App() {
     race: "Dwarf",
     // default characterClass should be "noClass" rather than empty string
     subrace: "Hill",
-    characterClass: "wizard",
+    characterClass: "barbarian",
     subclass: "bladesinging",
     characterLevel: 1,
     hp: 100,
@@ -23,12 +23,12 @@ function App() {
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
     stats: {
-      'str': 0,
-      'dex': 0,
-      'con': 0,
-      'int': 0,
-      'wis': 0, 
-      'cha': 0
+      'str': {value:8, mod:1},
+      'dex': {value:10, mod:1},
+      'con': {value:11, mod:1},
+      'int': {value:13, mod:1},
+      'wis': {value:15, mod:1}, 
+      'cha': {value:17, mod:1}
     },
     spellsPrepared: {
       0:[],

@@ -43,7 +43,7 @@ export const ClassesData = {
     hitDice: "D8",
     // "refer to spellTables" means that spellsKnown is also the same as spells prepared for this class, and is found on spellTables.js
     isSpellCaster: "refer to spellTables",
-    spellcastingAbility: "charisma",
+    spellcastingAbility: "cha",
     subclasses: {
       creation: "",
       eloquence: "",
@@ -58,7 +58,7 @@ export const ClassesData = {
   cleric: {
     hitDice: "D8",
     isSpellCaster: "fullCaster",
-    spellcastingAbility: "wisdom",
+    spellcastingAbility: "wis",
     subclasses: {
       arcana: "",
       death: "",
@@ -83,7 +83,7 @@ export const ClassesData = {
   druid: {
     hitDice: "D8",
     isSpellCaster: "fullCaster",
-    spellcastingAbility: "wisdom",
+    spellcastingAbility: "wis",
     subclasses: {
       dreams: "",
       land: "",
@@ -131,7 +131,7 @@ export const ClassesData = {
   paladin: {
     hitDice: "D10",
     isSpellCaster: "halfCaster",
-    spellcastingAbility: "charisma",
+    spellcastingAbility: "cha",
     subclasses: {
       ancients: "",
       conquest: "",
@@ -147,7 +147,7 @@ export const ClassesData = {
   ranger: {
     hitDice: "D10",
     isSpellCaster: "refer to spellTables",
-    spellcastingAbility: "wisdom",
+    spellcastingAbility: "wis",
     subclasses: {
       beastMaster: "",
       drakewarden: "",
@@ -178,7 +178,7 @@ export const ClassesData = {
   sorceror: {
     hitDice: "D6",
     isSpellCaster: "refer to spellTables",
-    spellcastingAbility: "charisma",
+    spellcastingAbility: "cha",
     subclasses: {
       aberrantMind: "",
       clockworkSoul: "",
@@ -193,7 +193,7 @@ export const ClassesData = {
   warlock: {
     hitDice: "D8",
     isSpellCaster: "refer to spellTables",
-    spellcastingAbility: "charisma",
+    spellcastingAbility: "cha",
     subclasses: {
       archfey: "",
       celestial: "",
@@ -209,7 +209,7 @@ export const ClassesData = {
   wizard: {
     hitDice: "D6",
     isSpellCaster: "fullCaster",
-    spellcastingAbility: "intelligence",
+    spellcastingAbility: "int",
     subclasses: {
       abjuration: "",
       bladesinging: "",
