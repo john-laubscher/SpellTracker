@@ -1,7 +1,7 @@
 import "./App.css";
 import CharacterCreationForm from "./components/characterCreationForm";
 import { Routes, Route } from "react-router-dom";
-import MainUI from "./components/MainUI/Index";
+import MainUI from "./components/mainUI/index";
 import React, { useState } from "react";
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
 import ThemeConfig, { BackgroundWrapper, CharCreationBGPic } from "./components/ThemeConfig";
@@ -15,7 +15,7 @@ function App() {
     // default characterClass should be "noClass" rather than empty string
     subrace: "Hill",
     characterClass: "barbarian",
-    subclass: "bladesinging",
+    subclass: "beast",
     characterLevel: 1,
     hp: 100,
     ac: 17,

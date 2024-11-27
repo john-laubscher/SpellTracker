@@ -61,7 +61,7 @@ export const CharacterCreationForm = (props) => {
       return (
         <Box sx={{ minWidth: 120 }}>
           <InputLabel id="subrace-select-label">Choose Your Subrace</InputLabel>
-          <Select labelId="subrace-select-label" id="subrace-select" label="Subrace" name="subrace" onChange={handleChange}>
+          <Select labelId="subrace-select-label" id="subrace-select" value={characterInfo.subrace} label="Subrace" name="subrace" onChange={handleChange}>
             {Subraces[characterInfo.race].map((subrace, index) => {
               return (
                 <MenuItem key={subrace} value={subrace}>
@@ -82,7 +82,7 @@ export const CharacterCreationForm = (props) => {
       return (
         <Box sx={{ minWidth: 120 }}>
           <InputLabel id="subclass-select-label">Choose Your Subclass</InputLabel>
-          <Select labelId="subclass-select-label" id="subclass-select" label="Subclass" name="subclass" onChange={handleChange}>
+          <Select labelId="subclass-select-label" id="subclass-select" value={characterInfo.subclass} label="Subclass" name="subclass" onChange={handleChange}>
             {subclassKeysArray.map((subclass, index) => {
               return (
                 <MenuItem key={subclass} value={subclass}>
@@ -152,11 +152,11 @@ export const CharacterCreationForm = (props) => {
   return (
     <div>
       <Box component="form" noValidate autoComplete="off">
-        <TextField id="character-name" label="Character Name" variant="outlined" name="characterName" onChange={handleChange} />
+        <TextField id="character-name" label="Character Name" value={characterInfo.characterName} variant="outlined" name="characterName" onChange={handleChange} />
       </Box>
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="demo-simple-select-label">Choose Your Race</InputLabel>
-        <Select labelId="race-select-label" id="race-select" label="Race" name="race" onChange={handleChange}>
+        <Select labelId="race-select-label" id="race-select" value={characterInfo.race} label="Race" name="race" onChange={handleChange}>
           {Races.map((race, index) => {
             return (
               <MenuItem key={race} value={race}>
@@ -183,7 +183,7 @@ export const CharacterCreationForm = (props) => {
       {renderWizardSpellCountMod()}
       <Box sx={{ minWidth: 120 }}>
         <InputLabel id="character-level-select-label">Choose your Character Level</InputLabel>
-        <Select labelId="character-level-select-label" id="character-level-select" label="character-level" name="characterLevel" onChange={handleChange}>
+        <Select labelId="character-level-select-label" id="character-level-select" value={characterInfo.characterLevel} label="character-level" name="characterLevel" onChange={handleChange}>
           {characterLevels.map((charLevels, index) => {
             return (
               <MenuItem key={charLevels} value={charLevels}>
@@ -195,11 +195,11 @@ export const CharacterCreationForm = (props) => {
       </Box>
       {/* CHANGE NEEDED: Change styling */}
       <Box component="form" noValidate autoComplete="off">
-        <TextField id="character-hit-points" label="Character Hit Points" variant="outlined" name="hp" onChange={handleChange} />
+        <TextField id="character-hit-points" value={characterInfo.hp} label="Character Hit Points" variant="outlined" name="hp" onChange={handleChange} />
       </Box>
       {/* FEATURE NEEDED: Add tooltip to add up AC--can be different for each class or just a general message */}
       <Box component="form" noValidate autoComplete="off">
-        <TextField id="armor-class" label="Armor Class" variant="outlined" name="armor class" onChange={handleChange} />
+        <TextField id="armor-class" value={characterInfo.ac} label="Armor Class" variant="outlined" name="armor class" onChange={handleChange} />
       </Box>
       {/* add conditional logic for spellcasters vs non spellcasters to adjust the message based onwhich class is chosen or to just have this conditionally render if a spellcasting class */}
       {/* NEEDED: STYLING FOR THIS, NUMBERS AREN'T READABLE */}
