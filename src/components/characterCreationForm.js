@@ -97,25 +97,6 @@ export const CharacterCreationForm = (props) => {
   };
 
   //due to issues with the .keys method, "noClass" is the default class (found in ClassesData.js)
-  const renderSpellModDD = () => {
-    if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
-    } else {
-      return (
-        <Box sx={{ minWidth: 120 }}>
-          <InputLabel id="spellcasting-mod-select-label">Your spellcasting ability is {ClassesData[characterInfo.characterClass].spellcastingAbility}. What is your Spellcasting Modifier?</InputLabel>
-          <Select labelId="spellcasting-mod-select-label" id="spellcasting-mod-select" label="spellcasting-mod" name="spellcastingMod" onChange={handleChange}>
-            {spellcastingModArray.map((spellcastingMod, index) => {
-              return (
-                <MenuItem key={spellcastingMod} value={spellcastingMod}>
-                  {spellcastingMod}
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </Box>
-      );
-    }
-  };
 
   //easier to use logic/for loop, or to create this datastructure?
   const spellcastingModArray = [-4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7, +8, +9, +10];
@@ -218,8 +199,6 @@ export const CharacterCreationForm = (props) => {
         />
       ))}
     </Box>
-      
-      {renderSpellModDD()}
       <Button variant="contained" onClick={() => navigate("/mainUI")}>
         Continue
       </Button>

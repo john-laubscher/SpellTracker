@@ -63,12 +63,11 @@ export const Header = () => {
     return abilityMap[ability.toLowerCase()] || ability;
   };
 
+  const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
+
 useEffect(() => {
 
   console.log(characterInfo.stats, 'stats')
-
-
-  const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
   
   if (spellcastingAbility === "nonCaster") {
     setSpellData(prevState => ({
@@ -161,7 +160,7 @@ const determineNoncasters = () => {
                   <Typography variant="h6" sx={theme.typography.body1}>
                     {ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster" 
                       ? "NonCaster"
-                      : `Spell Attack Mod: + ${ClassesData[characterInfo.characterClass].spellcastingAbility}`}
+                      : `Spell Attack Mod: + ${characterInfo.stats[spellcastingAbility].mod}`}
                   </Typography>                  
                   <Typography variant="h6" sx={theme.typography.body1}>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}</Typography>
                   <Typography variant="h6" sx={theme.typography.body1}>Armor Class: {characterInfo.ac}</Typography>
