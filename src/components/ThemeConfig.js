@@ -109,7 +109,7 @@ export const BackgroundWrapper = ({ children, bgImage }) => {
     return (
       <div
         style={{
-          backgroundImage: bgImage, // Add your image path
+          backgroundImage: bgImage,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

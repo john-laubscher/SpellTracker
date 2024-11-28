@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, TextField  } from '@mui/material';
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -14,7 +14,7 @@ export const Header = () => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const navigate = useNavigate();
 
-  const theme = useTheme(); // Access the theme for styles
+  const theme = useTheme();
   const spellsFromWizLevel = (characterInfo.characterLevel - 1) * 2 + 6
 
   const [showDetails, setShowDetails] = useState(false);
@@ -24,11 +24,7 @@ export const Header = () => {
     spellcastingAbility: '',
   });
 
-  // const prevStatsRef = useRef(characterInfo.stats);
-
   const toggleDetails = () => setShowDetails(!showDetails);
-
-  //   const noncasters = ["barbarian", "fighter", "monk", "rogue"];
 
   const proficiencyBonus = {
     1: 2,
@@ -117,16 +113,13 @@ const determineNoncasters = () => {
   }
 };
 
-
   // ***NEED FEATURE*** TAKE LONG REST (resets hp to max)
   // ***NEED FEATURE*** LEVEL UP (take user thru gaining hp based on class, auto increases level, allow PC to choose more spells if appropriate, add feats and access other features, etc.)
 
   return (
 // Header needs weapon bonuses
-    // Advanced feature is multiple weapons that can be named
-    // Each weapon can have a tooltip description with damage type and other info
-// AC
-// HP NEEDS TO BE CHANGED AND ABLE TO CHANGE STATE THROUGHOUT A BATTLE
+// Advanced feature is multiple weapons that can be named
+// Each weapon can have a tooltip description with damage type and other info
 // Will header eventually need to be moved to top to make room for spell list??
 
     <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
@@ -171,9 +164,6 @@ const determineNoncasters = () => {
       </Grid>
 
       {/* Expanded Details */}
-      {/* Expanded needs Stats and mods
-      Proficiency bonus
-       */}
       {showDetails && (
         <Grid container spacing={2} sx={theme.components.CharacterHeader.styleOverrides.expandedDetails}>
           <Grid item xs={12} md={6}>
