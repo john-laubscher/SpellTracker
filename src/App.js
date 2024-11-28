@@ -18,7 +18,15 @@ function App() {
     characterLevel: 1,
     hp: 100,
     ac: 17,
-    weaponAttackMod: 4,
+    // weaponAttackMod: 4,
+      weapons: [
+        {
+          name: "Longsword",      
+          dmgType: "slashing",    
+          mod: 1,
+          statMod: "str",
+        },
+      ],
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
     stats: {

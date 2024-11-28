@@ -196,9 +196,10 @@ export const CharacterCreationForm = (props) => {
             }
             inputProps={{ min: 1, max: 50 }}
             sx={{ width: "80px" }}
-        />
-      ))}
-    </Box>
+          />
+        ))}
+      </Box>
+      
       <Button variant="contained" onClick={() => navigate("/mainUI")}>
         Continue
       </Button>
