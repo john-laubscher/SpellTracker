@@ -1,9 +1,10 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
 import { Races, Subraces } from "./RacesData"
 import WeaponManager from "./mainUI/WeaponManager"
+import { proficiencyBonus } from "../components/mainUI/header";
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
@@ -23,6 +24,13 @@ export const CharacterCreationForm = (props) => {
   // const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setCharacterInfo((prev) => ({
+      ...prev,
+      proficiencyMod: proficiencyBonus[prev.characterLevel] || 2, // Fallback to 2 for safety
+    }));
+  }, [characterInfo.characterLevel]);
 
   const renderWizardSpellCountMod = () => {
     if (characterInfo.characterClass === 'wizard') {

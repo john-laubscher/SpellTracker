@@ -16,6 +16,7 @@ function App() {
     characterClass: "barbarian",
     subclass: "beast",
     characterLevel: 1,
+    proficiencyMod: 2,
     hp: 100,
     ac: 17,
     // weaponAttackMod: 4,

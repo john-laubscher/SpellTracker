@@ -67,7 +67,7 @@ const WeaponManager = () => {
               <Checkbox
                 name="proficient"
                 checked={newWeapon.proficient}
-                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficiency: e.target.value }))}
+                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficient: e.target.checked }))}
                 />
             }
             label="Proficient"
@@ -88,7 +88,7 @@ const WeaponManager = () => {
               title={
                 <>
                   <Typography variant="body2">
-                    {weapon.proficient ? "Proficient" : "Not Proficient"}
+                    Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod: 0}
                   </Typography>
                   <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
                   <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
@@ -99,10 +99,11 @@ const WeaponManager = () => {
               <Card sx={{ cursor: "pointer", padding: "8px" }}>
                 <CardContent>
                   <Typography variant="h6">{weapon.name}</Typography>
-                  <Typography variant="body2">
-                    {/* Needs to account for negative numbers, and adds prof mod */}
                     {/* Allow modification of weapons */}
-                    Modifier: + {characterInfo.stats[weapon.statMod].mod}
+                  <Typography variant="body2">
+                    Modifier: + 
+                    {characterInfo.stats[weapon.statMod].mod +
+                      (weapon.proficient ? characterInfo.proficiencyMod : 0)}
                   </Typography>
                 </CardContent>
               </Card>
