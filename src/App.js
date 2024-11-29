@@ -25,17 +25,19 @@ function App() {
           dmgType: "slashing",    
           mod: 1,
           statMod: "str",
+          proficient: true,
         },
       ],
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
+    // have to account for 0 mods
     stats: {
-      'str': {value:8, mod:1},
-      'dex': {value:10, mod:1},
-      'con': {value:11, mod:1},
+      'str': {value:8, mod:-1},
+      'dex': {value:10, mod:0},
+      'con': {value:11, mod:0},
       'int': {value:13, mod:1},
-      'wis': {value:15, mod:1}, 
-      'cha': {value:17, mod:1}
+      'wis': {value:15, mod:2}, 
+      'cha': {value:17, mod:3}
     },
     spellsPrepared: {
       0:[],

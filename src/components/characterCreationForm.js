@@ -3,15 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
 import { Races, Subraces } from "./RacesData"
+import WeaponManager from "./mainUI/WeaponManager"
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-// import Classes from "./ClassesData";
 import Button from "@mui/material/Button";
-// import ThemeConfig, { BackgroundOverlay } from "./components/ThemeConfig";
 
 
 export const CharacterCreationForm = (props) => {
@@ -99,7 +98,6 @@ export const CharacterCreationForm = (props) => {
   //due to issues with the .keys method, "noClass" is the default class (found in ClassesData.js)
 
   //easier to use logic/for loop, or to create this datastructure?
-  const spellcastingModArray = [-4, -3, -2, -1, 0, +1, +2, +3, +4, +5, +6, +7, +8, +9, +10];
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
@@ -199,7 +197,7 @@ export const CharacterCreationForm = (props) => {
           />
         ))}
       </Box>
-      
+      <WeaponManager/> 
       <Button variant="contained" onClick={() => navigate("/mainUI")}>
         Continue
       </Button>
