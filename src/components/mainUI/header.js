@@ -8,6 +8,7 @@ import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
+import {WeaponsDisplay} from "./WeaponManager";
 
 export const proficiencyBonus = {
   1: 2,
@@ -123,7 +124,7 @@ const determineNoncasters = () => {
 
     <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
       <Grid container sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
-      <Grid item>
+        <Grid item>
           <IconButton onClick={toggleDetails}>
             {showDetails ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
           </IconButton>
@@ -149,6 +150,9 @@ const determineNoncasters = () => {
               <CardContent>
                 <div>
                   {/* Despite some classes not being spellcasters, we can still render this info, many races or items give non-casters spells or require a DC like monks stunning strike */}
+                  {/* Maybe tooltips for calculated stats */}
+                  {/* Needs card for weapon attacks--They should be horizontal */}
+                  {/* Move header outside of the background? Refactor styling? */}
                   <Typography variant="h6" sx={theme.typography.body1}>
                     {ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster" 
                       ? "NonCaster"
@@ -159,6 +163,9 @@ const determineNoncasters = () => {
                 </div>
               </CardContent>
             </Card>
+            <Grid>
+              <WeaponsDisplay characterInfo={characterInfo} />
+            </Grid>
         </Grid> 
       </Grid>
 

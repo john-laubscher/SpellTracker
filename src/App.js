@@ -19,15 +19,15 @@ function App() {
     proficiencyMod: 2,
     hp: 100,
     ac: 17,
-      weapons: [
-        {
-          name: "Longsword",      
-          dmgType: "slashing",    
-          mod: 1,
-          statMod: "str",
-          proficient: true,
-        },
-      ],
+    weapons: [
+      {
+        name: "Longsword",      
+        dmgType: "slashing",    
+        mod: 1,
+        statMod: "str",
+        proficient: true,
+      },
+    ],
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
     stats: {

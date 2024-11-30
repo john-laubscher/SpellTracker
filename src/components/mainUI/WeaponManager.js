@@ -3,6 +3,42 @@ import { Tooltip, Grid, Typography, Card, CardContent, FormControlLabel, Checkbo
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
+export const WeaponsDisplay = ({ characterInfo }) => (
+  <Grid container spacing={2} mt={2}>
+    {characterInfo.weapons.map((weapon, index) => {
+      const totalModifier =
+        characterInfo.stats[weapon.statMod].mod +
+        (weapon.proficient ? characterInfo.proficiencyMod : 0);
+      const modifierColor = totalModifier >= 0 ? "green" : "red";
+      const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
+
+      return (
+        <Tooltip
+          key={index}
+          title={
+            <>
+              <Typography variant="body2">
+                Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
+              </Typography>
+              <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
+              <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+            </>
+          }
+          arrow
+        >
+          <Typography
+            variant="body1"
+            sx={{ cursor: "pointer", margin: "8px 0", textAlign: "center" }}
+          >
+            {weapon.name}: atk{" "}
+            <span style={{ color: modifierColor }}>{modifierText}</span>
+          </Typography>
+        </Tooltip>
+      );
+    })}
+  </Grid>
+);
+
 const WeaponManager = () => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
@@ -13,8 +49,7 @@ const WeaponManager = () => {
     proficient: false
   });
 
-  // const totalModifier = characterInfo.stats[weapon.statMod].mod + 
-  //                     (weapon.proficient ? characterInfo.proficiencyMod : 0);
+
 
   const handleAddWeapon = () => {
     if (!newWeapon.name || !newWeapon.dmgType) return; // Ensure required fields are filled
@@ -121,4 +156,4 @@ const WeaponManager = () => {
   );
 };
 
-export default WeaponManager;
+export {WeaponManager};
