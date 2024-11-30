@@ -11,15 +11,14 @@ function App() {
   const [characterInfo, setCharacterInfo] = useState({
     characterName: "Garetjax",
     race: "Dwarf",
-    // default characterClass should be "noClass" rather than empty string
     subrace: "Hill",
+    // default characterClass should be "noClass" rather than empty string
     characterClass: "barbarian",
     subclass: "beast",
     characterLevel: 1,
     proficiencyMod: 2,
     hp: 100,
     ac: 17,
-    // weaponAttackMod: 4,
       weapons: [
         {
           name: "Longsword",      
@@ -31,7 +30,6 @@ function App() {
       ],
     spellcastingMod: 2,
     wizardSpellCountMod: 2,
-    // have to account for 0 mods
     stats: {
       'str': {value:8, mod:-1},
       'dex': {value:10, mod:0},

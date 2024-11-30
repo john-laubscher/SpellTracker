@@ -13,6 +13,9 @@ const WeaponManager = () => {
     proficient: false
   });
 
+  // const totalModifier = characterInfo.stats[weapon.statMod].mod + 
+  //                     (weapon.proficient ? characterInfo.proficiencyMod : 0);
+
   const handleAddWeapon = () => {
     if (!newWeapon.name || !newWeapon.dmgType) return; // Ensure required fields are filled
     setCharacterInfo((prev) => ({
@@ -79,37 +82,40 @@ const WeaponManager = () => {
           </IconButton>
         </Grid>
       </Grid>
-
-      {/* Display Weapons */}
       <Grid container spacing={2} mt={2}>
-        {characterInfo.weapons.map((weapon, index) => (
-          <Grid item key={index} xs={12} sm={6} md={4}>
-            <Tooltip
-              title={
-                <>
-                  <Typography variant="body2">
-                    Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod: 0}
-                  </Typography>
-                  <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
-                  <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
-                </>
-              }
-              arrow
-            >
-              <Card sx={{ cursor: "pointer", padding: "8px" }}>
-                <CardContent>
-                  <Typography variant="h6">{weapon.name}</Typography>
-                    {/* Allow modification of weapons */}
-                  <Typography variant="body2">
-                    Modifier: + 
-                    {characterInfo.stats[weapon.statMod].mod +
-                      (weapon.proficient ? characterInfo.proficiencyMod : 0)}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Tooltip>
-          </Grid>
-        ))}
+        {characterInfo.weapons.map((weapon, index) => {
+          const totalModifier =
+            characterInfo.stats[weapon.statMod].mod +
+            (weapon.proficient ? characterInfo.proficiencyMod : 0);
+          const modifierColor = totalModifier >= 0 ? "green" : "red";
+          const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
+          return (
+            <Grid item key={index} xs={12} sm={6} md={4}>
+              <Tooltip
+                title={
+                  <>
+                    <Typography variant="body2">
+                      Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
+                    </Typography>
+                    <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
+                    <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+                  </>
+                }
+                arrow
+              >
+                <Card sx={{ cursor: "pointer", padding: "8px", textAlign: "center" }}>
+                  <CardContent>
+                    <Typography variant="h6">{weapon.name}</Typography>
+                    <Typography variant="body2">
+                      Modifier:{" "}
+                      <span style={{ color: modifierColor }}>{modifierText}</span>
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Tooltip>
+            </Grid>
+          );
+        })}
       </Grid>
     </div>
   );
