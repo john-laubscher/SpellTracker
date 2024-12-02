@@ -13,6 +13,8 @@ import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellBut
 import SpellAccordian from './SpellAccordian';
 import {PrepareSubraceSpells, renderDailySpellsList} from './RacialSpellsList'
 
+//**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
+
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
