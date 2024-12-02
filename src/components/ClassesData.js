@@ -7,6 +7,7 @@ export const ClassesData = {
 
   // When building out rendering/component for this, ADV Feature: allow users to send features to expanded section or main/header section to be more immediately visible, and give user control over what they are seeing/what they think is most important. (probably need to give each feature an additional feature/key value pair like header: true/false)
   // To build out new header: true/false section, copy and paste into ai, and have it explicitly return the structure with all the previous data, and all the new data too (default: if tracked is 1, put it in header, 0 is in expandable. User can change it later)
+  // Desc might be incomplete
   barbarian: {
     hitDice: "D12",
     isSpellCaster: "nonCaster",
@@ -511,6 +512,7 @@ export const ClassesData = {
     oathbreaker: "",
   },
 },
+// Desc might be too short or not complete
   ranger: {
     hitDice: "D10",
     isSpellCaster: "refer to spellTables",
@@ -629,7 +631,7 @@ export const ClassesData = {
         name: "Stroke of Luck",
         desc: "If your attack misses a target, you can turn it into a hit.",
         level: 20,
-        tracked: 0, // Comment: 1/SR
+        tracked: 1, // Comment: 1/SR
       },
     ],
     subclasses: {
@@ -661,7 +663,7 @@ export const ClassesData = {
         name: "Metamagic",
         desc: "You gain the ability to twist spells to suit your needs.",
         level: 3,
-        tracked: 0,
+        tracked: 0, // Maybe part of Char Creation user an choose metamagic if higher than lvl 3 (gain 1 more at 10 and 17 too)
       },
       {
         id: "sorcerous_restoration",
@@ -686,7 +688,36 @@ export const ClassesData = {
     hitDice: "D8",
     isSpellCaster: "refer to spellTables",
     spellcastingAbility: "cha",
-    classFeatures: [],
+    classFeatures: [
+      {
+        id: "eldritch_invocations",
+        name: "Eldritch Invocations",
+        desc: "At 2nd level, you gain two Eldritch Invocations of your choice. When you gain certain warlock levels, you gain additional invocations of your choice.",
+        level: 2,
+        tracked: 0, //Should be part of Char Creation after lvl 2, and levelups. Refer to chart for number of invocations
+      },
+      {
+        id: "pact_boon",
+        name: "Pact Boon",
+        desc: "At 3rd level, you gain a pact boon feature of your choice.",
+        level: 3,
+        tracked: 0,
+      },
+      {
+        id: "mystic_arcanum",
+        name: "Mystic Arcanum",
+        desc: "At 11th level, your patron bestows upon you a magical secret called an arcanum. Choose one 6th-level spell from the warlock spell list as this arcanum. You can cast it once without expending a spell slot.",
+        level: 11,
+        tracked: 0, // **NEEDS Spelllist to account for this--might already be in spellTable page?**
+      },
+      {
+        id: "eldritch_master",
+        name: "Eldritch Master",
+        desc: "At 20th level, you can draw on your inner reserve of mystical power while entreating your patron for aid. Once per long rest, you can regain all your expended spell slots as an action.",
+        level: 20,
+        tracked: 1, //1/LR
+      },
+    ],
     subclasses: {
       archfey: "",
       celestial: "",
@@ -699,6 +730,7 @@ export const ClassesData = {
       undying: "",
     },
   },
+
   wizard: {
     hitDice: "D6",
     isSpellCaster: "fullCaster",
@@ -716,7 +748,7 @@ export const ClassesData = {
         name: "Signature Spells",
         desc: "You gain two 3rd-level spells that you can cast without expending a spell slot.",
         level: 20,
-        tracked: 0,
+        tracked: 2, //Each spell can only be used 1/SR
       },
     ],
     subclasses: {
