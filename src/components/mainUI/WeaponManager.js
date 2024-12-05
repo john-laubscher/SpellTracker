@@ -156,4 +156,4 @@ const WeaponManager = () => {
   );
 };
 
-export {WeaponManager};
+export { WeaponManager };

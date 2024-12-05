@@ -4,7 +4,7 @@ import React from "react";
 import { BackgroundWrapper, MainUIBGPic } from "../ThemeConfig";
 
 
-import Header from "./header";
+import { Header } from "./header";
 
 export const MainUI = () => {
 

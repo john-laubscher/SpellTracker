@@ -10,7 +10,7 @@ import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import {WeaponsDisplay} from "./WeaponManager";
 
-export const proficiencyBonus = {
+const proficiencyBonus = {
   1: 2,
   2: 2,
   3: 2,
@@ -33,7 +33,7 @@ export const proficiencyBonus = {
   20: 6,
 };
 
-export const Header = () => {
+const Header = () => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const navigate = useNavigate();
 
@@ -252,4 +252,4 @@ const determineNoncasters = () => {
   );
 };
 
-export default Header;
+export { Header, proficiencyBonus } ;

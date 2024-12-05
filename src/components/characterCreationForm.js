@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
 import { Races, Subraces } from "./RacesData"
-import {WeaponManager} from "./mainUI/WeaponManager"
-import { proficiencyBonus } from "../components/mainUI/header";
+import { WeaponManager } from "./MainUI/WeaponManager"
+import { proficiencyBonus } from "../components/MainUI/header";
 
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";

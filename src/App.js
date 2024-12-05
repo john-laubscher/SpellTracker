@@ -1,7 +1,7 @@
 import "./App.css";
 import CharacterCreationForm from "./components/characterCreationForm";
 import { Routes, Route } from "react-router-dom";
-import MainUI from "./components/mainUI/index";
+import MainUI from "./components/MainUI/Index";
 import React, { useState } from "react";
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
 import ThemeConfig, { BackgroundWrapper, CharCreationBGPic } from "./components/ThemeConfig";
