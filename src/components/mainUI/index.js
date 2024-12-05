@@ -1,10 +1,10 @@
-import SpellList from "./spellList";
 import React from "react";
-
 import { BackgroundWrapper, MainUIBGPic } from "../ThemeConfig";
 
-
+import SpellList from "./spellList";
 import { Header } from "./header";
+import FeaturesAndTrackables from "./FeaturesAndTrackables";
+
 
 export const MainUI = () => {
 
@@ -13,6 +13,7 @@ export const MainUI = () => {
       <p>Main UI</p>
       <BackgroundWrapper bgImage={MainUIBGPic}>
         <Header />
+        <FeaturesAndTrackables/>
         <SpellList />
       </BackgroundWrapper>
       {/* ***NEED FEATURE*** need section for racial and subclass spells */}
