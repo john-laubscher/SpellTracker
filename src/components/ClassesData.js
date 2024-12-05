@@ -8,6 +8,7 @@ export const ClassesData = {
   // When building out rendering/component for this, ADV Feature: allow users to send features to expanded section or main/header section to be more immediately visible, and give user control over what they are seeing/what they think is most important. (probably need to give each feature an additional feature/key value pair like header: true/false)
   // To build out new header: true/false section, copy and paste into ai, and have it explicitly return the structure with all the previous data, and all the new data too (default: if tracked is 1, put it in header, 0 is in expandable. User can change it later)
   // Desc might be incomplete
+  // Check comments of the tracked to see for exceptions that need to be made for individual features or classes
   barbarian: {
     hitDice: "D12",
     isSpellCaster: "nonCaster",
