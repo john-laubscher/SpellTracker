@@ -60,14 +60,18 @@ const FeatureDisplay = ({ title, features }) => {
 
 const FeaturesAndTrackables = () => {
   const { characterInfo } = useContext(CharacterInfoContext);
-  const { characterClass, characterLevel } = characterInfo;
+  const { characterClass, characterLevel, subclass } = characterInfo;
 
   // Retrieve class data
   const classData = classesData[characterClass] || {};
   const classFeatures = classData.classFeatures?.filter((f) => f.level <= characterLevel) || [];
 
   // Placeholder data for subclass and racial/misc features
-  const subclassFeatures = []; // Replace with subclass logic when implemented
+  const subclassData = classesData[characterClass].subclasses[subclass]
+  console.log('subclassData', subclassData)
+  const subclassFeatures = subclassData.filter((feature) => feature.level <= characterLevel);
+
+
   const racialAndMiscFeatures = []; // Replace with racial/misc feature logic
 
   return (

@@ -109,13 +109,231 @@ export const ClassesData = {
           tracked: false,
         },
       ],
-      battleRager: [],
-      beast: [],
-      berserker: [],
-      stormHerald: [],
-      totemWarrior: [],
-      wildMagic: [],
-      zealot: [],
+      // RAW, only dwarves can be battlerager
+      battleRager: [
+        {
+          id: "battle_rager_armor",
+          name: "Battle Rager Armor",
+          desc: "You gain the ability to use spiked armor as a weapon. While wearing spiked armor, you can use a bonus action to make a melee weapon attack with your armor spikes. On a hit, the target takes 1d4 piercing damage. You also deal 3 piercing damage to a creature that grapples you or is grappled by you.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "reckless_abandon",
+          name: "Reckless Abandon",
+          desc: "When you use Reckless Attack while raging, you gain temporary hit points equal to your Constitution modifier. They vanish if your rage ends.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "battle_rager_charge",
+          name: "Battle Rager Charge",
+          desc: "You can take the Dash action as a bonus action while raging.",
+          level: 10,
+          tracked: false,
+        },
+        {
+          id: "spiked_retribution",
+          name: "Spiked Retribution",
+          desc: "When a creature within 5 feet of you hits you with a melee attack, it takes 3 piercing damage if you are raging, wearing spiked armor, and not incapacitated.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      beast: [
+        {
+          id: "form_of_the_beast",
+          name: "Form of the Beast",
+          desc: "When you enter your rage, you can transform, manifesting a natural weapon. Choose one: Bite (1d8 piercing and regain hit points equal to your proficiency bonus once per turn), Claws (1d6 slashing; if you attack with claws, you can make one additional claw attack as part of the same Attack action), or Tail (1d8 piercing and you can use your reaction to impose disadvantage on an attack roll against you).",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "bestial_soul",
+          name: "Bestial Soul",
+          desc: "Your natural weapons count as magical for overcoming resistance and immunity to nonmagical attacks. You can also adapt to your environment: climb speed equal to your walking speed, breathe underwater and gain a swim speed, or jump distance increases by a number of feet equal to your Strength modifier.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "infectious_fury",
+          name: "Infectious Fury",
+          desc: "When you hit a creature with your natural weapons while raging, it must succeed on a Wisdom saving throw or suffer one of the following effects (your choice): 2d12 psychic damage, or must use its reaction to attack another creature you designate. This ability can be used a number of times equal to your proficiency bonus per long rest.",
+          level: 10,
+          tracked: true, //prof bonus, regain on LR
+        },
+        {
+          id: "call_the_hunt",
+          name: "Call the Hunt",
+          desc: "When you enter your rage, you can choose up to 10 creatures within 30 feet. Each creature gains a bonus to attack rolls and saving throws equal to your proficiency bonus for 1 minute. You gain temporary hit points equal to 5 times the number of creatures you chose. Once used, you can't use this feature again until you finish a long rest.",
+          level: 14,
+          tracked: true, //equal to prof bonus regain on LR
+        },
+      ],
+      berserker: [
+        {
+          id: "frenzy",
+          name: "Frenzy",
+          desc: "When you rage, you can enter a frenzy. If you do, you can make a single melee weapon attack as a bonus action on each of your turns after this one. When your rage ends, you suffer one level of exhaustion.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "mindless_rage",
+          name: "Mindless Rage",
+          desc: "You can't be charmed or frightened while raging. If you are charmed or frightened when you enter your rage, the effect is suspended for the duration of the rage.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "intimidating_presence",
+          name: "Intimidating Presence",
+          desc: "You can use your action to frighten a creature within 30 feet that you can see. The target must succeed on a Wisdom saving throw (DC 8 + your proficiency bonus + your Charisma modifier) or be frightened of you for 1 minute. The creature can repeat the save at the end of each of its turns. Once you use this feature, you can't use it again until you finish a long rest.",
+          level: 10,
+          tracked: true, // once every 24 hrs
+        },
+        {
+          id: "retaliation",
+          name: "Retaliation",
+          desc: "When you take damage from a creature within 5 feet of you, you can use your reaction to make a melee weapon attack against that creature.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      stormHerald: [
+        {
+          id: "storm_aura",
+          name: "Storm Aura",
+          desc: "When you rage, you emanate a stormy, magical aura. Choose one of three effects: Desert (burning heat), Sea (lightning strikes), or Tundra (chilling cold). The aura extends 10 feet from you and activates each turn while raging, applying its effect based on the environment chosen. You can change the environment when you level up in this class.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "storm_soul",
+          name: "Storm Soul",
+          desc: "Your connection to your chosen storm grants benefits: resistance to fire (Desert), lightning (Sea), or cold (Tundra) damage, plus additional effects. Desert: You don't suffer extreme heat; Sea: You can breathe underwater and swim at your walking speed; Tundra: You don't suffer extreme cold.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "shielding_storm",
+          name: "Shielding Storm",
+          desc: "Each creature of your choice gains the damage resistance from your Storm Soul aura while in your aura's effect.",
+          level: 10,
+          tracked: false,
+        },
+        {
+          id: "raging_storm",
+          name: "Raging Storm",
+          desc: "Your storm intensifies and gains a powerful reaction effect: Desert: A creature takes fire damage when it hits you; Sea: You force a creature to make a Strength save or be knocked prone; Tundra: Its speed is reduced by 0 until the start of your next turn.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      totemWarrior: [
+        {
+          id: "spirit_seeker",
+          name: "Spirit Seeker",
+          desc: "You gain the ability to cast Beast Sense and Speak with Animals as rituals, reflecting your attunement to nature's spirits.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "totem_spirit",
+          name: "Totem Spirit",
+          desc: "Choose a totem animal. Options include Bear (resistance to all damage except psychic while raging), Eagle (disadvantage on opportunity attacks against you, and Dash as a bonus action), and Wolf (allies gain advantage on melee attack rolls against creatures within 5 feet of you).",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "aspect_of_the_beast",
+          name: "Aspect of the Beast",
+          desc: "Choose a totem animal. Options include Bear (carry capacity doubles and advantage on Strength checks for pushing, pulling, lifting), Eagle (see up to 1 mile away clearly and no disadvantage on long-range perception), or Wolf (track creatures at fast pace and move stealthily while traveling).",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "spirit_walker",
+          name: "Spirit Walker",
+          desc: "You can cast Commune with Nature as a ritual. When you do so, a spirit of your totem animal appears to you to convey the information you seek.",
+          level: 10,
+          tracked: false,
+        },
+        {
+          id: "totemic_attunement",
+          name: "Totemic Attunement",
+          desc: "Choose a totem animal. Options include Bear (creatures within 5 feet have disadvantage on attack rolls against others), Eagle (fly at half speed while raging if not wearing heavy armor), and Wolf (knock a creature prone as a bonus action if you hit it).",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      wildMagic: [
+        {
+          id: "magic_surges",
+          name: "Magic Surges",
+          desc: "Starting when you choose this path at 3rd level, your innate magic erupts in unpredictable ways. Whenever you rage, roll on the Wild Magic table to determine the magical effect produced.",
+          level: 3,
+          tracked: true, //prof bonus, regain on LR
+        },
+        {
+          id: "bolstering_magic",
+          name: "Bolstering Magic",
+          desc: "At 6th level, you can harness your wild magic to bolster yourself or a companion. As an action, you touch a creature and roll a d3. The creature gains one of the following effects: (1) Add the rolled number to any attack roll or ability check made in the next minute, or (2) Regain a spell slot equal to the rolled number. You can use this action a number of times equal to your proficiency bonus, and you regain all uses after a long rest.",
+          level: 6,
+          tracked: true, //prof bonus, regain on LR
+        },
+        {
+          id: "unstable_backlash",
+          name: "Unstable Backlash",
+          desc: "At 10th level, when you take damage while raging, you can use your reaction to roll on the Wild Magic table and immediately produce the effect. This replaces the current Wild Magic effect if one is active.",
+          level: 10,
+          tracked: false,
+        },
+        {
+          id: "controlled_surge",
+          name: "Controlled Surge",
+          desc: "At 14th level, whenever you roll on the Wild Magic table, you can roll twice and choose which result to use.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      zealot: [
+        {
+          id: "divine_fury",
+          name: "Divine Fury",
+          desc: "Starting when you choose this path at 3rd level, you can channel divine fury into your weapon strikes. While you're raging, the first creature you hit on each of your turns takes extra damage equal to 1d6 + half your barbarian level. The extra damage is necrotic or radiant (your choice when you gain this feature).",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "warrior_of_the_gods",
+          name: "Warrior of the Gods",
+          desc: "At 3rd level, your soul is marked for endless battle. If a spell such as raise dead has the sole effect of restoring you to life (but not undeath), the caster doesn't need material components to cast the spell on you.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "fanatical_focus",
+          name: "Fanatical Focus",
+          desc: "Starting at 6th level, you can reroll a saving throw that you fail while raging. You must use the new roll. You can use this ability once per rage.",
+          level: 6,
+          tracked: true, // 1/Rage
+        },
+        {
+          id: "zealous_presence",
+          name: "Zealous Presence",
+          desc: "At 10th level, you can channel divine power to inspire zealotry in your allies. As a bonus action, you unleash a battle cry infused with divine energy. Up to ten creatures of your choice within 60 feet that can hear you gain advantage on attack rolls and saving throws until the start of your next turn. Once you use this feature, you can't use it again until you finish a long rest.",
+          level: 10,
+          tracked: true, // 1/ LR
+        },
+        {
+          id: "rage_beyond_death",
+          name: "Rage Beyond Death",
+          desc: "Beginning at 14th level, the divine power that fuels your rage allows you to shrug off fatal blows. While you're raging, having 0 hit points doesn't knock you unconscious. You still must make death saving throws, and you suffer the normal effects of taking damage while at 0 hit points. However, if you would die due to failing death saving throws, you don't die until your rage ends.",
+          level: 14,
+          tracked: false,
+        },
+      ],
     },
   },
     // Add other classes here...  
@@ -136,28 +354,28 @@ export const ClassesData = {
         name: "Song of Rest",
         desc: "You can use soothing music or oration to help revitalize your allies during a short rest. If you or any friendly creatures who can hear your performance regain hit points at the end of the short rest, each of those creatures regains an extra 1d6 hit points.",
         level: 2,
-        tracked: 0,
+        tracked: false,
       },
       {
         id: "font_of_inspiration",
         name: "Font of Inspiration",
         desc: "Beginning at 5th level, you regain all your expended uses of Bardic Inspiration when you finish a short or long rest.",
         level: 5,
-        tracked: 0,
+        tracked: false,
       },
       {
         id: "countercharm",
         name: "Countercharm",
         desc: "At 6th level, you gain the ability to use music or oration to disrupt mind-influencing effects. As an action, you can start a performance that lasts until the end of your next turn. During that time, you and any friendly creatures within 30 feet who can hear you gain advantage on saving throws against being frightened or charmed.",
         level: 6,
-        tracked: 0,
+        tracked: false,
       },
       {
         id: "magical_secrets",
         name: "Magical Secrets",
         desc: "At 10th level, you have plundered magical knowledge from a wide spectrum of disciplines. Choose two spells from any class, including this one. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip.",
         level: 10,
-        tracked: 0,
+        tracked: false,
         // **FEATURE NEEDED: spell list needs to account for this feature to add more spells**
       },
       {
@@ -165,17 +383,221 @@ export const ClassesData = {
         name: "Superior Inspiration",
         desc: "At 20th level, when you roll initiative and have no uses of Bardic Inspiration left, you regain one use.",
         level: 20,
-        tracked: 0,
+        tracked: false,
       },
     ],
     subclasses: {
-      creation: "",
-      eloquence: "",
-      glamour: "",
-      lore: "",
-      spirits: "",
-      swords: "",
-      valor: "",
+      creation: [
+        {
+          id: "mote_of_potential",
+          name: "Mote of Potential",
+          desc: "Whenever you give a creature a Bardic Inspiration die, you can create a Tiny mote of potential that orbits the creature. The mote provides an additional effect based on how the Bardic Inspiration die is used: an ability check (adds a bonus equal to the die roll), an attack roll (deals additional damage to the target equal to the die roll), or a saving throw (grants temporary hit points equal to the die roll + your Charisma modifier).",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "performance_of_creation",
+          name: "Performance of Creation",
+          desc: "As an action, you can create a nonmagical item of your choice in an unoccupied space within 10 feet of you. The item must be on a surface or in a liquid that can support it. The gold piece value of the item can’t exceed 20 × your Bard level. The item lasts for a number of hours equal to your proficiency bonus or until you use this feature again.",
+          level: 3,
+          tracked: true, //1/LR, then you can use a 2nd lvl spell to use again
+        },
+        {
+          id: "animating_performance",
+          name: "Animating Performance",
+          desc: "As an action, you can animate one Large or smaller nonmagical item within 30 feet of you. The animated item is friendly to you and your companions and obeys your commands. It uses the Dancing Item stat block and remains animated for 1 hour or until it is reduced to 0 hit points.",
+          level: 6,
+          tracked: true, // 1/LR then u can use a 3rd level spell to use again
+        },
+        {
+          id: "creative_crescendo",
+          name: "Creative Crescendo",
+          desc: "When you use your Performance of Creation, you can create more than one item at once. The number of items equals your Charisma modifier (minimum of one). If you create an item that exceeds the combined gold piece value limit of your Bard level × 20, it lasts for 10 minutes instead of your proficiency bonus in hours.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      
+      eloquence: [
+        {
+          id: "silver_tongue",
+          name: "Silver Tongue",
+          desc: "You become a master at saying the right thing at the right time. When you make a Charisma (Persuasion) or Charisma (Deception) check, you can treat a d20 roll of 9 or lower as a 10.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "unsettling_words",
+          name: "Unsettling Words",
+          desc: "As a bonus action, you can expend a use of Bardic Inspiration and choose a creature within 60 feet. The creature subtracts the Bardic Inspiration die from the next saving throw it makes before the start of your next turn.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "unfailing_inspiration",
+          name: "Unfailing Inspiration",
+          desc: "Your inspiring words are so persuasive that they always work. If a creature adds one of your Bardic Inspiration dice to its ability check, attack roll, or saving throw and the roll fails, the creature retains the Bardic Inspiration die.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "universal_speech",
+          name: "Universal Speech",
+          desc: "You gain the ability to make your speech intelligible to all. As an action, choose up to a number of creatures equal to your Charisma modifier within 60 feet. For 1 hour, they can magically understand you, regardless of the language you speak.",
+          level: 6,
+          tracked: true, // 1/LR
+        },
+        {
+          id: "infectious_inspiration",
+          name: "Infectious Inspiration",
+          desc: "When you successfully inspire someone, the power of your eloquence can now spread to others. When a creature within 60 feet adds your Bardic Inspiration die to its roll and succeeds, you can use your reaction to give Bardic Inspiration to another creature without expending a use of the feature.",
+          level: 14,
+          tracked: true, // cha mod (min 1) regain on LR
+        },
+      ],
+      glamour: [
+        {
+          id: "mantle_of_inspiration",
+          name: "Mantle of Inspiration",
+          desc: "At 3rd level, as a bonus action, you can expend one use of your Bardic Inspiration to grant yourself a wondrous appearance. When you do so, choose a number of creatures you can see and that can see you within 60 feet of you, up to a number equal to your Charisma modifier (minimum of one). Each creature gains 5 temporary hit points. When a creature gains these hit points, it can immediately use its reaction to move up to its speed without provoking opportunity attacks. The temporary hit points increase to 8 at 5th level, 11 at 10th level, and 14 at 15th level.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "enthralling_performance",
+          name: "Enthralling Performance",
+          desc: "Starting at 3rd level, you can use your action to perform for at least 1 minute. At the end of the performance, choose a number of humanoids within 60 feet of you who watched and listened to all of it, up to a number equal to your Charisma modifier (minimum of one). Each target must succeed on a Wisdom saving throw against your spell save DC or be charmed by you for 1 hour. While charmed, the target idolizes you, speaks glowingly of you to anyone who talks to it, and hinders anyone who opposes you. The effect ends early if it takes damage, you attack it, or it witnesses you attacking or damaging its allies.",
+          level: 3,
+          tracked: true,  // 1/SR
+        },
+        {
+          id: "mantle_of_majesty",
+          name: "Mantle of Majesty",
+          desc: "At 6th level, you gain the ability to cloak yourself in fey magic that makes others want to serve you. As a bonus action, you cast *command*, without expending a spell slot, and you take on an appearance of unearthly beauty for 1 minute or until your concentration ends (as if concentrating on a spell). During this time, you can use the *command* spell as a bonus action on each of your turns, without expending a spell slot.",
+          level: 6,
+          tracked: true, // 1/LR
+        },
+        {
+          id: "unbreakable_majesty",
+          name: "Unbreakable Majesty",
+          desc: "At 14th level, your appearance permanently gains an otherworldly aspect that makes you look more lovely and fierce. In addition, as a bonus action, you can assume a majestic presence for 1 minute or until you are incapacitated. For the duration, whenever any creature tries to attack you or force you to make a saving throw, it must first make a Charisma saving throw against your spell save DC. On a failed save, it must choose a different target or the attack or spell automatically misses. On a successful save, it is immune to this effect for 24 hours.",
+          level: 14,
+          tracked: true, // 1/SR
+        },
+      ],
+      lore: [
+        {
+          id: "cutting_words",
+          name: "Cutting Words",
+          desc: "Also at 3rd level, you learn how to use your wit to distract, confuse, and otherwise sap the confidence and competence of others. When a creature you can see within 60 feet of you makes an attack roll, ability check, or damage roll, you can use your reaction to expend one of your uses of Bardic Inspiration, rolling a Bardic Inspiration die and subtracting the number rolled from the creature's roll. You can choose to use this feature after the creature makes its roll, but before the DM determines whether the attack roll or ability check succeeds or fails, or before the creature deals its damage.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "additional_magical_secrets",
+          name: "Additional Magical Secrets",
+          desc: "At 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but don’t count against the number of bard spells you know.",
+          level: 6,
+          tracked: false, //Add 2 spells, don't count agains the spells you know as a bard
+        },
+        {
+          id: "peerless_skill",
+          name: "Peerless Skill",
+          desc: "Starting at 14th level, when you make an ability check, you can expend one use of Bardic Inspiration. Roll a Bardic Inspiration die and add the number rolled to your ability check. You can choose to do so after you roll the die for the ability check but before the DM determines whether you succeed or fail.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      spirits: [
+        {
+          id: "guiding_whispers",
+          name: "Guiding Whispers",
+          desc: "At 3rd level, you gain the ability to reach out to spirits and guide others. You learn the Guidance cantrip, which doesn’t count against the number of bard cantrips you know. Its range becomes 60 feet when you cast it.",
+          level: 3,
+          tracked: false, //Adds guidance to cantrip--60 ft
+        },
+        {
+          id: "spiritual_focus",
+          name: "Spiritual Focus",
+          desc: "Also at 3rd level, you can use an object such as a candle, crystal ball, skull, or similar token as a spellcasting focus. When you cast a bard spell that deals damage or restores hit points through the focus, roll a d6, and you gain a bonus to one damage or healing roll of the spell equal to the number rolled.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "tales_from_beyond",
+          name: "Tales from Beyond",
+          desc: "At 3rd level, you learn to weave spirits’ tales into your magic. As a bonus action, you can expend one use of Bardic Inspiration to roll on the Tales from Beyond table, using your Bardic Inspiration die to determine the result. You retain the tale in mind until you bestow its effects or finish a short or long rest. You can use this feature a number of times equal to your proficiency bonus per long rest.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "spirit_session",
+          name: "Spirit Session",
+          desc: "At 6th level, you can conduct an hour-long ritual channeling spirits to gain supernatural knowledge. With at least one other creature, you perform the ritual using your Spiritual Focus. At the end of the ritual, you temporarily learn one spell of your choice from any class. The spell you choose must be of a level equal to the number of creatures that conducted the ritual (up to a maximum level equal to your proficiency bonus). The spell counts as a bard spell for you but doesn't count against the number of bard spells you know. Once you perform the ritual, you can't do so again until you finish a long rest.",
+          level: 6,
+          tracked: true,
+        },
+        {
+          id: "mystical_connection",
+          name: "Mystical Connection",
+          desc: "At 14th level, your connection to spirits deepens. Whenever you use Tales from Beyond, you can roll twice on the table and choose which of the two effects to use. If you roll the same number on both dice, you can choose both effects. If both effects target creatures, you can choose the same creature or different ones.",
+          level: 14,
+          tracked: false,
+        },
+      ],      
+      swords: [
+        {
+          id: "fighting_style",
+          name: "Fighting Style",
+          desc: "At 3rd level, you adopt a fighting style as your specialty. Choose one of the following options: Dueling or Two-Weapon Fighting. You can't take the same Fighting Style option more than once, even if you later get to choose again.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "blade_flourish",
+          name: "Blade Flourish",
+          desc: "At 3rd level, you learn to perform impressive flourishes with your weapons. Whenever you take the Attack action on your turn, your walking speed increases by 10 feet until the end of the turn. If a weapon attack you make as part of this action hits a creature, you can use one of the following Blade Flourish options: Defensive Flourish, Slashing Flourish, or Mobile Flourish.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "extra_attack",
+          name: "Extra Attack",
+          desc: "Starting at 6th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "masters_flourish",
+          name: "Master's Flourish",
+          desc: "At 14th level, whenever you use a Blade Flourish option, you can roll a d6 and use it instead of expending a Bardic Inspiration die.",
+          level: 14,
+          tracked: false,
+        },
+      ],
+      valor: [
+        {
+          id: "combat_inspiration",
+          name: "Combat Inspiration",
+          desc: "At 3rd level, you gain the ability to inspire others in battle. A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses.",
+          level: 3,
+          tracked: false,
+        },
+        {
+          id: "extra_attack",
+          name: "Extra Attack",
+          desc: "Starting at 6th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.",
+          level: 6,
+          tracked: false,
+        },
+        {
+          id: "battle_magic",
+          name: "Battle Magic",
+          desc: "At 14th level, you have mastered the art of weaving spellcasting and weapon use into a single harmonious act. When you use your action to cast a bard spell, you can make one weapon attack as a bonus action.",
+          level: 14,
+          tracked: false,
+        },
+      ],      
       whispers: "",
     },
   },
