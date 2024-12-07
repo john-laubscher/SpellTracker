@@ -13,9 +13,9 @@ function App() {
     race: "Dwarf",
     subrace: "Hill",
     // default characterClass should be "noClass" rather than empty string
-    characterClass: "barbarian",
-    subclass: "beast",
-    characterLevel: 1,
+    characterClass: "cleric",
+    subclass: "grave",
+    characterLevel: 10,
     proficiencyMod: 2,
     hp: 100,
     ac: 17,
