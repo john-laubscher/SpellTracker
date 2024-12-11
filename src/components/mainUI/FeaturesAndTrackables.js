@@ -67,7 +67,7 @@ const FeaturesAndTrackables = () => {
   const classFeatures = classData.classFeatures?.filter((f) => f.level <= characterLevel) || [];
 
   // Placeholder data for subclass and racial/misc features
-  const subclassData = classesData[characterClass].subclasses[subclass].subclassFeatures
+  const subclassData = classesData[characterClass].subclasses[subclass].features
   console.log('subclassData', subclassData)
   const subclassFeatures = subclassData.filter((feature) => feature.level <= characterLevel);
 
