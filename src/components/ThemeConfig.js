@@ -39,21 +39,20 @@ const theme = createTheme({
         root: {
           "& .MuiInputBase-root": {
             backgroundColor: "#f5deb3",
-            borderRadius: "8px",
+            borderRadius: "6px",
             border: "1px solid #8B4513",
-            padding: "10px",
-            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)",
+            boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.15)",
           },
           "& .MuiInputBase-input": {
             fontFamily: "'Cinzel', serif",
-            fontSize: "18px",
+            fontSize: "15px",
             fontWeight: 600,
             color: "#3e2723",
-            letterSpacing: "0.75px",
+            letterSpacing: "0.5px",
           },
           "& .Mui-focused": {
             borderColor: "#d4af37",
-            boxShadow: "0 0 8px #d4af37",
+            boxShadow: "0 0 6px #d4af37",
           },
           "&.EditableHP": {
             width: "80px",
@@ -67,6 +66,30 @@ const theme = createTheme({
               fontSize: "20px",
             },
           },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#f5deb3",
+          borderRadius: "6px",
+          border: "1px solid #8B4513",
+          boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.15)",
+          fontFamily: "'Cinzel', serif",
+          fontSize: "15px",
+          fontWeight: 600,
+          color: "#3e2723",
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontFamily: "'Cinzel', serif",
+          fontWeight: 600,
+          color: "#5d4037",
+          fontSize: "14px",
         },
       },
     },
@@ -122,12 +145,13 @@ export const BackgroundWrapper = ({ children, bgImage }) => {
       >
         <Box
           sx={{
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white (adjust opacity)
-            borderRadius: '8px',
-            padding: '20px',
-            maxWidth: '800px', // Adjust the width as needed
-            minWidth: '425px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+            backgroundColor: 'rgba(255, 255, 255, 0.82)',
+            borderRadius: '10px',
+            padding: '28px 32px',
+            maxWidth: '560px',
+            width: '100%',
+            minWidth: '360px',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.25)',
           }}
         >
           {children}
