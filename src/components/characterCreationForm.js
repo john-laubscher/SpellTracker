@@ -114,10 +114,10 @@ export const CharacterCreationForm = (props) => {
   };
 
   return (
-    <Box component="form" noValidate autoComplete="off" sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+    <Box component="form" noValidate autoComplete="off" sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
 
       {/* Character Name */}
-      <Box sx={{ ...sectionStyle, maxWidth: "260px" }}>
+      <Box sx={{ ...sectionStyle, maxWidth: "180px", width: "100%" }}>
         <TextField
           id="character-name"
           label="Character Name"
@@ -130,11 +130,11 @@ export const CharacterCreationForm = (props) => {
         />
       </Box>
 
-      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2 }} />
+      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 
       {/* Race & Class Row */}
       <Typography sx={sectionLabelStyle}>Race & Class</Typography>
-      <Box sx={{ ...sectionStyle, maxWidth: "340px" }}>
+      <Box sx={{ ...sectionStyle, maxWidth: "340px", width: "100%" }}>
         <Grid container spacing={1.5}>
           <Grid item xs={6}>
             <FormControl fullWidth size="small">
@@ -185,11 +185,11 @@ export const CharacterCreationForm = (props) => {
 
       {renderWizardSpellCountMod()}
 
-      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2 }} />
+      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 
       {/* Level, HP, AC Row */}
       <Typography sx={sectionLabelStyle}>Combat Stats</Typography>
-      <Box sx={{ ...sectionStyle, maxWidth: "280px" }}>
+      <Box sx={{ ...sectionStyle, maxWidth: "280px", width: "100%" }}>
         <Grid container spacing={1.5}>
           <Grid item xs={4}>
             <FormControl fullWidth size="small">
@@ -228,11 +228,11 @@ export const CharacterCreationForm = (props) => {
         </Grid>
       </Box>
 
-      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2 }} />
+      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 
       {/* Ability Scores */}
       <Typography sx={sectionLabelStyle}>Ability Scores</Typography>
-      <Box sx={sectionStyle}>
+      <Box sx={{ ...sectionStyle, width: "100%" }}>
         <Grid container spacing={1.5} justifyContent="center">
           {Object.entries(characterInfo.stats).map(([statName, statValue]) => (
             <Grid item xs={4} sm={2} key={statName}>
@@ -259,11 +259,11 @@ export const CharacterCreationForm = (props) => {
         </Grid>
       </Box>
 
-      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2 }} />
+      <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 
       {/* Weapons */}
       <Typography sx={sectionLabelStyle}>Weapons</Typography>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, width: "100%" }}>
         <WeaponManager />
       </Box>
 
@@ -271,11 +271,11 @@ export const CharacterCreationForm = (props) => {
       <Button
         variant="contained"
         onClick={() => navigate("/mainUI")}
-        fullWidth
         sx={{
           mt: 1,
           mb: 1,
           py: 1.2,
+          px: 6,
           fontFamily: "'Cinzel', serif",
           fontWeight: 700,
           fontSize: "16px",
