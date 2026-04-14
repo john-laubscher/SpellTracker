@@ -22,6 +22,8 @@ export const CharacterCreationForm = (props) => {
 
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
   //I get errors if characterClass starts out as an empty string due to the object.keys functions I'm using. This solution works, but idk if it's ideal to have a starting class in state and connecting subclass in data set.
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
@@ -161,9 +163,9 @@ export const CharacterCreationForm = (props) => {
           <Grid item xs={6}>
             <FormControl fullWidth size="small">
               <InputLabel id="class-select-label">Class</InputLabel>
-              <Select labelId="class-select-label" id="class-select" value={characterInfo.characterClass} label="Class" name="characterClass" onChange={handleChange}>
+              <Select labelId="class-select-label" id="class-select" value={characterInfo.characterClass} label="Class" name="characterClass" onChange={handleChange} renderValue={capitalize}>
                 {characterClasses.map((charClass) => (
-                  <MenuItem key={charClass} value={charClass}>{charClass}</MenuItem>
+                  <MenuItem key={charClass} value={charClass}>{capitalize(charClass)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -172,9 +174,9 @@ export const CharacterCreationForm = (props) => {
             {characterInfo.characterClass !== "noClass" && (
               <FormControl fullWidth size="small">
                 <InputLabel id="subclass-select-label">Subclass</InputLabel>
-                <Select labelId="subclass-select-label" id="subclass-select" value={characterInfo.subclass} label="Subclass" name="subclass" onChange={handleChange}>
+                <Select labelId="subclass-select-label" id="subclass-select" value={characterInfo.subclass} label="Subclass" name="subclass" onChange={handleChange} renderValue={capitalize}>
                   {Object.keys(ClassesData[characterInfo.characterClass].subclasses).map((subclass) => (
-                    <MenuItem key={subclass} value={subclass}>{subclass}</MenuItem>
+                    <MenuItem key={subclass} value={subclass}>{capitalize(subclass)}</MenuItem>
                   ))}
                 </Select>
               </FormControl>

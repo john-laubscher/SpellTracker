@@ -3,6 +3,8 @@ import { Tooltip, Grid, Typography, Card, CardContent, FormControlLabel, Checkbo
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export const WeaponsDisplay = ({ characterInfo }) => (
   <Grid container spacing={2} mt={2}>
     {characterInfo.weapons.map((weapon, index) => {
@@ -20,8 +22,8 @@ export const WeaponsDisplay = ({ characterInfo }) => (
               <Typography variant="body2">
                 Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
               </Typography>
-              <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
-              <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+              <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
+              <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
             </>
           }
           arrow
@@ -91,10 +93,11 @@ const WeaponManager = () => {
               labelId="Stat-mod-label"
               value={newWeapon.statMod}
               onChange={(e) => setNewWeapon((prev) => ({ ...prev, statMod: e.target.value }))}
+              renderValue={(v) => v.toUpperCase()}
             >
               {["str", "dex", "con", "int", "wis", "cha"].map((stat) => (
                 <MenuItem key={stat} value={stat}>
-                  {stat}
+                  {stat.toUpperCase()}
                 </MenuItem>
               ))}
             </Select>
@@ -118,8 +121,8 @@ const WeaponManager = () => {
                     <Typography variant="body2">
                       Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
                     </Typography>
-                    <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
-                    <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+                    <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
+                    <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
                   </>
                 }
                 arrow
