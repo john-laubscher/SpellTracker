@@ -3,6 +3,8 @@ import { Tooltip, Grid, Typography, Card, CardContent, FormControlLabel, Checkbo
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export const WeaponsDisplay = ({ characterInfo }) => (
   <Grid container spacing={2} mt={2}>
     {characterInfo.weapons.map((weapon, index) => {
@@ -20,8 +22,8 @@ export const WeaponsDisplay = ({ characterInfo }) => (
               <Typography variant="body2">
                 Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
               </Typography>
-              <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
-              <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+              <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
+              <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
             </>
           }
           arrow
@@ -63,87 +65,81 @@ const WeaponManager = () => {
   return (
     <div>
       {/* Form to Add Weapon */}
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={3}>
+      <Grid container spacing={1.5} alignItems="center">
+        <Grid item xs={4}>
           <TextField
             label="Weapon Name"
             variant="outlined"
             size="small"
+            fullWidth
             value={newWeapon.name}
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
           />
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={4}>
           <TextField
             label="Damage Type"
             variant="outlined"
             size="small"
+            fullWidth
             value={newWeapon.dmgType}
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, dmgType: e.target.value }))}
           />
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={4}>
           <FormControl fullWidth size="small">
             <InputLabel id="Stat-mod-label">Stat mod</InputLabel>
             <Select
               labelId="Stat-mod-label"
               value={newWeapon.statMod}
               onChange={(e) => setNewWeapon((prev) => ({ ...prev, statMod: e.target.value }))}
+              renderValue={(v) => v.toUpperCase()}
             >
               {["str", "dex", "con", "int", "wis", "cha"].map((stat) => (
                 <MenuItem key={stat} value={stat}>
-                  {/* {stat.toUpperCase()} */}
-                  {stat}
+                  {stat.toUpperCase()}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={12}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="proficient"
-                checked={newWeapon.proficient}
-                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficient: e.target.checked }))}
-                />
-            }
-            label="Proficient"
-          />
-        </Grid>
-        <Grid item xs={3}>
-          <IconButton onClick={handleAddWeapon} color="primary">
-            <AddIcon />
-          </IconButton>
-        </Grid>
+        {/* Proficient checkbox hidden until needed */}
+        {/* Add weapon button hidden until needed */}
       </Grid>
-      <Grid container spacing={2} mt={2}>
+      <Grid container spacing={1.5} mt={1}>
         {characterInfo.weapons.map((weapon, index) => {
           const totalModifier =
             characterInfo.stats[weapon.statMod].mod +
             (weapon.proficient ? characterInfo.proficiencyMod : 0);
-          const modifierColor = totalModifier >= 0 ? "green" : "red";
+          const modifierColor = totalModifier >= 0 ? "#2e7d32" : "#c62828";
           const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
           return (
-            <Grid item key={index} xs={12} sm={6} md={4}>
+            <Grid item key={index} xs={6} sm={4}>
               <Tooltip
                 title={
                   <>
                     <Typography variant="body2">
                       Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
                     </Typography>
-                    <Typography variant="body2">Damage Type: {weapon.dmgType}</Typography>
-                    <Typography variant="body2">Modifier: {weapon.statMod}</Typography>
+                    <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
+                    <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
                   </>
                 }
                 arrow
               >
-                <Card sx={{ cursor: "pointer", padding: "8px", textAlign: "center" }}>
-                  <CardContent>
-                    <Typography variant="h6">{weapon.name}</Typography>
-                    <Typography variant="body2">
-                      Modifier:{" "}
-                      <span style={{ color: modifierColor }}>{modifierText}</span>
+                <Card sx={{
+                  cursor: "pointer",
+                  py: 0.5,
+                  px: 1,
+                  textAlign: "center",
+                  backgroundColor: "rgba(139,69,19,0.08)",
+                  border: "1px solid rgba(139,69,19,0.25)",
+                }}>
+                  <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "14px" }}>{weapon.name}</Typography>
+                    <Typography sx={{ fontSize: "13px" }}>
+                      Atk:{" "}
+                      <span style={{ color: modifierColor, fontWeight: 700 }}>{modifierText}</span>
                     </Typography>
                   </CardContent>
                 </Card>
