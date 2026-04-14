@@ -99,23 +99,8 @@ const WeaponManager = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={12}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="proficient"
-                checked={newWeapon.proficient}
-                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficient: e.target.checked }))}
-                />
-            }
-            label="Proficient"
-          />
-        </Grid>
-        <Grid item xs={3}>
-          <IconButton onClick={handleAddWeapon} color="primary">
-            <AddIcon />
-          </IconButton>
-        </Grid>
+        {/* Proficient checkbox hidden until needed */}
+        {/* Add weapon button hidden until needed */}
       </Grid>
       <Grid container spacing={2} mt={2}>
         {characterInfo.weapons.map((weapon, index) => {
