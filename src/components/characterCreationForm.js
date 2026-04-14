@@ -117,7 +117,7 @@ export const CharacterCreationForm = (props) => {
     <Box component="form" noValidate autoComplete="off" sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
 
       {/* Character Name */}
-      <Box sx={sectionStyle}>
+      <Box sx={{ ...sectionStyle, maxWidth: "260px" }}>
         <TextField
           id="character-name"
           label="Character Name"
@@ -134,8 +134,8 @@ export const CharacterCreationForm = (props) => {
 
       {/* Race & Class Row */}
       <Typography sx={sectionLabelStyle}>Race & Class</Typography>
-      <Box sx={sectionStyle}>
-        <Grid container spacing={2}>
+      <Box sx={{ ...sectionStyle, maxWidth: "340px" }}>
+        <Grid container spacing={1.5}>
           <Grid item xs={6}>
             <FormControl fullWidth size="small">
               <InputLabel id="race-select-label">Race</InputLabel>
@@ -189,8 +189,8 @@ export const CharacterCreationForm = (props) => {
 
       {/* Level, HP, AC Row */}
       <Typography sx={sectionLabelStyle}>Combat Stats</Typography>
-      <Box sx={sectionStyle}>
-        <Grid container spacing={2}>
+      <Box sx={{ ...sectionStyle, maxWidth: "280px" }}>
+        <Grid container spacing={1.5}>
           <Grid item xs={4}>
             <FormControl fullWidth size="small">
               <InputLabel id="level-select-label">Level</InputLabel>
