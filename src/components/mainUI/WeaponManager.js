@@ -67,8 +67,8 @@ const WeaponManager = () => {
   return (
     <div>
       {/* Add weapon form */}
-      <Grid container spacing={1} alignItems="center">
-        <Grid item xs>
+      <Grid container spacing={1.5} alignItems="center">
+        <Grid item sx={{ width: 120 }}>
           <TextField
             label="Name"
             variant="outlined"
@@ -78,7 +78,7 @@ const WeaponManager = () => {
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
           />
         </Grid>
-        <Grid item xs>
+        <Grid item sx={{ width: 110 }}>
           <TextField
             label="Dmg Type"
             variant="outlined"
@@ -88,7 +88,7 @@ const WeaponManager = () => {
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, dmgType: e.target.value }))}
           />
         </Grid>
-        <Grid item sx={{ minWidth: 80 }}>
+        <Grid item sx={{ minWidth: 85 }}>
           <FormControl fullWidth size="small">
             <InputLabel id="Stat-mod-label">Stat</InputLabel>
             <Select
