@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
@@ -105,6 +105,32 @@ const WeaponManager = () => {
               ))}
             </Select>
           </FormControl>
+        </Grid>
+        <Grid item>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={newWeapon.proficient}
+                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficient: e.target.checked }))}
+                sx={{
+                  color: "#8B4513",
+                  "&.Mui-checked": { color: "#8B4513" },
+                  p: 0.5,
+                }}
+              />
+            }
+            label="Prof"
+            sx={{
+              mr: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: "12px",
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 600,
+                color: "#3e2723",
+              },
+            }}
+          />
         </Grid>
         <Grid item>
           <IconButton
