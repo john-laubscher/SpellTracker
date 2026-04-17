@@ -6,38 +6,61 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Box from '@mui/material/Box';
 
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
-// typically will be used with an array of spells being iterated over, but would work with single spells as long as the classSpellsDetails for that numericalSpellLevel is set in state
-
-// ***NEED CRITICAL FEATURE*** SOME SPELLS ARE NOT IN THE API. NEED TO AT LEAST GIVE THE NAME OF THE SPELL IF THERE IS NOT DESCRIPTION, AND AN ALTERNATIVE MESSAGE 
-const SpellAccordian = ({numericalSpellLevel, spell}) => {
+const SpellAccordian = ({numericalSpellLevel, spell, actionButton}) => {
 
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)
+    const details = classSpellsDetails[numericalSpellLevel]?.[spell.index];
 
     return (
-        <Accordion>
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{
+            backgroundColor: 'transparent',
+            '&:before': { display: 'none' },
+            '&.Mui-expanded': { margin: 0 },
+          }}
+        >
               <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
+                expandIcon={<ExpandMoreIcon sx={{ fontSize: '18px' }} />}
                 aria-controls={`${spell.index}-class-spells-content`}
-                id={`${spell.index}-class-spells-header`} 
+                id={`${spell.index}-class-spells-header`}
+                sx={{
+                  minHeight: 32,
+                  px: 1,
+                  py: 0,
+                  '& .MuiAccordionSummary-content': {
+                    margin: '4px 0',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  },
+                  '&.Mui-expanded': { minHeight: 32 },
+                }}
               >
-                <Typography>{spell.name}</Typography>
+                <Typography sx={{ fontSize: '14px', fontWeight: 600, flexGrow: 1 }}>{spell.name}</Typography>
+                {actionButton && (
+                  <Box onClick={(e) => e.stopPropagation()} sx={{ flexShrink: 0 }}>
+                    {actionButton}
+                  </Box>
+                )}
               </AccordionSummary>
-              <AccordionDetails>
-                <Typography>
-                  <p><strong>Range:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.range}</p>
-                  <p><strong>Duration:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.duration}</p>
-                  <p><strong>Casting time:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.casting_time}</p>
-                  <p><strong>Spell components:</strong> {classSpellsDetails[numericalSpellLevel][spell.index]?.components.join(', ')}</p>
-                  {classSpellsDetails[numericalSpellLevel][spell.index]?.concentration ? (
+              <AccordionDetails sx={{ px: 2, py: 1, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '4px', mx: 1, mb: 0.5 }}>
+                <Typography component="div" sx={{ fontSize: '13px', '& p': { margin: '2px 0' } }}>
+                  <p><strong>Range:</strong> {details?.range}</p>
+                  <p><strong>Duration:</strong> {details?.duration}</p>
+                  <p><strong>Casting time:</strong> {details?.casting_time}</p>
+                  <p><strong>Components:</strong> {details?.components?.join(', ')}</p>
+                  {details?.concentration && (
                     <p style={{ fontStyle: 'italic' }}><strong>Concentration</strong></p>
-                    ) : null}
-                  {classSpellsDetails[numericalSpellLevel][spell.index]?.ritual ? (
+                  )}
+                  {details?.ritual && (
                     <p style={{ fontStyle: 'italic' }}><strong>Ritual</strong></p>
-                    ) : null}
-                  <p>{classSpellsDetails[numericalSpellLevel][spell.index]?.desc}</p>
+                  )}
+                  <p>{details?.desc}</p>
                 </Typography>
               </AccordionDetails>
             </Accordion>

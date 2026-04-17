@@ -32,7 +32,7 @@ export const WeaponsDisplay = ({ characterInfo }) => (
             variant="body1"
             sx={{ cursor: "pointer", margin: "8px 0", textAlign: "center" }}
           >
-            {weapon.name}: atk{" "}
+            {weapon.name}: Atk{" "}
             <span style={{ color: modifierColor }}>{modifierText}</span>
           </Typography>
         </Tooltip>
