@@ -10,6 +10,8 @@ import ClassesData from "../ClassesData";
 import spellTables from "../spellTables";
 import {WeaponsDisplay} from "./WeaponManager";
 
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 const proficiencyBonus = {
   1: 2,
   2: 2,
@@ -180,7 +182,7 @@ const determineNoncasters = () => {
                   {ClassesData[characterInfo.characterClass].hitDice} hit dice
                 </Typography>
                 <Typography variant="body2">
-                  Level {characterInfo.characterLevel} {characterInfo.characterClass} ({characterInfo.subclass})
+                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)} ({capitalize(characterInfo.subclass)})
                 </Typography>
                 <Typography variant="body2">
                   Race: {characterInfo.subrace} {characterInfo.race}
