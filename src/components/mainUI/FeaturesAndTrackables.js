@@ -10,7 +10,7 @@ import { CharacterInfoContext } from "../../Contexts/Context"; // Adjust the pat
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
 
 // Reusable FeatureDisplay component
-const FeatureDisplay = ({ title, features }) => {
+const FeatureDisplay = ({ title, features, untrackedLabel }) => {
   const trackedFeatures = features.filter((feature) => feature.tracked);
   const untrackedFeatures = features.filter((feature) => !feature.tracked);
 
@@ -45,7 +45,7 @@ const FeatureDisplay = ({ title, features }) => {
             expandIcon={<ExpandMoreIcon sx={{ fontSize: '18px' }} />}
             sx={{ minHeight: 28, px: 0.5, py: 0, '& .MuiAccordionSummary-content': { margin: '2px 0' }, '&.Mui-expanded': { minHeight: 28 } }}
           >
-            <Typography sx={{ fontSize: '13px', color: '#5d4037' }}>Other Features</Typography>
+            <Typography sx={{ fontSize: '13px', color: '#5d4037' }}>{untrackedLabel || 'Other Features'}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ px: 1, py: 0.5 }}>
             {untrackedFeatures.map((feature) => (
@@ -84,12 +84,14 @@ const FeaturesAndTrackables = () => {
       <FeatureDisplay
         title="Class Features"
         features={classFeatures}
+        untrackedLabel="Untracked Class Features"
       />
 
       {/* Subclass Features Section */}
       <FeatureDisplay
         title="Subclass Features"
         features={subclassFeatures}
+        untrackedLabel="Untracked Subclass Features"
       />
 
       {/* Racial and Miscellaneous Features Section */}

@@ -19,19 +19,18 @@ export const MainUI = () => {
         <FeaturesAndTrackables/>
         <SpellList />
         <Button
-          variant="contained"
+          variant="text"
+          size="small"
           onClick={() => navigate("/")}
           sx={{
             mt: 2,
             mb: 1,
-            py: 1,
-            px: 4,
             fontFamily: "'Cinzel', serif",
-            fontWeight: 700,
-            fontSize: '14px',
-            letterSpacing: '1px',
-            backgroundColor: '#8B4513',
-            '&:hover': { backgroundColor: '#6d3410' },
+            fontSize: '11px',
+            color: '#5d4037',
+            opacity: 0.7,
+            textTransform: 'none',
+            '&:hover': { opacity: 1, backgroundColor: 'rgba(139,69,19,0.08)' },
             display: 'block',
             mx: 'auto',
           }}
