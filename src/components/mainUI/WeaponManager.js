@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, FormControlLabel, Checkbox, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
@@ -62,51 +62,12 @@ const WeaponManager = () => {
     setNewWeapon({ name: "", dmgType: "", statMod: "str", proficiency: false }); // Reset form
   };
 
+  const canAdd = newWeapon.name.trim() !== "" && newWeapon.dmgType.trim() !== "";
+
   return (
     <div>
-      {/* Form to Add Weapon */}
-      <Grid container spacing={1.5} alignItems="center">
-        <Grid item xs={4}>
-          <TextField
-            label="Weapon Name"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={newWeapon.name}
-            onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Damage Type"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={newWeapon.dmgType}
-            onChange={(e) => setNewWeapon((prev) => ({ ...prev, dmgType: e.target.value }))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="Stat-mod-label">Stat mod</InputLabel>
-            <Select
-              labelId="Stat-mod-label"
-              value={newWeapon.statMod}
-              onChange={(e) => setNewWeapon((prev) => ({ ...prev, statMod: e.target.value }))}
-              renderValue={(v) => v.toUpperCase()}
-            >
-              {["str", "dex", "con", "int", "wis", "cha"].map((stat) => (
-                <MenuItem key={stat} value={stat}>
-                  {stat.toUpperCase()}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        {/* Proficient checkbox hidden until needed */}
-        {/* Add weapon button hidden until needed */}
-      </Grid>
-      <Grid container spacing={1.5} mt={1}>
+      {/* Weapon cards */}
+      <Grid container spacing={1.5}>
         {characterInfo.weapons.map((weapon, index) => {
           const totalModifier =
             characterInfo.stats[weapon.statMod].mod +
@@ -147,6 +108,63 @@ const WeaponManager = () => {
             </Grid>
           );
         })}
+      </Grid>
+
+      {/* Add weapon form */}
+      <Grid container spacing={1} alignItems="center" sx={{ mt: 1.5 }}>
+        <Grid item xs>
+          <TextField
+            label="Name"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={newWeapon.name}
+            onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
+          />
+        </Grid>
+        <Grid item xs>
+          <TextField
+            label="Dmg Type"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={newWeapon.dmgType}
+            onChange={(e) => setNewWeapon((prev) => ({ ...prev, dmgType: e.target.value }))}
+          />
+        </Grid>
+        <Grid item sx={{ minWidth: 80 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="Stat-mod-label">Stat</InputLabel>
+            <Select
+              labelId="Stat-mod-label"
+              label="Stat"
+              value={newWeapon.statMod}
+              onChange={(e) => setNewWeapon((prev) => ({ ...prev, statMod: e.target.value }))}
+              renderValue={(v) => v.toUpperCase()}
+            >
+              {["str", "dex", "con", "int", "wis", "cha"].map((stat) => (
+                <MenuItem key={stat} value={stat}>
+                  {stat.toUpperCase()}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item>
+          <IconButton
+            onClick={handleAddWeapon}
+            disabled={!canAdd}
+            sx={{
+              backgroundColor: canAdd ? "#8B4513" : "rgba(0,0,0,0.12)",
+              color: canAdd ? "#fff" : "rgba(0,0,0,0.26)",
+              "&:hover": { backgroundColor: canAdd ? "#6d3410" : "rgba(0,0,0,0.12)" },
+              width: 36,
+              height: 36,
+            }}
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
+        </Grid>
       </Grid>
     </div>
   );
