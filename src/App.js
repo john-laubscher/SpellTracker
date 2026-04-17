@@ -16,7 +16,7 @@ function App() {
     characterClass: "cleric",
     subclass: "grave",
     characterLevel: 10,
-    proficiencyMod: 2,
+    proficiencyMod: 4,
     hp: 100,
     ac: 17,
     weapons: [
