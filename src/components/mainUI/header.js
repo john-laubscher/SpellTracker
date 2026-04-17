@@ -53,12 +53,18 @@ const Header = () => {
 
   const formatSpellcastingAbility = (ability) => {
     const abilityMap = {
-      intelligence: "Int",
-      wisdom: "Wis",
-      charisma: "Cha",
+      intelligence: "INT",
+      wisdom: "WIS",
+      charisma: "CHA",
+      int: "INT",
+      wis: "WIS",
+      cha: "CHA",
+      str: "STR",
+      dex: "DEX",
+      con: "CON",
     };
     
-    return abilityMap[ability.toLowerCase()] || ability;
+    return abilityMap[ability.toLowerCase()] || ability.toUpperCase();
   };
 
   const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
