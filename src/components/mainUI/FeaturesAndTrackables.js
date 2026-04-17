@@ -3,7 +3,7 @@
 // Subclass Features, Racial Features, and additional features (Feats, magic items, custom features, etc) will have their own sections/columns on the mainUI 
 
 import React, { useContext } from "react";
-import { Typography, Accordion, AccordionSummary, AccordionDetails, Grid, Checkbox, Tooltip } from "@mui/material";
+import { Typography, Accordion, AccordionSummary, AccordionDetails, Checkbox, Tooltip } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { CharacterInfoContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
@@ -15,42 +15,46 @@ const FeatureDisplay = ({ title, features }) => {
   const untrackedFeatures = features.filter((feature) => !feature.tracked);
 
   return (
-    <div>
-      <Typography variant="h6">{title}</Typography>
+    <div style={{ marginBottom: '8px' }}>
+      <Typography sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '15px', color: '#3e2723', mb: 0.5 }}>
+        {title}
+      </Typography>
 
-      {/* Render tracked features */}
-      <Grid container spacing={2}>
-        {trackedFeatures.map((feature) => (
-          <Grid item xs={12} key={feature.id}>
-            <Tooltip title={feature.desc} arrow>
-              <Typography variant="body1" style={{ display: "inline" }}>
-                {feature.name}
-              </Typography>
-            </Tooltip>
-            <Checkbox
-              defaultChecked={false} // Add tracking logic if needed
-              style={{ marginLeft: "8px" }}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      {trackedFeatures.map((feature) => (
+        <div key={feature.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
+          <Tooltip title={feature.desc} arrow>
+            <Typography sx={{ fontSize: '14px', cursor: 'pointer' }}>
+              {feature.name}
+            </Typography>
+          </Tooltip>
+          <Checkbox
+            defaultChecked={false}
+            size="small"
+            sx={{ ml: 0.5, p: 0.25, color: '#8B4513', '&.Mui-checked': { color: '#8B4513' } }}
+          />
+        </div>
+      ))}
 
-      {/* Render untracked features in an expandable section */}
       {untrackedFeatures.length > 0 && (
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Other Features</Typography>
+        <Accordion disableGutters elevation={0} sx={{
+          backgroundColor: 'transparent',
+          '&:before': { display: 'none' },
+          '&.Mui-expanded': { margin: 0 },
+        }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon sx={{ fontSize: '18px' }} />}
+            sx={{ minHeight: 28, px: 0.5, py: 0, '& .MuiAccordionSummary-content': { margin: '2px 0' }, '&.Mui-expanded': { minHeight: 28 } }}
+          >
+            <Typography sx={{ fontSize: '13px', color: '#5d4037' }}>Other Features</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Grid container spacing={2}>
-              {untrackedFeatures.map((feature) => (
-                <Grid item xs={12} key={feature.id}>
-                  <Tooltip title={feature.desc} arrow>
-                    <Typography variant="body1">{feature.name}</Typography>
-                  </Tooltip>
-                </Grid>
-              ))}
-            </Grid>
+          <AccordionDetails sx={{ px: 1, py: 0.5 }}>
+            {untrackedFeatures.map((feature) => (
+              <Tooltip key={feature.id} title={feature.desc} arrow>
+                <Typography sx={{ fontSize: '13px', cursor: 'pointer', py: 0.25 }}>
+                  {feature.name}
+                </Typography>
+              </Tooltip>
+            ))}
           </AccordionDetails>
         </Accordion>
       )}
