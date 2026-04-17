@@ -128,27 +128,19 @@ export const SpellList = (props) => {
     if (spells[numericalSpellLevel].classSpells.length === 0) {
       axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then(res => {
-        // get list of class spells into state
         let fetchedSpellsArr = res.data.results
-
         setSpells(spells => ({ ...spells, [numericalSpellLevel]: { ...spells[numericalSpellLevel], classSpells: fetchedSpellsArr}}));
-        // get spell details from list of class spells
         fetchClassSpellsDetails(numericalSpellLevel, fetchedSpellsArr)
-        return(
-        <div>
-          {showClassSpellsButton(numericalSpellLevel)}
-        </div>
-        )
       })
       .catch(error => {
+        console.log('Error fetching spells:', error);
       });
-    } else {
-      return(
-        <div>
-          {showClassSpellsButton(numericalSpellLevel)}
-        </div>
-      )
     }
+    return (
+      <div>
+        {showClassSpellsButton(numericalSpellLevel)}
+      </div>
+    )
   }
 
   const unprepareAllSpells = () => {
