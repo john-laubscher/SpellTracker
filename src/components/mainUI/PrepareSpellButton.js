@@ -7,21 +7,37 @@ import { makeStyles } from '@mui/styles';
 
 export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     prepareButton: {
-        fontSize: '14px',
-        padding: '6px 16px',
+        fontSize: '12px',
+        padding: '2px 10px',
         borderRadius: '4px',
         textTransform: 'none',
         backgroundColor: '#a881af',
         color: '#fff',
-        transition: 'background-color 0.5s ease-in-out', // CSS transition for smooth color change
+        minWidth: 'auto',
+        lineHeight: 1.4,
+        transition: 'background-color 0.3s ease-in-out',
         '&:hover': {
-        backgroundColor: '#80669d',
-        },
-        '&.flashAdd': {
-        backgroundColor: 'green',
+            backgroundColor: '#80669d',
         },
         '&.flashRemove': {
-        backgroundColor: 'red',
+            backgroundColor: '#c62828',
+        },
+    },
+    preparedButton: {
+        fontSize: '12px',
+        padding: '2px 10px',
+        borderRadius: '4px',
+        textTransform: 'none',
+        backgroundColor: '#2e7d32',
+        color: '#fff',
+        minWidth: 'auto',
+        lineHeight: 1.4,
+        transition: 'background-color 0.3s ease-in-out',
+        '&:hover': {
+            backgroundColor: '#1b5e20',
+        },
+        '&.flashRemove': {
+            backgroundColor: '#c62828',
         },
     },
     }));
@@ -31,7 +47,6 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
     
     const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-    const isButtonClicked = clickedButtons.includes(`add-${index}`);
     const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
 
     const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some(
@@ -69,31 +84,25 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const classes = togglePreparedSpellBtnStyle();
 
+    const buttonClass = isSpellAlreadyPrepared ? classes.preparedButton : classes.prepareButton;
+
     return (
             <Button
-              className={`${classes.prepareButton} ${isButtonClicked ? 'flashAdd' : ''} ${
-                isRemoveClicked ? 'flashRemove' : ''
-              }`}
+              className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
               variant="contained"
-              color="primary"
               onClick={() => {
-
                 if (isSpellAlreadyPrepared) {
-                  setClickedButtons([...clickedButtons, `remove-${index}`]); // Add the button to clickedButtons with the "remove-" prefix
+                  setClickedButtons([...clickedButtons, `remove-${index}`]);
                   togglePreparedSpell(spell, numericalSpellLevel);
                   setTimeout(() => {
-                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`)); // Remove the button from clickedButtons
-                  }, 300); // Reset after 300ms (adjust the duration as needed)
+                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`));
+                  }, 300);
                 } else {
-                  setClickedButtons([...clickedButtons, `add-${index}`]); // Add the button to clickedButtons with the "add-" prefix
                   togglePreparedSpell(spell, numericalSpellLevel);
-                  setTimeout(() => {
-                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `add-${index}`)); // Remove the button from clickedButtons
-                  }, 300); // Reset after 300ms (adjust the duration as needed)
                 }
               }}
             >
-              {isSpellAlreadyPrepared ? 'Unprepare Spell' : 'Prepare Spell'}
+              {isSpellAlreadyPrepared ? 'Unprepare' : 'Prepare Spell'}
             </Button>
     )
 }

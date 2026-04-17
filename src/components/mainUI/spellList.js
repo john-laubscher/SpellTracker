@@ -169,22 +169,20 @@ export const SpellList = (props) => {
 
 
   const renderPreparedSpells = (numericalSpellLevel) => {
-    // prepareSubraceSpells()
-    // console.log('ERROR?', characterInfo.spellsPrepared[numericalSpellLevel])
-    console.log('TEST2 SPELLLVL', numericalSpellLevel)
-    console.log('STATE', characterInfo.spellsPrepared[numericalSpellLevel])
     return (
       <div>
         {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
-          <div>
-            <PrepareSpellButton
-              numericalSpellLevel={numericalSpellLevel}
-              spell={spell}
-              index={index}
-            />
+          <div key={spell.index}>
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
+              actionButton={
+                <PrepareSpellButton
+                  numericalSpellLevel={numericalSpellLevel}
+                  spell={spell}
+                  index={index}
+                />
+              }
             />
           </div>
         ))}
