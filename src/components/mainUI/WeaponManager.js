@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, FormControlLabel, Checkbox, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
@@ -62,13 +62,15 @@ const WeaponManager = () => {
     setNewWeapon({ name: "", dmgType: "", statMod: "str", proficiency: false }); // Reset form
   };
 
+  const canAdd = newWeapon.name.trim() !== "" && newWeapon.dmgType.trim() !== "";
+
   return (
     <div>
-      {/* Form to Add Weapon */}
-      <Grid container spacing={1.5} alignItems="center">
-        <Grid item xs={4}>
+      {/* Add weapon form */}
+      <Grid container spacing={1} alignItems="center">
+        <Grid item xs>
           <TextField
-            label="Weapon Name"
+            label="Name"
             variant="outlined"
             size="small"
             fullWidth
@@ -76,9 +78,9 @@ const WeaponManager = () => {
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs>
           <TextField
-            label="Damage Type"
+            label="Dmg Type"
             variant="outlined"
             size="small"
             fullWidth
@@ -86,11 +88,12 @@ const WeaponManager = () => {
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, dmgType: e.target.value }))}
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item sx={{ minWidth: 80 }}>
           <FormControl fullWidth size="small">
-            <InputLabel id="Stat-mod-label">Stat mod</InputLabel>
+            <InputLabel id="Stat-mod-label">Stat</InputLabel>
             <Select
               labelId="Stat-mod-label"
+              label="Stat"
               value={newWeapon.statMod}
               onChange={(e) => setNewWeapon((prev) => ({ ...prev, statMod: e.target.value }))}
               renderValue={(v) => v.toUpperCase()}
@@ -103,10 +106,57 @@ const WeaponManager = () => {
             </Select>
           </FormControl>
         </Grid>
-        {/* Proficient checkbox hidden until needed */}
-        {/* Add weapon button hidden until needed */}
+        <Grid item>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={newWeapon.proficient}
+                onChange={(e) => setNewWeapon((prev) => ({ ...prev, proficient: e.target.checked }))}
+                sx={{
+                  color: "#8B4513",
+                  "&.Mui-checked": { color: "#8B4513" },
+                  p: 0.5,
+                }}
+              />
+            }
+            label="Prof"
+            sx={{
+              mr: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: "12px",
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 600,
+                color: "#3e2723",
+              },
+            }}
+          />
+        </Grid>
+        <Grid item>
+          <IconButton
+            onClick={handleAddWeapon}
+            disabled={!canAdd}
+            sx={{
+              backgroundColor: "#8B4513",
+              color: "#fff",
+              opacity: canAdd ? 1 : 0.45,
+              "&:hover": { backgroundColor: "#6d3410" },
+              "&.Mui-disabled": {
+                backgroundColor: "#8B4513",
+                color: "#fff",
+                opacity: 0.45,
+              },
+              width: 36,
+              height: 36,
+            }}
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
+        </Grid>
       </Grid>
-      <Grid container spacing={1.5} mt={1}>
+
+      {/* Weapon cards */}
+      <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
         {characterInfo.weapons.map((weapon, index) => {
           const totalModifier =
             characterInfo.stats[weapon.statMod].mod +
