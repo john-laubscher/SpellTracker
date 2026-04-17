@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Divider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
@@ -66,52 +66,8 @@ const WeaponManager = () => {
 
   return (
     <div>
-      {/* Weapon cards */}
-      <Grid container spacing={1.5}>
-        {characterInfo.weapons.map((weapon, index) => {
-          const totalModifier =
-            characterInfo.stats[weapon.statMod].mod +
-            (weapon.proficient ? characterInfo.proficiencyMod : 0);
-          const modifierColor = totalModifier >= 0 ? "#2e7d32" : "#c62828";
-          const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
-          return (
-            <Grid item key={index} xs={6} sm={4}>
-              <Tooltip
-                title={
-                  <>
-                    <Typography variant="body2">
-                      Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
-                    </Typography>
-                    <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
-                    <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
-                  </>
-                }
-                arrow
-              >
-                <Card sx={{
-                  cursor: "pointer",
-                  py: 0.5,
-                  px: 1,
-                  textAlign: "center",
-                  backgroundColor: "rgba(139,69,19,0.08)",
-                  border: "1px solid rgba(139,69,19,0.25)",
-                }}>
-                  <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: "14px" }}>{weapon.name}</Typography>
-                    <Typography sx={{ fontSize: "13px" }}>
-                      Atk:{" "}
-                      <span style={{ color: modifierColor, fontWeight: 700 }}>{modifierText}</span>
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Tooltip>
-            </Grid>
-          );
-        })}
-      </Grid>
-
       {/* Add weapon form */}
-      <Grid container spacing={1} alignItems="center" sx={{ mt: 1.5 }}>
+      <Grid container spacing={1} alignItems="center">
         <Grid item xs>
           <TextField
             label="Name"
@@ -155,9 +111,15 @@ const WeaponManager = () => {
             onClick={handleAddWeapon}
             disabled={!canAdd}
             sx={{
-              backgroundColor: canAdd ? "#8B4513" : "rgba(0,0,0,0.12)",
-              color: canAdd ? "#fff" : "rgba(0,0,0,0.26)",
-              "&:hover": { backgroundColor: canAdd ? "#6d3410" : "rgba(0,0,0,0.12)" },
+              backgroundColor: "#8B4513",
+              color: "#fff",
+              opacity: canAdd ? 1 : 0.45,
+              "&:hover": { backgroundColor: "#6d3410" },
+              "&.Mui-disabled": {
+                backgroundColor: "#8B4513",
+                color: "#fff",
+                opacity: 0.45,
+              },
               width: 36,
               height: 36,
             }}
@@ -165,6 +127,55 @@ const WeaponManager = () => {
             <AddIcon fontSize="small" />
           </IconButton>
         </Grid>
+      </Grid>
+
+      {/* Divider between form and weapon list */}
+      {characterInfo.weapons.length > 0 && (
+        <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", my: 1.5 }} />
+      )}
+
+      {/* Weapon cards */}
+      <Grid container spacing={1.5}>
+        {characterInfo.weapons.map((weapon, index) => {
+          const totalModifier =
+            characterInfo.stats[weapon.statMod].mod +
+            (weapon.proficient ? characterInfo.proficiencyMod : 0);
+          const modifierColor = totalModifier >= 0 ? "#2e7d32" : "#c62828";
+          const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
+          return (
+            <Grid item key={index} xs={6} sm={4}>
+              <Tooltip
+                title={
+                  <>
+                    <Typography variant="body2">
+                      Proficiency Mod: {weapon.proficient ? characterInfo.proficiencyMod : 0}
+                    </Typography>
+                    <Typography variant="body2">Damage Type: {capitalize(weapon.dmgType)}</Typography>
+                    <Typography variant="body2">Modifier: {weapon.statMod.toUpperCase()}</Typography>
+                  </>
+                }
+                arrow
+              >
+                <Card sx={{
+                  cursor: "pointer",
+                  py: 0.5,
+                  px: 1,
+                  textAlign: "center",
+                  backgroundColor: "rgba(139,69,19,0.08)",
+                  border: "1px solid rgba(139,69,19,0.25)",
+                }}>
+                  <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "14px" }}>{weapon.name}</Typography>
+                    <Typography sx={{ fontSize: "13px" }}>
+                      Atk:{" "}
+                      <span style={{ color: modifierColor, fontWeight: 700 }}>{modifierText}</span>
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Tooltip>
+            </Grid>
+          );
+        })}
       </Grid>
     </div>
   );
