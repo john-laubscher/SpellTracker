@@ -2,6 +2,8 @@ import React, { useContext, useEffect } from "react";
 import axios from 'axios';
 
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
 import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -12,6 +14,21 @@ import SpellCheckboxes from "./SpellCheckboxes";
 import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellButton";
 import SpellAccordian from './SpellAccordian';
 import {PrepareSubraceSpells, renderDailySpellsList} from './RacialSpellsList'
+
+const spellLevelColors = {
+  0: '#607d8b',
+  1: '#1565c0',
+  2: '#2e7d32',
+  3: '#f9a825',
+  4: '#ef6c00',
+  5: '#c62828',
+  6: '#6a1b9a',
+  7: '#283593',
+  8: '#4e342e',
+  9: '#b71c1c',
+};
+
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
@@ -48,17 +65,29 @@ export const SpellList = (props) => {
   })
 
   const showClassSpellsButton = (numericalSpellLevel) => {
-    // Button doesn't render if server isn't running
     return (
       <div>
-        {/* ***NEED FEATURE*** Adjust verbiage based on each class ie: wizards don't prepare spells--they would adjust their spellbook or something like that */}
-        <button onClick={() => toggleModal(numericalSpellLevel)}>{spells[numericalSpellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}</button>
-          {spells[numericalSpellLevel].showModal ? <AddSpellModal 
-            isModalOpen={spells[numericalSpellLevel].showModal} 
-            onClose={() =>toggleModal(numericalSpellLevel)} 
-            numericalSpellLevel={numericalSpellLevel}
-            spells={spells[numericalSpellLevel].classSpells}
-          /> : null}
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => toggleModal(numericalSpellLevel)}
+          sx={{
+            textTransform: 'none',
+            fontSize: '12px',
+            fontFamily: "'Cinzel', serif",
+            color: '#5d4037',
+            borderColor: 'rgba(139,69,19,0.4)',
+            '&:hover': { borderColor: '#8B4513', backgroundColor: 'rgba(139,69,19,0.06)' },
+          }}
+        >
+          {spells[numericalSpellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}
+        </Button>
+        {spells[numericalSpellLevel].showModal ? <AddSpellModal
+          isModalOpen={spells[numericalSpellLevel].showModal}
+          onClose={() => toggleModal(numericalSpellLevel)}
+          numericalSpellLevel={numericalSpellLevel}
+          spells={spells[numericalSpellLevel].classSpells}
+        /> : null}
       </div>
     )
   }
@@ -144,24 +173,45 @@ export const SpellList = (props) => {
   // ***NEED FEATURE--CRITICAL--*** some subrace spells are not in the api, so will need a condition that instead shows a message saying that the description is not available
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (textualSpellLevel, numericalSpellLevel) => {
-    // console.log('NUMERICALSPELLLVL1', numericalSpellLevel)
-    // Maybe clean up this? needs to have some way of checking for nonCaster since they are not on the spellTables and will likely cause an error from the other if statement
-        // Maybe add them to the spell Tables with all spells as 0 as a possible solution
     if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
-      // this elseif should keep the functions from running once for each level
-        // - the elements are rendering correctly and the correct number of times, but the renderSpellModal is always running 10 times (once for each spell level)
+      return null;
     } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel] !== 0) {
+      const levelColor = spellLevelColors[numericalSpellLevel] || '#607d8b';
+      const slotCount = spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel];
+      const isCantrips = textualSpellLevel === 'cantrips';
+      const heading = isCantrips
+        ? `Cantrips Known: ${slotCount}`
+        : `${capitalize(textualSpellLevel)} Level Spell Slots`;
+
       return (
-        <div>
-          <div>
-            <h3>
-              {textualSpellLevel} {textualSpellLevel === 'cantrips' ? 'known:' : 'level spell slots:'} {spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel]}
-            </h3>
-              <SpellCheckboxes textualSpellLevel={textualSpellLevel}/> 
-          </div>
+        <Box
+          sx={{
+            borderLeft: `4px solid ${levelColor}`,
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255,255,255,0.45)',
+            mb: 1.5,
+            px: 1.5,
+            py: 1,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography sx={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              fontSize: '15px',
+              color: levelColor,
+            }}>
+              {heading}
+            </Typography>
+            {!isCantrips && (
+              <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
+            )}
+          </Box>
           {renderPreparedSpells(numericalSpellLevel)}
-          {renderSpellModal(numericalSpellLevel)}
-        </div>
+          <Box sx={{ mt: 0.5 }}>
+            {renderSpellModal(numericalSpellLevel)}
+          </Box>
+        </Box>
       );
     }
   };
@@ -191,16 +241,28 @@ export const SpellList = (props) => {
   };
 
   return (
-    <div>
-      <p>Spell Tracker Section</p>
-      <Button
-        className={classes.prepareButton}
-        variant="contained"
-        color="primary"
-        onClick={unprepareAllSpells}
-      >
-      Unprepare ALL Spells
-    </Button>
+    <Box sx={{ mt: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        <Typography sx={{
+          fontFamily: "'Cinzel', serif",
+          fontWeight: 700,
+          fontSize: '18px',
+          color: '#3e2723',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+        }}>
+          Spell Tracker
+        </Typography>
+        <Button
+          className={classes.prepareButton}
+          variant="contained"
+          size="small"
+          onClick={unprepareAllSpells}
+          sx={{ textTransform: 'none', fontSize: '11px' }}
+        >
+          Unprepare All
+        </Button>
+      </Box>
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}
@@ -211,10 +273,8 @@ export const SpellList = (props) => {
       {renderPCSpells("seventh", 7)}
       {renderPCSpells("eighth", 8)}
       {renderPCSpells("ninth", 9)}
-      {/* render subrace spells */}
-      {/* {PrepareSubraceSpells()} */}
       {renderDailySpellsList()}
-    </div>
+    </Box>
   );
 };
 

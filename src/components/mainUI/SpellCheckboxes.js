@@ -1,49 +1,40 @@
-import React, { useContext, useState } from 'react';
-import { CharacterInfoContext } from "../../Contexts/Context";
-import spellTables from "../spellTables"
+import React, { useState } from 'react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Checkbox from '@mui/material/Checkbox';
 
-const SpellCheckboxes = ({ textualSpellLevel }) => {
-  const [checkedSpells, setCheckedSpells] = useState({});
-  const { characterInfo } = useContext(CharacterInfoContext);
+const SpellCheckboxes = ({ textualSpellLevel, slotCount }) => {
+  const [checkedSlots, setCheckedSlots] = useState({});
 
-  const spellSlots = spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel]
-
-  const handleCheckboxChange = (textualSpellLevel) => {
-    setCheckedSpells((prevState) => ({
-      ...prevState,
-      [textualSpellLevel]: !prevState[textualSpellLevel],
+  const handleCheckboxChange = (slotIndex) => {
+    setCheckedSlots((prev) => ({
+      ...prev,
+      [slotIndex]: !prev[slotIndex],
     }));
   };
 
-  const renderCheckboxes = () => {
-    const checkboxes = [];
+  if (textualSpellLevel === 'cantrips' || !slotCount) return null;
 
-    for (let i = 0; i < spellSlots; i++) {
-      const textualSpellLevel = i + 1;
-
-      checkboxes.push(
-        <label key={textualSpellLevel}>
-          <input
-            type="checkbox"
-            checked={checkedSpells[textualSpellLevel]}
-            onChange={() => handleCheckboxChange(textualSpellLevel)}
-          />
-        </label>
-      );
-    }
-
-    return checkboxes;
-};
-return (
-    <div>
-        {textualSpellLevel !== 'cantrips' ? (
-          <>
-            <h4>Spell Slots</h4>
-            {renderCheckboxes()}
-          </>
-        ) : null}
-    </div>
-)
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+      <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#5d4037', mr: 0.5 }}>
+        Slots
+      </Typography>
+      {Array.from({ length: slotCount }, (_, i) => (
+        <Checkbox
+          key={i}
+          size="small"
+          checked={!!checkedSlots[i]}
+          onChange={() => handleCheckboxChange(i)}
+          sx={{
+            p: 0.25,
+            color: '#8B4513',
+            '&.Mui-checked': { color: '#8B4513' },
+          }}
+        />
+      ))}
+    </Box>
+  );
 };
 
 export default SpellCheckboxes;
