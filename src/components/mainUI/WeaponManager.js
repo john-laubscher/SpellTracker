@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Divider } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
@@ -129,13 +129,8 @@ const WeaponManager = () => {
         </Grid>
       </Grid>
 
-      {/* Divider between form and weapon list */}
-      {characterInfo.weapons.length > 0 && (
-        <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", my: 1.5 }} />
-      )}
-
       {/* Weapon cards */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
         {characterInfo.weapons.map((weapon, index) => {
           const totalModifier =
             characterInfo.stats[weapon.statMod].mod +
