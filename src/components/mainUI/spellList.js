@@ -125,7 +125,7 @@ export const SpellList = (props) => {
   }
 
   const renderSpellModal = (numericalSpellLevel) => {
-    if (spells[numericalSpellLevel].classSpells.length === 0) {
+    if (spells[numericalSpellLevel].showModal && spells[numericalSpellLevel].classSpells.length === 0) {
       axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then(res => {
         let fetchedSpellsArr = res.data.results

@@ -13,7 +13,17 @@ import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 const SpellAccordian = ({numericalSpellLevel, spell, actionButton}) => {
 
     const { classSpellsDetails } = useContext(ClassSpellsDetailsContext)
-    const details = classSpellsDetails[numericalSpellLevel]?.[spell.index];
+    const detailsFromApi = classSpellsDetails[numericalSpellLevel]?.[spell.index];
+    const details =
+      detailsFromApi ||
+      (spell && (spell.isCustom || String(spell.index || '').startsWith('custom:')) ? spell : null);
+
+    const descLines = React.useMemo(() => {
+      if (!details) return [];
+      if (Array.isArray(details.desc)) return details.desc;
+      if (typeof details.desc === 'string') return [details.desc];
+      return [];
+    }, [details]);
 
     return (
         <Accordion
@@ -60,7 +70,9 @@ const SpellAccordian = ({numericalSpellLevel, spell, actionButton}) => {
                   {details?.ritual && (
                     <p style={{ fontStyle: 'italic' }}><strong>Ritual</strong></p>
                   )}
-                  <p>{details?.desc}</p>
+                  {descLines.map((line, idx) => (
+                    <p key={idx}>{line}</p>
+                  ))}
                 </Typography>
               </AccordionDetails>
             </Accordion>
