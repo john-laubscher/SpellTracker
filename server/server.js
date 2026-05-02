@@ -207,6 +207,124 @@ app.delete("/custom-spells/:id", requireAuth, (req, res) => {
   return res.status(204).send();
 });
 
+app.get("/custom-features", requireAuth, (req, res) => {
+  const kindRaw = req.query.kind !== undefined ? String(req.query.kind || "") : "";
+  const trackedRaw = req.query.tracked !== undefined ? String(req.query.tracked || "") : "";
+
+  const kind = kindRaw ? kindRaw.trim().toLowerCase() : null;
+  const tracked =
+    trackedRaw === ""
+      ? null
+      : trackedRaw.trim().toLowerCase() === "true"
+        ? true
+        : trackedRaw.trim().toLowerCase() === "false"
+          ? false
+          : null;
+
+  const store = readStore();
+  const results = store.customFeatures
+    .filter((f) => f.userId === req.userId)
+    .filter((f) => (kind ? f.kind === kind : true))
+    .filter((f) => (tracked === null ? true : Boolean(f.tracked) === tracked))
+    .map((f) => ({
+      id: f.id,
+      kind: f.kind,
+      tracked: Boolean(f.tracked),
+      name: f.title,
+      desc: f.description || "",
+      isCustom: true,
+    }));
+
+  res.json({ count: results.length, results });
+});
+
+app.post("/custom-features", requireAuth, (req, res) => {
+  const kind = String(req.body?.kind || "").trim().toLowerCase();
+  const title = String(req.body?.title || "").trim();
+  const description = String(req.body?.description || "").trim();
+  const tracked = Boolean(req.body?.tracked);
+
+  if (kind !== "class" && kind !== "subclass") return res.status(400).json({ error: "bad_kind" });
+  if (!title) return res.status(400).json({ error: "missing_title" });
+
+  const id = newId();
+  const record = {
+    id,
+    userId: req.userId,
+    kind,
+    tracked,
+    title,
+    description,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  updateStore((s) => ({ ...s, customFeatures: [...(s.customFeatures || []), record] }));
+
+  res.status(201).json({
+    id,
+    kind,
+    tracked,
+    name: title,
+    desc: description,
+    isCustom: true,
+  });
+});
+
+app.put("/custom-features/:id", requireAuth, (req, res) => {
+  const id = String(req.params.id || "");
+  const updates = {
+    title: req.body?.title !== undefined ? String(req.body.title || "").trim() : undefined,
+    description:
+      req.body?.description !== undefined ? String(req.body.description || "").trim() : undefined,
+    tracked: req.body?.tracked !== undefined ? Boolean(req.body.tracked) : undefined,
+  };
+
+  let updatedRecord = null;
+  updateStore((s) => {
+    const next = { ...s };
+    next.customFeatures = (s.customFeatures || []).map((f) => {
+      if (f.id !== id || f.userId !== req.userId) return f;
+      updatedRecord = {
+        ...f,
+        title: updates.title ?? f.title,
+        description: updates.description ?? f.description,
+        tracked: updates.tracked ?? f.tracked,
+        updatedAt: Date.now(),
+      };
+      return updatedRecord;
+    });
+    return next;
+  });
+
+  if (!updatedRecord) return res.status(404).json({ error: "not_found" });
+
+  res.json({
+    id: updatedRecord.id,
+    kind: updatedRecord.kind,
+    tracked: Boolean(updatedRecord.tracked),
+    name: updatedRecord.title,
+    desc: updatedRecord.description || "",
+    isCustom: true,
+  });
+});
+
+app.delete("/custom-features/:id", requireAuth, (req, res) => {
+  const id = String(req.params.id || "");
+  let removed = false;
+  updateStore((s) => {
+    const beforeLen = (s.customFeatures || []).length;
+    const nextFeatures = (s.customFeatures || []).filter(
+      (f) => !(f.id === id && f.userId === req.userId)
+    );
+    removed = nextFeatures.length !== beforeLen;
+    return { ...s, customFeatures: nextFeatures };
+  });
+
+  if (!removed) return res.status(404).json({ error: "not_found" });
+  return res.status(204).send();
+});
+
 app.get('/singlespell/:spell_index', (req, res) => {
         // const spell_index= 'acid-splash'
 
