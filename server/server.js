@@ -10,6 +10,12 @@ const app = express();
 app.use(cors({ origin: true, credentials: false, allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.status(200).send(
+    "SpellTracker backend is running. Open http://localhost:3000 for the UI. API is on port 3001."
+  );
+});
+
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization || "";
   const m = auth.match(/^Bearer\s+(.+)$/i);
