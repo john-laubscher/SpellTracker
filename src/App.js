@@ -1,7 +1,7 @@
 import "./App.css";
 import CharacterCreationForm from "./components/characterCreationForm";
 import { Routes, Route } from "react-router-dom";
-import MainUI from "./components/mainUI/index.js";
+import MainUI from "./components/mainUI/Index.js";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { AuthContext, CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
