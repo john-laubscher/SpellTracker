@@ -5,15 +5,14 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
+import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
-import { subRaceSpells } from "../RacesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
 import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellButton";
 import SpellAccordian from './SpellAccordian';
-import {PrepareSubraceSpells, renderDailySpellsList} from './RacialSpellsList'
+import { renderDailySpellsList } from './RacialSpellsList'
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -34,7 +33,19 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-  const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
+
+  const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
+    0: { loading: false, error: '' },
+    1: { loading: false, error: '' },
+    2: { loading: false, error: '' },
+    3: { loading: false, error: '' },
+    4: { loading: false, error: '' },
+    5: { loading: false, error: '' },
+    6: { loading: false, error: '' },
+    7: { loading: false, error: '' },
+    8: { loading: false, error: '' },
+    9: { loading: false, error: '' },
+  });
 
   // is this doing anything usefull?
   useEffect(() => {
@@ -64,13 +75,77 @@ export const SpellList = (props) => {
     9: {showModal: false, classSpells:[]},
   })
 
+  useEffect(() => {
+    setSpells((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        next[k] = { ...next[k], classSpells: [] };
+      });
+      return next;
+    });
+    setSpellListLoadStatus({
+      0: { loading: false, error: '' },
+      1: { loading: false, error: '' },
+      2: { loading: false, error: '' },
+      3: { loading: false, error: '' },
+      4: { loading: false, error: '' },
+      5: { loading: false, error: '' },
+      6: { loading: false, error: '' },
+      7: { loading: false, error: '' },
+      8: { loading: false, error: '' },
+      9: { loading: false, error: '' },
+    });
+  }, [characterInfo.characterClass]);
+
+  const loadClassSpellsForLevel = (numericalSpellLevel) => {
+    if (spellListLoadStatus[numericalSpellLevel]?.loading) return;
+
+    setSpellListLoadStatus((prev) => ({
+      ...prev,
+      [numericalSpellLevel]: { loading: true, error: '' },
+    }));
+
+    axios
+      .get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
+      .then((res) => {
+        const fetchedSpellsArr = res.data?.results || [];
+        setSpells((prevSpells) => ({
+          ...prevSpells,
+          [numericalSpellLevel]: {
+            ...prevSpells[numericalSpellLevel],
+            classSpells: fetchedSpellsArr,
+          },
+        }));
+        setSpellListLoadStatus((prev) => ({
+          ...prev,
+          [numericalSpellLevel]: { loading: false, error: '' },
+        }));
+      })
+      .catch((error) => {
+        console.log('Error fetching spells:', error);
+        setSpellListLoadStatus((prev) => ({
+          ...prev,
+          [numericalSpellLevel]: {
+            loading: false,
+            error: 'Failed to load spells. Is the backend running on port 3001?',
+          },
+        }));
+      });
+  };
+
   const showClassSpellsButton = (numericalSpellLevel) => {
     return (
       <div>
         <Button
           variant="outlined"
           size="small"
-          onClick={() => toggleModal(numericalSpellLevel)}
+          onClick={() => {
+            const isOpening = !spells[numericalSpellLevel].showModal;
+            toggleModal(numericalSpellLevel);
+            if (isOpening && spells[numericalSpellLevel].classSpells.length === 0) {
+              loadClassSpellsForLevel(numericalSpellLevel);
+            }
+          }}
           sx={{
             textTransform: 'none',
             fontSize: '12px',
@@ -87,55 +162,14 @@ export const SpellList = (props) => {
           onClose={() => toggleModal(numericalSpellLevel)}
           numericalSpellLevel={numericalSpellLevel}
           spells={spells[numericalSpellLevel].classSpells}
+          spellsLoading={spellListLoadStatus[numericalSpellLevel]?.loading}
+          spellsError={spellListLoadStatus[numericalSpellLevel]?.error}
         /> : null}
       </div>
     )
   }
 
-  const fetchClassSpellsDetails = (numericalSpellLevel, spells) => {
-    const fetchDetails = async () => {
-
-      const spellPromises = spells.map((spell) =>
-        axios.get(`http://localhost:3001/singlespell/${spell.index}`)
-      );
-  
-      try {
-        // Promise.all fetches requests concurrently so we can reduce overall wait time
-        const spellResponses = await Promise.all(spellPromises);
-        const spellsDetails = {};
-        // console.log('HOW OFTEN IS IT RUNNING?')
-        spellResponses.forEach((response, index) => {
-          const spellDetails = response.data;
-          const spell = spells[index];
-
-          spellsDetails[spell.index] = { ...spellDetails};
-        });
-        setClassSpellsDetails(classSpellsDetails => ({
-          ...classSpellsDetails,
-          [numericalSpellLevel]: spellsDetails
-        }));
-
-      } catch (error) {
-        console.log('Error fetching spell details:', error);
-      }
-    };
-    if (classSpellsDetails[numericalSpellLevel].length === 0) {
-      fetchDetails();
-    }
-  }
-
   const renderSpellModal = (numericalSpellLevel) => {
-    if (spells[numericalSpellLevel].showModal && spells[numericalSpellLevel].classSpells.length === 0) {
-      axios.get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
-      .then(res => {
-        let fetchedSpellsArr = res.data.results
-        setSpells(spells => ({ ...spells, [numericalSpellLevel]: { ...spells[numericalSpellLevel], classSpells: fetchedSpellsArr}}));
-        fetchClassSpellsDetails(numericalSpellLevel, fetchedSpellsArr)
-      })
-      .catch(error => {
-        console.log('Error fetching spells:', error);
-      });
-    }
     return (
       <div>
         {showClassSpellsButton(numericalSpellLevel)}

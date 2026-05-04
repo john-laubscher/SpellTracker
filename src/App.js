@@ -7,6 +7,18 @@ import axios from "axios";
 import { AuthContext, CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
 import ThemeConfig, { BackgroundWrapper, CharCreationBGPic } from "./components/ThemeConfig";
 
+const loadPreparedSpellsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_spellsPrepared");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -21,61 +33,65 @@ function App() {
     return { token: token || null, user };
   });
 
-  const [characterInfo, setCharacterInfo] = useState({
-    characterName: "Garetjax",
-    race: "Dwarf",
-    subrace: "Hill",
-    // default characterClass should be "noClass" rather than empty string
-    characterClass: "cleric",
-    subclass: "grave",
-    characterLevel: 10,
-    proficiencyMod: 4,
-    hp: 100,
-    ac: 17,
-    weapons: [
-      {
-        name: "Longsword",      
-        dmgType: "slashing",    
-        mod: 1,
-        statMod: "str",
-        proficient: true,
+  const [characterInfo, setCharacterInfo] = useState(() => {
+    const persistedPrepared = loadPreparedSpellsFromStorage();
+    return {
+      characterName: "Garetjax",
+      race: "Dwarf",
+      subrace: "Hill",
+      // default characterClass should be "noClass" rather than empty string
+      characterClass: "cleric",
+      subclass: "grave",
+      characterLevel: 10,
+      proficiencyMod: 4,
+      hp: 100,
+      ac: 17,
+      weapons: [
+        {
+          name: "Longsword",
+          dmgType: "slashing",
+          mod: 1,
+          statMod: "str",
+          proficient: true,
+        },
+      ],
+      spellcastingMod: 2,
+      wizardSpellCountMod: 2,
+      stats: {
+        str: { value: 8, mod: -1 },
+        dex: { value: 10, mod: 0 },
+        con: { value: 11, mod: 0 },
+        int: { value: 13, mod: 1 },
+        wis: { value: 15, mod: 2 },
+        cha: { value: 17, mod: 3 },
       },
-    ],
-    spellcastingMod: 2,
-    wizardSpellCountMod: 2,
-    stats: {
-      'str': {value:8, mod:-1},
-      'dex': {value:10, mod:0},
-      'con': {value:11, mod:0},
-      'int': {value:13, mod:1},
-      'wis': {value:15, mod:2}, 
-      'cha': {value:17, mod:3}
-    },
-    spellsPrepared: {
-      0:[],
-      1:[],
-      2:[],
-      3:[],
-      4:[],
-      5:[],
-      6:[],
-      7:[],
-      8:[],
-      9:[]
-    }
+      spellsPrepared: {
+        0: [],
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: [],
+        6: [],
+        7: [],
+        8: [],
+        9: [],
+        ...(persistedPrepared || {}),
+      },
+    };
   });
 
   const [classSpellsDetails, setClassSpellsDetails] = useState({
-    0: [],
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
+    0: {},
+    1: {},
+    2: {},
+    3: {},
+    4: {},
+    5: {},
+    6: {},
+    7: {},
+    8: {},
+    9: {},
   })
 
   useEffect(() => {
@@ -95,6 +111,17 @@ function App() {
         localStorage.removeItem("spelltracker_user");
       });
   }, [auth.token, auth.user]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_spellsPrepared",
+        JSON.stringify(characterInfo.spellsPrepared || {})
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.spellsPrepared]);
 
   return (
     <div className="App">
