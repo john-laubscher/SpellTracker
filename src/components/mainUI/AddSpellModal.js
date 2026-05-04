@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import axios from 'axios';
 
 import SpellAccordian from './SpellAccordian';
-import { PrepareSpellButton } from './PrepareSpellButton';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -25,10 +24,11 @@ import Typography from '@mui/material/Typography';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 
 import { AuthContext, CharacterInfoContext } from '../../Contexts/Context';
 
-const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) => {
+const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spellsLoading, spellsError }) => {
   const { auth, setAuth } = React.useContext(AuthContext);
   const token = auth?.token;
   const { setCharacterInfo } = React.useContext(CharacterInfoContext);
@@ -59,8 +59,15 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
   const [editingCustomSpellIndex, setEditingCustomSpellIndex] = React.useState(null);
   const [deleteConfirm, setDeleteConfirm] = React.useState({ open: false, spell: null });
 
+  const [checkedSpellIndexes, setCheckedSpellIndexes] = React.useState(() => new Set());
+
   useEffect(() => {
   }, [spells]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    setCheckedSpellIndexes(new Set());
+  }, [isModalOpen, numericalSpellLevel]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -350,79 +357,176 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
     }
   };
 
+  const renderSpellRow = (spell, key, actionButton, rowIndex = 0) => {
+    const indexKey = String(spell?.index || key);
+    const isChecked = checkedSpellIndexes.has(indexKey);
+    const rowBg = rowIndex % 2 === 1 ? 'rgba(0,0,0,0.10)' : 'transparent';
+
+    return (
+      <ListItem
+        key={key}
+        disableGutters
+        sx={{ py: 0.25, borderRadius: '6px', backgroundColor: rowBg }}
+      >
+        <SpellAccordian
+          numericalSpellLevel={numericalSpellLevel}
+          spell={spell}
+          leadingControl={
+            <Checkbox
+              size="small"
+              checked={isChecked}
+              onChange={(e) => {
+                const nextChecked = e.target.checked;
+                setCheckedSpellIndexes((prev) => {
+                  const next = new Set(prev);
+                  if (nextChecked) next.add(indexKey);
+                  else next.delete(indexKey);
+                  return next;
+                });
+              }}
+              inputProps={{ 'aria-label': `Select ${spell?.name || 'spell'}` }}
+            />
+          }
+          actionButton={actionButton || null}
+        />
+      </ListItem>
+    );
+  };
+
   const renderSpells = () => {
     return spells.map((spell, index) => {
-      return (
-        <div key={spell?.index || index}>
-          <PrepareSpellButton spell={spell} numericalSpellLevel={numericalSpellLevel} index={index} />
-          <SpellAccordian numericalSpellLevel={numericalSpellLevel} spell={spell} />
-        </div>
+      return renderSpellRow(
+        spell,
+        spell?.index || index,
+        null,
+        index
       );
     });
   };
 
+  const prepareCheckedSpells = () => {
+    const checked = Array.from(checkedSpellIndexes);
+    if (checked.length === 0) return;
+
+    const byIndex = new Map();
+    spells.forEach((s) => {
+      if (s?.index) byIndex.set(String(s.index), s);
+    });
+    customSpells.forEach((s) => {
+      if (s?.index) byIndex.set(String(s.index), s);
+    });
+
+    const selectedSpells = checked.map((idx) => byIndex.get(String(idx))).filter(Boolean);
+    if (selectedSpells.length === 0) return;
+
+    setCharacterInfo((prev) => {
+      const levelKey = numericalSpellLevel;
+      const current = Array.isArray(prev.spellsPrepared?.[levelKey]) ? prev.spellsPrepared[levelKey] : [];
+      const existing = new Set(current.map((s) => String(s?.index)));
+      const toAdd = selectedSpells.filter((s) => !existing.has(String(s.index)));
+      if (toAdd.length === 0) return prev;
+      return {
+        ...prev,
+        spellsPrepared: {
+          ...prev.spellsPrepared,
+          [levelKey]: [...current, ...toAdd],
+        },
+      };
+    });
+
+    setCheckedSpellIndexes(new Set());
+  };
+
   return (
     <>
-      <Dialog onClose={onClose} open={isModalOpen} fullWidth maxWidth="md">
-        <DialogTitle>Choose spells to prepare</DialogTitle>
+      <Dialog onClose={onClose} open={isModalOpen} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ pr: 5 }}>
+          Choose spells to prepare
+          <IconButton
+            aria-label="Close"
+            onClick={onClose}
+            size="small"
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'rgba(0,0,0,0.55)',
+              '&:hover': { backgroundColor: 'rgba(0,0,0,0.06)' },
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
         <DialogContent dividers>
           <List sx={{ pt: 0 }}>
-            {renderSpells()}
-
-            <Divider sx={{ my: 1 }} />
-            <ListItem disableGutters>
-              <Box sx={{ width: '100%', px: 1 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: '13px', opacity: 0.75 }}>
-                  Custom Spells
-                </Typography>
-                {customSpellsLoading ? (
-                  <Typography variant="body2" sx={{ opacity: 0.7, mt: 0.5 }}>
-                    Loading custom spells…
+            {spellsLoading ? (
+              <ListItem disableGutters>
+                <Box sx={{ width: '100%', px: 1 }}>
+                  <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                    Loading spellsâ€¦
                   </Typography>
-                ) : null}
-                {!customSpellsLoading && customSpells.length === 0 ? (
-                  <Typography variant="body2" sx={{ opacity: 0.7, mt: 0.5 }}>
-                    {token ? 'No custom spells yet.' : 'Log in to view your custom spells.'}
+                </Box>
+              </ListItem>
+            ) : null}
+            {spellsError ? (
+              <ListItem disableGutters>
+                <Box sx={{ width: '100%', px: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#c62828' }}>
+                    {spellsError}
                   </Typography>
-                ) : null}
-
-                {customSpells.map((spell, idx) => (
-                  <Box key={spell.index || idx} sx={{ mt: 1 }}>
-                    <SpellAccordian
-                      numericalSpellLevel={numericalSpellLevel}
-                      spell={spell}
-                      actionButton={
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                          <PrepareSpellButton
-                            spell={spell}
-                            numericalSpellLevel={numericalSpellLevel}
-                            index={`custom-${idx}`}
-                          />
-                          <Tooltip title="Edit" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => openEditCustomSpellModal(spell, idx)}
-                              aria-label="Edit custom spell"
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => requestDeleteCustomSpell(spell)}
-                              aria-label="Delete custom spell"
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      }
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </ListItem>
+                </Box>
+              </ListItem>
+            ) : null}
+	            {renderSpells()}
+	
+	            <Divider sx={{ my: 1 }} />
+	            <ListItem disableGutters sx={{ py: 0.25, px: 1 }}>
+	              <Typography sx={{ fontWeight: 700, fontSize: '13px', opacity: 0.75 }}>
+	                Custom Spells
+	              </Typography>
+	            </ListItem>
+	            {customSpellsLoading ? (
+	              <ListItem disableGutters sx={{ py: 0.25, px: 1 }}>
+	                <Typography variant="body2" sx={{ opacity: 0.7 }}>
+	                  Loading custom spells...
+	                </Typography>
+	              </ListItem>
+	            ) : null}
+	            {!customSpellsLoading && customSpells.length === 0 ? (
+	              <ListItem disableGutters sx={{ py: 0.25, px: 1 }}>
+	                <Typography variant="body2" sx={{ opacity: 0.7 }}>
+	                  {token ? 'No custom spells yet.' : 'Log in to view your custom spells.'}
+	                </Typography>
+	              </ListItem>
+	            ) : null}
+            {customSpells.map((spell, idx) =>
+              renderSpellRow(
+                spell,
+                spell.index || `custom-${idx}`,
+                <>
+                  <Tooltip title="Edit" arrow>
+                    <IconButton
+                      size="small"
+                      onClick={() => openEditCustomSpellModal(spell, idx)}
+	                      aria-label="Edit custom spell"
+	                    >
+	                      <EditIcon fontSize="small" />
+	                    </IconButton>
+	                  </Tooltip>
+	                  <Tooltip title="Delete" arrow>
+	                    <IconButton
+	                      size="small"
+	                      onClick={() => requestDeleteCustomSpell(spell)}
+	                      aria-label="Delete custom spell"
+	                    >
+	                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </>
+                ,
+                idx
+              )
+            )}
             <Divider sx={{ my: 1 }} />
             <ListItem disableGutters>
               <ListItemButton onClick={() => openCustomSpellModal()}>
@@ -431,8 +535,30 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
             </ListItem>
           </List>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Exit Spell List</Button>
+        <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
+          <Button
+            onClick={onClose}
+            sx={{
+              textTransform: 'none',
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              color: '#5d4037',
+              backgroundColor: 'rgba(93,64,55,0.06)',
+              '&:hover': {
+                backgroundColor: 'rgba(93,64,55,0.14)',
+              },
+            }}
+          >
+            Exit Spell List
+          </Button>
+          <Button
+            variant="contained"
+            onClick={prepareCheckedSpells}
+            disabled={checkedSpellIndexes.size === 0}
+            sx={{ textTransform: 'none', fontFamily: "'Cinzel', serif" }}
+          >
+            Prepare Checked Spells
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -582,7 +708,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
             type="submit"
           >
             {customSpellSaving
-              ? 'Saving…'
+              ? 'Savingâ€¦'
               : editingCustomSpellIndex === null
                 ? 'Create'
                 : 'Save'}
@@ -598,7 +724,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
       >
         <DialogTitle>Delete Custom Spell?</DialogTitle>
         <DialogContent dividers>
-          <Typography>Delete “{deleteConfirm.spell?.name}”? This can’t be undone.</Typography>
+          <Typography>Delete â€œ{deleteConfirm.spell?.name}â€? This canâ€™t be undone.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirm({ open: false, spell: null })}>Cancel</Button>
@@ -612,3 +738,4 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells }) =
 };
 
 export default AddSpellsModal;
+
