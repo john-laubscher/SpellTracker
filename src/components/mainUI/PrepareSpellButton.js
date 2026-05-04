@@ -85,6 +85,9 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
     const classes = togglePreparedSpellBtnStyle();
 
     const buttonClass = isSpellAlreadyPrepared ? classes.preparedButton : classes.prepareButton;
+    const isCantrip = Number(numericalSpellLevel) === 0;
+    const preparedLabel = isCantrip ? 'Forget' : 'Unprepare';
+    const unpreparedLabel = isCantrip ? 'Learn Cantrip' : 'Prepare Spell';
 
     return (
             <Button
@@ -102,7 +105,7 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
                 }
               }}
             >
-              {isSpellAlreadyPrepared ? 'Unprepare' : 'Prepare Spell'}
+              {isSpellAlreadyPrepared ? preparedLabel : unpreparedLabel}
             </Button>
     )
 }

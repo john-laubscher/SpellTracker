@@ -27,6 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { AuthContext, CharacterInfoContext } from '../../Contexts/Context';
+import PreparedSpellsStatus from './PreparedSpellsStatus';
 
 const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spellsLoading, spellsError }) => {
   const { auth, setAuth } = React.useContext(AuthContext);
@@ -60,6 +61,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
   const [deleteConfirm, setDeleteConfirm] = React.useState({ open: false, spell: null });
 
   const [checkedSpellIndexes, setCheckedSpellIndexes] = React.useState(() => new Set());
+  const isCantrips = Number(numericalSpellLevel) === 0;
 
   useEffect(() => {
   }, [spells]);
@@ -441,7 +443,20 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
     <>
       <Dialog onClose={onClose} open={isModalOpen} fullWidth maxWidth="xs">
         <DialogTitle sx={{ pr: 5 }}>
-          Choose spells to prepare
+          {isCantrips ? (
+            'Choose cantrips to learn'
+          ) : (
+            <PreparedSpellsStatus
+              label="Choose spells to prepare"
+              typographySx={{
+                fontFamily: 'inherit',
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                letterSpacing: 0,
+                textTransform: 'none',
+              }}
+            />
+          )}
           <IconButton
             aria-label="Close"
             onClick={onClose}
@@ -549,7 +564,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
               },
             }}
           >
-            Exit Spell List
+            {isCantrips ? 'Exit Cantrip List' : 'Exit Spell List'}
           </Button>
           <Button
             variant="contained"
@@ -557,7 +572,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
             disabled={checkedSpellIndexes.size === 0}
             sx={{ textTransform: 'none', fontFamily: "'Cinzel', serif" }}
           >
-            Prepare Checked Spells
+            {isCantrips ? 'Learn Checked Cantrips' : 'Prepare Checked Spells'}
           </Button>
         </DialogActions>
       </Dialog>
