@@ -17,6 +17,7 @@ import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import Divider from "@mui/material/Divider";
 
+import AuthControls from "./AuthControls";
 
 export const CharacterCreationForm = (props) => {
 
@@ -36,7 +37,7 @@ export const CharacterCreationForm = (props) => {
       ...prev,
       proficiencyMod: proficiencyBonus[prev.characterLevel] || 2, // Fallback to 2 for safety
     }));
-  }, [characterInfo.characterLevel]);
+  }, [characterInfo.characterLevel, setCharacterInfo]);
 
   const renderWizardSpellCountMod = () => {
     if (characterInfo.characterClass === 'wizard') {
@@ -117,6 +118,17 @@ export const CharacterCreationForm = (props) => {
 
   return (
     <Box component="form" noValidate autoComplete="off" sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
+
+      <Box
+        sx={{
+          position: "fixed",
+          top: 12,
+          right: 12,
+          zIndex: 2000,
+        }}
+      >
+        <AuthControls />
+      </Box>
 
       {/* Character Name */}
       <Box sx={{ ...sectionStyle, maxWidth: "180px", width: "100%" }}>

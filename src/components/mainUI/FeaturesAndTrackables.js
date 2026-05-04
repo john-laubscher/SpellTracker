@@ -85,7 +85,7 @@ const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, ma
               sx={{
                 mt: "-2px",
                 ml: 0.25,
-                opacity: showHeaderActions ? 1 : 0,
+                opacity: showHeaderActions ? 1 : 0.25,
                 transition: "opacity 120ms ease",
                 "&:focus-visible": { opacity: 1 },
               }}
@@ -185,7 +185,7 @@ const FeaturesAndTrackables = () => {
     }
 
     axios
-      .get("http://localhost:3001/custom-features", {
+      .get("/custom-features", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setCustomFeatures(res.data?.results || []))
@@ -331,7 +331,7 @@ const FeaturesAndTrackables = () => {
       );
       try {
         const res = await axios.put(
-          `http://localhost:3001/custom-features/${apiId}`,
+          `/custom-features/${apiId}`,
           { tracked: Boolean(tracked) },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -469,7 +469,7 @@ const FeaturesAndTrackables = () => {
           if (!deletingCustom?.apiId || !token || deleting) return;
           setDeleting(true);
           try {
-            await axios.delete(`http://localhost:3001/custom-features/${deletingCustom.apiId}`, {
+            await axios.delete(`/custom-features/${deletingCustom.apiId}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             setCustomFeatures((prev) => (prev || []).filter((f) => f.id !== deletingCustom.apiId));

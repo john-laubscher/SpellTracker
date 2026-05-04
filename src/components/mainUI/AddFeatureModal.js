@@ -19,9 +19,14 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
   const token = auth?.token;
 
   const [authMode, setAuthMode] = React.useState('login'); // 'login' | 'register'
+  const [authScreen, setAuthScreen] = React.useState('auth'); // 'auth' | 'requestReset' | 'reset'
   const [authEmail, setAuthEmail] = React.useState('');
   const [authPassword, setAuthPassword] = React.useState('');
   const [authError, setAuthError] = React.useState('');
+  const [resetEmail, setResetEmail] = React.useState('');
+  const [resetToken, setResetToken] = React.useState('');
+  const [resetNewPassword, setResetNewPassword] = React.useState('');
+  const [resetStatus, setResetStatus] = React.useState('');
   const [feature, setFeature] = React.useState({ title: '', description: '', tracked: true });
   const [saving, setSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState('');
@@ -32,6 +37,11 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
     setSaveError('');
     setSaving(false);
     setFeature({ title: '', description: '', tracked: true });
+    setAuthScreen('auth');
+    setResetEmail('');
+    setResetToken('');
+    setResetNewPassword('');
+    setResetStatus('');
   }, [open, kind]);
 
   const submitAuth = async () => {
@@ -45,7 +55,7 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
 
     const endpoint = authMode === 'register' ? '/auth/register' : '/auth/login';
     try {
-      const res = await axios.post(`http://localhost:3001${endpoint}`, { email, password });
+      const res = await axios.post(endpoint, { email, password });
       const nextToken = res.data?.token;
       const user = res.data?.user || null;
       if (!nextToken) throw new Error('No token returned');
@@ -69,6 +79,59 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
     }
   };
 
+  const submitPasswordResetRequest = async () => {
+    setResetStatus('');
+    const email = String(resetEmail || authEmail || '').trim().toLowerCase();
+    if (!email) {
+      setResetStatus('Email is required.');
+      return;
+    }
+
+    try {
+      const res = await axios.post('/auth/request-password-reset', { email });
+      const tokenFromServer = String(res.data?.token || '');
+      setResetEmail(email);
+      if (tokenFromServer) setResetToken(tokenFromServer);
+      setResetStatus(
+        tokenFromServer
+          ? 'Reset token generated (dev only). Use it below to set a new password.'
+          : 'If that email exists, a reset email would be sent.'
+      );
+      setAuthScreen('reset');
+    } catch {
+      setResetStatus('Failed to request reset. Try again.');
+    }
+  };
+
+  const submitPasswordReset = async () => {
+    setResetStatus('');
+    const email = String(resetEmail || '').trim().toLowerCase();
+    const tokenValue = String(resetToken || '').trim();
+    const nextPassword = String(resetNewPassword || '');
+    if (!email || !tokenValue || !nextPassword) {
+      setResetStatus('Email, token, and new password are required.');
+      return;
+    }
+
+    try {
+      await axios.post('/auth/reset-password', {
+        email,
+        token: tokenValue,
+        newPassword: nextPassword,
+      });
+      setResetStatus('Password updated. You can log in now.');
+      setAuthMode('login');
+      setAuthPassword('');
+      setResetToken('');
+      setResetNewPassword('');
+      setAuthScreen('auth');
+    } catch (e) {
+      const err = e?.response?.data?.error;
+      if (err === 'weak_password') setResetStatus('Password is too short (min 6 characters).');
+      else setResetStatus('Reset failed. Check the token or request a new one.');
+    }
+  };
+
   const canSave = Boolean(token) && Boolean(feature.title.trim());
 
   const submitFeature = async () => {
@@ -77,7 +140,7 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
     setSaveError('');
     try {
       const res = await axios.post(
-        'http://localhost:3001/custom-features',
+        '/custom-features',
         {
           kind,
           title: feature.title.trim(),
@@ -110,39 +173,101 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
             <Typography sx={{ mb: 1.5, fontSize: '14px', color: '#5d4037' }}>
               Log in to add custom features.
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-              <Button
-                size="small"
-                variant={authMode === 'login' ? 'contained' : 'outlined'}
-                onClick={() => setAuthMode('login')}
-              >
-                Login
-              </Button>
-              <Button
-                size="small"
-                variant={authMode === 'register' ? 'contained' : 'outlined'}
-                onClick={() => setAuthMode('register')}
-              >
-                Register
-              </Button>
-            </Box>
-            <TextField
-              fullWidth
-              label="Email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              sx={{ mb: 1.5 }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              sx={{ mb: 1 }}
-            />
-            {authError ? (
-              <Typography sx={{ color: 'error.main', fontSize: '13px' }}>{authError}</Typography>
+            {authScreen === 'auth' ? (
+              <>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                  <Button
+                    size="small"
+                    variant={authMode === 'login' ? 'contained' : 'outlined'}
+                    onClick={() => setAuthMode('login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={authMode === 'register' ? 'contained' : 'outlined'}
+                    onClick={() => setAuthMode('register')}
+                  >
+                    Register
+                  </Button>
+                  <Button size="small" variant="text" onClick={() => setAuthScreen('requestReset')}>
+                    Forgot password?
+                  </Button>
+                </Box>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  sx={{ mb: 1.5 }}
+                />
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                {authError ? (
+                  <Typography sx={{ color: 'error.main', fontSize: '13px' }}>{authError}</Typography>
+                ) : null}
+              </>
+            ) : null}
+
+            {authScreen === 'requestReset' ? (
+              <>
+                <Typography sx={{ mb: 1, fontSize: '14px', color: '#5d4037' }}>
+                  Request a password reset.
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                {resetStatus ? (
+                  <Typography sx={{ color: 'text.secondary', fontSize: '13px', mb: 1 }}>
+                    {resetStatus}
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
+
+            {authScreen === 'reset' ? (
+              <>
+                <Typography sx={{ mb: 1, fontSize: '14px', color: '#5d4037' }}>
+                  Set a new password.
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  label="Reset Token"
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  label="New Password"
+                  type="password"
+                  value={resetNewPassword}
+                  onChange={(e) => setResetNewPassword(e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                {resetStatus ? (
+                  <Typography sx={{ color: 'text.secondary', fontSize: '13px' }}>
+                    {resetStatus}
+                  </Typography>
+                ) : null}
+              </>
             ) : null}
           </Box>
         ) : (
@@ -183,9 +308,31 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
           Cancel
         </Button>
         {!token ? (
-          <Button onClick={submitAuth} variant="contained">
-            {authMode === 'register' ? 'Register' : 'Login'}
+          <>
+            {authScreen !== 'auth' ? (
+              <Button onClick={() => setAuthScreen('auth')} variant="text">
+                Back
+              </Button>
+            ) : null}
+            <Button
+            onClick={
+              authScreen === 'auth'
+                ? submitAuth
+                : authScreen === 'requestReset'
+                  ? submitPasswordResetRequest
+                  : submitPasswordReset
+            }
+            variant="contained"
+          >
+            {authScreen === 'auth'
+              ? authMode === 'register'
+                ? 'Register'
+                : 'Login'
+              : authScreen === 'requestReset'
+                ? 'Request Reset'
+                : 'Reset Password'}
           </Button>
+          </>
         ) : (
           <Button onClick={submitFeature} variant="contained" disabled={!canSave || saving}>
             {saving ? 'Saving…' : 'Save'}

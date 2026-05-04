@@ -35,7 +35,7 @@ const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButto
       setDetailsLoading(true);
 
       axios
-        .get(`http://localhost:3001/singlespell/${spell.index}`, { signal: controller.signal })
+        .get(`/singlespell/${spell.index}`, { signal: controller.signal })
         .then((res) => {
           const spellDetails = res.data;
           setClassSpellsDetails((prev) => ({

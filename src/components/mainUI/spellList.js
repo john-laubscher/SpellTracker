@@ -107,7 +107,7 @@ export const SpellList = (props) => {
     }));
 
     axios
-      .get(`http://localhost:3001/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
+      .get(`/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
       .then((res) => {
         const fetchedSpellsArr = res.data?.results || [];
         setSpells((prevSpells) => ({

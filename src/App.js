@@ -97,7 +97,7 @@ function App() {
   useEffect(() => {
     if (!auth.token || auth.user) return;
     axios
-      .get("http://localhost:3001/auth/me", {
+      .get("/auth/me", {
         headers: { Authorization: `Bearer ${auth.token}` },
       })
       .then((res) => {

@@ -36,9 +36,14 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
 
   const [isAuthOpen, setIsAuthOpen] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('login'); // 'login' | 'register'
+  const [authScreen, setAuthScreen] = React.useState('auth'); // 'auth' | 'requestReset' | 'reset'
   const [authEmail, setAuthEmail] = React.useState('');
   const [authPassword, setAuthPassword] = React.useState('');
   const [authError, setAuthError] = React.useState('');
+  const [resetEmail, setResetEmail] = React.useState('');
+  const [resetToken, setResetToken] = React.useState('');
+  const [resetNewPassword, setResetNewPassword] = React.useState('');
+  const [resetStatus, setResetStatus] = React.useState('');
   const [postAuthAction, setPostAuthAction] = React.useState(null); // 'openCreate' | null
 
   const [isCustomSpellOpen, setIsCustomSpellOpen] = React.useState(false);
@@ -72,6 +77,15 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
   }, [isModalOpen, numericalSpellLevel]);
 
   useEffect(() => {
+    if (!isAuthOpen) return;
+    setAuthScreen('auth');
+    setResetEmail('');
+    setResetToken('');
+    setResetNewPassword('');
+    setResetStatus('');
+  }, [isAuthOpen]);
+
+  useEffect(() => {
     if (!isModalOpen) return;
     if (!token) {
       setCustomSpells([]);
@@ -80,7 +94,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
 
     setCustomSpellsLoading(true);
     axios
-      .get(`http://localhost:3001/custom-spells?level=${numericalSpellLevel}`, {
+      .get(`/custom-spells?level=${numericalSpellLevel}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setCustomSpells(res.data?.results || []))
@@ -146,7 +160,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
 
     const endpoint = authMode === 'register' ? '/auth/register' : '/auth/login';
     try {
-      const res = await axios.post(`http://localhost:3001${endpoint}`, { email, password });
+      const res = await axios.post(endpoint, { email, password });
       const nextToken = res.data?.token;
       const user = res.data?.user || null;
       if (!nextToken) throw new Error('No token returned');
@@ -175,6 +189,59 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
             : 'Login failed. Check your email/password.'
         );
       }
+    }
+  };
+
+  const submitPasswordResetRequest = async () => {
+    setResetStatus('');
+    const email = String(resetEmail || authEmail || '').trim().toLowerCase();
+    if (!email) {
+      setResetStatus('Email is required.');
+      return;
+    }
+
+    try {
+      const res = await axios.post('/auth/request-password-reset', { email });
+      const tokenFromServer = String(res.data?.token || '');
+      setResetEmail(email);
+      if (tokenFromServer) setResetToken(tokenFromServer);
+      setResetStatus(
+        tokenFromServer
+          ? 'Reset token generated (dev only). Use it below to set a new password.'
+          : 'If that email exists, a reset email would be sent.'
+      );
+      setAuthScreen('reset');
+    } catch {
+      setResetStatus('Failed to request reset. Try again.');
+    }
+  };
+
+  const submitPasswordReset = async () => {
+    setResetStatus('');
+    const email = String(resetEmail || '').trim().toLowerCase();
+    const tokenValue = String(resetToken || '').trim();
+    const nextPassword = String(resetNewPassword || '');
+    if (!email || !tokenValue || !nextPassword) {
+      setResetStatus('Email, token, and new password are required.');
+      return;
+    }
+
+    try {
+      await axios.post('/auth/reset-password', {
+        email,
+        token: tokenValue,
+        newPassword: nextPassword,
+      });
+      setResetStatus('Password updated. You can log in now.');
+      setAuthMode('login');
+      setAuthPassword('');
+      setResetToken('');
+      setResetNewPassword('');
+      setAuthScreen('auth');
+    } catch (e) {
+      const err = e?.response?.data?.error;
+      if (err === 'weak_password') setResetStatus('Password is too short (min 6 characters).');
+      else setResetStatus('Reset failed. Check the token or request a new one.');
     }
   };
 
@@ -253,8 +320,8 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
     try {
       const isEdit = editingCustomSpellIndex !== null;
       const endpoint = isEdit
-        ? `http://localhost:3001/custom-spells/${getCustomSpellId(customSpells[editingCustomSpellIndex])}`
-        : 'http://localhost:3001/custom-spells';
+        ? `/custom-spells/${getCustomSpellId(customSpells[editingCustomSpellIndex])}`
+        : '/custom-spells';
 
       const normalized = normalizeSpellPayload(customSpell, numericalSpellLevel);
       const payload = isEdit
@@ -342,7 +409,7 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
     }
 
     try {
-      await axios.delete(`http://localhost:3001/custom-spells/${id}`, {
+      await axios.delete(`/custom-spells/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -578,46 +645,128 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
       </Dialog>
 
       <Dialog open={isAuthOpen} onClose={() => setIsAuthOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>{authMode === 'register' ? 'Register' : 'Log In'}</DialogTitle>
+        <DialogTitle>
+          {authScreen === 'auth'
+            ? authMode === 'register'
+              ? 'Register'
+              : 'Log In'
+            : authScreen === 'requestReset'
+              ? 'Reset Password'
+              : 'Set New Password'}
+        </DialogTitle>
         <DialogContent dividers>
           <Box
             component="form"
             onSubmit={(e) => {
               e.preventDefault();
-              submitAuth();
+              if (authScreen === 'auth') submitAuth();
+              else if (authScreen === 'requestReset') submitPasswordResetRequest();
+              else submitPasswordReset();
             }}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}
           >
-            <TextField
-              label="Email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Password"
-              type="password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              fullWidth
-            />
-            {authError ? (
-              <Typography variant="body2" sx={{ color: '#c62828' }}>
-                {authError}
-              </Typography>
+            {authScreen === 'auth' ? (
+              <>
+                <TextField
+                  label="Email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Password"
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  fullWidth
+                />
+                {authError ? (
+                  <Typography variant="body2" sx={{ color: '#c62828' }}>
+                    {authError}
+                  </Typography>
+                ) : null}
+                <Button
+                  variant="text"
+                  onClick={() => setAuthMode((m) => (m === 'login' ? 'register' : 'login'))}
+                >
+                  {authMode === 'login' ? 'Need an account? Register' : 'Have an account? Log in'}
+                </Button>
+                <Button variant="text" onClick={() => setAuthScreen('requestReset')}>
+                  Forgot password?
+                </Button>
+              </>
             ) : null}
-            <Button
-              variant="text"
-              onClick={() => setAuthMode((m) => (m === 'login' ? 'register' : 'login'))}
-            >
-              {authMode === 'login' ? 'Need an account? Register' : 'Have an account? Log in'}
-            </Button>
+
+            {authScreen === 'requestReset' ? (
+              <>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Enter your email and request a reset token.
+                </Typography>
+                <TextField
+                  label="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  fullWidth
+                />
+                {resetStatus ? (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {resetStatus}
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
+
+            {authScreen === 'reset' ? (
+              <>
+                <TextField
+                  label="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Reset Token"
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="New Password"
+                  type="password"
+                  value={resetNewPassword}
+                  onChange={(e) => setResetNewPassword(e.target.value)}
+                  fullWidth
+                />
+                {resetStatus ? (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {resetStatus}
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsAuthOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={submitAuth} type="submit">
-            {authMode === 'register' ? 'Register' : 'Log In'}
+          {authScreen !== 'auth' ? <Button onClick={() => setAuthScreen('auth')}>Back</Button> : null}
+          <Button
+            variant="contained"
+            onClick={
+              authScreen === 'auth'
+                ? submitAuth
+                : authScreen === 'requestReset'
+                  ? submitPasswordResetRequest
+                  : submitPasswordReset
+            }
+            type="submit"
+          >
+            {authScreen === 'auth'
+              ? authMode === 'register'
+                ? 'Register'
+                : 'Log In'
+              : authScreen === 'requestReset'
+                ? 'Request Reset'
+                : 'Reset Password'}
           </Button>
         </DialogActions>
       </Dialog>

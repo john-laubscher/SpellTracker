@@ -37,7 +37,7 @@ const EditCustomFeatureModal = ({ open, feature, onClose, onUpdated }) => {
     setError("");
     try {
       const res = await axios.put(
-        `http://localhost:3001/custom-features/${feature.apiId}`,
+        `/custom-features/${feature.apiId}`,
         { title: title.trim(), description: description.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
+const crypto = require("crypto");
 
 const { readStore, updateStore } = require("./store");
 const { hashPassword, newId, signToken, verifyToken } = require("./auth");
@@ -68,6 +69,83 @@ app.get("/auth/me", requireAuth, (req, res) => {
   const user = store.users.find((u) => u.id === req.userId);
   if (!user) return res.status(401).json({ error: "invalid_token" });
   return res.json({ user: { id: user.id, email: user.email } });
+});
+
+function sha256Hex(input) {
+  return crypto.createHash("sha256").update(String(input), "utf8").digest("hex");
+}
+
+function isProd() {
+  return String(process.env.NODE_ENV || "").toLowerCase() === "production";
+}
+
+// Dev-only password reset flow:
+// - POST /auth/request-password-reset { email } -> { ok: true, token? }
+// - POST /auth/reset-password { email, token, newPassword } -> { ok: true }
+//
+// In production, you should email the token (or a reset link) and omit it from the response.
+app.post("/auth/request-password-reset", (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: "missing_email" });
+
+  let issuedToken = null;
+  updateStore((s) => {
+    const next = { ...s };
+    next.users = (s.users || []).map((u) => {
+      if (u.email !== email) return u;
+      issuedToken = crypto.randomBytes(32).toString("hex");
+      const resetTokenHashHex = sha256Hex(issuedToken);
+      return {
+        ...u,
+        resetTokenHashHex,
+        resetTokenExpiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
+        resetTokenIssuedAt: Date.now(),
+      };
+    });
+    return next;
+  });
+
+  // Always return ok=true to avoid email enumeration.
+  // In dev, include the token to keep the flow usable without an email provider.
+  return res.json({ ok: true, ...(issuedToken && !isProd() ? { token: issuedToken } : {}) });
+});
+
+app.post("/auth/reset-password", (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const token = String(req.body?.token || "").trim();
+  const newPassword = String(req.body?.newPassword || "");
+
+  if (!email || !token || !newPassword) return res.status(400).json({ error: "missing_fields" });
+  if (newPassword.length < 6) return res.status(400).json({ error: "weak_password" });
+
+  const tokenHashHex = sha256Hex(token);
+
+  let updated = false;
+  updateStore((s) => {
+    const next = { ...s };
+    next.users = (s.users || []).map((u) => {
+      if (u.email !== email) return u;
+      const expiresAt = Number(u.resetTokenExpiresAt || 0);
+      if (!u.resetTokenHashHex || expiresAt <= Date.now()) return u;
+      if (u.resetTokenHashHex !== tokenHashHex) return u;
+
+      const { saltHex, hashHex } = hashPassword(newPassword);
+      updated = true;
+      return {
+        ...u,
+        saltHex,
+        hashHex,
+        resetTokenHashHex: null,
+        resetTokenExpiresAt: null,
+        resetTokenIssuedAt: null,
+        updatedAt: Date.now(),
+      };
+    });
+    return next;
+  });
+
+  if (!updated) return res.status(400).json({ error: "invalid_or_expired_token" });
+  return res.json({ ok: true });
 });
 
 app.get("/custom-spells", requireAuth, (req, res) => {

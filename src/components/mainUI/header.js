@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, TextField  } from '@mui/material';
+import { Tooltip, Grid, Typography, Card, CardContent, Button, IconButton, useTheme, TextField, Box } from '@mui/material';
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
@@ -9,6 +9,7 @@ import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import {WeaponsDisplay} from "./WeaponManager";
 import { calculateTotalPreparedSpells } from "../../utils/preparedSpells";
+import AuthControls from "../AuthControls";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -118,7 +119,19 @@ const determineNoncasters = () => {
 // Each weapon can have a tooltip description with damage type and other info
 // Will header eventually need to be moved to top to make room for spell list??
 
-    <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
+    <>
+      <Box
+        sx={{
+          position: "fixed",
+          top: 12,
+          right: 12,
+          zIndex: 2000,
+        }}
+      >
+        <AuthControls onLoggedOutNavigateTo="/" />
+      </Box>
+
+      <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
       <Grid container sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
         <Grid item>
           <IconButton onClick={toggleDetails}>
@@ -245,6 +258,7 @@ const determineNoncasters = () => {
         </Grid>
       )}
     </Card>
+    </>
   );
 };
 

@@ -43,7 +43,7 @@ const PrepareSubraceSpells = () => {
       }
 
       Promise.all(
-        availableSubraceSpells.map((spell) => axios.get(`http://localhost:3001/singlespell/${spell}`))
+        availableSubraceSpells.map((spell) => axios.get(`/singlespell/${spell}`))
       )
         .then((spellDataResponses) => {
           spellDataResponses.forEach((spellDataResponse, index) => {
