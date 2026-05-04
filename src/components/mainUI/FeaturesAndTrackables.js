@@ -6,6 +6,7 @@ import React, { useContext } from "react";
 import axios from "axios";
 import {
   Typography,
+  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -134,23 +135,27 @@ const FeaturesAndTrackables = () => {
 
   return (
     <div>
-      {/* Class Features Section */}
-      <FeatureDisplay
-        title="Class Features"
-        addTooltip="Add custom Class Feature"
-        onAdd={() => setAddModal({ open: true, kind: "class" })}
-        features={[...classFeatures, ...classCustom]}
-        untrackedLabel="Untracked Class Features"
-      />
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <FeatureDisplay
+            title="Class Features"
+            addTooltip="Add custom Class Feature"
+            onAdd={() => setAddModal({ open: true, kind: "class" })}
+            features={[...classFeatures, ...classCustom]}
+            untrackedLabel="Untracked Class Features"
+          />
+        </Grid>
 
-      {/* Subclass Features Section */}
-      <FeatureDisplay
-        title="Subclass Features"
-        addTooltip="Add custom Subclass Feature"
-        onAdd={() => setAddModal({ open: true, kind: "subclass" })}
-        features={[...subclassFeatures, ...subclassCustom]}
-        untrackedLabel="Untracked Subclass Features"
-      />
+        <Grid item xs={12} md={6}>
+          <FeatureDisplay
+            title="Subclass Features"
+            addTooltip="Add custom Subclass Feature"
+            onAdd={() => setAddModal({ open: true, kind: "subclass" })}
+            features={[...subclassFeatures, ...subclassCustom]}
+            untrackedLabel="Untracked Subclass Features"
+          />
+        </Grid>
+      </Grid>
 
       {/* Racial and Miscellaneous Features Section */}
       <FeatureDisplay
