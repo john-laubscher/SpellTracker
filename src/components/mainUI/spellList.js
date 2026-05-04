@@ -13,6 +13,7 @@ import SpellCheckboxes from "./SpellCheckboxes";
 import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellButton";
 import SpellAccordian from './SpellAccordian';
 import { renderDailySpellsList } from './RacialSpellsList'
+import PreparedSpellsStatus from "./PreparedSpellsStatus";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -134,6 +135,8 @@ export const SpellList = (props) => {
   };
 
   const showClassSpellsButton = (numericalSpellLevel) => {
+    const isCantrips = Number(numericalSpellLevel) === 0;
+
     return (
       <div>
         <Button
@@ -155,7 +158,9 @@ export const SpellList = (props) => {
             '&:hover': { borderColor: '#8B4513', backgroundColor: 'rgba(139,69,19,0.06)' },
           }}
         >
-          {spells[numericalSpellLevel].showModal ? 'Close Spell List' : 'Prepare more spells'}
+          {spells[numericalSpellLevel].showModal
+            ? (isCantrips ? 'Close Cantrip List' : 'Close Spell List')
+            : (isCantrips ? 'Learn more cantrips' : 'Prepare more spells')}
         </Button>
         {spells[numericalSpellLevel].showModal ? <AddSpellModal
           isModalOpen={spells[numericalSpellLevel].showModal}
@@ -267,18 +272,9 @@ export const SpellList = (props) => {
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        <Typography sx={{
-          fontFamily: "'Cinzel', serif",
-          fontWeight: 700,
-          fontSize: '18px',
-          color: '#3e2723',
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-        }}>
-          Spell Tracker
-        </Typography>
+        <PreparedSpellsStatus label="Spell Tracker" />
         <Button
           className={classes.prepareButton}
           variant="contained"

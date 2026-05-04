@@ -7,8 +7,8 @@ import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
-import spellTables from "../spellTables";
 import {WeaponsDisplay} from "./WeaponManager";
+import { calculateTotalPreparedSpells } from "../../utils/preparedSpells";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -72,46 +72,34 @@ const Header = () => {
 useEffect(() => {
 
   console.log(characterInfo.stats, 'stats')
+
+  const totalPreparedSpells = calculateTotalPreparedSpells(characterInfo);
   
   if (spellcastingAbility === "nonCaster") {
     setSpellData(prevState => ({
       ...prevState,
       spellcastingAbility: "Non-caster",
-      totalPreparedSpells: 0,  // Non-casters do not prepare spells
+      totalPreparedSpells: 0, // Non-casters do not prepare spells
     }));
   } else if (spellcastingAbility) {
     setSpellData(prevState => ({
       ...prevState,
       spellcastingAbility: formatSpellcastingAbility(spellcastingAbility),
+      totalPreparedSpells,
     }));
   }
 
   if (ClassesData[characterInfo.characterClass]?.isSpellCaster) {
-    if (ClassesData[characterInfo.characterClass].isSpellCaster === "refer to spellTables") {
-      setSpellData(prevState => ({
-        ...prevState,
-        totalPreparedSpells: spellTables[characterInfo.characterClass][characterInfo.characterLevel].spellsKnown,
-      }));
-    } else if (ClassesData[characterInfo.characterClass].isSpellCaster === "halfCaster") {
-      setSpellData(prevState => ({
-        ...prevState,
-        totalPreparedSpells: Math.floor(0.5 * characterInfo.characterLevel + characterInfo.spellcastingMod),
-      }));
-    } else if (characterInfo.characterClass === "wizard") {
-      {/* Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known), at some point, add a way for them to add spells to this count either with dropdown or button. */}
+    if (characterInfo.characterClass === "wizard") {
+      // Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known).
       setSpellData(prevState => ({
         ...prevState,
         totalWizardSpells: spellsFromWizLevel + parseInt(characterInfo.wizardSpellCountMod),
-        totalPreparedSpells: characterInfo.characterLevel + characterInfo.spellcastingMod,
-      }));
-    } else if (ClassesData[characterInfo.characterClass].isSpellCaster === "fullCaster") {
-      setSpellData(prevState => ({
-        ...prevState,
-        totalPreparedSpells: characterInfo.characterLevel + characterInfo.spellcastingMod,
+        totalPreparedSpells,
       }));
     }
   }
-}, [characterInfo, ClassesData]);
+}, [characterInfo, spellcastingAbility, spellsFromWizLevel]);
 
 const determineNoncasters = () => {
   if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
