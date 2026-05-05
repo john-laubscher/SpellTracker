@@ -3,7 +3,7 @@ export const Races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "HalfElf", "HalfOrc
 // dot notation uses identifiers, but bracket notation doesn't--need bracket notation for key strings
 // UA subclasses not included yet as of 6/20/23
 export const Subraces = {
-    Dragonborn: ['Chromatic', 'Draconblood', 'Ravenite', 'Metallic', 'Gem'],
+    Dragonborn: ['Chromatic/Metallic', 'Draconblood', 'Ravenite'],
     Dwarf: ['Hill', 'Mountain', 'Mark of Warding', 'Plane Shift: Kaladesh'],
     Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Self', 'Bishtahar/Tirahar', 'Vahadar'],
     // Zendikar elves not included
@@ -15,6 +15,63 @@ export const Subraces = {
     // Plane Shift Humans not included (but don't have spells)
     Tiefling: ['Bloodline of Asmodeus', 'Bloodline of Baalzebul', 'Bloodline of Dispater', 'Bloodline of Fierna', 'Bloodline of Glasya', 'Bloodline of Levistus', 'Bloodline of Mammon', 'Bloodline of Mephistopheles', 'Bloodline of Zariel', 'Variant Tiefling']
   }
+
+// Combat/trackable-focused race traits (not a full character builder dataset).
+// Source: Roll20 Compendium — Free Basic Rules (2014).
+//
+// Conventions:
+// - `tracked: true` means the UI should treat it like a trackable feature (uses/rest, DCs, etc).
+// - `options` holds user-choice tables (e.g., Draconic Ancestry) used to parameterize features.
+export const RaceFeaturesData = {
+  Dragonborn: {
+    options: {
+      draconicAncestry: {
+        Black: { damageType: "Acid", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
+        Blue: { damageType: "Lightning", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
+        Brass: { damageType: "Fire", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
+        Bronze: { damageType: "Lightning", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
+        Copper: { damageType: "Acid", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
+        Gold: { damageType: "Fire", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "DEX" } },
+        Green: { damageType: "Poison", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
+        Red: { damageType: "Fire", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "DEX" } },
+        Silver: { damageType: "Cold", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
+        White: { damageType: "Cold", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
+      },
+    },
+    features: [
+      {
+        id: "draconic_ancestry",
+        name: "Draconic Ancestry",
+        desc: "Choose an ancestry (e.g., Red, Green). It determines your Breath Weapon shape/save and your Damage Resistance type.",
+        tracked: false,
+        choiceKey: "draconicAncestry",
+      },
+      {
+        id: "breath_weapon",
+        name: "Breath Weapon",
+        desc: "Action. Creatures in the area make a saving throw (by ancestry) vs DC 8 + CON mod + PB. Fail: 2d6; success: half. Damage scales: 3d6 at level 6, 4d6 at level 11, 5d6 at level 16. Recharge: short or long rest. Damage type/shape depend on Draconic Ancestry.",
+        tracked: true,
+        recharge: "shortOrLongRest",
+        uses: 1,
+        dc: { formula: "8 + CON + PB" },
+        scalingDamage: [
+          { level: 1, dice: "2d6" },
+          { level: 6, dice: "3d6" },
+          { level: 11, dice: "4d6" },
+          { level: 16, dice: "5d6" },
+        ],
+        choiceKey: "draconicAncestry",
+      },
+      {
+        id: "damage_resistance",
+        name: "Damage Resistance",
+        desc: "You have resistance to the damage type associated with your Draconic Ancestry.",
+        tracked: false,
+        choiceKey: "draconicAncestry",
+      },
+    ],
+  },
+};
 
 //   add this dropdown to the character creation menu
 export const HalfElfVersatilityArr = {

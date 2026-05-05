@@ -39,6 +39,7 @@ function App() {
       characterName: "Garetjax",
       race: "Dwarf",
       subrace: "Hill",
+      draconicAncestry: "",
       // default characterClass should be "noClass" rather than empty string
       characterClass: "cleric",
       subclass: "grave",

@@ -176,7 +176,19 @@ const FeaturesAndTrackables = () => {
   }, [subclassData, characterLevel]);
 
 
-  const racialAndMiscFeatures = []; // Replace with racial/misc feature logic
+  const raceFeatures = []; // TODO: replace with race feature logic
+  const subraceFeatures = []; // TODO: replace with subrace feature logic
+  const miscFeatures = []; // TODO: replace with misc feature logic (feats, items, etc)
+
+  const handleManageRaceFeatures = React.useCallback(() => {
+    // TODO: wire up manage modal for race features
+  }, []);
+  const handleManageSubraceFeatures = React.useCallback(() => {
+    // TODO: wire up manage modal for subrace features
+  }, []);
+  const handleManageMiscFeatures = React.useCallback(() => {
+    // TODO: wire up manage modal for misc features
+  }, []);
 
   React.useEffect(() => {
     if (!token) {
@@ -375,11 +387,37 @@ const FeaturesAndTrackables = () => {
         </Grid>
       </Grid>
 
-      {/* Racial and Miscellaneous Features Section */}
-      <FeatureDisplay
-        title="Racial and Miscellaneous Features"
-        features={racialAndMiscFeatures}
-      />
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <FeatureDisplay
+            title="Race Features"
+            manageTooltip="Manage which race features are tracked"
+            onManage={handleManageRaceFeatures}
+            features={raceFeatures}
+            untrackedLabel="Untracked Race Features"
+          />
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <FeatureDisplay
+            title="Subrace Features"
+            manageTooltip="Manage which subrace features are tracked"
+            onManage={handleManageSubraceFeatures}
+            features={subraceFeatures}
+            untrackedLabel="Untracked Subrace Features"
+          />
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <FeatureDisplay
+            title="Miscellaneous Features"
+            manageTooltip="Manage which miscellaneous features are tracked"
+            onManage={handleManageMiscFeatures}
+            features={miscFeatures}
+            untrackedLabel="Untracked Miscellaneous Features"
+          />
+        </Grid>
+      </Grid>
 
       <AddFeatureModal
         open={addModal.open}

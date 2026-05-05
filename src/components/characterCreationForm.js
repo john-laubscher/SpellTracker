@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
-import { Races, Subraces } from "./RacesData"
+import { Races, Subraces, RaceFeaturesData } from "./RacesData"
 import { WeaponManager } from "./mainUI/WeaponManager"
 import { proficiencyBonus } from "../components/mainUI/header";
 
@@ -38,6 +38,29 @@ export const CharacterCreationForm = (props) => {
       proficiencyMod: proficiencyBonus[prev.characterLevel] || 2, // Fallback to 2 for safety
     }));
   }, [characterInfo.characterLevel, setCharacterInfo]);
+
+  const dragonbornAncestryOptions = React.useMemo(() => {
+    // keep insertion order from the data file
+    return Object.keys(RaceFeaturesData?.Dragonborn?.options?.draconicAncestry || {});
+  }, []);
+
+  useEffect(() => {
+    if (characterInfo.race === "Dragonborn") {
+      if (!characterInfo.draconicAncestry && dragonbornAncestryOptions.length > 0) {
+        setCharacterInfo((prev) => ({ ...prev, draconicAncestry: dragonbornAncestryOptions[0] }));
+      }
+    } else if (characterInfo.draconicAncestry) {
+      setCharacterInfo((prev) => ({ ...prev, draconicAncestry: "" }));
+    }
+  }, [characterInfo.race, characterInfo.draconicAncestry, dragonbornAncestryOptions, setCharacterInfo]);
+
+  useEffect(() => {
+    const allowedSubraces = Subraces?.[characterInfo.race] || [];
+    if (allowedSubraces.length === 0) return;
+    if (!allowedSubraces.includes(characterInfo.subrace)) {
+      setCharacterInfo((prev) => ({ ...prev, subrace: allowedSubraces[0] }));
+    }
+  }, [characterInfo.race, characterInfo.subrace, setCharacterInfo]);
 
   const renderWizardSpellCountMod = () => {
     if (characterInfo.characterClass === 'wizard') {
@@ -195,6 +218,28 @@ export const CharacterCreationForm = (props) => {
             )}
           </Grid>
         </Grid>
+
+        {characterInfo.race === "Dragonborn" && dragonbornAncestryOptions.length > 0 ? (
+          <Box sx={{ mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="ancestry-select-label">Ancestry</InputLabel>
+              <Select
+                labelId="ancestry-select-label"
+                id="ancestry-select"
+                value={characterInfo.draconicAncestry || ""}
+                label="Ancestry"
+                name="draconicAncestry"
+                onChange={handleChange}
+              >
+                {dragonbornAncestryOptions.map((ancestry) => (
+                  <MenuItem key={ancestry} value={ancestry}>
+                    {ancestry}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        ) : null}
       </Box>
 
       {renderWizardSpellCountMod()}

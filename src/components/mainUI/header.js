@@ -102,13 +102,33 @@ useEffect(() => {
   }
 }, [characterInfo, spellcastingAbility, spellsFromWizLevel]);
 
-const determineNoncasters = () => {
-  if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
-    return <Typography variant="h6" sx={theme.typography.body1}>{characterInfo.characterName} is not a caster</Typography>;
-  } else {
-    return <Typography variant="h6" sx={theme.typography.body1}>Spellcasting ability is {spellData.spellcastingAbility}</Typography>;
-  }
-};
+  const determineNoncasters = () => {
+    if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
+      return (
+        <Typography variant="h6" sx={theme.typography.body1}>
+          {characterInfo.characterName} is not a caster
+        </Typography>
+      );
+    }
+    return (
+      <Typography variant="h6" sx={theme.typography.body1}>
+        Spellcasting ability is {spellData.spellcastingAbility}
+      </Typography>
+    );
+  };
+
+  const getRaceDisplay = () => {
+    const race = characterInfo.race;
+    const subrace = characterInfo.subrace;
+    const draconicAncestry = characterInfo.draconicAncestry;
+
+    if (race === "Dragonborn" && subrace === "Chromatic/Metallic" && draconicAncestry) {
+      return `${draconicAncestry} Dragonborn`;
+    }
+
+    if (!subrace || subrace === "No Subrace") return race;
+    return `${subrace} ${race}`;
+  };
 
   // ***NEED FEATURE*** TAKE LONG REST (resets hp to max)
   // ***NEED FEATURE*** LEVEL UP (take user thru gaining hp based on class, auto increases level, allow PC to choose more spells if appropriate, add feats and access other features, etc.)
@@ -192,7 +212,7 @@ const determineNoncasters = () => {
                   Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)} ({capitalize(characterInfo.subclass)})
                 </Typography>
                 <Typography variant="body2">
-                  Race: {characterInfo.subrace} {characterInfo.race}
+                  Race: {getRaceDisplay()}
                 </Typography>
               </CardContent>
             </Card>
