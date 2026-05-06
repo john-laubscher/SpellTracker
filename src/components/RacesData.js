@@ -71,6 +71,22 @@ export const RaceFeaturesData = {
       },
     ],
   },
+  Dwarf: {
+    features: [
+      {
+        id: "dwarven_resilience",
+        name: "Dwarven Resilience",
+        desc: "You have advantage on saving throws against poison, and you have resistance against poison damage.",
+        tracked: false,
+      },
+      {
+        id: "stonecunning",
+        name: "Stonecunning",
+        desc: "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check.",
+        tracked: false,
+      },
+    ],
+  },
 };
 
 //   add this dropdown to the character creation menu
