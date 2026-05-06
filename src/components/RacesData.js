@@ -1,4 +1,4 @@
-export const Races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "HalfElf", "HalfOrc", "Halfling", "Human", "Tiefling"];
+export const Races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half Elf", "Half Orc", "Halfling", "Human", "Tiefling"];
 
 // dot notation uses identifiers, but bracket notation doesn't--need bracket notation for key strings
 // UA subclasses not included yet as of 6/20/23
@@ -8,7 +8,7 @@ export const Subraces = {
     Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Self', 'Bishtahar/Tirahar', 'Vahadar'],
     // Zendikar elves not included
     Gnome: ['Forest', 'Rock', 'Mark of Scribing'],
-    'Half Elf': ['Mark of Detection', 'Mark of Storm', ],
+    'Half Elf': ['Standard Half Elf', 'Mark of Detection', 'Mark of Storm'],
     'Half Orc': ['No Subrace', 'Mark of Finding'],
     Halfling: ['Lightfoot', 'Stout', 'Ghostwise', 'Lotusden', 'Mark of Hospitality', 'Mark of Healing'],
     Human: ['No Subrace', 'Variant', 'Mark of Finding', 'Mark of Handling', 'Mark of Making', 'Mark of Passage', 'Mark of Sentinel', ],
@@ -83,6 +83,89 @@ export const RaceFeaturesData = {
         id: "stonecunning",
         name: "Stonecunning",
         desc: "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check.",
+        tracked: false,
+      },
+    ],
+  },
+  Elf: {
+    features: [
+      {
+        id: "fey_ancestry",
+        name: "Fey Ancestry",
+        desc: "You have advantage on saving throws against being charmed, and magic can't put you to sleep.",
+        tracked: false,
+      },
+    ],
+  },
+  Gnome: {
+    features: [
+      {
+        id: "gnome_cunning",
+        name: "Gnome Cunning",
+        desc: "You have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic.",
+        tracked: false,
+      },
+    ],
+  },
+  "Half Elf": {
+    features: [
+      {
+        id: "fey_ancestry",
+        name: "Fey Ancestry",
+        desc: "You have advantage on saving throws against being charmed, and magic can't put you to sleep.",
+        tracked: false,
+      },
+    ],
+  },
+  "Half Orc": {
+    features: [
+      {
+        id: "relentless_endurance",
+        name: "Relentless Endurance",
+        desc: "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. Recharge: long rest.",
+        tracked: true,
+        recharge: "longRest",
+        uses: 1,
+      },
+      {
+        id: "savage_attacks",
+        name: "Savage Attacks",
+        desc: "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit.",
+        tracked: false,
+      },
+    ],
+  },
+  Halfling: {
+    features: [
+      {
+        id: "lucky",
+        name: "Lucky",
+        desc: "When you roll a 1 on an attack roll, ability check, or saving throw, you can reroll the die. You must use the new result.",
+        tracked: false,
+      },
+      {
+        id: "brave",
+        name: "Brave",
+        desc: "You have advantage on saving throws against being frightened.",
+        tracked: false,
+      },
+      {
+        id: "nimble",
+        name: "Nimble",
+        desc: "You can move through the space of any creature that is of a size larger than yours.",
+        tracked: false,
+      },
+    ],
+  },
+  Human: {
+    features: [],
+  },
+  Tiefling: {
+    features: [
+      {
+        id: "hellish_resistance",
+        name: "Hellish Resistance",
+        desc: "You have resistance to fire damage.",
         tracked: false,
       },
     ],

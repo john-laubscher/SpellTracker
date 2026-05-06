@@ -20,7 +20,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 import { AuthContext, CharacterInfoContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
-import { RaceFeaturesData } from "../../components/RacesData";
+import { HalfElfVersatilityArr, RaceFeaturesData } from "../../components/RacesData";
 import AddFeatureModal from "./AddFeatureModal";
 import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
@@ -149,7 +149,7 @@ const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, ma
 
 const FeaturesAndTrackables = () => {
   const { characterInfo } = useContext(CharacterInfoContext);
-  const { characterClass, characterLevel, subclass, race, subrace } = characterInfo;
+  const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
 
@@ -191,9 +191,23 @@ const FeaturesAndTrackables = () => {
 
   const raceFeatures = React.useMemo(() => {
     const features = raceData?.features || null;
-    if (Array.isArray(features) && features.length > 0) return features;
+    const base = Array.isArray(features) ? [...features] : [];
+
+    if (race === "Half Elf" && subrace === "Standard Half Elf" && halfElfVersatility) {
+      const v = HalfElfVersatilityArr?.[halfElfVersatility] || null;
+      if (v?.name) {
+        base.push({
+          id: `half_elf_versatility:${halfElfVersatility}`,
+          name: v.name,
+          desc: v.description || "",
+          tracked: false,
+        });
+      }
+    }
+
+    if (base.length > 0) return base;
     return [notAvailableFeature({ id: "race:not_available" })];
-  }, [raceData, notAvailableFeature]);
+  }, [raceData, race, subrace, halfElfVersatility, notAvailableFeature]);
 
   const subraceFeatures = React.useMemo(() => {
     const features = raceData?.subraceFeatures?.[subrace] || null;

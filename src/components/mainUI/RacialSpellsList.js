@@ -147,10 +147,22 @@ const PrepareSubraceSpells = () => {
 
 // Assuming you have access to the `characterInfo` state and `setCharacterInfo` setter function
 
-  const renderDailySpellsList = () => {
-    return(
+  const renderDailySpellsList = (characterInfo) => {
+    const race = characterInfo?.race || "";
+    const subrace = characterInfo?.subrace || "";
+    const halfElfVersatility = characterInfo?.halfElfVersatility || "";
+
+    const shouldShowHalfElfNote =
+      race === "Half Elf" &&
+      subrace === "Standard Half Elf" &&
+      (halfElfVersatility === "Cantrip" || halfElfVersatility === "Drow Magic");
+
+    return (
+      <div>
         <h3>DAILY SUBRACE SPELL LIST</h3>
-    )
+        {shouldShowHalfElfNote ? <div>User has chosen {halfElfVersatility}</div> : null}
+      </div>
+    );
   }
 
   const fetchSubraceSpells = (subSpells) => {
