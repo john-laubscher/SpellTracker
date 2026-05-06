@@ -20,6 +20,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 import { AuthContext, CharacterInfoContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
+import { RaceFeaturesData } from "../../components/RacesData";
 import AddFeatureModal from "./AddFeatureModal";
 import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
@@ -148,7 +149,7 @@ const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, ma
 
 const FeaturesAndTrackables = () => {
   const { characterInfo } = useContext(CharacterInfoContext);
-  const { characterClass, characterLevel, subclass } = characterInfo;
+  const { characterClass, characterLevel, subclass, race, subrace } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
 
@@ -175,19 +176,59 @@ const FeaturesAndTrackables = () => {
     return (subclassData || []).filter((feature) => feature.level <= characterLevel);
   }, [subclassData, characterLevel]);
 
+  const notAvailableFeature = React.useCallback(
+    ({ id }) => ({
+      id,
+      name: "Not available yet",
+      desc: "Not available yet",
+      tracked: false,
+      isPlaceholder: true,
+    }),
+    []
+  );
 
-  const raceFeatures = []; // TODO: replace with race feature logic
-  const subraceFeatures = []; // TODO: replace with subrace feature logic
-  const miscFeatures = []; // TODO: replace with misc feature logic (feats, items, etc)
+  const raceData = React.useMemo(() => RaceFeaturesData?.[race] || null, [race]);
+
+  const raceFeatures = React.useMemo(() => {
+    const features = raceData?.features || null;
+    if (Array.isArray(features) && features.length > 0) return features;
+    return [notAvailableFeature({ id: "race:not_available" })];
+  }, [raceData, notAvailableFeature]);
+
+  const subraceFeatures = React.useMemo(() => {
+    const features = raceData?.subraceFeatures?.[subrace] || null;
+    if (Array.isArray(features) && features.length > 0) return features;
+    return [notAvailableFeature({ id: "subrace:not_available" })];
+  }, [raceData, subrace, notAvailableFeature]);
+
+  const miscCustomRaw = React.useMemo(() => {
+    return (customFeatures || []).filter((f) => f.kind === "misc");
+  }, [customFeatures]);
+
+  const miscCustomForUi = React.useMemo(() => {
+    return miscCustomRaw.map((f) => ({
+      id: `custom:${f.id}`,
+      apiId: f.id,
+      name: f.name,
+      desc: f.desc,
+      tracked: Boolean(f.tracked),
+      isCustom: true,
+    }));
+  }, [miscCustomRaw]);
+
+  const miscFeatures = React.useMemo(() => {
+    if (miscCustomForUi.length > 0) return miscCustomForUi;
+    return [notAvailableFeature({ id: "misc:not_available" })];
+  }, [miscCustomForUi, notAvailableFeature]);
 
   const handleManageRaceFeatures = React.useCallback(() => {
-    // TODO: wire up manage modal for race features
+    window.alert("Not available yet");
   }, []);
   const handleManageSubraceFeatures = React.useCallback(() => {
-    // TODO: wire up manage modal for subrace features
+    window.alert("Not available yet");
   }, []);
   const handleManageMiscFeatures = React.useCallback(() => {
-    // TODO: wire up manage modal for misc features
+    window.alert("Not available yet");
   }, []);
 
   React.useEffect(() => {
