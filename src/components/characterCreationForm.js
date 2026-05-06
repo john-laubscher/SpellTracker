@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
-import { Races, Subraces, RaceFeaturesData } from "./RacesData"
+import { Races, Subraces, RaceFeaturesData, HalfElfVersatilityArr } from "./RacesData"
 import { WeaponManager } from "./mainUI/WeaponManager"
 import { proficiencyBonus } from "../components/mainUI/header";
 
@@ -44,6 +44,10 @@ export const CharacterCreationForm = (props) => {
     return Object.keys(RaceFeaturesData?.Dragonborn?.options?.draconicAncestry || {});
   }, []);
 
+  const halfElfVersatilityOptions = React.useMemo(() => {
+    return Object.keys(HalfElfVersatilityArr || {});
+  }, []);
+
   useEffect(() => {
     if (characterInfo.race === "Dragonborn") {
       if (!characterInfo.draconicAncestry && dragonbornAncestryOptions.length > 0) {
@@ -53,6 +57,22 @@ export const CharacterCreationForm = (props) => {
       setCharacterInfo((prev) => ({ ...prev, draconicAncestry: "" }));
     }
   }, [characterInfo.race, characterInfo.draconicAncestry, dragonbornAncestryOptions, setCharacterInfo]);
+
+  useEffect(() => {
+    if (characterInfo.race === "Half Elf" && characterInfo.subrace === "Standard Half Elf") {
+      if (!characterInfo.halfElfVersatility && halfElfVersatilityOptions.length > 0) {
+        setCharacterInfo((prev) => ({ ...prev, halfElfVersatility: halfElfVersatilityOptions[0] }));
+      }
+    } else if (characterInfo.halfElfVersatility) {
+      setCharacterInfo((prev) => ({ ...prev, halfElfVersatility: "" }));
+    }
+  }, [
+    characterInfo.race,
+    characterInfo.subrace,
+    characterInfo.halfElfVersatility,
+    halfElfVersatilityOptions,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     const allowedSubraces = Subraces?.[characterInfo.race] || [];
@@ -234,6 +254,30 @@ export const CharacterCreationForm = (props) => {
                 {dragonbornAncestryOptions.map((ancestry) => (
                   <MenuItem key={ancestry} value={ancestry}>
                     {ancestry}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        ) : null}
+
+        {characterInfo.race === "Half Elf" &&
+        characterInfo.subrace === "Standard Half Elf" &&
+        halfElfVersatilityOptions.length > 0 ? (
+          <Box sx={{ mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="half-elf-versatility-select-label">Half-Elf Versatility</InputLabel>
+              <Select
+                labelId="half-elf-versatility-select-label"
+                id="half-elf-versatility-select"
+                value={characterInfo.halfElfVersatility || ""}
+                label="Half-Elf Versatility"
+                name="halfElfVersatility"
+                onChange={handleChange}
+              >
+                {halfElfVersatilityOptions.map((v) => (
+                  <MenuItem key={v} value={v}>
+                    {v}
                   </MenuItem>
                 ))}
               </Select>
