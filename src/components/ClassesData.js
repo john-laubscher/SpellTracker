@@ -265,8 +265,15 @@ export const ClassesData = {
         features: [
           {
             id: "giants_power",
-            name: "Giant's Power",
-            desc: "When you rage, you gain additional benefits (choose a giant origin), such as changing your size and adding extra damage to weapon attacks while raging.",
+            name: "Giant’s Power",
+            desc: "When you choose this path, you learn to speak, read, and write Giant or one other language of your choice if you already know Giant. Additionally, you learn a cantrip of your choice: either druidcraft or thaumaturgy. Wisdom is your spellcasting ability for this spell.",
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "giants_havoc",
+            name: "Giant’s Havoc",
+            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attack’s damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isn’t enough room for you to increase your size, your size doesn’t change.",
             level: 3,
             tracked: false,
           },
