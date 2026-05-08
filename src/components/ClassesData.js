@@ -103,7 +103,9 @@ export const ClassesData = {
             name: "Consult the Spirits",
             desc: "Cast Augury or Clairvoyance without using a spell slot or material components. Requires a short or long rest to use again.",
             level: 10,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "vengeful_ancestors",
@@ -161,21 +163,27 @@ export const ClassesData = {
             name: "Bestial Soul",
             desc: "Your natural weapons count as magical for overcoming resistance and immunity to nonmagical attacks. You can also adapt to your environment: climb speed equal to your walking speed, breathe underwater and gain a swim speed, or jump distance increases by a number of feet equal to your Strength modifier.",
             level: 6,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "infectious_fury",
             name: "Infectious Fury",
             desc: "When you hit a creature with your natural weapons while raging, it must succeed on a Wisdom saving throw or suffer one of the following effects (your choice): 2d12 psychic damage, or must use its reaction to attack another creature you designate. This ability can be used a number of times equal to your proficiency bonus per long rest.",
             level: 10,
-            tracked: true, //prof bonus, regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "call_the_hunt",
             name: "Call the Hunt",
             desc: "When you enter your rage, you can choose up to 10 creatures within 30 feet. Each creature gains a bonus to attack rolls and saving throws equal to your proficiency bonus for 1 minute. You gain temporary hit points equal to 5 times the number of creatures you chose. Once used, you can't use this feature again until you finish a long rest.",
             level: 14,
-            tracked: true, //equal to prof bonus regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
         ],
       },
@@ -200,7 +208,7 @@ export const ClassesData = {
             name: "Intimidating Presence",
             desc: "You can use your action to frighten a creature within 30 feet that you can see. The target must succeed on a Wisdom saving throw (DC 8 + your proficiency bonus + your Charisma modifier) or be frightened of you for 1 minute. The creature can repeat the save at the end of each of its turns. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 10,
-            tracked: true, // once every 24 hrs
+            tracked: false,
           },
           {
             id: "retaliation",
@@ -238,6 +246,38 @@ export const ClassesData = {
             id: "raging_storm",
             name: "Raging Storm",
             desc: "Your storm intensifies and gains a powerful reaction effect: Desert: A creature takes fire damage when it hits you; Sea: You force a creature to make a Strength save or be knocked prone; Tundra: Its speed is reduced by 0 until the start of your next turn.",
+            level: 14,
+            tracked: false,
+          },
+        ],
+      },
+      giant: {
+        features: [
+          {
+            id: "giants_power",
+            name: "Giant's Power",
+            desc: "When you rage, you gain additional benefits (choose a giant origin), such as changing your size and adding extra damage to weapon attacks while raging.",
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "elemental_cleaver",
+            name: "Elemental Cleaver",
+            desc: "You infuse your weapons with elemental power while raging, changing damage type and empowering thrown weapon attacks.",
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "mighty_impel",
+            name: "Mighty Impel",
+            desc: "You can move creatures and objects with the force of your giant power while raging, including throwing or repositioning them.",
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "demiurgic_colossus",
+            name: "Demiurgic Colossus",
+            desc: "Your giant power peaks, granting a major size-and-power boost while raging and empowering your attacks.",
             level: 14,
             tracked: false,
           },
@@ -286,17 +326,28 @@ export const ClassesData = {
         features: [
           {
             id: "magic_surges",
-            name: "Magic Surges",
+            name: "Wild Surge",
             desc: "Starting when you choose this path at 3rd level, your innate magic erupts in unpredictable ways. Whenever you rage, roll on the Wild Magic table to determine the magical effect produced.",
             level: 3,
-            tracked: true, //prof bonus, regain on LR
+            tracked: false,
+          },
+          {
+            id: "magic_awareness",
+            name: "Magic Awareness",
+            desc: "As an action, you can open your awareness to the presence of concentrated magic. Until the end of your next turn, you know the location of any spell or magic item within 60 feet of you that isn’t behind total cover. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            level: 3,
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "bolstering_magic",
             name: "Bolstering Magic",
             desc: "At 6th level, you can harness your wild magic to bolster yourself or a companion. As an action, you touch a creature and roll a d3. The creature gains one of the following effects: (1) Add the rolled number to any attack roll or ability check made in the next minute, or (2) Regain a spell slot equal to the rolled number. You can use this action a number of times equal to your proficiency bonus, and you regain all uses after a long rest.",
             level: 6,
-            tracked: true, //prof bonus, regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "unstable_backlash",
@@ -335,14 +386,18 @@ export const ClassesData = {
             name: "Fanatical Focus",
             desc: "Starting at 6th level, you can reroll a saving throw that you fail while raging. You must use the new roll. You can use this ability once per rage.",
             level: 6,
-            tracked: true, // 1/Rage
+            tracked: true,
+            uses: 1,
+            recharge: "rage",
           },
           {
             id: "zealous_presence",
             name: "Zealous Presence",
             desc: "At 10th level, you can channel divine power to inspire zealotry in your allies. As a bonus action, you unleash a battle cry infused with divine energy. Up to ten creatures of your choice within 60 feet that can hear you gain advantage on attack rolls and saving throws until the start of your next turn. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 10,
-            tracked: true, // 1/ LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "rage_beyond_death",

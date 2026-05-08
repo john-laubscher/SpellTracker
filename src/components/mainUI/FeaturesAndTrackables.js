@@ -25,6 +25,7 @@ import AddFeatureModal from "./AddFeatureModal";
 import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
 import EditCustomFeatureModal from "./EditCustomFeatureModal";
+import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
   getFeatureHiddenOverride,
@@ -36,7 +37,16 @@ import {
 } from "../../utils/featureOverrides";
 
 // Reusable FeatureDisplay component
-const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, manageTooltip, onManage }) => {
+const FeatureDisplay = ({
+  title,
+  features,
+  untrackedLabel,
+  addTooltip,
+  onAdd,
+  manageTooltip,
+  onManage,
+  proficiencyBonusValue,
+}) => {
   const trackedFeatures = features.filter((feature) => feature.tracked);
   const untrackedFeatures = features.filter((feature) => !feature.tracked);
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
@@ -47,6 +57,13 @@ const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, ma
       if (touchHideTimerRef.current) window.clearTimeout(touchHideTimerRef.current);
     };
   }, []);
+
+  const getUsesCount = (feature) => {
+    if (feature?.recharge === "rage") return 1;
+    if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
+    if (typeof feature?.uses === "number" && Number.isFinite(feature.uses) && feature.uses > 0) return feature.uses;
+    return 1;
+  };
 
   return (
     <div style={{ marginBottom: "8px" }}>
@@ -112,11 +129,14 @@ const FeatureDisplay = ({ title, features, untrackedLabel, addTooltip, onAdd, ma
               {feature.name}
             </Typography>
           </Tooltip>
-          <Checkbox
-            defaultChecked={false}
-            size="small"
-            sx={{ ml: 0.5, p: 0.25, color: '#8B4513', '&.Mui-checked': { color: '#8B4513' } }}
-          />
+          {Array.from({ length: getUsesCount(feature) }).map((_, idx) => (
+            <Checkbox
+              key={`${feature.id}:use:${idx}`}
+              defaultChecked={false}
+              size="small"
+              sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: '#8B4513', '&.Mui-checked': { color: '#8B4513' } }}
+            />
+          ))}
         </div>
       ))}
 
@@ -152,6 +172,7 @@ const FeaturesAndTrackables = () => {
   const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
+  const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
 
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
@@ -416,63 +437,68 @@ const FeaturesAndTrackables = () => {
 
   return (
     <div>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <FeatureDisplay
-            title="Class Features"
-            addTooltip="Add custom Class Feature"
-            onAdd={() => setAddModal({ open: true, kind: "class" })}
-            manageTooltip="Manage which class features are tracked"
-            onManage={() => setManageModal({ open: true, kind: "class" })}
-            features={[...visibleClassFeatures, ...visibleClassCustom]}
-            untrackedLabel="Untracked Class Features"
-          />
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <FeatureDisplay
+              title="Class Features"
+              addTooltip="Add custom Class Feature"
+              onAdd={() => setAddModal({ open: true, kind: "class" })}
+              manageTooltip="Manage which class features are tracked"
+              onManage={() => setManageModal({ open: true, kind: "class" })}
+              features={[...visibleClassFeatures, ...visibleClassCustom]}
+              untrackedLabel="Untracked Class Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FeatureDisplay
+              title="Subclass Features"
+              addTooltip="Add custom Subclass Feature"
+              onAdd={() => setAddModal({ open: true, kind: "subclass" })}
+              manageTooltip="Manage which subclass features are tracked"
+              onManage={() => setManageModal({ open: true, kind: "subclass" })}
+              features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
+              untrackedLabel="Untracked Subclass Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+            />
+          </Grid>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <FeatureDisplay
-            title="Subclass Features"
-            addTooltip="Add custom Subclass Feature"
-            onAdd={() => setAddModal({ open: true, kind: "subclass" })}
-            manageTooltip="Manage which subclass features are tracked"
-            onManage={() => setManageModal({ open: true, kind: "subclass" })}
-            features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
-            untrackedLabel="Untracked Subclass Features"
-          />
-        </Grid>
-      </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <FeatureDisplay
+              title="Race Features"
+              manageTooltip="Manage which race features are tracked"
+              onManage={handleManageRaceFeatures}
+              features={raceFeatures}
+              untrackedLabel="Untracked Race Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+            />
+          </Grid>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <FeatureDisplay
-            title="Race Features"
-            manageTooltip="Manage which race features are tracked"
-            onManage={handleManageRaceFeatures}
-            features={raceFeatures}
-            untrackedLabel="Untracked Race Features"
-          />
-        </Grid>
+          <Grid item xs={12} md={4}>
+            <FeatureDisplay
+              title="Subrace Features"
+              manageTooltip="Manage which subrace features are tracked"
+              onManage={handleManageSubraceFeatures}
+              features={subraceFeatures}
+              untrackedLabel="Untracked Subrace Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+            />
+          </Grid>
 
-        <Grid item xs={12} md={4}>
-          <FeatureDisplay
-            title="Subrace Features"
-            manageTooltip="Manage which subrace features are tracked"
-            onManage={handleManageSubraceFeatures}
-            features={subraceFeatures}
-            untrackedLabel="Untracked Subrace Features"
-          />
+          <Grid item xs={12} md={4}>
+            <FeatureDisplay
+              title="Miscellaneous Features"
+              manageTooltip="Manage which miscellaneous features are tracked"
+              onManage={handleManageMiscFeatures}
+              features={miscFeatures}
+              untrackedLabel="Untracked Miscellaneous Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+            />
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FeatureDisplay
-            title="Miscellaneous Features"
-            manageTooltip="Manage which miscellaneous features are tracked"
-            onManage={handleManageMiscFeatures}
-            features={miscFeatures}
-            untrackedLabel="Untracked Miscellaneous Features"
-          />
-        </Grid>
-      </Grid>
 
       <AddFeatureModal
         open={addModal.open}
