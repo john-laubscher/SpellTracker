@@ -23,6 +23,14 @@ export const ClassesData = {
         desc: "Enter a rage as a bonus action, granting bonuses to melee damage and resistance to physical damage.",
         level: 1,
         tracked: true,
+        usesByLevel: [
+          { level: 1, uses: 2 },
+          { level: 3, uses: 3 },
+          { level: 6, uses: 4 },
+          { level: 12, uses: 5 },
+          { level: 17, uses: 6 },
+          { level: 20, uses: "unlimited" },
+        ],
       },
       {
         id: "danger_sense",
@@ -43,7 +51,7 @@ export const ClassesData = {
         name: "Extra Attack",
         desc: "You can attack twice, instead of once, whenever you take the Attack action on your turn.",
         level: 5,
-        tracked: true,
+        tracked: false,
       },
       {
         id: "fast_movement",
@@ -72,6 +80,8 @@ export const ClassesData = {
         desc: "If you drop to 0 HP while raging, you can make a DC 10 Constitution saving throw to drop to 1 HP instead. Each time you use this feature, the DC increases by 5 until you finish a short or long rest.",
         level: 11,
         tracked: true,
+        trackedMode: "stackingChecks",
+        maxChecks: 10,
       },
       {
         id: "indomitable_might",
