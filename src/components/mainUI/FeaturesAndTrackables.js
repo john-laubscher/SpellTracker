@@ -11,7 +11,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Checkbox,
-  Tooltip,
   IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -36,6 +35,105 @@ import {
   setFeatureHiddenOverride,
 } from "../../utils/featureOverrides";
 
+const FeatureAccordionRow = ({
+  feature,
+  renderTrailingControls,
+  detailsIdPrefix,
+  renderDetailsHeader,
+}) => {
+  const [expanded, setExpanded] = React.useState(false);
+
+  const descLines = React.useMemo(() => {
+    if (!feature) return [];
+    if (Array.isArray(feature.desc)) return feature.desc;
+    if (typeof feature.desc === "string") return [feature.desc];
+    return [];
+  }, [feature]);
+
+  const safeIdPrefix = React.useMemo(() => {
+    const raw = String(detailsIdPrefix || "feature");
+    return raw.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "");
+  }, [detailsIdPrefix]);
+
+  return (
+    <Accordion
+      disableGutters
+      elevation={0}
+      expanded={expanded}
+      onChange={(_, nextExpanded) => setExpanded(nextExpanded)}
+      sx={{
+        backgroundColor: "transparent",
+        "&:before": { display: "none" },
+        "&.Mui-expanded": { margin: 0 },
+      }}
+    >
+      <AccordionSummary
+        aria-controls={`${safeIdPrefix}-${feature.id}-content`}
+        id={`${safeIdPrefix}-${feature.id}-header`}
+        sx={{
+          minHeight: 28,
+          px: 0.5,
+          py: 0,
+          "& .MuiAccordionSummary-content": {
+            margin: "2px 0 !important",
+            alignItems: "center",
+            gap: 0.5,
+            width: "100%",
+            display: "flex",
+          },
+          "& .MuiAccordionSummary-content.Mui-expanded": {
+            margin: "2px 0 !important",
+          },
+          "&.Mui-expanded": { minHeight: 28 },
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "14px",
+            cursor: "pointer",
+            flex: "0 1 auto",
+            minWidth: 0,
+            pr: 0.25,
+          }}
+        >
+          {feature.name}
+        </Typography>
+
+        {renderTrailingControls ? (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+          >
+            {renderTrailingControls()}
+          </div>
+        ) : null}
+      </AccordionSummary>
+
+      <AccordionDetails
+        sx={{
+          px: 1.5,
+          py: 1,
+          backgroundColor: "rgba(255,255,255,0.5)",
+          borderRadius: "4px",
+          mx: 0.5,
+          mb: 0.5,
+        }}
+      >
+        <Typography component="div" sx={{ fontSize: "13px", "& p": { margin: "2px 0" } }}>
+          {renderDetailsHeader ? renderDetailsHeader() : null}
+          {descLines.length === 0 ? (
+            <p style={{ opacity: 0.7 }}>
+              <em>No description available.</em>
+            </p>
+          ) : (
+            descLines.map((line, idx) => <p key={idx}>{line}</p>)
+          )}
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
+  );
+};
+
 // Reusable FeatureDisplay component
 const FeatureDisplay = ({
   title,
@@ -54,6 +152,7 @@ const FeatureDisplay = ({
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
+  const [untrackedExpanded, setUntrackedExpanded] = React.useState(false);
 
   React.useEffect(() => {
     return () => {
@@ -109,90 +208,103 @@ const FeatureDisplay = ({
         </Typography>
 
         {onManage ? (
-          <Tooltip title={manageTooltip || "Manage features"} arrow>
-            <IconButton
-              size="small"
-              onClick={onManage}
-              sx={{
-                mt: "-2px",
-                ml: 0.25,
-                opacity: showHeaderActions ? 1 : 0.25,
-                transition: "opacity 120ms ease",
-                "&:focus-visible": { opacity: 1 },
-              }}
-            >
-              <SettingsIcon fontSize="inherit" />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            size="small"
+            onClick={onManage}
+            aria-label={manageTooltip || "Manage features"}
+            sx={{
+              mt: "-2px",
+              ml: 0.25,
+              opacity: showHeaderActions ? 1 : 0.25,
+              transition: "opacity 120ms ease",
+              "&:focus-visible": { opacity: 1 },
+            }}
+          >
+            <SettingsIcon fontSize="inherit" />
+          </IconButton>
         ) : null}
 
         {onAdd ? (
-          <Tooltip title={addTooltip || 'Add custom feature'} arrow>
-            <IconButton size="small" onClick={onAdd} sx={{ mt: '-2px' }}>
-              <AddIcon fontSize="inherit" />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            size="small"
+            onClick={onAdd}
+            aria-label={addTooltip || "Add custom feature"}
+            sx={{ mt: "-2px" }}
+          >
+            <AddIcon fontSize="inherit" />
+          </IconButton>
         ) : null}
       </div>
 
       {trackedFeatures.map((feature) => (
-        <div key={feature.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-          <Tooltip
-            title={
-              feature?.trackedMode === "stackingChecks" ? (
-                <div style={{ maxWidth: 340 }}>
-                  <Typography sx={{ fontSize: "12px", fontWeight: 700, mb: 0.5 }}>
-                    CURRENT DC: {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
-                  </Typography>
-                  <Typography sx={{ fontSize: "12px" }}>{feature.desc}</Typography>
-                </div>
-              ) : (
-                feature.desc
-              )
-            }
-            arrow
-          >
-            <Typography sx={{ fontSize: '14px', cursor: 'pointer' }}>
-              {feature.name}
-            </Typography>
-          </Tooltip>
-
-          {(() => {
+        <FeatureAccordionRow
+          key={feature.id}
+          feature={feature}
+          detailsIdPrefix={`features-${title}`}
+          renderDetailsHeader={
+            feature?.trackedMode === "stackingChecks"
+              ? () => (
+                  <p style={{ margin: "2px 0" }}>
+                    <strong>Current DC:</strong>{" "}
+                    {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
+                  </p>
+                )
+              : null
+          }
+          renderTrailingControls={() => {
             const usesCount = getUsesCount(feature);
 
             if (feature?.trackedMode === "stackingChecks") {
-              const checkedCount = Math.max(0, Math.min(Number(stackingChecksById?.[feature.id]) || 0, feature?.maxChecks || 10));
+              const checkedCount = Math.max(
+                0,
+                Math.min(Number(stackingChecksById?.[feature.id]) || 0, feature?.maxChecks || 10)
+              );
               const maxChecks = Math.max(1, Math.min(Number(feature?.maxChecks) || 10, 10));
               const totalBoxes = Math.min(checkedCount + 1, maxChecks);
 
-              return Array.from({ length: totalBoxes }).map((_, idx) => (
-                <Checkbox
-                  key={`${feature.id}:stack:${idx}`}
-                  checked={idx < checkedCount}
-                  onChange={(e) => {
-                    const nextChecked = e.target.checked;
-                    setStackingChecksById((prev) => {
-                      const prevCount = Math.max(0, Math.min(Number(prev?.[feature.id]) || 0, maxChecks));
-                      if (nextChecked) {
-                        if (idx !== prevCount) return prev;
-                        if (prevCount >= maxChecks) return prev;
-                        return { ...prev, [feature.id]: prevCount + 1 };
-                      }
-                      if (idx >= prevCount) return prev;
-                      return { ...prev, [feature.id]: Math.max(0, prevCount - 1) };
-                    });
-                  }}
-                  size="small"
-                  sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: "#8B4513", "&.Mui-checked": { color: "#8B4513" } }}
-                />
-              ));
+              return (
+                <>
+                  <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#5d4037", mr: 0.5 }}>
+                    DC {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
+                  </Typography>
+                  {Array.from({ length: totalBoxes }).map((_, idx) => (
+                    <Checkbox
+                      key={`${feature.id}:stack:${idx}`}
+                      checked={idx < checkedCount}
+                      onChange={(e) => {
+                        const nextChecked = e.target.checked;
+                        setStackingChecksById((prev) => {
+                          const prevCount = Math.max(
+                            0,
+                            Math.min(Number(prev?.[feature.id]) || 0, maxChecks)
+                          );
+                          if (nextChecked) {
+                            if (idx !== prevCount) return prev;
+                            if (prevCount >= maxChecks) return prev;
+                            return { ...prev, [feature.id]: prevCount + 1 };
+                          }
+                          if (idx >= prevCount) return prev;
+                          return { ...prev, [feature.id]: Math.max(0, prevCount - 1) };
+                        });
+                      }}
+                      size="small"
+                      sx={{
+                        ml: idx === 0 ? 0.25 : 0,
+                        p: 0.25,
+                        color: "#8B4513",
+                        "&.Mui-checked": { color: "#8B4513" },
+                      }}
+                    />
+                  ))}
+                </>
+              );
             }
 
             if (usesCount === "unlimited") {
               return (
                 <Typography
                   sx={{
-                    ml: 1,
+                    ml: 0.5,
                     fontSize: "12px",
                     fontWeight: 700,
                     color: "#5d4037",
@@ -208,37 +320,54 @@ const FeatureDisplay = ({
               );
             }
 
-            return Array.from({ length: usesCount }).map((_, idx) => (
-              <Checkbox
-                key={`${feature.id}:use:${idx}`}
-                defaultChecked={false}
-                size="small"
-                sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: "#8B4513", "&.Mui-checked": { color: "#8B4513" } }}
-              />
-            ));
-          })()}
-        </div>
+            return (
+              <>
+                {Array.from({ length: usesCount }).map((_, idx) => (
+                  <Checkbox
+                    key={`${feature.id}:use:${idx}`}
+                    defaultChecked={false}
+                    size="small"
+                    sx={{
+                      ml: idx === 0 ? 0.25 : 0,
+                      p: 0.25,
+                      color: "#8B4513",
+                      "&.Mui-checked": { color: "#8B4513" },
+                    }}
+                  />
+                ))}
+              </>
+            );
+          }}
+        />
       ))}
 
       {untrackedFeatures.length > 0 && (
-        <Accordion disableGutters elevation={0} sx={{
-          backgroundColor: 'transparent',
-          '&:before': { display: 'none' },
-          '&.Mui-expanded': { margin: 0 },
-        }}>
+        <Accordion
+          disableGutters
+          elevation={0}
+          expanded={untrackedExpanded}
+          onChange={(_, nextExpanded) => setUntrackedExpanded(nextExpanded)}
+          sx={{
+            backgroundColor: 'transparent',
+            '&:before': { display: 'none' },
+            '&.Mui-expanded': { margin: 0 },
+          }}
+        >
           <AccordionSummary
             expandIcon={<ExpandMoreIcon sx={{ fontSize: '18px' }} />}
             sx={{ minHeight: 28, px: 0.5, py: 0, '& .MuiAccordionSummary-content': { margin: '2px 0' }, '&.Mui-expanded': { minHeight: 28 } }}
           >
-            <Typography sx={{ fontSize: '13px', color: '#5d4037' }}>{untrackedLabel || 'Other Features'}</Typography>
+            <Typography sx={{ fontSize: '13px', color: '#5d4037', flexGrow: 1, minWidth: 0 }}>
+              {untrackedLabel || 'Other Features'}
+            </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ px: 1, py: 0.5 }}>
             {untrackedFeatures.map((feature) => (
-              <Tooltip key={feature.id} title={feature.desc} arrow>
-                <Typography sx={{ fontSize: '13px', cursor: 'pointer', py: 0.25 }}>
-                  {feature.name}
-                </Typography>
-              </Tooltip>
+              <FeatureAccordionRow
+                key={feature.id}
+                feature={feature}
+                detailsIdPrefix={`untracked-${title}`}
+              />
             ))}
           </AccordionDetails>
         </Accordion>
