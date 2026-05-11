@@ -295,7 +295,7 @@ export const SpellList = (props) => {
       {renderPCSpells("seventh", 7)}
       {renderPCSpells("eighth", 8)}
       {renderPCSpells("ninth", 9)}
-      {renderDailySpellsList(characterInfo)}
+      {renderDailySpellsList(characterInfo, setCharacterInfo)}
     </Box>
   );
 };

@@ -46,11 +46,14 @@ const FeatureDisplay = ({
   manageTooltip,
   onManage,
   proficiencyBonusValue,
+  characterClass,
+  characterLevel,
 }) => {
   const trackedFeatures = features.filter((feature) => feature.tracked);
   const untrackedFeatures = features.filter((feature) => !feature.tracked);
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
+  const [stackingChecksById, setStackingChecksById] = React.useState({});
 
   React.useEffect(() => {
     return () => {
@@ -60,6 +63,16 @@ const FeatureDisplay = ({
 
   const getUsesCount = (feature) => {
     if (feature?.recharge === "rage") return 1;
+    if (Array.isArray(feature?.usesByLevel) && Number.isFinite(characterLevel)) {
+      const sorted = [...feature.usesByLevel].sort((a, b) => (a?.level || 0) - (b?.level || 0));
+      const match = sorted.reduce((acc, cur) => {
+        if (!cur || !Number.isFinite(cur.level)) return acc;
+        if (cur.level <= characterLevel) return cur;
+        return acc;
+      }, null);
+      if (match?.uses === "unlimited") return "unlimited";
+      if (typeof match?.uses === "number" && Number.isFinite(match.uses) && match.uses > 0) return match.uses;
+    }
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
     if (typeof feature?.uses === "number" && Number.isFinite(feature.uses) && feature.uses > 0) return feature.uses;
     return 1;
@@ -124,19 +137,86 @@ const FeatureDisplay = ({
 
       {trackedFeatures.map((feature) => (
         <div key={feature.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-          <Tooltip title={feature.desc} arrow>
+          <Tooltip
+            title={
+              feature?.trackedMode === "stackingChecks" ? (
+                <div style={{ maxWidth: 340 }}>
+                  <Typography sx={{ fontSize: "12px", fontWeight: 700, mb: 0.5 }}>
+                    CURRENT DC: {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
+                  </Typography>
+                  <Typography sx={{ fontSize: "12px" }}>{feature.desc}</Typography>
+                </div>
+              ) : (
+                feature.desc
+              )
+            }
+            arrow
+          >
             <Typography sx={{ fontSize: '14px', cursor: 'pointer' }}>
               {feature.name}
             </Typography>
           </Tooltip>
-          {Array.from({ length: getUsesCount(feature) }).map((_, idx) => (
-            <Checkbox
-              key={`${feature.id}:use:${idx}`}
-              defaultChecked={false}
-              size="small"
-              sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: '#8B4513', '&.Mui-checked': { color: '#8B4513' } }}
-            />
-          ))}
+
+          {(() => {
+            const usesCount = getUsesCount(feature);
+
+            if (feature?.trackedMode === "stackingChecks") {
+              const checkedCount = Math.max(0, Math.min(Number(stackingChecksById?.[feature.id]) || 0, feature?.maxChecks || 10));
+              const maxChecks = Math.max(1, Math.min(Number(feature?.maxChecks) || 10, 10));
+              const totalBoxes = Math.min(checkedCount + 1, maxChecks);
+
+              return Array.from({ length: totalBoxes }).map((_, idx) => (
+                <Checkbox
+                  key={`${feature.id}:stack:${idx}`}
+                  checked={idx < checkedCount}
+                  onChange={(e) => {
+                    const nextChecked = e.target.checked;
+                    setStackingChecksById((prev) => {
+                      const prevCount = Math.max(0, Math.min(Number(prev?.[feature.id]) || 0, maxChecks));
+                      if (nextChecked) {
+                        if (idx !== prevCount) return prev;
+                        if (prevCount >= maxChecks) return prev;
+                        return { ...prev, [feature.id]: prevCount + 1 };
+                      }
+                      if (idx >= prevCount) return prev;
+                      return { ...prev, [feature.id]: Math.max(0, prevCount - 1) };
+                    });
+                  }}
+                  size="small"
+                  sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: "#8B4513", "&.Mui-checked": { color: "#8B4513" } }}
+                />
+              ));
+            }
+
+            if (usesCount === "unlimited") {
+              return (
+                <Typography
+                  sx={{
+                    ml: 1,
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#5d4037",
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: "10px",
+                    border: "1px solid rgba(93, 64, 55, 0.35)",
+                    background: "rgba(244, 233, 221, 0.65)",
+                  }}
+                >
+                  Unlimited
+                </Typography>
+              );
+            }
+
+            return Array.from({ length: usesCount }).map((_, idx) => (
+              <Checkbox
+                key={`${feature.id}:use:${idx}`}
+                defaultChecked={false}
+                size="small"
+                sx={{ ml: idx === 0 ? 0.5 : 0, p: 0.25, color: "#8B4513", "&.Mui-checked": { color: "#8B4513" } }}
+              />
+            ));
+          })()}
         </div>
       ))}
 
@@ -448,6 +528,8 @@ const FeaturesAndTrackables = () => {
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel="Untracked Class Features"
               proficiencyBonusValue={proficiencyBonusValue}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
             />
           </Grid>
 
@@ -461,6 +543,8 @@ const FeaturesAndTrackables = () => {
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
               proficiencyBonusValue={proficiencyBonusValue}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
             />
           </Grid>
         </Grid>
@@ -474,6 +558,8 @@ const FeaturesAndTrackables = () => {
               features={raceFeatures}
               untrackedLabel="Untracked Race Features"
               proficiencyBonusValue={proficiencyBonusValue}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
             />
           </Grid>
 
@@ -485,6 +571,8 @@ const FeaturesAndTrackables = () => {
               features={subraceFeatures}
               untrackedLabel="Untracked Subrace Features"
               proficiencyBonusValue={proficiencyBonusValue}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
             />
           </Grid>
 
@@ -496,6 +584,8 @@ const FeaturesAndTrackables = () => {
               features={miscFeatures}
               untrackedLabel="Untracked Miscellaneous Features"
               proficiencyBonusValue={proficiencyBonusValue}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
             />
           </Grid>
         </Grid>

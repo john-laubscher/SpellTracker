@@ -23,6 +23,14 @@ export const ClassesData = {
         desc: "Enter a rage as a bonus action, granting bonuses to melee damage and resistance to physical damage.",
         level: 1,
         tracked: true,
+        usesByLevel: [
+          { level: 1, uses: 2 },
+          { level: 3, uses: 3 },
+          { level: 6, uses: 4 },
+          { level: 12, uses: 5 },
+          { level: 17, uses: 6 },
+          { level: 20, uses: "unlimited" },
+        ],
       },
       {
         id: "danger_sense",
@@ -43,7 +51,7 @@ export const ClassesData = {
         name: "Extra Attack",
         desc: "You can attack twice, instead of once, whenever you take the Attack action on your turn.",
         level: 5,
-        tracked: true,
+        tracked: false,
       },
       {
         id: "fast_movement",
@@ -72,6 +80,8 @@ export const ClassesData = {
         desc: "If you drop to 0 HP while raging, you can make a DC 10 Constitution saving throw to drop to 1 HP instead. Each time you use this feature, the DC increases by 5 until you finish a short or long rest.",
         level: 11,
         tracked: true,
+        trackedMode: "stackingChecks",
+        maxChecks: 10,
       },
       {
         id: "indomitable_might",
@@ -255,8 +265,15 @@ export const ClassesData = {
         features: [
           {
             id: "giants_power",
-            name: "Giant's Power",
-            desc: "When you rage, you gain additional benefits (choose a giant origin), such as changing your size and adding extra damage to weapon attacks while raging.",
+            name: "Giant’s Power",
+            desc: "When you choose this path, you learn to speak, read, and write Giant or one other language of your choice if you already know Giant. Additionally, you learn a cantrip of your choice: either druidcraft or thaumaturgy. Wisdom is your spellcasting ability for this spell.",
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "giants_havoc",
+            name: "Giant’s Havoc",
+            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attack’s damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isn’t enough room for you to increase your size, your size doesn’t change.",
             level: 3,
             tracked: false,
           },

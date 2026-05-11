@@ -1,173 +1,213 @@
-// NEEED FEATURES
-    // New section for racial spells
-    // refactor RacesData keys for 1/LR spells 
-        // Tooltip over the checkmark?
-    // refactor RacesData keys for Spells Added to Prepared Spells List
-    // List Racial Prepared Spells with a symbol or grayed out to differentiate them from other prepared spells
-        // Tooltip over symbol or spell to show they are prepared as part of your race/subrace (list specifically which one)
- 
-import React, { useContext, useEffect } from "react";
-import axios from 'axios';
+import React from "react";
+import axios from "axios";
 
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Typography from "@mui/material/Typography";
 
-import { subRaceSpells } from "../RacesData";
+import SpellAccordian from "./SpellAccordian";
 
-import { CharacterInfoContext, ClassSpellsDetailsContext } from "../../Contexts/Context";
-import spellTables from "../spellTables";
+const GIANTS_POWER_CANTRIPS = [
+  { index: "druidcraft", label: "Druidcraft" },
+  { index: "thaumaturgy", label: "Thaumaturgy" },
+];
 
+const getGiantsPowerPreparedIndex = (characterInfo) => {
+  const cantrips = Array.isArray(characterInfo?.spellsPrepared?.[0])
+    ? characterInfo.spellsPrepared[0]
+    : [];
+  const prepared = cantrips.find((s) =>
+    GIANTS_POWER_CANTRIPS.some((c) => c.index === s?.index)
+  );
+  return prepared?.index || null;
+};
 
+const upsertGiantsPowerCantrip = ({ characterInfo, setCharacterInfo, spell }) => {
+  if (!spell?.index) return;
 
-
-const PrepareSubraceSpells = () => {
-
-    const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-
-    
-
-    if (subRaceSpells[characterInfo.race].hasOwnProperty(characterInfo.subrace)) {
-      // just for prepared spells, not 1x/LR spells
-      // shouldn't need to worry about non-caster, they don't have access to the spellList anyway.
-
-      // determine if character has access to Level of spell based on characterLevel
-      const myCharSpellTable = spellTables[characterInfo.characterClass][characterInfo.characterLevel];
-      const subRSpells = subRaceSpells[characterInfo.race][characterInfo.subrace].additionalPreparedSpells;
-      let availableSubraceSpells = [];
-
-      for (const spellLevel in myCharSpellTable) {
-        // this excludes the cantrip and spellsKnown keys in the spellTables.js
-        // if the character has access to that spell Level, then the spells are pushed into the array
-        if (spellLevel !== 'cantrips' && spellLevel !== 'spellsKnown' && myCharSpellTable[spellLevel] > 0 && subRSpells.hasOwnProperty(spellLevel)) {
-          availableSubraceSpells.push(...subRSpells[spellLevel]);
-          console.log('avail SR Spells', availableSubraceSpells);
-        }
-      }
-
-      Promise.all(
-        availableSubraceSpells.map((spell) => axios.get(`/singlespell/${spell}`))
-      )
-        .then((spellDataResponses) => {
-          spellDataResponses.forEach((spellDataResponse, index) => {
-            const spellDetails = spellDataResponse.data;
-
-            console.log('SPELLDETAILS', spellDetails)
-            console.log('spellLevel', spellDetails.level)
-  
-            // something is going wrong with this --not updating correctly. line 59 is trying to iterate??
-            setCharacterInfo((prevCharacterInfo) => ({
-              ...prevCharacterInfo,
-              spellsPrepared: {
-                ...prevCharacterInfo.spellsPrepared,
-                [spellDetails.level]: [
-                  ...(prevCharacterInfo.spellsPrepared[spellDetails.level] || []),
-                  ...spellDetails,
-                ],
-              },
-            }));
-          });
-        })
-        .catch((error) => {
-          console.error('Error fetching spell data:', error);
-          // Handle the error condition as needed
-        });
-
-        // const spellDataPromises = availableSubraceSpells.map((spell) =>
-        // axios.get(`http://localhost:3001/singlespell/${spell.index}`)
-        // );
-
-        // const spellDataResponses = Promise.all(spellDataPromises);
-
-        // spellDataResponses.forEach((spellDetails, index) => {
-        // // const spellLevel = spellDataResponses[index].level;
-        // // const newSpellData = response.data;
-        // console.log('SPELLDETAILS', spellDetails)
-
-        // setCharacterInfo((prevCharacterInfo) => ({
-        //   ...prevCharacterInfo,
-        //   spellsPrepared: {
-        //     ...prevCharacterInfo.spellsPrepared,
-        //     [spellLevel]: [
-        //       ...(prevCharacterInfo.spellsPrepared[spellLevel] || []),
-        //       newSpellData,
-        //     ],
-        //   },
-        // }));
-        // });
-    
-
-
-    //   const fetchDataAndUpdateState = async (spells) => {
-    //     try {
-    //       const spellDataPromises = spells.map((spell) =>
-    //         axios.get(`http://localhost:3001/singlespell/${spell.index}`)
-    //       );
-      
-    //       const spellDataResponses = await Promise.all(spellDataPromises);
-      
-    //       spellDataResponses.forEach((spellDetails, index) => {
-    //         // const spellLevel = spellDataResponses[index].level;
-    //         // const newSpellData = response.data;
-    //         console.log('SPELLDETAILS', spellDetails)
-
-    //         // setCharacterInfo((prevCharacterInfo) => ({
-    //         //   ...prevCharacterInfo,
-    //         //   spellsPrepared: {
-    //         //     ...prevCharacterInfo.spellsPrepared,
-    //         //     [spellLevel]: [
-    //         //       ...(prevCharacterInfo.spellsPrepared[spellLevel] || []),
-    //         //       newSpellData,
-    //         //     ],
-    //         //   },
-    //         // }));
-    //       });
-    //     } catch (error) {
-    //       console.error('Error fetching spell data:', error);
-    //       // Handle the error condition as needed
-    //     }
-    //   };
-
-
-      // fetchSubraceSpells(availableSubraceSpells)
-      // if availableSubraceSpell.length > 0, make api call and push into prepared spells
-      // continue process for all levels of subrace spells,
-      // Then iterate over each item, make the api call, set the spell into characterInfo.spellsPrepared
-
-      // Alternatively, make the api call after each one is checked, starting from lowest, and stopping when player doesn't have access to higher level
-      console.log('test1: subrace has spells')
-    } else {
-      console.log('test2: subrace has NO spells')
-
-      // The subrace is not present in the object
-    }
-    return (
-      <h3>
-          SUBRACE SPELL LIST
-      </h3>
-    )
-  }
-
-// Assuming you have access to the `characterInfo` state and `setCharacterInfo` setter function
-
-  const renderDailySpellsList = (characterInfo) => {
-    const race = characterInfo?.race || "";
-    const subrace = characterInfo?.subrace || "";
-    const halfElfVersatility = characterInfo?.halfElfVersatility || "";
-
-    const shouldShowHalfElfNote =
-      race === "Half Elf" &&
-      subrace === "Standard Half Elf" &&
-      (halfElfVersatility === "Cantrip" || halfElfVersatility === "Drow Magic");
-
-    return (
-      <div>
-        <h3>DAILY SUBRACE SPELL LIST</h3>
-        {shouldShowHalfElfNote ? <div>User has chosen {halfElfVersatility}</div> : null}
-      </div>
+  setCharacterInfo((prev) => {
+    const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+    const withoutGiantsPower = current.filter(
+      (s) => !GIANTS_POWER_CANTRIPS.some((c) => c.index === s?.index)
     );
-  }
+    const next = [...withoutGiantsPower, spell];
+    return {
+      ...prev,
+      spellsPrepared: {
+        ...prev.spellsPrepared,
+        0: next,
+      },
+    };
+  });
+};
 
-  const fetchSubraceSpells = (subSpells) => {
-    PrepareSubraceSpells()
-    // console.log(characterInfo.spellsPrepared)
-  }
+const removeGiantsPowerCantrip = ({ setCharacterInfo }) => {
+  setCharacterInfo((prev) => {
+    const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+    const next = current.filter((s) => !GIANTS_POWER_CANTRIPS.some((c) => c.index === s?.index));
+    return {
+      ...prev,
+      spellsPrepared: {
+        ...prev.spellsPrepared,
+        0: next,
+      },
+    };
+  });
+};
 
-  export {PrepareSubraceSpells, renderDailySpellsList}
+const GiantsPowerCantripPicker = ({ characterInfo, setCharacterInfo }) => {
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [spellDetails, setSpellDetails] = React.useState({});
+
+  const preparedIndex = getGiantsPowerPreparedIndex(characterInfo);
+
+  const loadSpells = React.useCallback(() => {
+    if (loading) return;
+    setLoading(true);
+    setError("");
+
+    Promise.all(GIANTS_POWER_CANTRIPS.map((c) => axios.get(`/singlespell/${c.index}`)))
+      .then((responses) => {
+        const next = {};
+        responses.forEach((res) => {
+          const spell = res?.data;
+          if (spell?.index) next[spell.index] = spell;
+        });
+        setSpellDetails(next);
+      })
+      .catch(() => setError("Failed to load cantrips. Is the backend running on port 3001?"))
+      .finally(() => setLoading(false));
+  }, [loading]);
+
+  const openPicker = () => {
+    setOpen(true);
+    if (Object.keys(spellDetails).length === 0) loadSpells();
+  };
+
+  const closePicker = () => setOpen(false);
+
+  return (
+    <>
+      <Box
+        sx={{
+          borderLeft: "4px solid #607d8b",
+          borderRadius: "6px",
+          backgroundColor: "rgba(255,255,255,0.45)",
+          mb: 1.5,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+          <Typography
+            sx={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              fontSize: "15px",
+              color: "#607d8b",
+            }}
+          >
+            Subrace Spell List
+          </Typography>
+          <Button variant="outlined" size="small" onClick={openPicker}>
+            {preparedIndex ? "Change cantrip" : "Choose cantrip"}
+          </Button>
+        </Box>
+
+        {preparedIndex ? (
+          <SpellAccordian
+            numericalSpellLevel={0}
+            spell={(Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : []).find(
+              (s) => s?.index === preparedIndex
+            )}
+            actionButton={
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => removeGiantsPowerCantrip({ setCharacterInfo })}
+                sx={{ textTransform: "none", fontSize: "12px", backgroundColor: "#2e7d32" }}
+              >
+                Forget
+              </Button>
+            }
+          />
+        ) : (
+          <Typography sx={{ fontSize: "12px", opacity: 0.85 }}>
+            Giant’s Power: prepare either Druidcraft or Thaumaturgy.
+          </Typography>
+        )}
+      </Box>
+
+      <Dialog open={open} onClose={closePicker} fullWidth maxWidth="sm">
+        <DialogTitle>Giant’s Power — Choose a cantrip</DialogTitle>
+        <DialogContent dividers>
+          {loading ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={18} />
+              <Typography>Loading…</Typography>
+            </Box>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : (
+            GIANTS_POWER_CANTRIPS.map((c) => {
+              const spell = spellDetails[c.index];
+              if (!spell) return null;
+              const isPrepared = preparedIndex === c.index;
+
+              return (
+                <Box key={c.index} sx={{ mb: 1 }}>
+                  <SpellAccordian
+                    numericalSpellLevel={0}
+                    spell={spell}
+                    actionButton={
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                          if (isPrepared) {
+                            removeGiantsPowerCantrip({ setCharacterInfo });
+                            return;
+                          }
+                          upsertGiantsPowerCantrip({ characterInfo, setCharacterInfo, spell });
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          fontSize: "12px",
+                          backgroundColor: isPrepared ? "#2e7d32" : "#a881af",
+                        }}
+                      >
+                        {isPrepared ? "Forget" : "Learn Cantrip"}
+                      </Button>
+                    }
+                  />
+                </Box>
+              );
+            })
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closePicker}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
+export const renderDailySpellsList = (characterInfo, setCharacterInfo) => {
+  const isGiantsPowerAvailable =
+    characterInfo?.characterClass === "barbarian" &&
+    characterInfo?.subclass === "giant" &&
+    Number(characterInfo?.characterLevel || 0) >= 3;
+
+  if (!isGiantsPowerAvailable) return null;
+  if (typeof setCharacterInfo !== "function") return null;
+
+  return <GiantsPowerCantripPicker characterInfo={characterInfo} setCharacterInfo={setCharacterInfo} />;
+};

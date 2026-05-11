@@ -36,17 +36,17 @@ function App() {
   const [characterInfo, setCharacterInfo] = useState(() => {
     const persistedPrepared = loadPreparedSpellsFromStorage();
     return {
-      characterName: "Garetjax",
-      race: "Dwarf",
-      subrace: "Hill",
+      characterName: "",
+      race: "noRace",
+      subrace: "noSubrace",
       draconicAncestry: "",
       // default characterClass should be "noClass" rather than empty string
-      characterClass: "cleric",
-      subclass: "grave",
-      characterLevel: 10,
-      proficiencyMod: 4,
-      hp: 100,
-      ac: 17,
+      characterClass: "noClass",
+      subclass: "noSubclass",
+      characterLevel: 1,
+      proficiencyMod: 2,
+      hp: 0,
+      ac: 10,
       weapons: [
         {
           name: "Longsword",
