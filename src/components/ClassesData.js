@@ -436,9 +436,16 @@ export const ClassesData = {
       {
         id: "bardic_inspiration",
         name: "Bardic Inspiration",
-        desc: "You can inspire others through stirring words or music. Use a bonus action to give one creature within 60 feet an inspiration die (1d6 at 1st level). The die increases as you gain levels.",
+        desc: [
+          "You can inspire others through stirring words or music. To do so, you use a bonus action on your turn to choose one creature other than yourself within 60 feet of you who can hear you. That creature gains one Bardic Inspiration die, a d6.",
+          "Once within the next 10 minutes, the creature can roll the die and add the number rolled to one ability check, attack roll, or saving throw it makes. The creature can wait until after it rolls the d20 before deciding to use the Bardic Inspiration die, but must decide before the DM says whether the roll succeeds or fails. Once the Bardic Inspiration die is rolled, it is lost. A creature can have only one Bardic Inspiration die at a time.",
+          "You can use this feature a number of times equal to your Charisma modifier (a minimum of once). You regain any expended uses when you finish a long rest.",
+          "Your Bardic Inspiration die changes when you reach certain levels in this class. The die becomes a d8 at 5th level, a d10 at 10th level, and a d12 at 15th level.",
+        ],
         level: 1,
-        tracked: 1, // Cha mod, min of 1.
+        tracked: true,
+        uses: "cha_mod",
+        recharge: "lr",
       },
       {
         id: "song_of_rest",
@@ -450,7 +457,7 @@ export const ClassesData = {
       {
         id: "font_of_inspiration",
         name: "Font of Inspiration",
-        desc: "Beginning at 5th level, you regain all your expended uses of Bardic Inspiration when you finish a short or long rest.",
+        desc: "Beginning when you reach 5th level, you regain all of your expended uses of Bardic Inspiration when you finish a short or long rest.",
         level: 5,
         tracked: false,
       },
@@ -480,31 +487,56 @@ export const ClassesData = {
     subclasses: {
       creation: {
         features: [
-          {
+                    {
             id: "mote_of_potential",
             name: "Mote of Potential",
-            desc: "Whenever you give a creature a Bardic Inspiration die, you can create a Tiny mote of potential that orbits the creature. The mote provides an additional effect based on how the Bardic Inspiration die is used: an ability check (adds a bonus equal to the die roll), an attack roll (deals additional damage to the target equal to the die roll), or a saving throw (grants temporary hit points equal to the die roll + your Charisma modifier).",
+            desc: [
+              "When you join the College of Creation at 3rd level, whenever you give a creature a Bardic Inspiration die, you can utter a note from the Song of Creation to create a Tiny mote of potential, which orbits within 5 feet of that creature. The mote is intangible and invulnerable, and it lasts until the Bardic Inspiration die is lost. The mote looks like a musical note, a star, a flower, or another symbol of art or life that you choose.",
+              "When the creature uses the Bardic Inspiration die, the mote provides an additional effect based on whether the die benefits an ability check, an attack roll, or a saving throw, as detailed below:",
+              "Ability Check. When the creature rolls the Bardic Inspiration die to add it to an ability check, the creature can roll the Bardic Inspiration die again and choose which roll to use, as the mote pops and emits colorful, harmless sparks for a moment.",
+              "Attack Roll. Immediately after the creature rolls the Bardic Inspiration die to add it to an attack roll against a target, the mote thunderously shatters. The target and each creature of your choice that you can see within 5 feet of it must succeed on a Constitution saving throw against your spell save DC or take thunder damage equal to the number rolled on the Bardic Inspiration die.",
+              "Saving Throw. Immediately after the creature rolls the Bardic Inspiration die and adds it to a saving throw, the mote vanishes with the sound of soft music, causing the creature to gain temporary hit points equal to the number rolled on the Bardic Inspiration die plus your Charisma modifier (minimum of 1 temporary hit point).",
+            ],
             level: 3,
             tracked: false,
           },
-          {
+                    {
             id: "performance_of_creation",
             name: "Performance of Creation",
-            desc: "As an action, you can create a nonmagical item of your choice in an unoccupied space within 10 feet of you. The item must be on a surface or in a liquid that can support it. The gold piece value of the item can’t exceed 20 × your Bard level. The item lasts for a number of hours equal to your proficiency bonus or until you use this feature again.",
+            desc: [
+              "Also at 3rd level, as an action, you can channel the magic of the Song of Creation to create one nonmagical item of your choice in an unoccupied space within 10 feet of you. The item must appear on a surface or in a liquid that can support it. The gp value of the item can't be more than 20 times your bard level, and the item must be Medium or smaller. The item glimmers softly, and a creature can faintly hear music when touching it. The created item disappears after a number of hours equal to your proficiency bonus. For examples of items you can create, see the equipment chapter of the Player's Handbook.",
+              "Once you create an item with this feature, you can't do so again until you finish a long rest, unless you expend a spell slot of 2nd level or higher to use this feature again. You can have only one item created by this feature at a time; if you use this action and already have an item from this feature, the first one immediately vanishes.",
+              "The size of the item you can create with this feature increases by one size category when you reach 6th level (Large) and 14th level (Huge).",
+            ],
             level: 3,
-            tracked: true, //1/LR, then you can use a 2nd lvl spell to use again
+            tracked: true,
+            recharge: "lr",
+            usesByLevel: [
+              { level: 3, uses: 1 },
+              { level: 14, uses: "cha_mod", minUses: 2 },
+            ],
           },
-          {
+                    {
             id: "animating_performance",
             name: "Animating Performance",
-            desc: "As an action, you can animate one Large or smaller nonmagical item within 30 feet of you. The animated item is friendly to you and your companions and obeys your commands. It uses the Dancing Item stat block and remains animated for 1 hour or until it is reduced to 0 hit points.",
+            desc: [
+              "By 6th level, as an action, you can animate one Large or smaller nonmagical item within 30 feet of you that isn�t being worn or carried. The animate item uses the Dancing Item stat block, which uses your proficiency bonus (PB), The item is friendly to you and your companions and obeys your commands. It lives for 1 hour, until it is reduced to 0 hit points, or until you die.",
+              "In combat, the item shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the item can take any action of its choice, not just Dodge.",
+              "When you use your Bardic Inspiration feature, you can command the item as part of the same bonus action you use for Bardic Inspiration.",
+              "Once you animate an item with this feature, you can't do so again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use this feature again. You can have only one item animated by this feature at a time; if you use this action and already have a dancing item from this feature, the first one immediately becomes inanimate.",
+            ],
             level: 6,
-            tracked: true, // 1/LR then u can use a 3rd level spell to use again
+            tracked: true,
+            recharge: "lr",
+            uses: 1,
           },
-          {
+                    {
             id: "creative_crescendo",
             name: "Creative Crescendo",
-            desc: "When you use your Performance of Creation, you can create more than one item at once. The number of items equals your Charisma modifier (minimum of one). If you create an item that exceeds the combined gold piece value limit of your Bard level × 20, it lasts for 10 minutes instead of your proficiency bonus in hours.",
+            desc: [
+              "At 14th level, when you use your Performance of Creation feature, you can create more than one item at once. The number of items equals your Charisma modifier (minimum of two items). If you create an item that would exceed that number, you choose which of the previously created items disappears. Only one of these items can be of the maximum size you can create; the rest must be Small or Tiny.",
+              "You are no longer limited by gp value when creating items with Performance of Creation.",
+            ],
             level: 14,
             tracked: false,
           },
