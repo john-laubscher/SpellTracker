@@ -20,6 +20,10 @@ import Divider from "@mui/material/Divider";
 import AuthControls from "./AuthControls";
 
 export const CharacterCreationForm = (props) => {
+  const NO_RACE = "noRace";
+  const NO_SUBRACE = "noSubrace";
+  const NO_CLASS = "noClass";
+  const NO_SUBCLASS = "noSubclass";
 
   const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
 
@@ -31,6 +35,32 @@ export const CharacterCreationForm = (props) => {
   // const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
   const navigate = useNavigate();
+  const [continueAttempted, setContinueAttempted] = React.useState(false);
+  const [animateMissing, setAnimateMissing] = React.useState(false);
+
+  const isMissingRace = !characterInfo.race || characterInfo.race === NO_RACE;
+  const isMissingSubrace = !characterInfo.subrace || characterInfo.subrace === NO_SUBRACE;
+  const isMissingClass = !characterInfo.characterClass || characterInfo.characterClass === NO_CLASS;
+  const isMissingSubclass = !characterInfo.subclass || characterInfo.subclass === NO_SUBCLASS;
+
+  const missingFieldSx = (shouldHighlight) => {
+    if (!shouldHighlight) return null;
+    return {
+      "@keyframes missingFieldShake": {
+        "0%": { transform: "translateX(0px)" },
+        "20%": { transform: "translateX(-4px)" },
+        "40%": { transform: "translateX(4px)" },
+        "60%": { transform: "translateX(-3px)" },
+        "80%": { transform: "translateX(3px)" },
+        "100%": { transform: "translateX(0px)" },
+      },
+      ...(animateMissing ? { animation: "missingFieldShake 420ms ease-in-out 0s 1" } : null),
+      "& .MuiOutlinedInput-notchedOutline": { borderColor: "#b71c1c" },
+      "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#b71c1c" },
+      "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#b71c1c" },
+      "& .MuiInputLabel-root": { color: "#b71c1c" },
+    };
+  };
 
   useEffect(() => {
     setCharacterInfo((prev) => ({
@@ -76,11 +106,34 @@ export const CharacterCreationForm = (props) => {
 
   useEffect(() => {
     const allowedSubraces = Subraces?.[characterInfo.race] || [];
+    if (characterInfo.race === NO_RACE) {
+      if (characterInfo.subrace !== NO_SUBRACE) {
+        setCharacterInfo((prev) => ({ ...prev, subrace: NO_SUBRACE }));
+      }
+      return;
+    }
+
     if (allowedSubraces.length === 0) return;
     if (!allowedSubraces.includes(characterInfo.subrace)) {
-      setCharacterInfo((prev) => ({ ...prev, subrace: allowedSubraces[0] }));
+      setCharacterInfo((prev) => ({ ...prev, subrace: NO_SUBRACE }));
     }
   }, [characterInfo.race, characterInfo.subrace, setCharacterInfo]);
+
+  useEffect(() => {
+    if (characterInfo.characterClass === NO_CLASS) {
+      if (characterInfo.subclass !== NO_SUBCLASS) {
+        setCharacterInfo((prev) => ({ ...prev, subclass: NO_SUBCLASS }));
+      }
+      return;
+    }
+
+    const subclasses = ClassesData?.[characterInfo.characterClass]?.subclasses || {};
+    const allowedSubclassKeys = Object.keys(subclasses);
+    if (allowedSubclassKeys.length === 0) return;
+    if (!allowedSubclassKeys.includes(characterInfo.subclass)) {
+      setCharacterInfo((prev) => ({ ...prev, subclass: NO_SUBCLASS }));
+    }
+  }, [characterInfo.characterClass, characterInfo.subclass, setCharacterInfo]);
 
   const renderWizardSpellCountMod = () => {
     if (characterInfo.characterClass === 'wizard') {
@@ -118,13 +171,36 @@ export const CharacterCreationForm = (props) => {
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   const handleChange = (event) => {
-    const {name, value} = event.target;
-    if (characterInfo.characterClass === 'wizard') {
-      setCharacterInfo({...characterInfo, [name]: parseInt(value)})
-    }
-    setCharacterInfo({ ...characterInfo, [name]: event.target.value });
+    const { name, value } = event.target;
+
+    setCharacterInfo((prev) => {
+      const next = { ...prev, [name]: value };
+
+      if (name === "race") {
+        next.subrace = NO_SUBRACE;
+        next.draconicAncestry = "";
+        next.halfElfVersatility = "";
+      }
+
+      if (name === "characterClass") {
+        next.subclass = NO_SUBCLASS;
+      }
+
+      return next;
+    });
   };
 
+  const handleContinue = () => {
+    const missingAny = isMissingRace || isMissingSubrace || isMissingClass || isMissingSubclass;
+    if (!missingAny) {
+      navigate("/mainUI");
+      return;
+    }
+
+    setContinueAttempted(true);
+    setAnimateMissing(true);
+    window.setTimeout(() => setAnimateMissing(false), 500);
+  };
 
   const handleStatChange = (statName, newValue) => {
     setCharacterInfo((prev) => {
@@ -194,9 +270,12 @@ export const CharacterCreationForm = (props) => {
       <Box sx={{ ...sectionStyle, maxWidth: "340px", width: "100%" }}>
         <Grid container spacing={1.5}>
           <Grid item xs={6}>
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="small" error={continueAttempted && isMissingRace} sx={missingFieldSx(continueAttempted && isMissingRace)}>
               <InputLabel id="race-select-label">Race</InputLabel>
               <Select labelId="race-select-label" id="race-select" value={characterInfo.race} label="Race" name="race" onChange={handleChange}>
+                <MenuItem value={NO_RACE} disabled>
+                  Select a race
+                </MenuItem>
                 {Races.map((race) => (
                   <MenuItem key={race} value={race}>{race}</MenuItem>
                 ))}
@@ -204,21 +283,49 @@ export const CharacterCreationForm = (props) => {
             </FormControl>
           </Grid>
           <Grid item xs={6}>
-            {characterInfo.race !== "noRace" && (
-              <FormControl fullWidth size="small">
-                <InputLabel id="subrace-select-label">Subrace</InputLabel>
-                <Select labelId="subrace-select-label" id="subrace-select" value={characterInfo.subrace} label="Subrace" name="subrace" onChange={handleChange}>
-                  {Subraces[characterInfo.race].map((subrace) => (
-                    <MenuItem key={subrace} value={subrace}>{subrace}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            <FormControl
+              fullWidth
+              size="small"
+              disabled={characterInfo.race === NO_RACE}
+              error={continueAttempted && isMissingSubrace}
+              sx={missingFieldSx(continueAttempted && isMissingSubrace)}
+            >
+              <InputLabel id="subrace-select-label">Subrace</InputLabel>
+              <Select
+                labelId="subrace-select-label"
+                id="subrace-select"
+                value={characterInfo.subrace}
+                label="Subrace"
+                name="subrace"
+                onChange={handleChange}
+              >
+                <MenuItem value={NO_SUBRACE} disabled>
+                  Select a subrace
+                </MenuItem>
+                {(Subraces?.[characterInfo.race] || []).map((subrace) => (
+                  <MenuItem key={subrace} value={subrace}>
+                    {subrace}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={6}>
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="small" error={continueAttempted && isMissingClass} sx={missingFieldSx(continueAttempted && isMissingClass)}>
               <InputLabel id="class-select-label">Class</InputLabel>
-              <Select labelId="class-select-label" id="class-select" value={characterInfo.characterClass} label="Class" name="characterClass" onChange={handleChange} renderValue={capitalize}>
+              <Select
+                labelId="class-select-label"
+                id="class-select"
+                value={characterInfo.characterClass}
+                label="Class"
+                name="characterClass"
+                onChange={handleChange}
+                displayEmpty
+                renderValue={(selected) => (selected === NO_CLASS ? "Select a class" : capitalize(selected))}
+              >
+                <MenuItem value={NO_CLASS} disabled>
+                  Select a class
+                </MenuItem>
                 {characterClasses.map((charClass) => (
                   <MenuItem key={charClass} value={charClass}>{capitalize(charClass)}</MenuItem>
                 ))}
@@ -226,16 +333,34 @@ export const CharacterCreationForm = (props) => {
             </FormControl>
           </Grid>
           <Grid item xs={6}>
-            {characterInfo.characterClass !== "noClass" && (
-              <FormControl fullWidth size="small">
-                <InputLabel id="subclass-select-label">Subclass</InputLabel>
-                <Select labelId="subclass-select-label" id="subclass-select" value={characterInfo.subclass} label="Subclass" name="subclass" onChange={handleChange} renderValue={capitalize}>
-                  {Object.keys(ClassesData[characterInfo.characterClass].subclasses).map((subclass) => (
-                    <MenuItem key={subclass} value={subclass}>{capitalize(subclass)}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            <FormControl
+              fullWidth
+              size="small"
+              disabled={characterInfo.characterClass === NO_CLASS}
+              error={continueAttempted && isMissingSubclass}
+              sx={missingFieldSx(continueAttempted && isMissingSubclass)}
+            >
+              <InputLabel id="subclass-select-label">Subclass</InputLabel>
+              <Select
+                labelId="subclass-select-label"
+                id="subclass-select"
+                value={characterInfo.subclass}
+                label="Subclass"
+                name="subclass"
+                onChange={handleChange}
+                displayEmpty
+                renderValue={(selected) => (selected === NO_SUBCLASS ? "Select a subclass" : capitalize(selected))}
+              >
+                <MenuItem value={NO_SUBCLASS} disabled>
+                  Select a subclass
+                </MenuItem>
+                {Object.keys(ClassesData?.[characterInfo.characterClass]?.subclasses || {}).map((subclass) => (
+                  <MenuItem key={subclass} value={subclass}>
+                    {capitalize(subclass)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
 
@@ -373,7 +498,7 @@ export const CharacterCreationForm = (props) => {
       {/* Continue Button */}
       <Button
         variant="contained"
-        onClick={() => navigate("/mainUI")}
+        onClick={handleContinue}
         sx={{
           mt: 1,
           mb: 1,
