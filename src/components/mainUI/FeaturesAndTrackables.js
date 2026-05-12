@@ -12,10 +12,12 @@ import {
   AccordionDetails,
   Checkbox,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 import { AuthContext, CharacterInfoContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
@@ -24,6 +26,7 @@ import AddFeatureModal from "./AddFeatureModal";
 import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
 import EditCustomFeatureModal from "./EditCustomFeatureModal";
+import MagicalSecretsModal from "./MagicalSecretsModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -139,6 +142,7 @@ const FeatureDisplay = ({
   title,
   features,
   untrackedLabel,
+  renderUntrackedTrailingControls,
   addTooltip,
   onAdd,
   manageTooltip,
@@ -368,13 +372,20 @@ const FeatureDisplay = ({
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ px: 1, py: 0.5 }}>
-            {untrackedFeatures.map((feature) => (
-              <FeatureAccordionRow
-                key={feature.id}
-                feature={feature}
-                detailsIdPrefix={`untracked-${title}`}
-              />
-            ))}
+            {untrackedFeatures.map((feature) => {
+              const trailing = renderUntrackedTrailingControls
+                ? renderUntrackedTrailingControls(feature)
+                : null;
+
+              return (
+                <FeatureAccordionRow
+                  key={feature.id}
+                  feature={feature}
+                  detailsIdPrefix={`untracked-${title}`}
+                  renderTrailingControls={trailing ? () => trailing : null}
+                />
+              );
+            })}
           </AccordionDetails>
         </Accordion>
       )}
@@ -397,6 +408,16 @@ const FeaturesAndTrackables = () => {
   const [editingCustom, setEditingCustom] = React.useState(null);
   const [deletingCustom, setDeletingCustom] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
+  const [magicalSecretsModalOpen, setMagicalSecretsModalOpen] = React.useState(false);
+
+  const hasAdditionalMagicalSecrets =
+    characterClass === "bard" &&
+    subclass === "lore" &&
+    Number(characterLevel || 0) >= 6;
+
+  const magicalSecretsCount = Array.isArray(characterInfo?.magicalSecretsPrepared)
+    ? characterInfo.magicalSecretsPrepared.length
+    : 0;
 
   // Retrieve class data
   const classData = React.useMemo(() => classesData[characterClass] || {}, [characterClass]);
@@ -679,6 +700,33 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
+              renderUntrackedTrailingControls={(feature) => {
+                if (!hasAdditionalMagicalSecrets) return null;
+                if (feature?.id !== "additional_magical_secrets") return null;
+                const isOver = magicalSecretsCount > 2;
+
+                return (
+                  <Tooltip arrow title={`Choose Magical Secrets (${magicalSecretsCount}/2)`}>
+                    <IconButton
+                      size="small"
+                      aria-label="Choose Magical Secrets"
+                      onClick={() => setMagicalSecretsModalOpen(true)}
+                      sx={{
+                        ml: 0.25,
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : "#5d4037",
+                        border: "1px solid rgba(93, 64, 55, 0.25)",
+                        backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(244, 233, 221, 0.65)",
+                        "&:hover": {
+                          backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                        },
+                      }}
+                    >
+                      <MenuBookIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               characterClass={characterClass}
@@ -766,6 +814,11 @@ const FeaturesAndTrackables = () => {
           setDeletingCustom({ ...f, kind: "class" });
         }}
         onClose={() => setManageModal((s) => ({ ...s, open: false }))}
+      />
+
+      <MagicalSecretsModal
+        open={magicalSecretsModalOpen}
+        onClose={() => setMagicalSecretsModalOpen(false)}
       />
 
       <ManageFeaturesModal
