@@ -91,7 +91,7 @@ const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButto
                   '& .MuiAccordionSummary-content': {
                     margin: '4px 0 !important',
                     alignItems: 'center',
-                    gap: 1,
+                    gap: 0.5,
                     width: '100%',
                     display: 'flex',
                   },

@@ -3,7 +3,10 @@ import axios from 'axios';
 
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -14,6 +17,7 @@ import {PrepareSpellButton, togglePreparedSpellBtnStyle} from "./PrepareSpellBut
 import SpellAccordian from './SpellAccordian';
 import { renderDailySpellsList } from './RacialSpellsList'
 import PreparedSpellsStatus from "./PreparedSpellsStatus";
+import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -34,6 +38,19 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  const hasGuidingWhispers =
+    characterInfo?.characterClass === "bard" &&
+    characterInfo?.subclass === "spirits" &&
+    Number(characterInfo?.characterLevel || 0) >= 3;
+
+  const hasAdditionalMagicalSecrets =
+    characterInfo?.characterClass === "bard" &&
+    characterInfo?.subclass === "lore" &&
+    Number(characterInfo?.characterLevel || 0) >= 6;
+
+  const magicalSecrets = Array.isArray(characterInfo?.magicalSecretsPrepared)
+    ? characterInfo.magicalSecretsPrepared
+    : [];
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
     0: { loading: false, error: '' },
@@ -51,6 +68,72 @@ export const SpellList = (props) => {
   // is this doing anything usefull?
   useEffect(() => {
   }, [characterInfo]);
+
+  useEffect(() => {
+    const hasGuidingWhispers =
+      characterInfo?.characterClass === "bard" &&
+      characterInfo?.subclass === "spirits" &&
+      Number(characterInfo?.characterLevel || 0) >= 3;
+
+    if (!hasGuidingWhispers) {
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => s?.index !== "guidance");
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const alreadyHasGuidance = currentCantrips.some((s) => s?.index === "guidance");
+    if (alreadyHasGuidance) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/guidance")
+      .then((res) => {
+        if (cancelled) return;
+        const guidanceSpell = res?.data;
+        if (!guidanceSpell?.index) return;
+
+        const guidance60ft = {
+          ...guidanceSpell,
+          range: "60 feet",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "guidance")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, guidance60ft],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
 
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
@@ -204,11 +287,21 @@ export const SpellList = (props) => {
   // ***NEED FEATURE--CRITICAL--*** some subrace spells are not in the api, so will need a condition that instead shows a message saying that the description is not available
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
   const renderPCSpells = (textualSpellLevel, numericalSpellLevel) => {
-    if (ClassesData[characterInfo.characterClass].isSpellCaster === "nonCaster") {
+    const classKey = characterInfo?.characterClass;
+    const classMeta = ClassesData?.[classKey];
+    if (!classMeta) return null;
+
+    if (classMeta.isSpellCaster === "nonCaster") {
       return null;
-    } else if (spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel] !== 0) {
+    }
+
+    const levelKey = Number(characterInfo?.characterLevel) || 0;
+    const tableRow = spellTables?.[classKey]?.[levelKey];
+    if (!tableRow) return null;
+
+    const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
+    if (slotCount === 0) return null;
       const levelColor = spellLevelColors[numericalSpellLevel] || '#607d8b';
-      const slotCount = spellTables[characterInfo.characterClass][characterInfo.characterLevel][textualSpellLevel];
       const isCantrips = textualSpellLevel === 'cantrips';
       const heading = isCantrips
         ? `Cantrips Known: ${slotCount}`
@@ -226,33 +319,47 @@ export const SpellList = (props) => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography sx={{
-              fontFamily: "'Cinzel', serif",
-              fontWeight: 700,
-              fontSize: '15px',
-              color: levelColor,
-            }}>
-              {heading}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Typography sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: '15px',
+                color: levelColor,
+              }}>
+                {heading}
+              </Typography>
+              {isCantrips && hasGuidingWhispers ? (
+                <Tooltip
+                  arrow
+                  title="Guidance is granted by Guiding Whispers and doesn’t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
+            </Box>
             {!isCantrips && (
               <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
             )}
           </Box>
+          {renderMagicalSecretsForLevel(numericalSpellLevel)}
           {renderPreparedSpells(numericalSpellLevel)}
           <Box sx={{ mt: 0.5 }}>
             {renderSpellModal(numericalSpellLevel)}
           </Box>
         </Box>
       );
-    }
   };
 
 
 
   const renderPreparedSpells = (numericalSpellLevel) => {
+    const prepared = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+      ? characterInfo.spellsPrepared[numericalSpellLevel]
+      : [];
+
     return (
       <div>
-        {characterInfo.spellsPrepared[numericalSpellLevel].map((spell, index) => (
+        {prepared.map((spell, index) => (
           <div key={spell.index}>
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
@@ -268,6 +375,55 @@ export const SpellList = (props) => {
           </div>
         ))}
       </div>
+    );
+  };
+
+  const renderMagicalSecretsForLevel = (numericalSpellLevel) => {
+    if (!hasAdditionalMagicalSecrets) return null;
+
+    const secretsAtLevel = magicalSecrets.filter((spell) => {
+      const lvl = Number(spell?.level);
+      const key = Number.isFinite(lvl) ? lvl : 0;
+      return key === Number(numericalSpellLevel);
+    });
+
+    if (secretsAtLevel.length === 0) return null;
+
+    const isOver = magicalSecrets.length > 2;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {secretsAtLevel.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={numericalSpellLevel}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title="Additional Magical Secret (does not count toward prepared spells)."
+                >
+                  <Chip
+                    size="small"
+                    label="MS"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: 0.55,
+                      backgroundColor: "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(62, 39, 35, 0.72)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(62, 39, 35, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={<PrepareMagicalSecretButton spell={spell} index={idx} />}
+            />
+          </Box>
+        ))}
+      </Box>
     );
   };
 
