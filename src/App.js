@@ -31,6 +31,18 @@ const loadMagicalSecretsFromStorage = () => {
   }
 };
 
+const loadSpiritSessionFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_spiritSessionPrepared");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -48,6 +60,7 @@ function App() {
   const [characterInfo, setCharacterInfo] = useState(() => {
     const persistedPrepared = loadPreparedSpellsFromStorage();
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
+    const persistedSpiritSession = loadSpiritSessionFromStorage();
     return {
       characterName: "",
       race: "noRace",
@@ -93,6 +106,7 @@ function App() {
         ...(persistedPrepared || {}),
       },
       magicalSecretsPrepared: Array.isArray(persistedMagicalSecrets) ? persistedMagicalSecrets : [],
+      spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
     };
   });
 
@@ -148,6 +162,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.magicalSecretsPrepared]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_spiritSessionPrepared",
+        JSON.stringify(characterInfo.spiritSessionPrepared || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.spiritSessionPrepared]);
 
   return (
     <div className="App">
