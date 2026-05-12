@@ -776,23 +776,39 @@ export const ClassesData = {
       {
         id: "channel_divinity",
         name: "Channel Divinity",
-        desc: "You gain the ability to channel divine energy directly from your deity, using it to fuel magical effects. At 2nd level, you can use your Channel Divinity once per short or long rest. Additional uses and effects are gained as you level.",
+        desc: "At 2nd level, you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with Turn Undead and an effect determined by your domain. When you use Channel Divinity, you choose which effect to create. You regain expended uses when you finish a short or long rest. If a Channel Divinity option requires a saving throw, the DC equals your cleric spell save DC.",
         level: 2,
-        tracked: 1, // 2nd lvl:1, 6th lvl: 2,  18th lvl: 3
+        tracked: true,
+        usesByLevel: [
+          { level: 2, uses: 1 },
+          { level: 6, uses: 2 },
+          { level: 18, uses: 3 },
+        ],
+      },
+      {
+        id: "channel_divinity_turn_undead",
+        name: "Channel Divinity: Turn Undead",
+        desc: "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet must make a Wisdom saving throw. On a failed save, it is turned for 1 minute or until it takes damage. A turned creature tries to move away from you and is limited in the actions it can take while turned.",
+        level: 2,
+        tracked: false,
+        uses: 0, // Uses come from your Channel Divinity pool.
       },
       {
         id: "destroy_undead",
         name: "Destroy Undead",
-        desc: "When an undead fails its saving throw against your Turn Undead feature, it is instantly destroyed if its challenge rating is at or below a certain threshold based on your cleric level.",
+        desc: "Starting at 5th level, when an undead fails its saving throw against your Turn Undead feature, it is instantly destroyed if its challenge rating is at or below a certain threshold based on your cleric level.",
         level: 5,
-        tracked: false, // Tracks undead CR threshold
+        tracked: false,
+        uses: 0,
       },
       {
         id: "divine_intervention",
         name: "Divine Intervention",
-        desc: "Beginning at 10th level, you can call on your deity to intervene on your behalf when your need is great. As an action, you describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. If successful, you canâ€™t use this feature again for 7 days. Otherwise, you can use it again after a long rest.",
+        desc: "Beginning at 10th level, you can call on your deity to intervene on your behalf when your need is great. As an action, you describe the assistance you seek and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes (the DM determines the nature of the intervention). If your deity intervenes, you can't use this feature again for 7 days. Otherwise, you can use it again after you finish a long rest. At 20th level, your call succeeds automatically.",
         level: 10,
-        tracked: 7, // (typically once every 7 days if successful), need tooltip to explain checkboxes track days between uses
+        tracked: true,
+        trackedMode: "divineInterventionCooldown",
+        uses: 0,
       },
     ],
     subclasses: {
@@ -841,6 +857,98 @@ export const ClassesData = {
           { level: 5, spells: ["dispel_magic", "magic_circle"] },
           { level: 7, spells: ["arcane_eye", "leomund's_secret_chest"] },
           { level: 9, spells: ["planar_binding", "teleportation_circle"] },
+        ],
+      },
+      death: {
+        features: [
+          {
+            id: "reaper",
+            name: "Reaper",
+            desc: "At 1st level, you learn an extra necromancy cantrip. When you cast a necromancy cantrip that targets one creature, you can also target a second creature within 5 feet of the first.",
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "channel_divinity_touch_of_death",
+            name: "Channel Divinity: Touch of Death",
+            desc: "Starting at 2nd level, you can use Channel Divinity to add extra necrotic damage to a melee attack.",
+            level: 2,
+            tracked: false, // Channel Divinity use
+          },
+          {
+            id: "inescapable_destruction",
+            name: "Inescapable Destruction",
+            desc: "Starting at 6th level, your necrotic damage is harder to resist.",
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "divine_strike",
+            name: "Divine Strike",
+            desc: "At 8th level, once on each of your turns when you hit with a weapon attack, you deal extra necrotic damage. The extra damage increases at 14th level.",
+            level: 8,
+            tracked: false,
+          },
+          {
+            id: "improved_reaper",
+            name: "Improved Reaper",
+            desc: "At 17th level, when you cast certain necromancy spells that normally target one creature, you can target a second creature within 5 feet of the first.",
+            level: 17,
+            tracked: false,
+          },
+        ],
+        subclassSpells: [
+          { level: 1, spells: ["false_life", "ray_of_sickness"] },
+          { level: 3, spells: ["blindness_deafness", "ray_of_enfeeblement"] },
+          { level: 5, spells: ["animate_dead", "vampiric_touch"] },
+          { level: 7, spells: ["blight", "death_ward"] },
+          { level: 9, spells: ["antilife_shell", "cloudkill"] },
+        ],
+      },
+      forge: {
+        features: [
+          {
+            id: "blessing_of_the_forge",
+            name: "Blessing of the Forge",
+            desc: "At 1st level, you can imbue a nonmagical weapon or suit of armor with a minor blessing after a rest.",
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "channel_divinity_artisans_blessing",
+            name: "Channel Divinity: Artisan's Blessing",
+            desc: "Starting at 2nd level, you can use Channel Divinity to craft a simple item from metal with appropriate materials on hand.",
+            level: 2,
+            tracked: false, // Channel Divinity use
+          },
+          {
+            id: "soul_of_the_forge",
+            name: "Soul of the Forge",
+            desc: "At 6th level, you gain defensive benefits while wearing heavy armor, including improved resilience against fire.",
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "divine_strike",
+            name: "Divine Strike",
+            desc: "At 8th level, once on each of your turns when you hit with a weapon attack, you deal extra fire damage. The extra damage increases at 14th level.",
+            level: 8,
+            tracked: false,
+          },
+          {
+            id: "saint_of_forge_and_fire",
+            name: "Saint of Forge and Fire",
+            desc: "At 17th level, you gain major fire and physical durability benefits while wearing heavy armor.",
+            level: 17,
+            tracked: false,
+          },
+        ],
+        subclassSpells: [
+          { level: 1, spells: ["identify", "searing_smite"] },
+          { level: 3, spells: ["heat_metal", "magic_weapon"] },
+          { level: 5, spells: ["elemental_weapon", "protection_from_energy"] },
+          { level: 7, spells: ["fabricate", "wall_of_fire"] },
+          { level: 9, spells: ["animate_objects", "creation"] },
         ],
       },
       grave: {
