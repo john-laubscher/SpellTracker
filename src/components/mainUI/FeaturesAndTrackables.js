@@ -16,6 +16,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
+import CheckIcon from "@mui/icons-material/Check";
+import RemoveIcon from "@mui/icons-material/Remove";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 
@@ -38,6 +40,28 @@ import {
   setFeatureTrackedOverride,
   setFeatureHiddenOverride,
 } from "../../utils/featureOverrides";
+
+const FEATURE_TRACKERS_STORAGE_KEY = "spelltracker_featureTrackers_v1";
+
+const loadFeatureTrackers = () => {
+  try {
+    const raw = localStorage.getItem(FEATURE_TRACKERS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+};
+
+const saveFeatureTrackers = (trackers) => {
+  try {
+    localStorage.setItem(FEATURE_TRACKERS_STORAGE_KEY, JSON.stringify(trackers || {}));
+  } catch {
+    // ignore write errors
+  }
+};
 
 const FeatureAccordionRow = ({
   feature,
@@ -159,6 +183,7 @@ const FeatureDisplay = ({
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
+  const [featureTrackers, setFeatureTrackers] = React.useState(() => loadFeatureTrackers());
   const [untrackedExpanded, setUntrackedExpanded] = React.useState(false);
 
   React.useEffect(() => {
@@ -167,8 +192,13 @@ const FeatureDisplay = ({
     };
   }, []);
 
+  React.useEffect(() => {
+    saveFeatureTrackers(featureTrackers);
+  }, [featureTrackers]);
+
   const getUsesCount = (feature) => {
     if (feature?.recharge === "rage") return 1;
+    if (feature?.uses === 0) return 0;
     if (Array.isArray(feature?.usesByLevel) && Number.isFinite(characterLevel)) {
       const sorted = [...feature.usesByLevel].sort((a, b) => (a?.level || 0) - (b?.level || 0));
       const match = sorted.reduce((acc, cur) => {
@@ -181,6 +211,7 @@ const FeatureDisplay = ({
         const minUses = Math.max(1, Number(match?.minUses) || 1);
         return Math.max(minUses, Math.max(1, Number(charismaModValue) || 1));
       }
+      if (match?.uses === 0) return 0;
       if (typeof match?.uses === "number" && Number.isFinite(match.uses) && match.uses > 0) return match.uses;
     }
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
@@ -268,6 +299,8 @@ const FeatureDisplay = ({
               ? renderTrackedTrailingControls(feature)
               : null;
             const usesCount = getUsesCount(feature);
+            const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
+            const tracker = featureTrackers?.[trackerKey] || {};
 
             if (feature?.trackedMode === "stackingChecks") {
               const checkedCount = Math.max(
@@ -311,6 +344,127 @@ const FeatureDisplay = ({
                       }}
                     />
                   ))}
+                  {extraTrailing}
+                </>
+              );
+            }
+
+            if (feature?.trackedMode === "divineInterventionCooldown") {
+              const cooldownDays = Math.max(0, Math.min(Number(tracker?.cooldownDays) || 0, 7));
+              const cooldownActive = Boolean(tracker?.cooldownActive);
+              const needsLongRest = Boolean(tracker?.needsLongRest);
+
+              const setTracker = (nextPartial) => {
+                setFeatureTrackers((prev) => ({
+                  ...(prev || {}),
+                  [trackerKey]: {
+                    ...(prev?.[trackerKey] || {}),
+                    ...nextPartial,
+                  },
+                }));
+              };
+
+              const statusLabel = cooldownActive
+                ? `Cooldown: ${cooldownDays}/7`
+                : needsLongRest
+                  ? "Used (needs long rest)"
+                  : cooldownDays >= 7
+                    ? "Ready (7 days)"
+                    : "Ready";
+
+              const statusColor = cooldownActive
+                ? "#7c2d12"
+                : needsLongRest
+                  ? "#075985"
+                  : "#0f766e";
+
+              return (
+                <>
+                  <Typography
+                    sx={{
+                      ml: 0.5,
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: statusColor,
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: "10px",
+                      border: `1px solid ${cooldownActive ? "rgba(124, 45, 18, 0.35)" : needsLongRest ? "rgba(7, 89, 133, 0.35)" : "rgba(15, 118, 110, 0.35)"}`,
+                      background: cooldownActive
+                        ? "rgba(252, 165, 165, 0.20)"
+                        : needsLongRest
+                          ? "rgba(186, 230, 253, 0.25)"
+                          : "rgba(167, 243, 208, 0.20)",
+                    }}
+                  >
+                    {statusLabel}
+                  </Typography>
+
+                  {cooldownActive ? (
+                    <>
+                      <Tooltip arrow title="Decrement cooldown day">
+                        <IconButton
+                          size="small"
+                          aria-label="Decrement Divine Intervention cooldown day"
+                          onClick={() => setTracker({ cooldownDays: Math.max(0, cooldownDays - 1) })}
+                          sx={{ ml: 0.25, p: 0.25 }}
+                        >
+                          <RemoveIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip arrow title="Increment cooldown day">
+                        <IconButton
+                          size="small"
+                          aria-label="Increment Divine Intervention cooldown day"
+                          onClick={() => {
+                            const next = Math.min(7, cooldownDays + 1);
+                            setTracker({ cooldownDays: next, cooldownActive: next < 7 });
+                          }}
+                          sx={{ p: 0.25 }}
+                        >
+                          <AddIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  ) : needsLongRest ? (
+                    <Tooltip arrow title="Mark long rest completed (feature ready)">
+                      <IconButton
+                        size="small"
+                        aria-label="Clear Divine Intervention long-rest lockout"
+                        onClick={() => setTracker({ needsLongRest: false })}
+                        sx={{ ml: 0.25, p: 0.25 }}
+                      >
+                        <CheckIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  ) : null}
+
+                  <Tooltip arrow title="Log a failed attempt (recharges after a long rest)">
+                    <IconButton
+                      size="small"
+                      aria-label="Divine Intervention attempt failed"
+                      onClick={() =>
+                        setTracker({ needsLongRest: true, cooldownActive: false, cooldownDays: 0 })
+                      }
+                      sx={{ ml: 0.25, p: 0.25, opacity: 0.9 }}
+                    >
+                      <Typography sx={{ fontSize: "11px", fontWeight: 800 }}>F</Typography>
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip arrow title="Log a successful intervention (7-day cooldown)">
+                    <IconButton
+                      size="small"
+                      aria-label="Divine Intervention attempt succeeded"
+                      onClick={() =>
+                        setTracker({ cooldownActive: true, cooldownDays: 0, needsLongRest: false })
+                      }
+                      sx={{ ml: 0.25, p: 0.25, opacity: 0.9 }}
+                    >
+                      <Typography sx={{ fontSize: "11px", fontWeight: 800 }}>S</Typography>
+                    </IconButton>
+                  </Tooltip>
+
                   {extraTrailing}
                 </>
               );
