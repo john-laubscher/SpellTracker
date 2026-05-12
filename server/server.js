@@ -440,6 +440,56 @@ app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
         });
 })
 
+app.get('/spellsbyschool/:numerical_spell_level/:school?', async (req, res) => {
+    const numerical_spell_level = parseInt(req.params.numerical_spell_level);
+
+    const rawSchool = String(req.params.school || req.query.school || "").trim();
+    let decodedSchool = rawSchool;
+    try {
+        decodedSchool = decodeURIComponent(rawSchool);
+    } catch {
+        decodedSchool = rawSchool;
+    }
+    const school = String(decodedSchool || "").trim();
+
+    if (!Number.isFinite(numerical_spell_level)) {
+        return res.status(400).json({ error: "invalid_level" });
+    }
+    if (!school) {
+        return res.status(400).json({ error: "invalid_school" });
+    }
+
+    const schools = school.split(",").map((s) => String(s || "").trim()).filter(Boolean);
+    const uniqueSchools = Array.from(new Set(schools.length ? schools : [school]));
+
+    try {
+        const responses = await Promise.all(
+            uniqueSchools.map((schoolIndex) =>
+                axios.get(`https://www.dnd5eapi.co/api/2014/spells`, {
+                    params: { level: numerical_spell_level, school: schoolIndex },
+                })
+            )
+        );
+
+        const results = [];
+        const seen = new Set();
+        responses.forEach((r) => {
+            const list = r.data?.results || [];
+            list.forEach((spell) => {
+                const key = String(spell?.index || spell?.url || "");
+                if (!key || seen.has(key)) return;
+                seen.add(key);
+                results.push(spell);
+            });
+        });
+
+        return res.json({ count: results.length, results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+})
+
 // function that gets the individual spell 
     // uses base then url value from the spell list 
 

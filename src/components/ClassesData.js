@@ -265,15 +265,15 @@ export const ClassesData = {
         features: [
           {
             id: "giants_power",
-            name: "Giant’s Power",
+            name: "Giantâ€™s Power",
             desc: "When you choose this path, you learn to speak, read, and write Giant or one other language of your choice if you already know Giant. Additionally, you learn a cantrip of your choice: either druidcraft or thaumaturgy. Wisdom is your spellcasting ability for this spell.",
             level: 3,
             tracked: false,
           },
           {
             id: "giants_havoc",
-            name: "Giant’s Havoc",
-            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attack’s damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isn’t enough room for you to increase your size, your size doesn’t change.",
+            name: "Giantâ€™s Havoc",
+            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attackâ€™s damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isnâ€™t enough room for you to increase your size, your size doesnâ€™t change.",
             level: 3,
             tracked: false,
           },
@@ -351,7 +351,7 @@ export const ClassesData = {
           {
             id: "magic_awareness",
             name: "Magic Awareness",
-            desc: "As an action, you can open your awareness to the presence of concentrated magic. Until the end of your next turn, you know the location of any spell or magic item within 60 feet of you that isn’t behind total cover. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: "As an action, you can open your awareness to the presence of concentrated magic. Until the end of your next turn, you know the location of any spell or magic item within 60 feet of you that isnâ€™t behind total cover. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 3,
             tracked: true,
             uses: "pb",
@@ -520,7 +520,7 @@ export const ClassesData = {
             id: "animating_performance",
             name: "Animating Performance",
             desc: [
-              "By 6th level, as an action, you can animate one Large or smaller nonmagical item within 30 feet of you that isn�t being worn or carried. The animate item uses the Dancing Item stat block, which uses your proficiency bonus (PB), The item is friendly to you and your companions and obeys your commands. It lives for 1 hour, until it is reduced to 0 hit points, or until you die.",
+              "By 6th level, as an action, you can animate one Large or smaller nonmagical item within 30 feet of you that isn’t being worn or carried. The animate item uses the Dancing Item stat block, which uses your proficiency bonus (PB), The item is friendly to you and your companions and obeys your commands. It lives for 1 hour, until it is reduced to 0 hit points, or until you die.",
               "In combat, the item shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the item can take any action of its choice, not just Dodge.",
               "When you use your Bardic Inspiration feature, you can command the item as part of the same bonus action you use for Bardic Inspiration.",
               "Once you animate an item with this feature, you can't do so again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use this feature again. You can have only one item animated by this feature at a time; if you use this action and already have a dancing item from this feature, the first one immediately becomes inanimate.",
@@ -625,7 +625,7 @@ export const ClassesData = {
           {
             id: "additional_magical_secrets",
             name: "Additional Magical Secrets",
-            desc: "At 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but don’t count against the number of bard spells you know.",
+            desc: "At 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but donâ€™t count against the number of bard spells you know.",
             level: 6,
             tracked: false, //Add 2 spells, don't count agains the spells you know as a bard
           },
@@ -643,7 +643,7 @@ export const ClassesData = {
           {
             id: "guiding_whispers",
             name: "Guiding Whispers",
-            desc: "At 3rd level, you gain the ability to reach out to spirits and guide others. You learn the Guidance cantrip, which doesn’t count against the number of bard cantrips you know. Its range becomes 60 feet when you cast it.",
+            desc: "At 3rd level, you gain the ability to reach out to spirits and guide others. You learn the Guidance cantrip, which doesnâ€™t count against the number of bard cantrips you know. Its range becomes 60 feet when you cast it.",
             level: 3,
             tracked: false, //Adds guidance to cantrip--60 ft
           },
@@ -657,14 +657,14 @@ export const ClassesData = {
           {
             id: "tales_from_beyond",
             name: "Tales from Beyond",
-            desc: "At 3rd level, you learn to weave spirits’ tales into your magic. As a bonus action, you can expend one use of Bardic Inspiration to roll on the Tales from Beyond table, using your Bardic Inspiration die to determine the result. You retain the tale in mind until you bestow its effects or finish a short or long rest. You can use this feature a number of times equal to your proficiency bonus per long rest.",
+            desc: "At 3rd level, you learn to weave spiritsâ€™ tales into your magic. As a bonus action, you can expend one use of Bardic Inspiration to roll on the Tales from Beyond table, using your Bardic Inspiration die to determine the result. You retain the tale in mind until you bestow its effects or finish a short or long rest. You can use this feature a number of times equal to your proficiency bonus per long rest.",
             level: 3,
             tracked: false,
           },
           {
             id: "spirit_session",
             name: "Spirit Session",
-            desc: "At 6th level, you can conduct an hour-long ritual channeling spirits to gain supernatural knowledge. With at least one other creature, you perform the ritual using your Spiritual Focus. At the end of the ritual, you temporarily learn one spell of your choice from any class. The spell you choose must be of a level equal to the number of creatures that conducted the ritual (up to a maximum level equal to your proficiency bonus). The spell counts as a bard spell for you but doesn't count against the number of bard spells you know. Once you perform the ritual, you can't do so again until you finish a long rest.",
+            desc: "At 6th level, you can conduct an hour-long ritual channeling spirits to gain supernatural knowledge. With at least one other creature, you perform the ritual using your Spiritual Focus. At the end of the ritual, you temporarily learn one spell of your choice from any class. The spell you choose must be of a level you can cast, and it must be from the school of Divination or Necromancy. The chosen spell counts as a bard spell for you but doesn't count against the number of bard spells you know. Once you perform the ritual, you can't do so again until you finish a long rest.",
             level: 6,
             tracked: true,
           },
@@ -746,21 +746,21 @@ export const ClassesData = {
           {
             id: "words_of_terror",
             name: "Words of Terror",
-            desc: "At 3rd level, you learn to infuse innocent-seeming words with an insidious magic that can inspire terror. If you speak to a humanoid alone for at least 1 minute, you can attempt to seed paranoia in its mind. At the end of the conversation, the target must succeed on a Wisdom saving throw against your spell save DC or be frightened of you or another creature of your choice for 1 hour. If the target succeeds, it has no hint that you tried to frighten it. The target must have an Intelligence of 4 or higher. Once you use this feature, you can’t use it again until you finish a short or long rest.",
+            desc: "At 3rd level, you learn to infuse innocent-seeming words with an insidious magic that can inspire terror. If you speak to a humanoid alone for at least 1 minute, you can attempt to seed paranoia in its mind. At the end of the conversation, the target must succeed on a Wisdom saving throw against your spell save DC or be frightened of you or another creature of your choice for 1 hour. If the target succeeds, it has no hint that you tried to frighten it. The target must have an Intelligence of 4 or higher. Once you use this feature, you canâ€™t use it again until you finish a short or long rest.",
             level: 3,
             tracked: true, // 1/ SR
           },
           {
             id: "mantle_of_whispers",
             name: "Mantle of Whispers",
-            desc: "At 6th level, you gain the ability to adopt a humanoid’s persona. When a humanoid dies within 30 feet of you, you can magically capture its shadow using your reaction. You retain this shadow until you use it or you finish a long rest. You can use the shadow as an action. When you do so, it vanishes, magically transforming into a disguise that appears on you. You now look like the dead person but healthy and alive. This disguise lasts for 1 hour or until you end it as a bonus action. While you’re in the disguise, you gain access to all information that the humanoid would freely share with a casual acquaintance. Information is enough to pass as the person by drawing on its memories. Another creature can see through this disguise by succeeding on a Wisdom (Insight) check contested by your Charisma (Deception) check. Once you capture a shadow, you can’t capture another until you finish a short or long rest.",
+            desc: "At 6th level, you gain the ability to adopt a humanoidâ€™s persona. When a humanoid dies within 30 feet of you, you can magically capture its shadow using your reaction. You retain this shadow until you use it or you finish a long rest. You can use the shadow as an action. When you do so, it vanishes, magically transforming into a disguise that appears on you. You now look like the dead person but healthy and alive. This disguise lasts for 1 hour or until you end it as a bonus action. While youâ€™re in the disguise, you gain access to all information that the humanoid would freely share with a casual acquaintance. Information is enough to pass as the person by drawing on its memories. Another creature can see through this disguise by succeeding on a Wisdom (Insight) check contested by your Charisma (Deception) check. Once you capture a shadow, you canâ€™t capture another until you finish a short or long rest.",
             level: 6,
             tracked: true, // 1/ SR
           },
           {
             id: "shadow_lore",
             name: "Shadow Lore",
-            desc: "At 14th level, you gain the ability to weave dark magic into your words and tap into a creature’s deepest fears. As an action, you magically whisper a phrase that only one creature of your choice within 30 feet of you can hear. The target must make a Wisdom saving throw against your spell save DC. It automatically succeeds if it doesn’t share a language with you or if it can’t hear you. On a failed save, the target is charmed by you for the next 8 hours or until a remove curse spell is cast on it, the charmed condition is removed from it, or you use this feature again. While charmed in this way, the creature obeys your commands for fear that you will reveal its darkest secrets. It won’t risk its life for you or fight for you unless it was already inclined to do so. Once you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "At 14th level, you gain the ability to weave dark magic into your words and tap into a creatureâ€™s deepest fears. As an action, you magically whisper a phrase that only one creature of your choice within 30 feet of you can hear. The target must make a Wisdom saving throw against your spell save DC. It automatically succeeds if it doesnâ€™t share a language with you or if it canâ€™t hear you. On a failed save, the target is charmed by you for the next 8 hours or until a remove curse spell is cast on it, the charmed condition is removed from it, or you use this feature again. While charmed in this way, the creature obeys your commands for fear that you will reveal its darkest secrets. It wonâ€™t risk its life for you or fight for you unless it was already inclined to do so. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/ LR
           },
@@ -790,7 +790,7 @@ export const ClassesData = {
       {
         id: "divine_intervention",
         name: "Divine Intervention",
-        desc: "Beginning at 10th level, you can call on your deity to intervene on your behalf when your need is great. As an action, you describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. If successful, you can’t use this feature again for 7 days. Otherwise, you can use it again after a long rest.",
+        desc: "Beginning at 10th level, you can call on your deity to intervene on your behalf when your need is great. As an action, you describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. If successful, you canâ€™t use this feature again for 7 days. Otherwise, you can use it again after a long rest.",
         level: 10,
         tracked: 7, // (typically once every 7 days if successful), need tooltip to explain checkboxes track days between uses
       },
@@ -947,7 +947,7 @@ export const ClassesData = {
           {
             id: "channel_divinity_preserve_life",
             name: "Channel Divinity: Preserve Life",
-            desc: "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can’t use this feature on an undead or a construct.",
+            desc: "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You canâ€™t use this feature on an undead or a construct.",
             level: 2,
             tracked: false, // Channel Divinity use
           },
@@ -1099,7 +1099,7 @@ export const ClassesData = {
           {
             id: "embodiment_of_law",
             name: "Embodiment of the Law",
-            desc: "At 6th level, you become extraordinarily adept at channeling magical energy to compel others. If you cast a spell of the enchantment school using a spell slot of 1st level or higher, you can change the casting time to 1 bonus action for this casting, provided the spell’s casting time is normally 1 action.",
+            desc: "At 6th level, you become extraordinarily adept at channeling magical energy to compel others. If you cast a spell of the enchantment school using a spell slot of 1st level or higher, you can change the casting time to 1 bonus action for this casting, provided the spellâ€™s casting time is normally 1 action.",
             level: 6,
             tracked: true,  //wis mod (min 1)
           },
@@ -1251,7 +1251,7 @@ export const ClassesData = {
           {
             id: "improved_duplicity",
             name: "Improved Duplicity",
-            desc: "At 17th level, your Invoke Duplicity creates up to four duplicates of yourself, instead of one. As a bonus action on your turn, you can move any number of them up to 30 feet to a space you can see. You can cast spells as though you were in any of the duplicates’ spaces, but you must use your own senses.",
+            desc: "At 17th level, your Invoke Duplicity creates up to four duplicates of yourself, instead of one. As a bonus action on your turn, you can move any number of them up to 30 feet to a space you can see. You can cast spells as though you were in any of the duplicatesâ€™ spaces, but you must use your own senses.",
             level: 17,
             tracked: false,
           },
@@ -1269,7 +1269,7 @@ export const ClassesData = {
           {
             id: "eyes_of_night",
             name: "Eyes of Night",
-            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. You can see in dim light as if it were bright light, and in darkness as if it were dim light. As an action, you can share this darkvision with willing creatures within 10 feet of you, up to a number of creatures equal to your proficiency bonus. The shared darkvision lasts for 1 hour. Once you use this action, you can’t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to use it again.",
+            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. You can see in dim light as if it were bright light, and in darkness as if it were dim light. As an action, you can share this darkvision with willing creatures within 10 feet of you, up to a number of creatures equal to your proficiency bonus. The shared darkvision lasts for 1 hour. Once you use this action, you canâ€™t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to use it again.",
             level: 1,
             tracked: true, // 1/LR, also spend a spell slot 
           },
@@ -1380,14 +1380,14 @@ export const ClassesData = {
       {
         id: "beast_spells",
         name: "Beast Spells",
-        desc: "Starting at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you aren’t able to provide material components.",
+        desc: "Starting at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you arenâ€™t able to provide material components.",
         level: 18,
         tracked: false, 
       },
       {
         id: "archdruid",
         name: "Archdruid",
-        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and aren’t consumed by a spell.",
+        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and arenâ€™t consumed by a spell.",
         level: 20,
         tracked: false, 
       },
@@ -1405,7 +1405,7 @@ export const ClassesData = {
           {
             id: "hearth_of_moonlight_and_shadow",
             name: "Hearth of Moonlight and Shadow",
-            desc: "At 6th level, home can be wherever you are. During a short or long rest, you can invoke the shadowy power of the gloaming court to help guard your respite. At the start of the rest, you touch a point in space, and an invisible, 30-foot-radius sphere of magic appears, centered on that point. Total cover blocks the sphere. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) checks and Wisdom (Perception) checks, and any light from open flames in the sphere isn’t visible outside it. The sphere vanishes at the end of the rest or when you leave the sphere.",
+            desc: "At 6th level, home can be wherever you are. During a short or long rest, you can invoke the shadowy power of the gloaming court to help guard your respite. At the start of the rest, you touch a point in space, and an invisible, 30-foot-radius sphere of magic appears, centered on that point. Total cover blocks the sphere. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) checks and Wisdom (Perception) checks, and any light from open flames in the sphere isnâ€™t visible outside it. The sphere vanishes at the end of the rest or when you leave the sphere.",
             level: 6,
             tracked: false,
           },
@@ -1522,7 +1522,7 @@ export const ClassesData = {
           {
             id: "spirit_totem",
             name: "Spirit Totem",
-            desc: "Starting at 2nd level, you can call forth nature spirits to influence the world around you. As a bonus action, you can magically summon an incorporeal spirit to a point you can see within 60 feet of you. The spirit creates an aura in a 30-foot radius around that point. It lasts for 1 minute or until you’re incapacitated. The effect of the spirit depends on the type of spirit you summon from the options below. Once you use this feature, you can’t use it again until you finish a short or long rest.\n\n**Bear Spirit**: You and your allies who are in the aura when the spirit appears gain temporary hit points equal to 5 + your druid level. In addition, you and your allies have advantage on Strength checks and Strength saving throws while in the aura.\n\n**Hawk Spirit**: When a creature makes an attack roll against a target in the spirit's aura, you can use your reaction to grant advantage on the attack roll. In addition, you and your allies have advantage on Wisdom (Perception) checks while in the aura.\n\n**Unicorn Spirit**: You and your allies gain advantage on all ability checks made to detect creatures in the aura. In addition, if you cast a spell using a spell slot that restores hit points to any creature inside or outside the aura, each creature of your choice in the aura also regains hit points equal to your druid level.",
+            desc: "Starting at 2nd level, you can call forth nature spirits to influence the world around you. As a bonus action, you can magically summon an incorporeal spirit to a point you can see within 60 feet of you. The spirit creates an aura in a 30-foot radius around that point. It lasts for 1 minute or until youâ€™re incapacitated. The effect of the spirit depends on the type of spirit you summon from the options below. Once you use this feature, you canâ€™t use it again until you finish a short or long rest.\n\n**Bear Spirit**: You and your allies who are in the aura when the spirit appears gain temporary hit points equal to 5 + your druid level. In addition, you and your allies have advantage on Strength checks and Strength saving throws while in the aura.\n\n**Hawk Spirit**: When a creature makes an attack roll against a target in the spirit's aura, you can use your reaction to grant advantage on the attack roll. In addition, you and your allies have advantage on Wisdom (Perception) checks while in the aura.\n\n**Unicorn Spirit**: You and your allies gain advantage on all ability checks made to detect creatures in the aura. In addition, if you cast a spell using a spell slot that restores hit points to any creature inside or outside the aura, each creature of your choice in the aura also regains hit points equal to your druid level.",
             level: 2,
             tracked: true, // 1/SR
           },
@@ -1543,7 +1543,7 @@ export const ClassesData = {
           {
             id: "faithful_summons",
             name: "Faithful Summons",
-            desc: "Starting at 14th level, the nature spirits you commune with protect you when you are at your most defenseless. If you are reduced to 0 hit points or are incapacitated against your will, you can immediately gain the benefits of *conjure animals* as if it were cast using a 9th-level spell slot. It summons four beasts of your choice that are challenge rating 2 or lower. The conjured beasts appear within 20 feet of you. If they receive no commands from you, they protect you from harm and attack your foes. The spell lasts for 1 hour, requiring no concentration, or until you dismiss it (no action required). Once you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "Starting at 14th level, the nature spirits you commune with protect you when you are at your most defenseless. If you are reduced to 0 hit points or are incapacitated against your will, you can immediately gain the benefits of *conjure animals* as if it were cast using a 9th-level spell slot. It summons four beasts of your choice that are challenge rating 2 or lower. The conjured beasts appear within 20 feet of you. If they receive no commands from you, they protect you from harm and attack your foes. The spell lasts for 1 hour, requiring no concentration, or until you dismiss it (no action required). Once you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/LR
           },
@@ -1554,7 +1554,7 @@ export const ClassesData = {
           {
             id: "circle_spells",
             name: "Circle Spells",
-            desc: "Your symbiotic link to fungi and your ability to tap into the cycle of life and death grants you access to certain spells. At 3rd, 5th, 7th, and 9th levels, you gain access to the spells listed below. Once you gain access to one of these spells, you always have it prepared, and it doesn’t count against the number of spells you can prepare each day.",
+            desc: "Your symbiotic link to fungi and your ability to tap into the cycle of life and death grants you access to certain spells. At 3rd, 5th, 7th, and 9th levels, you gain access to the spells listed below. Once you gain access to one of these spells, you always have it prepared, and it doesnâ€™t count against the number of spells you can prepare each day.",
             level: 2,
             tracked: false,
           },
@@ -1659,14 +1659,14 @@ export const ClassesData = {
           {
             id: "cauterizing_flames",
             name: "Cauterizing Flames",
-            desc: "Starting at 10th level, when a Small or larger creature dies within 30 feet of you or your wildfire spirit, a harmless spectral flame springs up in the dead creature’s space and flickers there for 1 minute. When a creature you can see enters that space, you can use your reaction to extinguish the spectral flame and either heal the creature or deal fire damage to it. The healing or damage equals 2d10 + your Wisdom modifier.",
+            desc: "Starting at 10th level, when a Small or larger creature dies within 30 feet of you or your wildfire spirit, a harmless spectral flame springs up in the dead creatureâ€™s space and flickers there for 1 minute. When a creature you can see enters that space, you can use your reaction to extinguish the spectral flame and either heal the creature or deal fire damage to it. The healing or damage equals 2d10 + your Wisdom modifier.",
             level: 10,
             tracked: true, // prof bonus, Reaction, regain on LR
           },
           {
             id: "blazing_revival",
             name: "Blazing Revival",
-            desc: "At 14th level, the bond with your wildfire spirit can save you from death. If you are reduced to 0 hit points and thereby fall unconscious, you can cause your wildfire spirit to drop to 0 hit points instead. You then regain half your hit points and immediately rise to your feet. Once you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "At 14th level, the bond with your wildfire spirit can save you from death. If you are reduced to 0 hit points and thereby fall unconscious, you can cause your wildfire spirit to drop to 0 hit points instead. You then regain half your hit points and immediately rise to your feet. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/LR
           },
@@ -1690,7 +1690,7 @@ export const ClassesData = {
       {
         id: "fighting_style",
         name: "Fighting Style",
-        desc: "At 1st level, you adopt a particular style of fighting as your specialty. Choose one Fighting Style option. You can’t take a Fighting Style option more than once, even if you later get to choose again.",
+        desc: "At 1st level, you adopt a particular style of fighting as your specialty. Choose one Fighting Style option. You canâ€™t take a Fighting Style option more than once, even if you later get to choose again.",
         level: 1,
         tracked: false, 
         // "**NEED FEATURE: maybe make fighting styles part of state, and have user choose one as part of char creation. Rendering will choose only 1, and we need some way to tooltip just the selected fighting Style(s).**"
@@ -1847,7 +1847,7 @@ export const ClassesData = {
           {
             id: "hold_the_line",
             name: "Hold the Line",
-            desc: "At 10th level, creatures provoke an opportunity attack from you when they move 5 feet or more while within your reach. If you hit a creature with an opportunity attack, the creature’s speed becomes 0 for the rest of the turn.",
+            desc: "At 10th level, creatures provoke an opportunity attack from you when they move 5 feet or more while within your reach. If you hit a creature with an opportunity attack, the creatureâ€™s speed becomes 0 for the rest of the turn.",
             level: 10,
             tracked: false,
           },
@@ -1861,7 +1861,7 @@ export const ClassesData = {
           {
             id: "vigilant_defender",
             name: "Vigilant Defender",
-            desc: "Starting at 18th level, you respond to danger with extraordinary vigilance. In combat, you get a special reaction that you can take once on every creature’s turn, except your turn. You can use this special reaction only to make an opportunity attack, and you can’t use it on the same turn that you take your normal reaction.",
+            desc: "Starting at 18th level, you respond to danger with extraordinary vigilance. In combat, you get a special reaction that you can take once on every creatureâ€™s turn, except your turn. You can use this special reaction only to make an opportunity attack, and you canâ€™t use it on the same turn that you take your normal reaction.",
             level: 18,
             tracked: false,
           },
@@ -1880,7 +1880,7 @@ export const ClassesData = {
           {
             id: "remarkable_athlete",
             name: "Remarkable Athlete",
-            desc: "Starting at 7th level, you can add half your proficiency bonus (round up) to any Strength, Dexterity, or Constitution check you make that doesn’t already use your proficiency bonus. Additionally, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier.",
+            desc: "Starting at 7th level, you can add half your proficiency bonus (round up) to any Strength, Dexterity, or Constitution check you make that doesnâ€™t already use your proficiency bonus. Additionally, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier.",
             level: 7,
             tracked: false,
           },
@@ -1901,7 +1901,7 @@ export const ClassesData = {
           {
             id: "survivor",
             name: "Survivor",
-            desc: "At 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half your hit points left. You don’t gain this benefit if you have 0 hit points.",
+            desc: "At 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half your hit points left. You donâ€™t gain this benefit if you have 0 hit points.",
             level: 18,
             tracked: false,
           },
@@ -2052,7 +2052,7 @@ export const ClassesData = {
           {
             id: "giant_might",
             name: "Giant's Might",
-            desc: "At 3rd level, you can imbue yourself with the might of giants. As a bonus action, you can gain the following benefits for 1 minute:\n- If you are smaller than Large, you become Large, along with anything you are wearing. If there isn’t enough room for you to become Large, your size doesn’t change.\n- You have advantage on Strength checks and Strength saving throws.\n- Once on each of your turns, one of your attacks with a weapon or unarmed strike can deal an extra 1d8 damage to a target on a hit.\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: "At 3rd level, you can imbue yourself with the might of giants. As a bonus action, you can gain the following benefits for 1 minute:\n- If you are smaller than Large, you become Large, along with anything you are wearing. If there isnâ€™t enough room for you to become Large, your size doesnâ€™t change.\n- You have advantage on Strength checks and Strength saving throws.\n- Once on each of your turns, one of your attacks with a weapon or unarmed strike can deal an extra 1d8 damage to a target on a hit.\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 3,
             tracked: true, // Uses = Prof bonus / LR
           },
@@ -2073,7 +2073,7 @@ export const ClassesData = {
           {
             id: "great_stature",
             name: "Great Stature",
-            desc: "At 10th level, the magic of your runes permanently alters you. When you gain this feature, roll 3d4. You grow a number of inches in height equal to the roll. Moreover, the extra damage you deal with your Giant’s Might feature increases to 1d10.",
+            desc: "At 10th level, the magic of your runes permanently alters you. When you gain this feature, roll 3d4. You grow a number of inches in height equal to the roll. Moreover, the extra damage you deal with your Giantâ€™s Might feature increases to 1d10.",
             level: 10,
             tracked: false,
           },
@@ -2087,7 +2087,7 @@ export const ClassesData = {
           {
             id: "runic_juggernaut",
             name: "Runic Juggernaut",
-            desc: "At 18th level, you learn how to amplify your runes. Your size increases to Huge. Moreover, the extra damage you deal with your Giant’s Might feature increases to 1d12.",
+            desc: "At 18th level, you learn how to amplify your runes. Your size increases to Huge. Moreover, the extra damage you deal with your Giantâ€™s Might feature increases to 1d12.",
             level: 18,
             tracked: false,
           },
@@ -2126,7 +2126,7 @@ export const ClassesData = {
           {
             id: "strength_before_death",
             name: "Strength Before Death",
-            desc: "Starting at 18th level, your fighting spirit can delay the grasp of death. If you take damage that reduces you to 0 hit points and doesn’t kill you outright, you can use your reaction to delay falling unconscious, and you can immediately take an extra turn, interrupting the current turn. While you have 0 hit points during that extra turn, taking damage causes death saving throw failures as normal. Once the extra turn ends, you fall unconscious if you still have 0 hit points. Once you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "Starting at 18th level, your fighting spirit can delay the grasp of death. If you take damage that reduces you to 0 hit points and doesnâ€™t kill you outright, you can use your reaction to delay falling unconscious, and you can immediately take an extra turn, interrupting the current turn. While you have 0 hit points during that extra turn, taking damage causes death saving throw failures as normal. Once the extra turn ends, you fall unconscious if you still have 0 hit points. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 18,
             tracked: true, // 1 / LR
           },
@@ -2258,7 +2258,7 @@ export const ClassesData = {
         {
           id: "hand_of_ultimate_mercy",
           name: "Hand of Ultimate Mercy",
-          desc: "At 17th level, as an action, you can touch the corpse of a creature that died within the past 24 hours and expend 5 ki points to return the creature to life, provided that its soul is willing and able to rejoin its body. If it returns to life, it regains a number of hit points equal to 4d10 + your Wisdom modifier. This feature can’t return to life a creature that has died of old age, nor can it restore any missing body parts.",
+          desc: "At 17th level, as an action, you can touch the corpse of a creature that died within the past 24 hours and expend 5 ki points to return the creature to life, provided that its soul is willing and able to rejoin its body. If it returns to life, it regains a number of hit points equal to 4d10 + your Wisdom modifier. This feature canâ€™t return to life a creature that has died of old age, nor can it restore any missing body parts.",
           level: 17,
           tracked: true, // 1/LR
         },
@@ -2269,7 +2269,7 @@ export const ClassesData = {
           {
             id: "draconic_disciple",
             name: "Draconic Disciple",
-            desc: "At 3rd level, you can channel draconic power to magnify your presence and imbue your unarmed strikes with the essence of a dragon’s breath. You gain the following benefits:\n\n- **Draconic Presence:** If you fail a Charisma (Intimidation) or Charisma (Persuasion) check, you can use your reaction to reroll the check, as you tap into the mighty presence of dragons. Once this feature turns a failure into a success, you can’t use it again until you finish a long rest.\n- **Draconic Strike:** When you damage a target with an unarmed strike, you can change the damage type to acid, cold, fire, lightning, or poison.\n- **Tongue of Dragons:** You learn to speak, read, and write Draconic or one other language of your choice.",
+            desc: "At 3rd level, you can channel draconic power to magnify your presence and imbue your unarmed strikes with the essence of a dragonâ€™s breath. You gain the following benefits:\n\n- **Draconic Presence:** If you fail a Charisma (Intimidation) or Charisma (Persuasion) check, you can use your reaction to reroll the check, as you tap into the mighty presence of dragons. Once this feature turns a failure into a success, you canâ€™t use it again until you finish a long rest.\n- **Draconic Strike:** When you damage a target with an unarmed strike, you can change the damage type to acid, cold, fire, lightning, or poison.\n- **Tongue of Dragons:** You learn to speak, read, and write Draconic or one other language of your choice.",
             level: 3,
             tracked: true, // Draconic Presence: 1 / LR
         },
@@ -2290,7 +2290,7 @@ export const ClassesData = {
         {
           id: "aspect_of_the_wyrm",
           name: "Aspect of the Wyrm",
-          desc: "At 11th level, as a bonus action, you can exude an aura of draconic power that radiates 10 feet from you for 1 minute. Choose acid, cold, fire, lightning, or poison damage. When you activate this aura, and as a bonus action on subsequent turns while it lasts, you can grant creatures of your choice within the aura resistance to that damage type. In addition, when a creature of your choice starts its turn within the aura, it takes damage equal to one roll of your Martial Arts die of the chosen type. Once you use this feature, you can’t use it again until you finish a long rest.",
+          desc: "At 11th level, as a bonus action, you can exude an aura of draconic power that radiates 10 feet from you for 1 minute. Choose acid, cold, fire, lightning, or poison damage. When you activate this aura, and as a bonus action on subsequent turns while it lasts, you can grant creatures of your choice within the aura resistance to that damage type. In addition, when a creature of your choice starts its turn within the aura, it takes damage equal to one roll of your Martial Arts die of the chosen type. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
           level: 11,
           tracked: true, // 1 / LR
         },
@@ -2354,7 +2354,7 @@ export const ClassesData = {
         },
         {
           id: "drunkard_s_luck",
-          name: "Drunkard’s Luck",
+          name: "Drunkardâ€™s Luck",
           desc: "Starting at 11th level, you can call on your ki to nullify disadvantage on an ability check, attack roll, or saving throw. When you make a roll with disadvantage, you can spend 2 ki points to roll normally instead.",
           level: 11,
           tracked: false, // 2 Ki Points / Use
@@ -2454,7 +2454,7 @@ export const ClassesData = {
         {
           id: "wholeness_of_body",
           name: "Wholeness of Body",
-          desc: "At 6th level, you gain the ability to heal yourself. As an action, you can regain hit points equal to three times your monk level. Once you use this feature, you can’t use it again until you finish a long rest.",
+          desc: "At 6th level, you gain the ability to heal yourself. As an action, you can regain hit points equal to three times your monk level. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
           level: 6,
           tracked: false, // 1/LR
         },
@@ -2479,7 +2479,7 @@ export const ClassesData = {
         {
           id: "shadow_arts",
           name: "Shadow Arts",
-          desc: "Starting when you choose this tradition at 3rd level, you can use your ki to duplicate the effects of certain spells. As an action, you can spend 2 ki points to cast darkness, darkvision, pass without trace, or silence, without providing material components. Additionally, you gain the minor illusion cantrip if you don’t already know it.",
+          desc: "Starting when you choose this tradition at 3rd level, you can use your ki to duplicate the effects of certain spells. As an action, you can spend 2 ki points to cast darkness, darkvision, pass without trace, or silence, without providing material components. Additionally, you gain the minor illusion cantrip if you donâ€™t already know it.",
           level: 3,
           tracked: false, // ki point expenditure
         },
@@ -2518,7 +2518,7 @@ export const ClassesData = {
         {
           id: "searing_arc_strike",
           name: "Searing Arc Strike",
-          desc: "At 6th level, immediately after you take the Attack action on your turn, you can spend 2 ki points to cast the burning hands spell as a bonus action. You can spend additional ki points to cast burning hands at a higher level, increasing the spell’s level by 1 for each additional ki point you spend. The maximum number of ki points you can spend on the spell equals half your monk level.",
+          desc: "At 6th level, immediately after you take the Attack action on your turn, you can spend 2 ki points to cast the burning hands spell as a bonus action. You can spend additional ki points to cast burning hands at a higher level, increasing the spellâ€™s level by 1 for each additional ki point you spend. The maximum number of ki points you can spend on the spell equals half your monk level.",
           level: 6,
           tracked: false, // ki point expenditure
         },
@@ -2555,7 +2555,7 @@ export const ClassesData = {
       {
         id: "lay_on_hands",
         name: "Lay on Hands",
-        desc: "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you finish a long rest. With that pool, you can restore a total number of hit points equal to your paladin level × 5.",
+        desc: "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you finish a long rest. With that pool, you can restore a total number of hit points equal to your paladin level Ã— 5.",
         level: 1,
         tracked: 1, // 5x Paladin LVL. Need to render small input that can be changed. Probably also need to add to state?
       },
@@ -2781,7 +2781,7 @@ export const ClassesData = {
           {
             id: "holy_nimbus",
             name: "Holy Nimbus",
-            desc: "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. The aura is a 30-foot radius of bright light and dim light for an additional 30 feet. Whenever an enemy starts its turn in the bright light, it takes 10 radiant damage. Additionally, allies in the light have advantage on saving throws against spells cast by fiends or undead. Once you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. The aura is a 30-foot radius of bright light and dim light for an additional 30 feet. Whenever an enemy starts its turn in the bright light, it takes 10 radiant damage. Additionally, allies in the light have advantage on saving throws against spells cast by fiends or undead. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 20,
             tracked: true, // 1/LR
           },
@@ -2859,7 +2859,7 @@ export const ClassesData = {
           {
             id: "protective_spirit",
             name: "Protective Spirit",
-            desc: "Starting at 15th level, a holy presence mends your wounds in battle. If you end your turn with fewer than half of your hit points remaining and you aren’t incapacitated, you regain hit points equal to 1d6 + your Charisma modifier.",
+            desc: "Starting at 15th level, a holy presence mends your wounds in battle. If you end your turn with fewer than half of your hit points remaining and you arenâ€™t incapacitated, you regain hit points equal to 1d6 + your Charisma modifier.",
             level: 15,
             tracked: false,
           },
@@ -2898,7 +2898,7 @@ export const ClassesData = {
           {
             id: "relentless_avenger",
             name: "Relentless Avenger",
-            desc: "Starting at 7th level, when you hit a creature with an opportunity attack, you can move up to half your speed immediately after the attack and as part of the same reaction. This movement doesn’t provoke opportunity attacks.",
+            desc: "Starting at 7th level, when you hit a creature with an opportunity attack, you can move up to half your speed immediately after the attack and as part of the same reaction. This movement doesnâ€™t provoke opportunity attacks.",
             level: 7,
             tracked: false,
           },
@@ -2912,7 +2912,7 @@ export const ClassesData = {
           {
             id: "avenging_angel",
             name: "Avenging Angel",
-            desc: "At 20th level, as an action, you can assume the form of an angelic avenger for 1 hour. You gain the following benefits:\n- Wings sprout from your back, granting you a flying speed of 60 feet.\n- You emanate an aura of menace in a 30-foot radius. The first time any enemy creature enters the aura or starts its turn there during combat, it must succeed on a Wisdom saving throw or become frightened of you for 1 minute. Once a creature succeeds on this saving throw, it is immune to the aura for 24 hours.\nOnce you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "At 20th level, as an action, you can assume the form of an angelic avenger for 1 hour. You gain the following benefits:\n- Wings sprout from your back, granting you a flying speed of 60 feet.\n- You emanate an aura of menace in a 30-foot radius. The first time any enemy creature enters the aura or starts its turn there during combat, it must succeed on a Wisdom saving throw or become frightened of you for 1 minute. Once a creature succeeds on this saving throw, it is immune to the aura for 24 hours.\nOnce you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 20,
             tracked: true, // 1/LR
           },
@@ -2958,7 +2958,7 @@ export const ClassesData = {
           {
             id: "mortal_bulwark",
             name: "Mortal Bulwark",
-            desc: "At 20th level, as an action, you manifest an otherworldly presence for 1 minute, gaining the following benefits:\n- True sight out to 120 feet.\n- Advantage on attack rolls against fiends, aberrations, and undead.\n- You can use your reaction when you hit a creature with an attack to force it to make a Charisma saving throw. On a failure, the creature is banished to its native plane.\nOnce you use this feature, you can’t use it again until you finish a long rest.",
+            desc: "At 20th level, as an action, you manifest an otherworldly presence for 1 minute, gaining the following benefits:\n- True sight out to 120 feet.\n- Advantage on attack rolls against fiends, aberrations, and undead.\n- You can use your reaction when you hit a creature with an attack to force it to make a Charisma saving throw. On a failure, the creature is banished to its native plane.\nOnce you use this feature, you canâ€™t use it again until you finish a long rest.",
             level: 20,
             tracked: true, // 1/LR
           },
@@ -3067,7 +3067,7 @@ export const ClassesData = {
           {
             id: "exceptional_training",
             name: "Exceptional Training",
-            desc: "Starting at 7th level, your beast companion’s attacks count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage. In addition, you can use a bonus action to command it to take the Dash, Disengage, or Help action on its turn.",
+            desc: "Starting at 7th level, your beast companionâ€™s attacks count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage. In addition, you can use a bonus action to command it to take the Dash, Disengage, or Help action on its turn.",
             level: 7,
             tracked: false,
           },
@@ -3107,7 +3107,7 @@ export const ClassesData = {
           {
             id: "bond_of_fang_and_scale",
             name: "Bond of Fang and Scale",
-            desc: "Starting at 7th level, your drake grows wings, gaining a flying speed of 40 feet if it isn’t wearing heavy armor. Additionally, the drake can now use its reaction to reduce damage dealt to another creature within 5 feet by its proficiency bonus.",
+            desc: "Starting at 7th level, your drake grows wings, gaining a flying speed of 40 feet if it isnâ€™t wearing heavy armor. Additionally, the drake can now use its reaction to reduce damage dealt to another creature within 5 feet by its proficiency bonus.",
             level: 7,
             tracked: false,
           },
@@ -3327,7 +3327,7 @@ export const ClassesData = {
           {
             id: "magic_user's_nemesis",
             name: "Magic User's Nemesis",
-            desc: "At 11th level, you can use your reaction to force a creature within 60 feet of you to make a Wisdom saving throw whenever it casts a spell. On a failed save, the creature’s spell fails and is wasted. Once you use this feature, you can’t use it again until you finish a short or long rest.",
+            desc: "At 11th level, you can use your reaction to force a creature within 60 feet of you to make a Wisdom saving throw whenever it casts a spell. On a failed save, the creatureâ€™s spell fails and is wasted. Once you use this feature, you canâ€™t use it again until you finish a short or long rest.",
             level: 11,
             tracked: true, // 1/SR or LR
           },
@@ -3360,7 +3360,7 @@ export const ClassesData = {
           {
             id: "writhing_tide",
             name: "Writhing Tide",
-            desc: "At 7th level, you can command your swarm to lift you in the air. As a bonus action, you gain a flying speed of 10 feet for 1 minute. Once you use this feature, you can’t use it again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use it again.",
+            desc: "At 7th level, you can command your swarm to lift you in the air. As a bonus action, you gain a flying speed of 10 feet for 1 minute. Once you use this feature, you canâ€™t use it again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use it again.",
             level: 7,
             tracked: true, // 1/LR or spell slot
           },
@@ -3397,7 +3397,7 @@ export const ClassesData = {
       {
         id: "sneak_attack",
         name: "Sneak Attack",
-        desc: "You know how to strike subtly and exploit a foe’s distraction.",
+        desc: "You know how to strike subtly and exploit a foeâ€™s distraction.",
         level: 1,
         tracked: false,
       },
@@ -3439,7 +3439,7 @@ export const ClassesData = {
       {
         id: "elusive",
         name: "Elusive",
-        desc: "No attack roll has advantage against you while you aren’t incapacitated.",
+        desc: "No attack roll has advantage against you while you arenâ€™t incapacitated.",
         level: 18,
         tracked: false,
       },
@@ -3498,14 +3498,14 @@ export const ClassesData = {
           {
             id: "bonus_proficiencies",
             name: "Bonus Proficiencies",
-            desc: "At 3rd level, you gain proficiency with the Disguise Kit and the Poisoner’s Kit.",
+            desc: "At 3rd level, you gain proficiency with the Disguise Kit and the Poisonerâ€™s Kit.",
             level: 3,
             tracked: false,
           },
           {
             id: "assassinate",
             name: "Assassinate",
-            desc: "Starting at 3rd level, you have advantage on attack rolls against any creature that hasn’t taken a turn in combat yet. In addition, any hit you score against a surprised creature is a critical hit.",
+            desc: "Starting at 3rd level, you have advantage on attack rolls against any creature that hasnâ€™t taken a turn in combat yet. In addition, any hit you score against a surprised creature is a critical hit.",
             level: 3,
             tracked: false,
           },
@@ -3553,7 +3553,7 @@ export const ClassesData = {
           {
             id: "insightful_fighting",
             name: "Insightful Fighting",
-            desc: "At 3rd level, as a bonus action, you can target a creature you can see within 30 feet and make an Insight check contested by its Deception check. On a success, you can use Sneak Attack against it even if you don’t have advantage, for up to 1 minute or until you use this feature on a different target.",
+            desc: "At 3rd level, as a bonus action, you can target a creature you can see within 30 feet and make an Insight check contested by its Deception check. On a success, you can use Sneak Attack against it even if you donâ€™t have advantage, for up to 1 minute or until you use this feature on a different target.",
             level: 3,
             tracked: false,
           },
@@ -3960,3 +3960,4 @@ export const ClassesData = {
 };
 
 export default ClassesData;
+

@@ -18,6 +18,7 @@ import SpellAccordian from './SpellAccordian';
 import { renderDailySpellsList } from './RacialSpellsList'
 import PreparedSpellsStatus from "./PreparedSpellsStatus";
 import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
+import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -48,8 +49,17 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "lore" &&
     Number(characterInfo?.characterLevel || 0) >= 6;
 
+  const hasSpiritSession =
+    characterInfo?.characterClass === "bard" &&
+    characterInfo?.subclass === "spirits" &&
+    Number(characterInfo?.characterLevel || 0) >= 6;
+
   const magicalSecrets = Array.isArray(characterInfo?.magicalSecretsPrepared)
     ? characterInfo.magicalSecretsPrepared
+    : [];
+
+  const spiritSessionSpells = Array.isArray(characterInfo?.spiritSessionPrepared)
+    ? characterInfo.spiritSessionPrepared
     : [];
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
@@ -68,6 +78,8 @@ export const SpellList = (props) => {
   // is this doing anything usefull?
   useEffect(() => {
   }, [characterInfo]);
+
+  // Spirit Session selection is soft-limited (UI warns when over limit).
 
   useEffect(() => {
     const hasGuidingWhispers =
@@ -342,6 +354,7 @@ export const SpellList = (props) => {
             )}
           </Box>
           {renderMagicalSecretsForLevel(numericalSpellLevel)}
+          {renderSpiritSessionForLevel(numericalSpellLevel)}
           {renderPreparedSpells(numericalSpellLevel)}
           <Box sx={{ mt: 0.5 }}>
             {renderSpellModal(numericalSpellLevel)}
@@ -420,6 +433,69 @@ export const SpellList = (props) => {
                 </Tooltip>
               }
               actionButton={<PrepareMagicalSecretButton spell={spell} index={idx} />}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderSpiritSessionForLevel = (numericalSpellLevel) => {
+    if (!hasSpiritSession) return null;
+
+    const isOver = spiritSessionSpells.length > 1;
+
+    const spellsAtLevel = spiritSessionSpells.filter((spell) => {
+      const lvl = Number(spell?.level);
+      const key = Number.isFinite(lvl) ? lvl : 0;
+      return key === Number(numericalSpellLevel);
+    });
+
+    if (spellsAtLevel.length === 0) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {spellsAtLevel.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={numericalSpellLevel}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Spirit Session spell (over limit — only 1 allowed)."
+                      : "Spirit Session spell (does not count toward prepared spells)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="SS"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.55,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(15, 118, 110, 0.85)",
+                      border: isOver
+                        ? "1px solid rgba(183, 28, 28, 0.30)"
+                        : "1px solid rgba(15, 118, 110, 0.22)",
+                      "@keyframes spiritSessionOverPulse": isOver
+                        ? {
+                            "0%": { transform: "translateY(0px) scale(1)" },
+                            "100%": { transform: "translateY(-1px) scale(1.02)" },
+                          }
+                        : undefined,
+                      animation: isOver
+                        ? "spiritSessionOverPulse 1.6s ease-in-out infinite alternate"
+                        : undefined,
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={<PrepareSpiritSessionButton spell={spell} index={idx} />}
             />
           </Box>
         ))}

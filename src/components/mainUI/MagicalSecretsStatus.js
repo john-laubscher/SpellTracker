@@ -41,7 +41,7 @@ export const MagicalSecretsStatus = ({
                 border: "1px solid rgba(194, 65, 12, 0.35)",
               }}
             >
-              *You have chosen more magical secrets than allowed*
+              *You have chosen more spells than allowed*
             </Typography>
           )}
 
@@ -161,4 +161,3 @@ export const MagicalSecretsStatus = ({
 };
 
 export default MagicalSecretsStatus;
-

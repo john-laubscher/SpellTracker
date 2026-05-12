@@ -27,6 +27,7 @@ import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
 import EditCustomFeatureModal from "./EditCustomFeatureModal";
 import MagicalSecretsModal from "./MagicalSecretsModal";
+import SpiritSessionModal from "./SpiritSessionModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -142,6 +143,7 @@ const FeatureDisplay = ({
   title,
   features,
   untrackedLabel,
+  renderTrackedTrailingControls,
   renderUntrackedTrailingControls,
   addTooltip,
   onAdd,
@@ -262,6 +264,9 @@ const FeatureDisplay = ({
               : null
           }
           renderTrailingControls={() => {
+            const extraTrailing = renderTrackedTrailingControls
+              ? renderTrackedTrailingControls(feature)
+              : null;
             const usesCount = getUsesCount(feature);
 
             if (feature?.trackedMode === "stackingChecks") {
@@ -306,27 +311,31 @@ const FeatureDisplay = ({
                       }}
                     />
                   ))}
+                  {extraTrailing}
                 </>
               );
             }
 
             if (usesCount === "unlimited") {
               return (
-                <Typography
-                  sx={{
-                    ml: 0.5,
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#5d4037",
-                    px: 1,
-                    py: 0.25,
-                    borderRadius: "10px",
-                    border: "1px solid rgba(93, 64, 55, 0.35)",
-                    background: "rgba(244, 233, 221, 0.65)",
-                  }}
-                >
-                  Unlimited
-                </Typography>
+                <>
+                  <Typography
+                    sx={{
+                      ml: 0.5,
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#5d4037",
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: "10px",
+                      border: "1px solid rgba(93, 64, 55, 0.35)",
+                      background: "rgba(244, 233, 221, 0.65)",
+                    }}
+                  >
+                    Unlimited
+                  </Typography>
+                  {extraTrailing}
+                </>
               );
             }
 
@@ -345,6 +354,7 @@ const FeatureDisplay = ({
                     }}
                   />
                 ))}
+                {extraTrailing}
               </>
             );
           }}
@@ -409,6 +419,7 @@ const FeaturesAndTrackables = () => {
   const [deletingCustom, setDeletingCustom] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
   const [magicalSecretsModalOpen, setMagicalSecretsModalOpen] = React.useState(false);
+  const [spiritSessionModalOpen, setSpiritSessionModalOpen] = React.useState(false);
 
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
@@ -417,6 +428,15 @@ const FeaturesAndTrackables = () => {
 
   const magicalSecretsCount = Array.isArray(characterInfo?.magicalSecretsPrepared)
     ? characterInfo.magicalSecretsPrepared.length
+    : 0;
+
+  const hasSpiritSession =
+    characterClass === "bard" &&
+    subclass === "spirits" &&
+    Number(characterLevel || 0) >= 6;
+
+  const spiritSessionCount = Array.isArray(characterInfo?.spiritSessionPrepared)
+    ? characterInfo.spiritSessionPrepared.length
     : 0;
 
   // Retrieve class data
@@ -700,6 +720,43 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
+              renderTrackedTrailingControls={(feature) => {
+                if (!hasSpiritSession) return null;
+                if (feature?.id !== "spirit_session") return null;
+
+                const isOver = spiritSessionCount > 1;
+                const isUnder = spiritSessionCount < 1;
+
+                return (
+                  <Tooltip arrow title={`Choose Spirit Session Spell (${spiritSessionCount}/1)`}>
+                    <IconButton
+                      size="small"
+                      aria-label="Choose Spirit Session Spell"
+                      onClick={() => setSpiritSessionModalOpen(true)}
+                      sx={{
+                        ml: 0.5,
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                        border: "1px solid rgba(15, 118, 110, 0.25)",
+                        backgroundColor: isOver
+                          ? "rgba(194, 65, 12, 0.10)"
+                          : isUnder
+                            ? "rgba(244, 233, 221, 0.65)"
+                            : "rgba(20, 184, 166, 0.10)",
+                        "&:hover": {
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.14)"
+                            : isUnder
+                              ? "rgba(244, 233, 221, 0.85)"
+                              : "rgba(20, 184, 166, 0.14)",
+                        },
+                      }}
+                    >
+                      <MenuBookIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }}
               renderUntrackedTrailingControls={(feature) => {
                 if (!hasAdditionalMagicalSecrets) return null;
                 if (feature?.id !== "additional_magical_secrets") return null;
@@ -819,6 +876,11 @@ const FeaturesAndTrackables = () => {
       <MagicalSecretsModal
         open={magicalSecretsModalOpen}
         onClose={() => setMagicalSecretsModalOpen(false)}
+      />
+
+      <SpiritSessionModal
+        open={spiritSessionModalOpen}
+        onClose={() => setSpiritSessionModalOpen(false)}
       />
 
       <ManageFeaturesModal
