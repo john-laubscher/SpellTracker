@@ -30,6 +30,8 @@ import ConfirmDialog from "./ConfirmDialog";
 import EditCustomFeatureModal from "./EditCustomFeatureModal";
 import MagicalSecretsModal from "./MagicalSecretsModal";
 import SpiritSessionModal from "./SpiritSessionModal";
+import ArcanaInitiateModal from "./ArcanaInitiateModal";
+import ArcaneMasteryModal from "./ArcaneMasteryModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -574,6 +576,8 @@ const FeaturesAndTrackables = () => {
   const [deleting, setDeleting] = React.useState(false);
   const [magicalSecretsModalOpen, setMagicalSecretsModalOpen] = React.useState(false);
   const [spiritSessionModalOpen, setSpiritSessionModalOpen] = React.useState(false);
+  const [arcanaInitiateModalOpen, setArcanaInitiateModalOpen] = React.useState(false);
+  const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
 
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
@@ -591,6 +595,24 @@ const FeaturesAndTrackables = () => {
 
   const spiritSessionCount = Array.isArray(characterInfo?.spiritSessionPrepared)
     ? characterInfo.spiritSessionPrepared.length
+    : 0;
+
+  const hasArcanaInitiate =
+    characterClass === "cleric" &&
+    subclass === "arcana" &&
+    Number(characterLevel || 0) >= 1;
+
+  const arcanaInitiateCount = Array.isArray(characterInfo?.arcanaInitiateCantrips)
+    ? characterInfo.arcanaInitiateCantrips.length
+    : 0;
+
+  const hasArcaneMastery =
+    characterClass === "cleric" &&
+    subclass === "arcana" &&
+    Number(characterLevel || 0) >= 17;
+
+  const arcaneMasteryCount = Array.isArray(characterInfo?.arcaneMasterySpells)
+    ? characterInfo.arcaneMasterySpells.length
     : 0;
 
   // Retrieve class data
@@ -912,31 +934,95 @@ const FeaturesAndTrackables = () => {
                 );
               }}
               renderUntrackedTrailingControls={(feature) => {
-                if (!hasAdditionalMagicalSecrets) return null;
-                if (feature?.id !== "additional_magical_secrets") return null;
-                const isOver = magicalSecretsCount > 2;
+                if (hasAdditionalMagicalSecrets && feature?.id === "additional_magical_secrets") {
+                  const isOver = magicalSecretsCount > 2;
 
-                return (
-                  <Tooltip arrow title={`Choose Magical Secrets (${magicalSecretsCount}/2)`}>
-                    <IconButton
-                      size="small"
-                      aria-label="Choose Magical Secrets"
-                      onClick={() => setMagicalSecretsModalOpen(true)}
-                      sx={{
-                        ml: 0.25,
-                        p: 0.25,
-                        color: isOver ? "#b71c1c" : "#5d4037",
-                        border: "1px solid rgba(93, 64, 55, 0.25)",
-                        backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(244, 233, 221, 0.65)",
-                        "&:hover": {
-                          backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
-                        },
-                      }}
-                    >
-                      <MenuBookIcon fontSize="inherit" />
-                    </IconButton>
-                  </Tooltip>
-                );
+                  return (
+                    <Tooltip arrow title={`Choose Magical Secrets (${magicalSecretsCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Magical Secrets"
+                        onClick={() => setMagicalSecretsModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : "#5d4037",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(244, 233, 221, 0.65)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (hasArcanaInitiate && feature?.id === "arcane_initiate") {
+                  const isOver = arcanaInitiateCount > 2;
+                  const isUnder = arcanaInitiateCount < 2;
+
+                  return (
+                    <Tooltip arrow title={`Choose Arcana Initiate cantrips (${arcanaInitiateCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Arcana Initiate cantrips"
+                        onClick={() => setArcanaInitiateModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (hasArcaneMastery && feature?.id === "arcane_mastery") {
+                  const isOver = arcaneMasteryCount > 4;
+                  const isUnder = arcaneMasteryCount < 4;
+
+                  return (
+                    <Tooltip arrow title={`Choose Arcane Mastery spells (${arcaneMasteryCount}/4)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Arcane Mastery spells"
+                        onClick={() => setArcaneMasteryModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                return null;
               }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
@@ -1035,6 +1121,16 @@ const FeaturesAndTrackables = () => {
       <SpiritSessionModal
         open={spiritSessionModalOpen}
         onClose={() => setSpiritSessionModalOpen(false)}
+      />
+
+      <ArcanaInitiateModal
+        open={arcanaInitiateModalOpen}
+        onClose={() => setArcanaInitiateModalOpen(false)}
+      />
+
+      <ArcaneMasteryModal
+        open={arcaneMasteryModalOpen}
+        onClose={() => setArcaneMasteryModalOpen(false)}
       />
 
       <ManageFeaturesModal

@@ -19,6 +19,7 @@ import { renderDailySpellsList } from './RacialSpellsList'
 import PreparedSpellsStatus from "./PreparedSpellsStatus";
 import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
+import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripButton";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -34,6 +35,35 @@ const spellLevelColors = {
 };
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const emptyByLevel = () => ({
+  0: [],
+  1: [],
+  2: [],
+  3: [],
+  4: [],
+  5: [],
+  6: [],
+  7: [],
+  8: [],
+  9: [],
+});
+
+const normalizeCompareName = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+
+const ARCANA_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, names: [["Detect Magic"], ["Magic Missile"]] },
+  { clericLevel: 3, spellLevel: 2, names: [["Magic Weapon"], ["Nystul's Magic Aura", "Arcanist's Magic Aura"]] },
+  { clericLevel: 5, spellLevel: 3, names: [["Dispel Magic"], ["Magic Circle"]] },
+  { clericLevel: 7, spellLevel: 4, names: [["Arcane Eye"], ["Leomund's Secret Chest", "Secret Chest"]] },
+  { clericLevel: 9, spellLevel: 5, names: [["Planar Binding"], ["Teleportation Circle"]] },
+];
 
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
@@ -61,6 +91,26 @@ export const SpellList = (props) => {
   const spiritSessionSpells = Array.isArray(characterInfo?.spiritSessionPrepared)
     ? characterInfo.spiritSessionPrepared
     : [];
+
+  const hasArcanaInitiate =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "arcana" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
+  const hasArcaneMastery =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "arcana" &&
+    Number(characterInfo?.characterLevel || 0) >= 17;
+
+  const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
+    ? characterInfo.arcanaInitiateCantrips
+    : [];
+
+  const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
+    ? characterInfo.arcaneMasterySpells
+    : [];
+
+  const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
     0: { loading: false, error: '' },
@@ -146,6 +196,72 @@ export const SpellList = (props) => {
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    const isArcanaCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "arcana";
+    if (!isArcanaCleric) {
+      setArcanaDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = ARCANA_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setArcanaDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/allspells/${lvl}/wizard`).then((res) => ({ lvl, res })))
+        );
+
+        const wizardLists = new Map();
+        responses.forEach(({ lvl, res }) => {
+          wizardLists.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = wizardLists.get(spellLevel) || [];
+
+          row.names.forEach((nameCandidates) => {
+            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
+            const found =
+              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
+              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
+              null;
+
+            if (found?.index) {
+              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
+              if (!existing.has(String(found.index))) {
+                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
+              }
+            }
+          });
+        });
+
+        if (!cancelled) setArcanaDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setArcanaDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
 
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
@@ -355,6 +471,8 @@ export const SpellList = (props) => {
           </Box>
           {renderMagicalSecretsForLevel(numericalSpellLevel)}
           {renderSpiritSessionForLevel(numericalSpellLevel)}
+          {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
+          {renderDomainSpellsForLevel(numericalSpellLevel)}
           {renderPreparedSpells(numericalSpellLevel)}
           <Box sx={{ mt: 0.5 }}>
             {renderSpellModal(numericalSpellLevel)}
@@ -496,6 +614,139 @@ export const SpellList = (props) => {
                 </Tooltip>
               }
               actionButton={<PrepareSpiritSessionButton spell={spell} index={idx} />}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderArcanaInitiateCantripsForLevel = (numericalSpellLevel) => {
+    if (!hasArcanaInitiate) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+    if (arcanaInitiateCantrips.length === 0) return null;
+
+    const isOver = arcanaInitiateCantrips.length > 2;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {arcanaInitiateCantrips.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Arcana Initiate cantrip (over limit — only 2 allowed)."
+                      : "Arcana Initiate cantrip (does not count toward cantrips known)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="AI"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.55,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(7, 89, 133, 0.85)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(7, 89, 133, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={<PrepareArcanaInitiateCantripButton spell={spell} index={idx} />}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderDomainSpellsForLevel = (numericalSpellLevel) => {
+    const domainAtLevel = Array.isArray(arcanaDomainSpellsByLevel?.[numericalSpellLevel])
+      ? arcanaDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const masteryAtLevel = hasArcaneMastery
+      ? arcaneMasterySpells.filter((s) => Number(s?.level) === Number(numericalSpellLevel))
+      : [];
+
+    const domainSeen = new Set();
+    const uniqueDomain = domainAtLevel.filter((s) => {
+      const key = String(s?.index || "");
+      if (!key || domainSeen.has(key)) return false;
+      domainSeen.add(key);
+      return true;
+    });
+
+    const masterySeen = new Set(domainSeen);
+    const uniqueMastery = masteryAtLevel.filter((s) => {
+      const key = String(s?.index || "");
+      if (!key || masterySeen.has(key)) return false;
+      masterySeen.add(key);
+      return true;
+    });
+
+    if (uniqueDomain.length === 0 && uniqueMastery.length === 0) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {uniqueDomain.map((spell) => (
+          <Box key={`ds:${spell.index}`} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={numericalSpellLevel}
+              spell={spell}
+              leadingControl={
+                <Tooltip arrow title="Domain Spell (always prepared; does not count toward prepared spells).">
+                  <Chip
+                    size="small"
+                    label="DS"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: 0.55,
+                      backgroundColor: "rgba(0,0,0,0.06)",
+                      color: "rgba(62, 39, 35, 0.72)",
+                      border: "1px solid rgba(62, 39, 35, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+            />
+          </Box>
+        ))}
+
+        {uniqueMastery.map((spell) => (
+          <Box key={`am:${spell.index}`} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={numericalSpellLevel}
+              spell={spell}
+              leadingControl={
+                <Tooltip arrow title="Arcane Mastery (always prepared; does not count toward prepared spells).">
+                  <Chip
+                    size="small"
+                    label="AM"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: 0.55,
+                      backgroundColor: "rgba(0,0,0,0.06)",
+                      color: "rgba(62, 39, 35, 0.72)",
+                      border: "1px solid rgba(62, 39, 35, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
             />
           </Box>
         ))}

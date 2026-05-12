@@ -43,6 +43,30 @@ const loadSpiritSessionFromStorage = () => {
   }
 };
 
+const loadArcanaInitiateFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcanaInitiateCantrips");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadArcaneMasteryFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcaneMasterySpells");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -61,6 +85,8 @@ function App() {
     const persistedPrepared = loadPreparedSpellsFromStorage();
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
     const persistedSpiritSession = loadSpiritSessionFromStorage();
+    const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
+    const persistedArcaneMastery = loadArcaneMasteryFromStorage();
     return {
       characterName: "",
       race: "noRace",
@@ -107,6 +133,8 @@ function App() {
       },
       magicalSecretsPrepared: Array.isArray(persistedMagicalSecrets) ? persistedMagicalSecrets : [],
       spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
+      arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
+      arcaneMasterySpells: Array.isArray(persistedArcaneMastery) ? persistedArcaneMastery : [],
     };
   });
 
@@ -173,6 +201,28 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.spiritSessionPrepared]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcanaInitiateCantrips",
+        JSON.stringify(characterInfo.arcanaInitiateCantrips || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcanaInitiateCantrips]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcaneMasterySpells",
+        JSON.stringify(characterInfo.arcaneMasterySpells || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcaneMasterySpells]);
 
   return (
     <div className="App">
