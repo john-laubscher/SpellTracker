@@ -4,9 +4,11 @@ import axios from 'axios';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import IconButton from "@mui/material/IconButton";
 import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -20,6 +22,8 @@ import PreparedSpellsStatus from "./PreparedSpellsStatus";
 import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
 import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripButton";
+import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
+import DomainSpellSwapModal from "./DomainSpellSwapModal";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -57,6 +61,23 @@ const normalizeCompareName = (s) =>
     .trim()
     .replace(/\s+/g, " ");
 
+const humanizeSpellIndex = (idx) => {
+  const raw = String(idx || "")
+    .replace(/^\/+/, "")
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .toLowerCase();
+  if (!raw) return "Unknown Spell";
+  const titled = raw.replace(/\b\w/g, (m) => m.toUpperCase());
+  return titled
+    .replace(/\bOf\b/g, "of")
+    .replace(/\bThe\b/g, "the")
+    .replace(/\bAnd\b/g, "and")
+    .replace(/\bTo\b/g, "to")
+    .replace(/\bA\b/g, "a")
+    .replace(/\bAn\b/g, "an");
+};
+
 const ARCANA_DOMAIN_SPELLS = [
   { clericLevel: 1, spellLevel: 1, names: [["Detect Magic"], ["Magic Missile"]] },
   { clericLevel: 3, spellLevel: 2, names: [["Magic Weapon"], ["Nystul's Magic Aura", "Arcanist's Magic Aura"]] },
@@ -64,6 +85,25 @@ const ARCANA_DOMAIN_SPELLS = [
   { clericLevel: 7, spellLevel: 4, names: [["Arcane Eye"], ["Leomund's Secret Chest", "Secret Chest"]] },
   { clericLevel: 9, spellLevel: 5, names: [["Planar Binding"], ["Teleportation Circle"]] },
 ];
+
+const DEATH_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["false-life", "ray-of-sickness"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["blindness-deafness", "ray-of-enfeeblement"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["animate-dead", "vampiric-touch"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["blight", "death-ward"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["antilife-shell", "cloudkill"] },
+];
+
+const FORGE_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["identify", "searing-smite"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["heat-metal", "magic-weapon"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["elemental-weapon", "protection-from-energy"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["fabricate", "wall-of-fire"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["animate-objects", "creation"] },
+];
+
+const REAPER_CANTRIP_TOOLTIP =
+  "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
@@ -102,6 +142,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "arcana" &&
     Number(characterInfo?.characterLevel || 0) >= 17;
 
+  const hasReaper =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "death" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -110,7 +155,19 @@ export const SpellList = (props) => {
     ? characterInfo.arcaneMasterySpells
     : [];
 
+  const reaperCantrip = characterInfo?.reaperCantrip || null;
+  const domainSpellSwaps = characterInfo?.domainSpellSwaps || {};
+  const currentDomainKey = `${String(characterInfo?.characterClass || "")}:${String(characterInfo?.subclass || "")}`;
+
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [forgeDomainSpellsByLevel, setForgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [domainSwapModal, setDomainSwapModal] = React.useState({
+    open: false,
+    spellLevel: 0,
+    domainKey: "",
+    originalSpell: null,
+  });
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
     0: { loading: false, error: '' },
@@ -253,6 +310,146 @@ export const SpellList = (props) => {
         if (!cancelled) setArcanaDomainSpellsByLevel(byLevel);
       } catch {
         if (!cancelled) setArcanaDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isDeathCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "death";
+    if (!isDeathCleric) {
+      setDeathDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = DEATH_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setDeathDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) =>
+            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
+          )
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setDeathDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setDeathDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isForgeCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "forge";
+    if (!isForgeCleric) {
+      setForgeDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = FORGE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setForgeDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) =>
+            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
+          )
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setForgeDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setForgeDomainSpellsByLevel(emptyByLevel());
       }
     };
 
@@ -472,6 +669,7 @@ export const SpellList = (props) => {
           {renderMagicalSecretsForLevel(numericalSpellLevel)}
           {renderSpiritSessionForLevel(numericalSpellLevel)}
           {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
+          {renderReaperCantripForLevel(numericalSpellLevel)}
           {renderDomainSpellsForLevel(numericalSpellLevel)}
           {renderPreparedSpells(numericalSpellLevel)}
           <Box sx={{ mt: 0.5 }}>
@@ -668,18 +866,73 @@ export const SpellList = (props) => {
     );
   };
 
+  const renderReaperCantripForLevel = (numericalSpellLevel) => {
+    if (!hasReaper) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+    if (!reaperCantrip?.index) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        <Box sx={{ py: 0.2 }}>
+          <SpellAccordian
+            numericalSpellLevel={0}
+            spell={reaperCantrip}
+            leadingControl={
+              <Tooltip arrow title={REAPER_CANTRIP_TOOLTIP}>
+                <Chip
+                  size="small"
+                  label="R"
+                  sx={{
+                    height: 18,
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    opacity: 0.7,
+                    backgroundColor: "rgba(0,0,0,0.06)",
+                    color: "rgba(46, 125, 50, 0.90)",
+                    border: "1px solid rgba(46, 125, 50, 0.22)",
+                    "&:hover": { opacity: 0.85 },
+                  }}
+                />
+              </Tooltip>
+            }
+            actionButton={<PrepareReaperCantripButton spell={reaperCantrip} index={0} />}
+          />
+        </Box>
+      </Box>
+    );
+  };
+
   const renderDomainSpellsForLevel = (numericalSpellLevel) => {
-    const domainAtLevel = Array.isArray(arcanaDomainSpellsByLevel?.[numericalSpellLevel])
+    const arcanaAtLevel = Array.isArray(arcanaDomainSpellsByLevel?.[numericalSpellLevel])
       ? arcanaDomainSpellsByLevel[numericalSpellLevel]
       : [];
+
+    const deathAtLevel = Array.isArray(deathDomainSpellsByLevel?.[numericalSpellLevel])
+      ? deathDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const forgeAtLevel = Array.isArray(forgeDomainSpellsByLevel?.[numericalSpellLevel])
+      ? forgeDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const domainAtLevel = [...arcanaAtLevel, ...deathAtLevel, ...forgeAtLevel];
+    const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
+    const domainSlotsAtLevel = domainAtLevel.map((original) => {
+      const originalIndex = String(original?.index || "");
+      const swapped = originalIndex ? swapsForCurrentDomain?.[originalIndex] : null;
+      return {
+        original,
+        spell: swapped?.index ? swapped : original,
+      };
+    });
 
     const masteryAtLevel = hasArcaneMastery
       ? arcaneMasterySpells.filter((s) => Number(s?.level) === Number(numericalSpellLevel))
       : [];
 
     const domainSeen = new Set();
-    const uniqueDomain = domainAtLevel.filter((s) => {
-      const key = String(s?.index || "");
+    const uniqueDomain = domainSlotsAtLevel.filter(({ spell }) => {
+      const key = String(spell?.index || "");
       if (!key || domainSeen.has(key)) return false;
       domainSeen.add(key);
       return true;
@@ -697,7 +950,7 @@ export const SpellList = (props) => {
 
     return (
       <Box sx={{ mb: 0.5 }}>
-        {uniqueDomain.map((spell) => (
+        {uniqueDomain.map(({ original, spell }) => (
           <Box key={`ds:${spell.index}`} sx={{ py: 0.2 }}>
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
@@ -718,6 +971,31 @@ export const SpellList = (props) => {
                       "&:hover": { opacity: 0.85 },
                     }}
                   />
+                </Tooltip>
+              }
+              actionButton={
+                <Tooltip arrow title="Swap this domain spell (cleric/custom only).">
+                  <IconButton
+                    size="small"
+                    aria-label="Swap domain spell"
+                    onClick={() =>
+                      setDomainSwapModal({
+                        open: true,
+                        spellLevel: Number(numericalSpellLevel),
+                        domainKey: currentDomainKey,
+                        originalSpell: original || spell,
+                      })
+                    }
+                    sx={{
+                      p: 0.25,
+                      color: "rgba(7, 89, 133, 0.95)",
+                      border: "1px solid rgba(7, 89, 133, 0.22)",
+                      backgroundColor: "rgba(2, 132, 199, 0.08)",
+                      "&:hover": { backgroundColor: "rgba(2, 132, 199, 0.12)" },
+                    }}
+                  >
+                    <SwapHorizIcon fontSize="inherit" />
+                  </IconButton>
                 </Tooltip>
               }
             />
@@ -779,6 +1057,16 @@ export const SpellList = (props) => {
       {renderPCSpells("eighth", 8)}
       {renderPCSpells("ninth", 9)}
       {renderDailySpellsList(characterInfo, setCharacterInfo)}
+
+      <DomainSpellSwapModal
+        open={domainSwapModal.open}
+        numericalSpellLevel={domainSwapModal.spellLevel}
+        domainKey={domainSwapModal.domainKey || currentDomainKey}
+        originalSpell={domainSwapModal.originalSpell}
+        onClose={() =>
+          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
+        }
+      />
     </Box>
   );
 };
