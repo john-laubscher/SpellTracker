@@ -965,9 +965,11 @@ export const ClassesData = {
           {
             id: "eyes_of_the_grave",
             name: "Eyes of the Grave",
-            desc: "At 1st level, you gain the ability to occasionally sense the presence of the undead, whose existence is an insult to the natural cycle of life. As an action, you can open your awareness to magically detect undead. Until the end of your next turn, you know the location of any undead within 60 feet of you that isn't behind total cover and that isn't protected from divination magic. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once), and you regain all expended uses when you finish a long rest.",
+            desc: "At 1st level, you gain the ability to occasionally sense the presence of the undead, whose existence is an insult to the natural cycle of life. As an action, you can open your awareness to magically detect undead. Until the end of your next turn, you know the location of any undead within 60 feet of you that isn't behind total cover and that isn't protected from divination magic. This sense doesn't tell you anything about a creature's capabilities or identity. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest.",
             level: 1,
             tracked: true, // Per long rest
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "channel_divinity_path_to_the_grave",
@@ -979,9 +981,11 @@ export const ClassesData = {
           {
             id: "sentinel_at_death's_door",
             name: "Sentinel at Death's Door",
-            desc: "At 6th level, you gain the ability to impede death's progress. As a reaction when you or a creature you can see within 30 feet of you suffers a critical hit, you can turn that hit into a normal hit. Any effects triggered by a critical hit are canceled. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once), and you regain all expended uses when you finish a long rest.",
+            desc: "At 6th level, you gain the ability to impede death’s progress. As a reaction when you or an ally that you can see within 30 feet of you suffers a critical hit, you can turn that attack into a normal hit. Any effects triggered by a critical hit are canceled. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest.",
             level: 6,
             tracked: true, // Per long rest
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "potent_spellcasting",
@@ -993,7 +997,7 @@ export const ClassesData = {
           {
             id: "keeper_of_souls",
             name: "Keeper of Souls",
-            desc: "At 17th level, you can seize a trace of vitality from a parting soul and use it to heal the living. When an enemy you can see dies within 60 feet of you, you or one creature of your choice that is within 60 feet of you regains hit points equal to the enemy's number of Hit Dice. You can use this feature only if you aren't incapacitated. Once you use it, you can't use it again until the start of your next turn.",
+            desc: "At 17th level, you can seize a trace of vitality from a parting soul and use it to heal the living. When an enemy you can see dies within 30 feet of you, you or one ally of your choice that is within 30 feet of you regains hit points equal to the enemy’s number of Hit Dice. You can use this feature only if you aren't incapacitated. Once you use it, you can't do so again until the start of your next turn.",
             level: 17,
             tracked: false,
           },

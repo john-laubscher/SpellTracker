@@ -102,6 +102,14 @@ const FORGE_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["animate-objects", "creation"] },
 ];
 
+const GRAVE_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["bane", "false-life"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["gentle-repose", "ray-of-enfeeblement"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["revivify", "vampiric-touch"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["blight", "death-ward"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["antilife-shell", "raise-dead"] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -147,6 +155,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "death" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
+  const hasCircleOfMortality =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "grave" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -162,6 +175,7 @@ export const SpellList = (props) => {
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [forgeDomainSpellsByLevel, setForgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [graveDomainSpellsByLevel, setGraveDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -250,6 +264,79 @@ export const SpellList = (props) => {
     characterInfo?.characterClass,
     characterInfo?.subclass,
     characterInfo?.characterLevel,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const BONUS_TAG = "circle_of_mortality";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+
+    if (!hasCircleOfMortality) {
+      const hasBonusSpare = currentCantrips.some(
+        (s) => s?.index === "spare-the-dying" && s?.spelltrackerBonus === BONUS_TAG
+      );
+      if (!hasBonusSpare) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter(
+          (s) => !(s?.index === "spare-the-dying" && s?.spelltrackerBonus === BONUS_TAG)
+        );
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const alreadyHasBonusSpare = currentCantrips.some(
+      (s) => s?.index === "spare-the-dying" && s?.spelltrackerBonus === BONUS_TAG
+    );
+    if (alreadyHasBonusSpare) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/spare-the-dying")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusSpare = {
+          ...spell,
+          range: "30 feet",
+          casting_time: "1 Bonus Action",
+          spelltrackerBonus: BONUS_TAG,
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          const hasAnySpare = current.some((s) => s?.index === "spare-the-dying");
+          if (hasAnySpare) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusSpare],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasCircleOfMortality,
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
@@ -450,6 +537,76 @@ export const SpellList = (props) => {
         if (!cancelled) setForgeDomainSpellsByLevel(byLevel);
       } catch {
         if (!cancelled) setForgeDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isGraveCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "grave";
+    if (!isGraveCleric) {
+      setGraveDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = GRAVE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setGraveDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) =>
+            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
+          )
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setGraveDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setGraveDomainSpellsByLevel(emptyByLevel());
       }
     };
 
@@ -661,6 +818,14 @@ export const SpellList = (props) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
+              {isCantrips && hasCircleOfMortality ? (
+                <Tooltip
+                  arrow
+                  title="Spare the Dying is granted by Circle of Mortality and doesnâ€™t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
             </Box>
             {!isCantrips && (
               <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
@@ -693,6 +858,31 @@ export const SpellList = (props) => {
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
+              leadingControl={
+                numericalSpellLevel === 0 &&
+                spell?.index === "spare-the-dying" &&
+                spell?.spelltrackerBonus === "circle_of_mortality" ? (
+                  <Tooltip
+                    arrow
+                    title="Circle of Mortality cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="CoM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(21, 101, 192, 0.85)",
+                        border: "1px solid rgba(21, 101, 192, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : null
+              }
               actionButton={
                 <PrepareSpellButton
                   numericalSpellLevel={numericalSpellLevel}
@@ -915,7 +1105,11 @@ export const SpellList = (props) => {
       ? forgeDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
-    const domainAtLevel = [...arcanaAtLevel, ...deathAtLevel, ...forgeAtLevel];
+    const graveAtLevel = Array.isArray(graveDomainSpellsByLevel?.[numericalSpellLevel])
+      ? graveDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const domainAtLevel = [...arcanaAtLevel, ...deathAtLevel, ...forgeAtLevel, ...graveAtLevel];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
       const originalIndex = String(original?.index || "");
