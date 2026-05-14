@@ -67,6 +67,31 @@ const loadArcaneMasteryFromStorage = () => {
   }
 };
 
+const loadReaperCantripFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_reaperCantrip");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.index || !parsed.name) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadDomainSpellSwapsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_domainSpellSwaps");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -87,16 +112,18 @@ function App() {
     const persistedSpiritSession = loadSpiritSessionFromStorage();
     const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
     const persistedArcaneMastery = loadArcaneMasteryFromStorage();
+    const persistedReaperCantrip = loadReaperCantripFromStorage();
+    const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     return {
-      characterName: "",
-      race: "noRace",
-      subrace: "noSubrace",
+      characterName: "Garetjax",
+      race: "Dwarf",
+      subrace: "Hill",
       draconicAncestry: "",
       // default characterClass should be "noClass" rather than empty string
-      characterClass: "noClass",
-      subclass: "noSubclass",
-      characterLevel: 1,
-      proficiencyMod: 2,
+      characterClass: "cleric",
+      subclass: "death",
+      characterLevel: 20,
+      proficiencyMod: 6,
       hp: 0,
       ac: 10,
       weapons: [
@@ -135,6 +162,8 @@ function App() {
       spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
       arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
       arcaneMasterySpells: Array.isArray(persistedArcaneMastery) ? persistedArcaneMastery : [],
+      reaperCantrip: persistedReaperCantrip || null,
+      domainSpellSwaps: persistedDomainSpellSwaps || {},
     };
   });
 
@@ -223,6 +252,28 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.arcaneMasterySpells]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_reaperCantrip",
+        JSON.stringify(characterInfo.reaperCantrip || null)
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.reaperCantrip]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_domainSpellSwaps",
+        JSON.stringify(characterInfo.domainSpellSwaps || {})
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.domainSpellSwaps]);
 
   return (
     <div className="App">

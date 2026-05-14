@@ -440,6 +440,25 @@ app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
         });
 })
 
+app.get('/spellsbylevel/:numerical_spell_level', async (req, res) => {
+    const numerical_spell_level = parseInt(req.params.numerical_spell_level);
+
+    if (!Number.isFinite(numerical_spell_level)) {
+        return res.status(400).json({ error: "invalid_level" });
+    }
+
+    try {
+        const response = await axios.get(`https://www.dnd5eapi.co/api/2014/spells`, {
+            params: { level: numerical_spell_level },
+        });
+        const results = response.data?.results || [];
+        return res.json({ count: results.length, results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+});
+
 app.get('/spellsbyschool/:numerical_spell_level/:school?', async (req, res) => {
     const numerical_spell_level = parseInt(req.params.numerical_spell_level);
 
