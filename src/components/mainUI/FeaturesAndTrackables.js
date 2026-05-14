@@ -178,6 +178,7 @@ const FeatureDisplay = ({
   onManage,
   proficiencyBonusValue,
   charismaModValue,
+  wisdomModValue,
   characterClass,
   characterLevel,
 }) => {
@@ -219,6 +220,7 @@ const FeatureDisplay = ({
     }
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
     if (feature?.uses === "cha_mod") return Math.max(1, Number(charismaModValue) || 1);
+    if (feature?.uses === "wis_mod") return Math.max(1, Number(wisdomModValue) || 1);
     if (typeof feature?.uses === "number" && Number.isFinite(feature.uses) && feature.uses > 0) return feature.uses;
     return 1;
   };
@@ -567,6 +569,7 @@ const FeaturesAndTrackables = () => {
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
+  const wisdomModValue = characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0;
 
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
@@ -891,6 +894,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Class Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1066,6 +1070,7 @@ const FeaturesAndTrackables = () => {
               }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1082,6 +1087,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Race Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1096,6 +1102,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Subrace Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1110,6 +1117,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Miscellaneous Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
