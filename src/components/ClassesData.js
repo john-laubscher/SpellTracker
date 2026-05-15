@@ -1256,9 +1256,11 @@ export const ClassesData = {
           {
             id: "emboldening_bond",
             name: "Emboldening Bond",
-            desc: "Starting at 1st level, you can forge an empowering bond among people who are at peace with one another. As an action, choose a number of willing creatures equal to your proficiency bonus within 30 feet of you. You create a magical bond among them for 10 minutes or until you use this feature again. While bonded, they can add 1d4 to an attack roll, ability check, or saving throw once per turn. They must be within 30 feet of each other to gain this benefit.",
+            desc: "Starting at 1st level, you can forge an empowering bond among people who are at peace with one another. As an action, choose a number of willing creatures within 30 feet of you (this can include yourself) equal to your proficiency bonus. You create a magical bond among them for 10 minutes or until you use this feature again. While any bonded creature is within 30 feet of another, the creature can roll a d4 and add it to an attack roll, an ability check, or a saving throw it makes. Each creature can add the d4 no more than once per turn.\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 1,
             tracked: true, // prof bonus, regain on LR
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "channel_divinity_balm_of_peace",
@@ -1291,10 +1293,10 @@ export const ClassesData = {
         ],
         subclassSpells: [
           { level: 1, spells: ["heroism", "sanctuary"] },
-          { level: 3, spells: ["aid", "warding_bond"] },
-          { level: 5, spells: ["beacon_of_hope", "sending"] },
-          { level: 7, spells: ["aura_of_purity", "guardian_of_faith"] },
-          { level: 9, spells: ["greater_restoration", "rary_s_telepathic_bond"] },
+          { level: 3, spells: ["aid", "warding-bond"] },
+          { level: 5, spells: ["beacon-of-hope", "sending"] },
+          { level: 7, spells: ["aura-of-purity", "otilukes-resilient-sphere"] },
+          { level: 9, spells: ["greater-restoration", "rarys-telepathic-bond"] },
         ],
       },
       tempest: {
@@ -1302,9 +1304,11 @@ export const ClassesData = {
           {
             id: "wrath_of_the_storm",
             name: "Wrath of the Storm",
-            desc: "Also at 1st level, you can thunderously rebuke attackers. When a creature within 5 feet of you that you can see hits you with an attack, you can use your reaction to cause the creature to make a Dexterity saving throw. The creature takes 2d8 lightning or thunder damage (your choice) on a failed save, or half as much damage on a successful one. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            desc: "Also at 1st level, you can thunderously rebuke attackers. When a creature within 5 feet of you that you can see hits you with an attack, you can use your reaction to cause the creature to make a Dexterity saving throw. The creature takes 2d8 lightning or thunder damage (your choice) on a failed saving throw, and half as much damage on a successful one.\nYou can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.",
             level: 1,
-            tracked: true, // wis mod Uses per LR
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "channel_divinity_destructive_wrath",
@@ -1336,11 +1340,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["fog_cloud", "thunderwave"] },
-          { level: 3, spells: ["gust_of_wind", "shatter"] },
-          { level: 5, spells: ["call_lightning", "sleet_storm"] },
-          { level: 7, spells: ["control_water", "ice_storm"] },
-          { level: 9, spells: ["destructive_wave", "insect_plague"] },
+          { level: 1, spells: ["fog-cloud", "thunderwave"] },
+          { level: 3, spells: ["gust-of-wind", "shatter"] },
+          { level: 5, spells: ["call-lightning", "sleet-storm"] },
+          { level: 7, spells: ["control-water", "ice-storm"] },
+          { level: 9, spells: ["destructive-wave", "insect-plague"] },
         ],
       },
       trickery: {
