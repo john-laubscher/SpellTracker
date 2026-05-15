@@ -151,6 +151,30 @@ const ORDER_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["commune", "dominate-person"] },
 ];
 
+const PEACE_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, names: [["Heroism"], ["Sanctuary"]] },
+  { clericLevel: 3, spellLevel: 2, names: [["Aid"], ["Warding Bond"]] },
+  { clericLevel: 5, spellLevel: 3, names: [["Beacon of Hope"], ["Sending"]] },
+  {
+    clericLevel: 7,
+    spellLevel: 4,
+    names: [["Aura of Purity"], ["Otiluke's Resilient Sphere", "Otiluke’s Resilient Sphere"]],
+  },
+  {
+    clericLevel: 9,
+    spellLevel: 5,
+    names: [["Greater Restoration"], ["Rary's Telepathic Bond", "Rary’s Telepathic Bond"]],
+  },
+];
+
+const TEMPEST_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, names: [["Fog Cloud"], ["Thunderwave"]] },
+  { clericLevel: 3, spellLevel: 2, names: [["Gust of Wind"], ["Shatter"]] },
+  { clericLevel: 5, spellLevel: 3, names: [["Call Lightning"], ["Sleet Storm"]] },
+  { clericLevel: 7, spellLevel: 4, names: [["Control Water"], ["Ice Storm"]] },
+  { clericLevel: 9, spellLevel: 5, names: [["Destructive Wave"], ["Insect Plague"]] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -236,6 +260,8 @@ export const SpellList = (props) => {
   const [lightDomainSpellsByLevel, setLightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [natureDomainSpellsByLevel, setNatureDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [orderDomainSpellsByLevel, setOrderDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [peaceDomainSpellsByLevel, setPeaceDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [tempestDomainSpellsByLevel, setTempestDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -1083,6 +1109,136 @@ export const SpellList = (props) => {
     };
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
 
+  useEffect(() => {
+    const isPeaceCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "peace";
+    if (!isPeaceCleric) {
+      setPeaceDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = PEACE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setPeaceDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+
+          (row.names || []).forEach((nameCandidates) => {
+            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
+            const found =
+              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
+              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
+              null;
+
+            if (found?.index) {
+              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
+              if (!existing.has(String(found.index))) {
+                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
+              }
+            }
+          });
+        });
+
+        if (!cancelled) setPeaceDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setPeaceDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isTempestCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "tempest";
+    if (!isTempestCleric) {
+      setTempestDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = TEMPEST_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setTempestDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+
+          (row.names || []).forEach((nameCandidates) => {
+            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
+            const found =
+              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
+              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
+              null;
+
+            if (found?.index) {
+              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
+              if (!existing.has(String(found.index))) {
+                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
+              }
+            }
+          });
+        });
+
+        if (!cancelled) setTempestDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setTempestDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
       ...spells,
@@ -1664,6 +1820,14 @@ export const SpellList = (props) => {
       ? orderDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
+    const peaceAtLevel = Array.isArray(peaceDomainSpellsByLevel?.[numericalSpellLevel])
+      ? peaceDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const tempestAtLevel = Array.isArray(tempestDomainSpellsByLevel?.[numericalSpellLevel])
+      ? tempestDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
     const domainAtLevel = [
       ...arcanaAtLevel,
       ...deathAtLevel,
@@ -1674,6 +1838,8 @@ export const SpellList = (props) => {
       ...lightAtLevel,
       ...natureAtLevel,
       ...orderAtLevel,
+      ...peaceAtLevel,
+      ...tempestAtLevel,
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
