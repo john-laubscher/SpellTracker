@@ -78,6 +78,11 @@ export const CharacterCreationForm = (props) => {
     return Object.keys(HalfElfVersatilityArr || {});
   }, []);
 
+  const landDruidTypeOptions = React.useMemo(
+    () => ["arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp", "underdark"],
+    []
+  );
+
   useEffect(() => {
     if (characterInfo.race === "Dragonborn") {
       if (!characterInfo.draconicAncestry && dragonbornAncestryOptions.length > 0) {
@@ -103,6 +108,20 @@ export const CharacterCreationForm = (props) => {
     halfElfVersatilityOptions,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    const isLandDruid = characterInfo.characterClass === "druid" && characterInfo.subclass === "land";
+    if (isLandDruid) {
+      if (!characterInfo.druidLandType && landDruidTypeOptions.length > 0) {
+        setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
+      }
+      return;
+    }
+
+    if (characterInfo.druidLandType) {
+      setCharacterInfo((prev) => ({ ...prev, druidLandType: "" }));
+    }
+  }, [characterInfo.characterClass, characterInfo.subclass, characterInfo.druidLandType, landDruidTypeOptions, setCharacterInfo]);
 
   useEffect(() => {
     const allowedSubraces = Subraces?.[characterInfo.race] || [];
@@ -170,8 +189,8 @@ export const CharacterCreationForm = (props) => {
   //easier to use logic/for loop, or to create this datastructure?
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+	  const handleChange = (event) => {
+	    const { name, value } = event.target;
 
     setCharacterInfo((prev) => {
       const next = { ...prev, [name]: value };
@@ -182,13 +201,18 @@ export const CharacterCreationForm = (props) => {
         next.halfElfVersatility = "";
       }
 
-      if (name === "characterClass") {
-        next.subclass = NO_SUBCLASS;
-      }
+	      if (name === "characterClass") {
+	        next.subclass = NO_SUBCLASS;
+	      }
 
-      return next;
-    });
-  };
+	      if (name === "subclass") {
+	        // Subclass-specific options reset when swapping subclasses.
+	        next.druidLandType = "";
+	      }
+
+	      return next;
+	    });
+	  };
 
   const handleContinue = () => {
     const missingAny = isMissingRace || isMissingSubrace || isMissingClass || isMissingSubclass;
@@ -386,9 +410,9 @@ export const CharacterCreationForm = (props) => {
           </Box>
         ) : null}
 
-        {characterInfo.race === "Half Elf" &&
-        characterInfo.subrace === "Standard Half Elf" &&
-        halfElfVersatilityOptions.length > 0 ? (
+	        {characterInfo.race === "Half Elf" &&
+	        characterInfo.subrace === "Standard Half Elf" &&
+	        halfElfVersatilityOptions.length > 0 ? (
           <Box sx={{ mt: 1 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="half-elf-versatility-select-label">Half-Elf Versatility</InputLabel>
@@ -408,8 +432,30 @@ export const CharacterCreationForm = (props) => {
               </Select>
             </FormControl>
           </Box>
-        ) : null}
-      </Box>
+	        ) : null}
+
+	        {characterInfo.characterClass === "druid" && characterInfo.subclass === "land" ? (
+	          <Box sx={{ mt: 1 }}>
+	            <FormControl fullWidth size="small">
+	              <InputLabel id="druid-land-type-select-label">Land Type</InputLabel>
+	              <Select
+	                labelId="druid-land-type-select-label"
+	                id="druid-land-type-select"
+	                value={characterInfo.druidLandType || ""}
+	                label="Land Type"
+	                name="druidLandType"
+	                onChange={handleChange}
+	              >
+	                {landDruidTypeOptions.map((landType) => (
+	                  <MenuItem key={landType} value={landType}>
+	                    {capitalize(landType)}
+	                  </MenuItem>
+	                ))}
+	              </Select>
+	            </FormControl>
+	          </Box>
+	        ) : null}
+	      </Box>
 
       {renderWizardSpellCountMod()}
 

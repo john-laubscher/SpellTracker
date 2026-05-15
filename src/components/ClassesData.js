@@ -1571,29 +1571,30 @@ export const ClassesData = {
           },
         ],
       },
-      land: {
-        features: [
-          {
-            id: "bonus_cantrip",
-            name: "Bonus Cantrip",
-            desc: "When you choose this circle at 2nd level, you learn one additional druid cantrip of your choice.",
-            level: 2,
-            tracked: false, 
-          },
-          {
-            id: "natural_recovery",
-            name: "Natural Recovery",
-            desc: "Starting at 2nd level, you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. Once you use this feature, you can't use it again until you finish a long rest.",
-            level: 2,
-            tracked: true, // 1/LR
-          },
-          {
-            id: "land_circle_spells",
-            name: "Land Circle Spells",
-            desc: "Your mystical connection to the land infuses you with the ability to cast certain spells. You gain access to a specific set of spells based on the land type you choose at 3rd level.",
-            level: 3,
-            tracked: false,
-          },
+	      land: {
+	        features: [
+	          {
+	            id: "bonus_cantrip",
+	            name: "Bonus Cantrip",
+	            desc: "When you choose this circle at 2nd level, you learn one additional druid cantrip of your choice.",
+	            level: 2,
+	            tracked: false, 
+	          },
+	          {
+	            id: "natural_recovery",
+	            name: "Natural Recovery",
+	            desc: "Starting at 2nd level, you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. Once you use this feature, you can't use it again until you finish a long rest.",
+	            level: 2,
+	            tracked: true, // 1/LR
+	            recharge: "lr",
+	          },
+	          {
+	            id: "land_circle_spells",
+	            name: "Land Circle Spells",
+	            desc: "Your mystical connection to the land infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+	            level: 3,
+	            tracked: false,
+	          },
           {
             id: "land_strides",
             name: "Land's Stride",
