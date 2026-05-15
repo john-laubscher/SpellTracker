@@ -24,6 +24,7 @@ yarn-error.log*
 
 # codex / local dev artifacts
 /.codex-artifacts
+/.codex-logs
 /_devlogs
 
 # local backend data (contains credentials/spells for dev)
