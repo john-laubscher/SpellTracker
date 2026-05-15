@@ -1398,9 +1398,11 @@ export const ClassesData = {
           {
             id: "eyes_of_night",
             name: "Eyes of Night",
-            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. You can see in dim light as if it were bright light, and in darkness as if it were dim light. As an action, you can share this darkvision with willing creatures within 10 feet of you, up to a number of creatures equal to your proficiency bonus. The shared darkvision lasts for 1 hour. Once you use this action, you canâ€™t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to use it again.",
+            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. In that radius, you can see in dim light as if it were bright light and in darkness as if it were dim light.\nAs an action, you can magically share the darkvision of this feature with willing creatures you can see within 10 feet of you, up to a number of creatures equal to your Wisdom modifier (minimum of one creature). The shared darkvision lasts for 1 hour. Once you share it, you can't do so again until you finish a long rest, unless you expend a spell slot of any level to share it again.",
             level: 1,
-            tracked: true, // 1/LR, also spend a spell slot 
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "vigilant_blessing",
@@ -1421,7 +1423,9 @@ export const ClassesData = {
             name: "Steps of Night",
             desc: "Starting at 6th level, you can draw on the mystical power of night to rise into the air. As a bonus action when you are in dim light or darkness, you can magically give yourself a flying speed equal to your walking speed for 1 minute. You can use this bonus action a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 6,
-            tracked: true, // Uses = Proficiency Bonus, regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "divine_strike",
@@ -1439,11 +1443,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["faerie_fire", "sleep"] },
-          { level: 3, spells: ["moonbeam", "see_invisibility"] },
-          { level: 5, spells: ["aura_of_vitality", "leomunds_tiny_hut"] },
-          { level: 7, spells: ["aura_of_life", "greater_invisibility"] },
-          { level: 9, spells: ["circle_of_power", "mislead"] },
+          { level: 1, spells: ["faerie-fire", "sleep"] },
+          { level: 3, spells: ["moonbeam", "see-invisibility"] },
+          { level: 5, spells: ["aura-of-vitality", "leomunds-tiny-hut"] },
+          { level: 7, spells: ["aura-of-life", "greater-invisibility"] },
+          { level: 9, spells: ["circle-of-power", "mislead"] },
         ],
       },
       war: {
