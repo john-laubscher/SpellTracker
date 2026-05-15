@@ -1107,7 +1107,7 @@ export const ClassesData = {
           {
             id: "bonus_cantrip",
             name: "Bonus Cantrip",
-            desc: "When you choose this domain at 1st level, you gain the light cantrip if you don't already know it.",
+            desc: "When you choose this domain at 1st level, you gain the Light cantrip if you don't already know it. This cantrip doesn't count against the number of cleric cantrips you know.",
             level: 1,
             tracked: false,
           },
@@ -1117,6 +1117,8 @@ export const ClassesData = {
             desc: "Also at 1st level, you can interpose divine light between yourself and an attacking enemy. When you are attacked by a creature within 30 feet of you that you can see, you can use your reaction to impose disadvantage on the attack roll, causing light to flare before the attacker before it hits or misses. An attacker that can't be blinded is immune to this feature. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
             level: 1,
             tracked: true, // Uses per Long Rest
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "channel_divinity_radiance_of_the_dawn",
@@ -1128,7 +1130,7 @@ export const ClassesData = {
           {
             id: "improved_flare",
             name: "Improved Flare",
-            desc: "Starting at 6th level, you can use your Warding Flare feature to protect other creatures. When a creature you can see within 30 feet of you is attacked, you can use your reaction to impose disadvantage on the attack roll. You must use this feature before knowing whether the attack hits or misses.",
+            desc: "Starting at 6th level, you can also use your Warding Flare feature when a creature that you can see within 30 feet of you attacks a creature other than you.",
             level: 6,
             tracked: false, // Same pool as Warding Flare
           },
@@ -1148,11 +1150,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["burning_hands", "faerie_fire"] },
-          { level: 3, spells: ["flaming_sphere", "scorching_ray"] },
+          { level: 1, spells: ["burning-hands", "faerie-fire"] },
+          { level: 3, spells: ["flaming-sphere", "scorching-ray"] },
           { level: 5, spells: ["daylight", "fireball"] },
-          { level: 7, spells: ["guardian_of_faith", "wall_of_fire"] },
-          { level: 9, spells: ["flame_strike", "scrying"] },
+          { level: 7, spells: ["guardian-of-faith", "wall-of-fire"] },
+          { level: 9, spells: ["flame-strike", "scrying"] },
         ],
       },
       nature: {
