@@ -1506,23 +1506,32 @@ export const ClassesData = {
       {
         id: "wild_shape",
         name: "Wild Shape",
-        desc: "Starting at 2nd level, you can use your action to magically assume the shape of a beast that you have seen before. You can use this feature twice, and regain expended uses when you finish a short or long rest. Your druid level determines the beasts you can transform into.",
+        desc: "Starting at 2nd level, you can use your action to magically assume the shape of a beast that you have seen before. You can use this feature twice, and you regain expended uses when you finish a short or long rest. Your druid level determines what beasts you can transform into.",
         level: 2,
-        tracked: 2, // 2/SR
+        tracked: true,
+        uses: 2,
+        recharge: "sr_or_lr",
+      },
+      {
+        id: "timeless_body",
+        name: "Timeless Body",
+        desc: "Starting at 18th level, the primal magic you wield causes you to age more slowly. For every 10 years that pass, your body ages only 1 year.",
+        level: 18,
+        tracked: false,
       },
       {
         id: "beast_spells",
         name: "Beast Spells",
-        desc: "Starting at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you arenâ€™t able to provide material components.",
+        desc: "Beginning at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you aren't able to provide material components.",
         level: 18,
-        tracked: false, 
+        tracked: false,
       },
       {
         id: "archdruid",
         name: "Archdruid",
-        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and arenâ€™t consumed by a spell.",
+        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you can ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and aren't consumed by a spell (in both your normal shape and your beast shape).",
         level: 20,
-        tracked: false, 
+        tracked: false,
       },
     ],
     subclasses: {
