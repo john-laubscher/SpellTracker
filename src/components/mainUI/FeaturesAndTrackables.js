@@ -33,6 +33,7 @@ import SpiritSessionModal from "./SpiritSessionModal";
 import ArcanaInitiateModal from "./ArcanaInitiateModal";
 import ArcaneMasteryModal from "./ArcaneMasteryModal";
 import ReaperCantripModal from "./ReaperCantripModal";
+import AcolyteOfNatureModal from "./AcolyteOfNatureModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -583,6 +584,7 @@ const FeaturesAndTrackables = () => {
   const [arcanaInitiateModalOpen, setArcanaInitiateModalOpen] = React.useState(false);
   const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
+  const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
 
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
@@ -626,6 +628,13 @@ const FeaturesAndTrackables = () => {
     Number(characterLevel || 0) >= 1;
 
   const reaperCantripCount = characterInfo?.reaperCantrip?.index ? 1 : 0;
+
+  const hasAcolyteOfNature =
+    characterClass === "cleric" &&
+    subclass === "nature" &&
+    Number(characterLevel || 0) >= 1;
+
+  const acolyteOfNatureCantripCount = characterInfo?.acolyteOfNatureCantrip?.index ? 1 : 0;
 
   // Retrieve class data
   const classData = React.useMemo(() => classesData[characterClass] || {}, [characterClass]);
@@ -1004,6 +1013,37 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
+                if (hasAcolyteOfNature && feature?.id === "acolyte_of_nature") {
+                  const isOver = acolyteOfNatureCantripCount > 1;
+                  const isUnder = acolyteOfNatureCantripCount < 1;
+
+                  return (
+                    <Tooltip arrow title={`Choose Acolyte of Nature cantrip (${acolyteOfNatureCantripCount}/1)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Acolyte of Nature cantrip"
+                        onClick={() => setAcolyteOfNatureModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasArcanaInitiate && feature?.id === "arcane_initiate") {
                   const isOver = arcanaInitiateCount > 2;
                   const isUnder = arcanaInitiateCount < 2;
@@ -1179,6 +1219,11 @@ const FeaturesAndTrackables = () => {
       <ReaperCantripModal
         open={reaperCantripModalOpen}
         onClose={() => setReaperCantripModalOpen(false)}
+      />
+
+      <AcolyteOfNatureModal
+        open={acolyteOfNatureModalOpen}
+        onClose={() => setAcolyteOfNatureModalOpen(false)}
       />
 
       <ArcaneMasteryModal

@@ -80,6 +80,19 @@ const loadReaperCantripFromStorage = () => {
   }
 };
 
+const loadAcolyteOfNatureCantripFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_acolyteOfNatureCantrip");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.index || !parsed.name) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const loadDomainSpellSwapsFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_domainSpellSwaps");
@@ -113,6 +126,7 @@ function App() {
     const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
     const persistedArcaneMastery = loadArcaneMasteryFromStorage();
     const persistedReaperCantrip = loadReaperCantripFromStorage();
+    const persistedAcolyteOfNatureCantrip = loadAcolyteOfNatureCantripFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     return {
       characterName: "Garetjax",
@@ -163,6 +177,7 @@ function App() {
       arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
       arcaneMasterySpells: Array.isArray(persistedArcaneMastery) ? persistedArcaneMastery : [],
       reaperCantrip: persistedReaperCantrip || null,
+      acolyteOfNatureCantrip: persistedAcolyteOfNatureCantrip || null,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
     };
   });
@@ -263,6 +278,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.reaperCantrip]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_acolyteOfNatureCantrip",
+        JSON.stringify(characterInfo.acolyteOfNatureCantrip || null)
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.acolyteOfNatureCantrip]);
 
   useEffect(() => {
     try {

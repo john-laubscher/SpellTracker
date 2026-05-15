@@ -23,6 +23,7 @@ import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
 import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripButton";
 import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
+import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
 
 const spellLevelColors = {
@@ -134,8 +135,27 @@ const LIGHT_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["flame-strike", "scrying"] },
 ];
 
+const NATURE_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["animal-friendship", "speak-with-animals"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["barkskin", "spike-growth"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["plant-growth", "wind-wall"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["dominate-beast", "grasping-vine"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["insect-plague", "tree-stride"] },
+];
+
+const ORDER_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["command", "heroism"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["hold-person", "zone-of-truth"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["mass-healing-word", "slow"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["compulsion", "locate-creature"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["commune", "dominate-person"] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
+
+const ACOLYTE_OF_NATURE_CANTRIP_TOOLTIP =
+  "Acolyte of Nature cantrip (counts as a cleric cantrip; does not count toward cantrips known).";
 
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
@@ -189,6 +209,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "light" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
+  const hasAcolyteOfNature =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "nature" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -198,6 +223,7 @@ export const SpellList = (props) => {
     : [];
 
   const reaperCantrip = characterInfo?.reaperCantrip || null;
+  const acolyteOfNatureCantrip = characterInfo?.acolyteOfNatureCantrip || null;
   const domainSpellSwaps = characterInfo?.domainSpellSwaps || {};
   const currentDomainKey = `${String(characterInfo?.characterClass || "")}:${String(characterInfo?.subclass || "")}`;
 
@@ -208,6 +234,8 @@ export const SpellList = (props) => {
   const [knowledgeDomainSpellsByLevel, setKnowledgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [lifeDomainSpellsByLevel, setLifeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [lightDomainSpellsByLevel, setLightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [natureDomainSpellsByLevel, setNatureDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [orderDomainSpellsByLevel, setOrderDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -919,6 +947,142 @@ export const SpellList = (props) => {
     };
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
 
+  useEffect(() => {
+    const isNatureCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "nature";
+    if (!isNatureCleric) {
+      setNatureDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = NATURE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setNatureDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setNatureDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setNatureDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isOrderCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "order";
+    if (!isOrderCleric) {
+      setOrderDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = ORDER_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setOrderDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setOrderDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setOrderDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
       ...spells,
@@ -1141,14 +1305,15 @@ export const SpellList = (props) => {
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
              )}
           </Box>
-          {renderMagicalSecretsForLevel(numericalSpellLevel)}
-          {renderSpiritSessionForLevel(numericalSpellLevel)}
-          {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
-          {renderReaperCantripForLevel(numericalSpellLevel)}
-          {renderDomainSpellsForLevel(numericalSpellLevel)}
-          {renderPreparedSpells(numericalSpellLevel)}
-          <Box sx={{ mt: 0.5 }}>
-            {renderSpellModal(numericalSpellLevel)}
+           {renderMagicalSecretsForLevel(numericalSpellLevel)}
+           {renderSpiritSessionForLevel(numericalSpellLevel)}
+           {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
+           {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
+           {renderReaperCantripForLevel(numericalSpellLevel)}
+           {renderDomainSpellsForLevel(numericalSpellLevel)}
+           {renderPreparedSpells(numericalSpellLevel)}
+           <Box sx={{ mt: 0.5 }}>
+             {renderSpellModal(numericalSpellLevel)}
           </Box>
         </Box>
       );
@@ -1390,6 +1555,42 @@ export const SpellList = (props) => {
     );
   };
 
+  const renderAcolyteOfNatureCantripForLevel = (numericalSpellLevel) => {
+    if (!hasAcolyteOfNature) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+    if (!acolyteOfNatureCantrip?.index) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        <Box sx={{ py: 0.2 }}>
+          <SpellAccordian
+            numericalSpellLevel={0}
+            spell={acolyteOfNatureCantrip}
+            leadingControl={
+              <Tooltip arrow title={ACOLYTE_OF_NATURE_CANTRIP_TOOLTIP}>
+                <Chip
+                  size="small"
+                  label="AoN"
+                  sx={{
+                    height: 18,
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    opacity: 0.7,
+                    backgroundColor: "rgba(0,0,0,0.06)",
+                    color: "rgba(2, 132, 199, 0.95)",
+                    border: "1px solid rgba(2, 132, 199, 0.22)",
+                    "&:hover": { opacity: 0.85 },
+                  }}
+                />
+              </Tooltip>
+            }
+            actionButton={<PrepareAcolyteOfNatureCantripButton spell={acolyteOfNatureCantrip} index={0} />}
+          />
+        </Box>
+      </Box>
+    );
+  };
+
   const renderReaperCantripForLevel = (numericalSpellLevel) => {
     if (!hasReaper) return null;
     if (Number(numericalSpellLevel) !== 0) return null;
@@ -1455,6 +1656,14 @@ export const SpellList = (props) => {
       ? lightDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
+    const natureAtLevel = Array.isArray(natureDomainSpellsByLevel?.[numericalSpellLevel])
+      ? natureDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const orderAtLevel = Array.isArray(orderDomainSpellsByLevel?.[numericalSpellLevel])
+      ? orderDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
     const domainAtLevel = [
       ...arcanaAtLevel,
       ...deathAtLevel,
@@ -1463,6 +1672,8 @@ export const SpellList = (props) => {
       ...knowledgeAtLevel,
       ...lifeAtLevel,
       ...lightAtLevel,
+      ...natureAtLevel,
+      ...orderAtLevel,
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
