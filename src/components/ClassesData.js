@@ -1359,7 +1359,7 @@ export const ClassesData = {
           {
             id: "channel_divinity_invoke_duplicity",
             name: "Channel Divinity: Invoke Duplicity",
-            desc: "Starting at 2nd level, you can use your Channel Divinity to create a perfect illusion of yourself. As an action, you create an illusory duplicate of yourself that lasts for 1 minute. The duplicate appears in an unoccupied space you can see within 30 feet of you. As a bonus action on your turn, you can move the illusion up to 30 feet to a space you can see. You can cast spells as though you were in the illusion's space, but you must use your own senses. Additionally, when both you and your illusion are within 5 feet of a creature that can see the illusion, you have advantage on attack rolls against that creature.",
+            desc: "Starting at 2nd level, you can use your Channel Divinity to create an illusory duplicate of yourself.\nAs an action, you create a perfect illusion of yourself that lasts for 1 minute, or until you lose your concentration (as if you were concentrating on a spell). The illusion appears in an unoccupied space that you can see within 30 feet of you. As a bonus action on your turn, you can move the illusion up to 30 feet to a space you can see, but it must remain within 120 feet of you.\nFor the duration, you can cast spells as though you were in the illusion's space, but you must use your own senses. Additionally, when both you and your illusion are within 5 feet of a creature that can see the illusion, you have advantage on attack rolls against that creature, given how distracting the illusion is to the target.",
             level: 2,
             tracked: false, // Channel Divinity use
           },
@@ -1380,17 +1380,17 @@ export const ClassesData = {
           {
             id: "improved_duplicity",
             name: "Improved Duplicity",
-            desc: "At 17th level, your Invoke Duplicity creates up to four duplicates of yourself, instead of one. As a bonus action on your turn, you can move any number of them up to 30 feet to a space you can see. You can cast spells as though you were in any of the duplicatesâ€™ spaces, but you must use your own senses.",
+            desc: "At 17th level, you can create up to four duplicates of yourself, instead of one, when you use Invoke Duplicity. As a bonus action on your turn, you can move any number of them up to 30 feet, to a maximum range of 120 feet.",
             level: 17,
             tracked: false,
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["charm_person", "disguise_self"] },
-          { level: 3, spells: ["mirror_image", "pass_without_trace"] },
-          { level: 5, spells: ["blink", "dispel_magic"] },
-          { level: 7, spells: ["dimension_door", "polymorph"] },
-          { level: 9, spells: ["dominate_person", "modify_memory"] },
+          { level: 1, spells: ["charm-person", "disguise-self"] },
+          { level: 3, spells: ["mirror-image", "pass-without-trace"] },
+          { level: 5, spells: ["blink", "dispel-magic"] },
+          { level: 7, spells: ["dimension-door", "polymorph"] },
+          { level: 9, spells: ["dominate-person", "modify-memory"] },
         ],
       },
       twilight: {
