@@ -1061,14 +1061,14 @@ export const ClassesData = {
           {
             id: "disciple_of_life",
             name: "Disciple of Life",
-            desc: "Also starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level.",
+            desc: "Starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level.",
             level: 1,
             tracked: false,
           },
           {
             id: "channel_divinity_preserve_life",
             name: "Channel Divinity: Preserve Life",
-            desc: "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You canâ€™t use this feature on an undead or a construct.",
+            desc: "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct.",
             level: 2,
             tracked: false, // Channel Divinity use
           },
@@ -1095,11 +1095,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["bless", "cure_wounds"] },
-          { level: 3, spells: ["lesser_restoration", "spiritual_weapon"] },
-          { level: 5, spells: ["beacon_of_hope", "revivify"] },
-          { level: 7, spells: ["death_ward", "guardian_of_faith"] },
-          { level: 9, spells: ["mass_cure_wounds", "raise_dead"] },
+          { level: 1, spells: ["bless", "cure-wounds"] },
+          { level: 3, spells: ["lesser-restoration", "spiritual-weapon"] },
+          { level: 5, spells: ["beacon-of-hope", "revivify"] },
+          { level: 7, spells: ["death-ward", "guardian-of-faith"] },
+          { level: 9, spells: ["mass-cure-wounds", "raise-dead"] },
         ],
       },
       light: {

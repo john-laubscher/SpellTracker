@@ -118,6 +118,14 @@ const KNOWLEDGE_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["legend-lore", "scrying"] },
 ];
 
+const LIFE_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["bless", "cure-wounds"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["lesser-restoration", "spiritual-weapon"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["beacon-of-hope", "revivify"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["death-ward", "guardian-of-faith"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["mass-cure-wounds", "raise-dead"] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -185,6 +193,7 @@ export const SpellList = (props) => {
   const [forgeDomainSpellsByLevel, setForgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [graveDomainSpellsByLevel, setGraveDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [knowledgeDomainSpellsByLevel, setKnowledgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [lifeDomainSpellsByLevel, setLifeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -695,6 +704,75 @@ export const SpellList = (props) => {
     };
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
 
+  useEffect(() => {
+    const isLifeCleric =
+      characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "life";
+    if (!isLifeCleric) {
+      setLifeDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = LIFE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setLifeDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setLifeDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setLifeDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
       ...spells,
@@ -1191,7 +1269,18 @@ export const SpellList = (props) => {
       ? knowledgeDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
-    const domainAtLevel = [...arcanaAtLevel, ...deathAtLevel, ...forgeAtLevel, ...graveAtLevel, ...knowledgeAtLevel];
+    const lifeAtLevel = Array.isArray(lifeDomainSpellsByLevel?.[numericalSpellLevel])
+      ? lifeDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const domainAtLevel = [
+      ...arcanaAtLevel,
+      ...deathAtLevel,
+      ...forgeAtLevel,
+      ...graveAtLevel,
+      ...knowledgeAtLevel,
+      ...lifeAtLevel,
+    ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
       const originalIndex = String(original?.index || "");
