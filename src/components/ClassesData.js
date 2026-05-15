@@ -1208,23 +1208,25 @@ export const ClassesData = {
           {
             id: "voice_of_authority",
             name: "Voice of Authority",
-            desc: "Starting at 1st level, you can invoke the power of law to embolden an ally to attack. If you cast a spell with a spell slot of 1st level or higher and target an ally with the spell, that ally can use their reaction immediately after the spell to make one weapon attack against a creature of your choice that you can see.",
+            desc: "Starting at 1st level, when you cast a 1st-level-or-higher spell using a spell slot and it targets an ally, you can let one affected ally use its reaction immediately after the spell to make one weapon attack against a creature you can see. If the spell targets more than one ally, you choose which ally makes the attack.",
             level: 1,
             tracked: false,
           },
           {
             id: "channel_divinity_order_demand",
             name: "Channel Divinity: Order's Demand",
-            desc: "Starting at 2nd level, you can use your Channel Divinity to compel creatures to follow your commands. As an action, you present your holy symbol, and each creature of your choice that can see or hear you within 30 feet of you must succeed on a Wisdom saving throw or be charmed by you until the end of your next turn or until the charmed creature takes damage. You can also cause any of the charmed creatures to drop what they are holding when they fail the saving throw.",
+            desc: "Starting at 2nd level, you can use your Channel Divinity to project an intimidating presence. As an action, present your holy symbol; each creature of your choice within 30 feet that can see or hear you must succeed on a Wisdom saving throw or be charmed by you until the end of your next turn (or until it takes damage). On a failed save, you can also cause it to drop what it is holding.",
             level: 2,
             tracked: false, // Channel Divinity use
           },
           {
             id: "embodiment_of_law",
             name: "Embodiment of the Law",
-            desc: "At 6th level, you become extraordinarily adept at channeling magical energy to compel others. If you cast a spell of the enchantment school using a spell slot of 1st level or higher, you can change the casting time to 1 bonus action for this casting, provided the spellâ€™s casting time is normally 1 action.",
+            desc: "At 6th level, when you cast a 1st-level-or-higher enchantment spell using a spell slot, you can change its casting time to 1 bonus action for that casting (as long as its normal casting time is 1 action). You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
             level: 6,
-            tracked: true,  //wis mod (min 1)
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "divine_strike",
@@ -1236,17 +1238,17 @@ export const ClassesData = {
           {
             id: "order_s_wrath",
             name: "Order's Wrath",
-            desc: "Starting at 17th level, enemies you designate for divine punishment wilt under the weight of the law. If you deal your Divine Strike damage to a creature on your turn, you can curse the creature until the start of your next turn. The next time one of your allies hits the cursed creature with an attack, the target also takes 2d8 psychic damage, and the curse ends.",
+            desc: "Starting at 17th level, when you deal your Divine Strike damage to a creature on your turn, you can curse it until the start of your next turn. The next time one of your allies hits the cursed creature with an attack, the target takes an extra 2d8 psychic damage and the curse ends (once per turn).",
             level: 17,
             tracked: false,
           },
         ],
         subclassSpells: [
           { level: 1, spells: ["command", "heroism"] },
-          { level: 3, spells: ["hold_person", "zone_of_truth"] },
-          { level: 5, spells: ["mass_healing_word", "slow"] },
-          { level: 7, spells: ["compulsion", "locate_creature"] },
-          { level: 9, spells: ["commune", "dominate_person"] },
+          { level: 3, spells: ["hold-person", "zone-of-truth"] },
+          { level: 5, spells: ["mass-healing-word", "slow"] },
+          { level: 7, spells: ["compulsion", "locate-creature"] },
+          { level: 9, spells: ["commune", "dominate-person"] },
         ],
       },
       peace: {
