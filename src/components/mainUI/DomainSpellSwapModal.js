@@ -24,13 +24,20 @@ const normalizeCompareName = (s) =>
     .trim()
     .replace(/\s+/g, " ");
 
-const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, originalSpell }) => {
+const DomainSpellSwapModal = ({
+  open,
+  onClose,
+  numericalSpellLevel,
+  domainKey,
+  originalSpell,
+  spellClassKey = "cleric",
+}) => {
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const [search, setSearch] = React.useState("");
-  const [clericSpells, setClericSpells] = React.useState([]);
+  const [classSpells, setClassSpells] = React.useState([]);
   const [customSpells, setCustomSpells] = React.useState([]);
   const [loadStatus, setLoadStatus] = React.useState({ loading: false, error: "" });
 
@@ -41,7 +48,7 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
   useEffect(() => {
     if (!open) return;
     setSearch("");
-    setClericSpells([]);
+    setClassSpells([]);
     setCustomSpells([]);
     setLoadStatus({ loading: false, error: "" });
   }, [open]);
@@ -50,24 +57,25 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
     if (!open) return;
     if (!Number.isFinite(Number(numericalSpellLevel))) return;
     if (loadStatus.loading) return;
-    if (clericSpells.length > 0) return;
+    if (classSpells.length > 0) return;
+    if (!spellClassKey) return;
 
     setLoadStatus({ loading: true, error: "" });
     axios
-      .get(`/allspells/${numericalSpellLevel}/cleric`)
+      .get(`/allspells/${numericalSpellLevel}/${spellClassKey}`)
       .then((res) => {
         const fetched = res.data?.results || [];
-        setClericSpells(fetched);
+        setClassSpells(fetched);
         setLoadStatus({ loading: false, error: "" });
       })
       .catch(() => {
         setLoadStatus({
           loading: false,
-          error: "Failed to load cleric spells. Is the backend running on port 3001?",
+          error: `Failed to load ${spellClassKey} spells. Is the backend running on port 3001?`,
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, numericalSpellLevel]);
+  }, [open, numericalSpellLevel, spellClassKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,7 +95,7 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
 
   const filtered = useMemo(() => {
     const normalizedSearch = String(search || "").trim().toLowerCase();
-    const combined = [...(clericSpells || []), ...(customSpells || [])];
+    const combined = [...(classSpells || []), ...(customSpells || [])];
 
     const seen = new Set();
     const unique = combined.filter((s) => {
@@ -102,7 +110,7 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
       const name = String(s?.name || "");
       return name.toLowerCase().includes(normalizedSearch) || normalizeCompareName(name).includes(normalizedSearch);
     });
-  }, [clericSpells, customSpells, search]);
+  }, [classSpells, customSpells, search]);
 
   const setSwap = (spell) => {
     if (!originalIndex || !spell?.index) return;
@@ -163,7 +171,7 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
       <DialogContent dividers>
         <Typography sx={{ fontSize: "13px", color: "#3e2723", mb: 1 }}>
           Swapping <strong>{originalSpell?.name || "Domain spell"}</strong> (level {numericalSpellLevel}) for another{" "}
-          <strong>cleric</strong> spell (or a <strong>custom</strong> spell).
+          <strong>{spellClassKey}</strong> spell (or a <strong>custom</strong> spell).
         </Typography>
 
         {currentSwap?.index ? (
@@ -199,7 +207,7 @@ const DomainSpellSwapModal = ({ open, onClose, numericalSpellLevel, domainKey, o
 
         {loadStatus.loading ? (
           <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
-            Loading cleric spells…
+            Loading spells…
           </Typography>
         ) : null}
         {loadStatus.error ? (

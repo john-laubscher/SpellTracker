@@ -191,6 +191,57 @@ const TWILIGHT_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["circle-of-power", "mislead"] },
 ];
 
+const LAND_CIRCLE_SPELLS_BY_TERRAIN = {
+  arctic: [
+    { druidLevel: 3, spellLevel: 2, spells: ["hold-person", "spike-growth"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["sleet-storm", "slow"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["freedom-of-movement", "ice-storm"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["commune-with-nature", "cone-of-cold"] },
+  ],
+  coast: [
+    { druidLevel: 3, spellLevel: 2, spells: ["mirror-image", "misty-step"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["water-breathing", "water-walk"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["control-water", "freedom-of-movement"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["conjure-elemental", "scrying"] },
+  ],
+  desert: [
+    { druidLevel: 3, spellLevel: 2, spells: ["blur", "silence"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["create-food-and-water", "protection-from-energy"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["blight", "hallucinatory-terrain"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["insect-plague", "wall-of-stone"] },
+  ],
+  forest: [
+    { druidLevel: 3, spellLevel: 2, spells: ["barkskin", "spider-climb"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["call-lightning", "plant-growth"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["divination", "freedom-of-movement"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["commune-with-nature", "tree-stride"] },
+  ],
+  grassland: [
+    { druidLevel: 3, spellLevel: 2, spells: ["invisibility", "pass-without-trace"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["daylight", "haste"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["divination", "freedom-of-movement"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["dream", "insect-plague"] },
+  ],
+  mountain: [
+    { druidLevel: 3, spellLevel: 2, spells: ["spider-climb", "spike-growth"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["lightning-bolt", "meld-into-stone"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["stone-shape", "stoneskin"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["passwall", "wall-of-stone"] },
+  ],
+  swamp: [
+    { druidLevel: 3, spellLevel: 2, spells: ["darkness", "acid-arrow"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["water-walk", "stinking-cloud"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["freedom-of-movement", "locate-creature"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["insect-plague", "scrying"] },
+  ],
+  underdark: [
+    { druidLevel: 3, spellLevel: 2, spells: ["spider-climb", "web"] },
+    { druidLevel: 5, spellLevel: 3, spells: ["gaseous-form", "stinking-cloud"] },
+    { druidLevel: 7, spellLevel: 4, spells: ["greater-invisibility", "stone-shape"] },
+    { druidLevel: 9, spellLevel: 5, spells: ["cloudkill", "insect-plague"] },
+  ],
+};
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -265,7 +316,16 @@ export const SpellList = (props) => {
   const reaperCantrip = characterInfo?.reaperCantrip || null;
   const acolyteOfNatureCantrip = characterInfo?.acolyteOfNatureCantrip || null;
   const domainSpellSwaps = characterInfo?.domainSpellSwaps || {};
-  const currentDomainKey = `${String(characterInfo?.characterClass || "")}:${String(characterInfo?.subclass || "")}`;
+  const currentDomainKey = React.useMemo(() => {
+    const cls = String(characterInfo?.characterClass || "");
+    const sub = String(characterInfo?.subclass || "");
+    const base = `${cls}:${sub}`;
+    if (cls === "druid" && sub === "land") {
+      const terrain = String(characterInfo?.druidLandType || "").trim() || "arctic";
+      return `${base}:${terrain}`;
+    }
+    return base;
+  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.druidLandType]);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -279,6 +339,7 @@ export const SpellList = (props) => {
   const [peaceDomainSpellsByLevel, setPeaceDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [tempestDomainSpellsByLevel, setTempestDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [trickeryDomainSpellsByLevel, setTrickeryDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [landCircleSpellsByLevel, setLandCircleSpellsByLevel] = React.useState(() => emptyByLevel());
   const [twilightDomainSpellsByLevel, setTwilightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
@@ -574,6 +635,92 @@ export const SpellList = (props) => {
       cancelled = true;
     };
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isLandDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "land";
+    if (!isLandDruid) {
+      setLandCircleSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const terrainKey = (String(characterInfo?.druidLandType || "").trim() || "arctic").toLowerCase();
+    const rows = Array.isArray(LAND_CIRCLE_SPELLS_BY_TERRAIN?.[terrainKey])
+      ? LAND_CIRCLE_SPELLS_BY_TERRAIN[terrainKey]
+      : [];
+
+    const druidLevel = (() => {
+      const raw = characterInfo?.classLevels?.druid;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "druid") return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const active = rows.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
+    if (active.length === 0) {
+      setLandCircleSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setLandCircleSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setLandCircleSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.druid,
+    characterInfo?.druidLandType,
+  ]);
 
   useEffect(() => {
     const isDeathCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "death";
@@ -1990,6 +2137,14 @@ export const SpellList = (props) => {
       ? twilightDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
+    const landCircleAtLevelRaw = Array.isArray(landCircleSpellsByLevel?.[numericalSpellLevel])
+      ? landCircleSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const landCircleAtLevel = landCircleAtLevelRaw.map((s) => ({
+      ...(s || {}),
+      spelltrackerAlwaysPreparedKind: "circle_spell",
+    }));
     const domainAtLevel = [
       ...arcanaAtLevel,
       ...deathAtLevel,
@@ -2004,6 +2159,7 @@ export const SpellList = (props) => {
       ...tempestAtLevel,
       ...trickeryAtLevel,
       ...twilightAtLevel,
+      ...landCircleAtLevel,
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
@@ -2039,16 +2195,26 @@ export const SpellList = (props) => {
 
     return (
       <Box sx={{ mb: 0.5 }}>
-        {uniqueDomain.map(({ original, spell }) => (
+        {uniqueDomain.map(({ original, spell }) => {
+          const kind =
+            String(original?.spelltrackerAlwaysPreparedKind || spell?.spelltrackerAlwaysPreparedKind || "") ||
+            "domain_spell";
+          const isCircleSpell = kind === "circle_spell";
+          const chipLabel = isCircleSpell ? "CS" : "DS";
+          const chipTooltip = isCircleSpell
+            ? "Circle Spell (always prepared; does not count toward prepared spells)."
+            : "Domain Spell (always prepared; does not count toward prepared spells).";
+
+          return (
           <Box key={`ds:${spell.index}`} sx={{ py: 0.2 }}>
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
               leadingControl={
-                <Tooltip arrow title="Domain Spell (always prepared; does not count toward prepared spells).">
+                <Tooltip arrow title={chipTooltip}>
                   <Chip
                     size="small"
-                    label="DS"
+                    label={chipLabel}
                     sx={{
                       height: 18,
                       fontSize: "11px",
@@ -2063,8 +2229,8 @@ export const SpellList = (props) => {
                 </Tooltip>
               }
               actionButton={
-                <Tooltip arrow title="Swap this domain spell (cleric/custom only).">
-                  <IconButton
+                <Tooltip arrow title="Swap this always-prepared spell (class/custom only).">
+	                  <IconButton
                     size="small"
                     aria-label="Swap domain spell"
                     onClick={() =>
@@ -2089,7 +2255,8 @@ export const SpellList = (props) => {
               }
             />
           </Box>
-        ))}
+          );
+        })}
 
         {uniqueMastery.map((spell) => (
           <Box key={`am:${spell.index}`} sx={{ py: 0.2 }}>
@@ -2147,15 +2314,16 @@ export const SpellList = (props) => {
       {renderPCSpells("ninth", 9)}
       {renderDailySpellsList(characterInfo, setCharacterInfo)}
 
-      <DomainSpellSwapModal
-        open={domainSwapModal.open}
-        numericalSpellLevel={domainSwapModal.spellLevel}
-        domainKey={domainSwapModal.domainKey || currentDomainKey}
-        originalSpell={domainSwapModal.originalSpell}
-        onClose={() =>
-          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
-        }
-      />
+	      <DomainSpellSwapModal
+	        open={domainSwapModal.open}
+	        numericalSpellLevel={domainSwapModal.spellLevel}
+	        domainKey={domainSwapModal.domainKey || currentDomainKey}
+	        originalSpell={domainSwapModal.originalSpell}
+	        spellClassKey={String(characterInfo?.characterClass || "cleric")}
+	        onClose={() =>
+	          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
+	        }
+	      />
     </Box>
   );
 };

@@ -13,6 +13,7 @@ import {
   Checkbox,
   FormControl,
   IconButton,
+  Menu,
   MenuItem,
   Select,
   Tooltip,
@@ -655,7 +656,7 @@ const FeatureDisplay = ({
 };
 
 const FeaturesAndTrackables = () => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
@@ -683,6 +684,32 @@ const FeaturesAndTrackables = () => {
   const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
+  const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
+
+  const landDruidTypeOptions = React.useMemo(
+    () => ["arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp", "underdark"],
+    []
+  );
+
+  React.useEffect(() => {
+    const isLandDruid = characterClass === "druid" && subclass === "land";
+    if (!isLandDruid) return;
+    if (characterInfo?.druidLandType) return;
+    if (landDruidTypeOptions.length === 0) return;
+
+    setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
+  }, [characterClass, subclass, characterInfo?.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+
+  const currentLandType = characterInfo?.druidLandType || landDruidTypeOptions[0] || "arctic";
+  const isLandTypeMenuOpen = Boolean(landTypeMenuAnchorEl);
+  const openLandTypeMenu = (e) => {
+    e?.stopPropagation?.();
+    setLandTypeMenuAnchorEl(e.currentTarget);
+  };
+  const closeLandTypeMenu = (e) => {
+    e?.stopPropagation?.();
+    setLandTypeMenuAnchorEl(null);
+  };
 
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
@@ -989,9 +1016,9 @@ const FeaturesAndTrackables = () => {
 
   return (
     <div>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <FeatureDisplay
+	        <Grid container spacing={2}>
+	          <Grid item xs={12} md={6}>
+	            <FeatureDisplay
               title="Class Features"
               addTooltip="Add custom Class Feature"
               onAdd={() => setAddModal({ open: true, kind: "class" })}
@@ -1054,7 +1081,7 @@ const FeaturesAndTrackables = () => {
                   </Tooltip>
                 );
               }}
-              renderUntrackedTrailingControls={(feature) => {
+		              renderUntrackedTrailingControls={(feature) => {
                 if (hasAdditionalMagicalSecrets && feature?.id === "additional_magical_secrets") {
                   const isOver = magicalSecretsCount > 2;
 
@@ -1174,7 +1201,7 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
-                if (hasArcaneMastery && feature?.id === "arcane_mastery") {
+		                if (hasArcaneMastery && feature?.id === "arcane_mastery") {
                   const isOver = arcaneMasteryCount > 4;
                   const isUnder = arcaneMasteryCount < 4;
 
@@ -1203,23 +1230,87 @@ const FeaturesAndTrackables = () => {
                       </IconButton>
                     </Tooltip>
                   );
-                }
+		                }
 
-                return null;
-              }}
-              proficiencyBonusValue={proficiencyBonusValue}
-              charismaModValue={charismaModValue}
+		                if (
+		                  characterClass === "druid" &&
+		                  subclass === "land" &&
+		                  feature?.id === "land_circle_spells"
+		                ) {
+		                  const label = String(currentLandType || "arctic");
+		                  const prettyLabel = label
+		                    .split("-")
+		                    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+		                    .join(" ");
+
+		                  return (
+		                    <Tooltip arrow title={`Land Type: ${prettyLabel} (click to change)`}>
+		                      <IconButton
+		                        size="small"
+		                        aria-label="Choose Land Type"
+		                        onClick={openLandTypeMenu}
+		                        sx={{
+		                          ml: 0.25,
+		                          p: 0.25,
+		                          color: "#5d4037",
+		                          border: "1px solid rgba(93, 64, 55, 0.25)",
+		                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+		                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+		                        }}
+		                      >
+		                        <MenuBookIcon fontSize="inherit" />
+		                      </IconButton>
+		                    </Tooltip>
+		                  );
+		                }
+
+			                return null;
+			              }}
+	              proficiencyBonusValue={proficiencyBonusValue}
+	              charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
           </Grid>
-        </Grid>
+	        </Grid>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <FeatureDisplay
+	        {characterClass === "druid" && subclass === "land" ? (
+	          <Menu
+	            anchorEl={landTypeMenuAnchorEl}
+	            open={isLandTypeMenuOpen}
+	            onClose={closeLandTypeMenu}
+	            onClick={(e) => e.stopPropagation()}
+	          >
+	            {landDruidTypeOptions.map((landType) => {
+	              const pretty = String(landType || "")
+	                .split("-")
+	                .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+	                .join(" ");
+	              const isSelected = String(currentLandType) === String(landType);
+
+	              return (
+	                <MenuItem
+	                  key={`land-druid:menu:${landType}`}
+	                  selected={isSelected}
+	                  onClick={(e) => {
+	                    e.stopPropagation();
+	                    const nextLand = String(landType || "");
+	                    setCharacterInfo((prev) => ({ ...prev, druidLandType: nextLand }));
+	                    closeLandTypeMenu(e);
+	                  }}
+	                >
+	                  {pretty}
+	                </MenuItem>
+	              );
+	            })}
+	          </Menu>
+	        ) : null}
+	
+	        <Grid container spacing={2}>
+	          <Grid item xs={12} md={4}>
+	            <FeatureDisplay
               title="Race Features"
               manageTooltip="Manage which race features are tracked"
               onManage={handleManageRaceFeatures}
