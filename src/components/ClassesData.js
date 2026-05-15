@@ -1540,30 +1540,38 @@ export const ClassesData = {
           {
             id: "balm_of_the_summer_court",
             name: "Balm of the Summer Court",
-            desc: "At 2nd level, you become imbued with the blessings of the Summer Court. You gain a pool of fey energy represented by a number of d6s equal to your druid level. As a bonus action, you can choose an ally you can see within 120 feet of you and spend a number of those dice equal to half your druid level or less. Roll the spent dice and add them together. The target regains a number of hit points equal to the total, and the target also gains 1 temporary hit point per die spent. You regain all expended dice when you finish a long rest.",
+            desc: "At 2nd level, you gain a pool of fey energy represented by a number of d6s equal to your druid level. As a bonus action, you can choose an ally you can see within 120 feet and spend a number of dice equal to half your druid level or less; roll the spent dice to heal that ally, and the ally also gains 1 temporary hit point per die spent. You regain all expended dice when you finish a long rest.",
             level: 2,
             tracked: true, // Uses = Druid Level
+            trackedMode: "dicePool",
+            poolSize: "druid_level",
+            die: "d6",
+            spendLimit: "half_druid_level",
+            recharge: "lr",
           },
           {
             id: "hearth_of_moonlight_and_shadow",
             name: "Hearth of Moonlight and Shadow",
-            desc: "At 6th level, home can be wherever you are. During a short or long rest, you can invoke the shadowy power of the gloaming court to help guard your respite. At the start of the rest, you touch a point in space, and an invisible, 30-foot-radius sphere of magic appears, centered on that point. Total cover blocks the sphere. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) checks and Wisdom (Perception) checks, and any light from open flames in the sphere isnâ€™t visible outside it. The sphere vanishes at the end of the rest or when you leave the sphere.",
+            desc: "At 6th level, during a short or long rest you can create an invisible 30-foot-radius sphere that helps guard your respite. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) and Wisdom (Perception) checks, and light from open flames in the sphere isn't visible outside it. The sphere vanishes at the end of the rest or when you leave it.",
             level: 6,
             tracked: false,
           },
           {
             id: "hidden_paths",
             name: "Hidden Paths",
-            desc: "Starting at 10th level, you can use the hidden, magical pathways that some fey use to traverse space in the blink of an eye. As a bonus action, you can teleport up to 60 feet to an unoccupied space you can see. Alternatively, you can use your action to teleport one willing creature you touch up to 30 feet to an unoccupied space you can see. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            desc: "Starting at 10th level, as a bonus action you can teleport up to 60 feet to an unoccupied space you can see; alternatively, as an action you can teleport one willing creature you touch up to 30 feet. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
             level: 10,
             tracked: true, // Uses = Wisdom Modifier
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "walker_in_dreams",
             name: "Walker in Dreams",
-            desc: "At 14th level, the magic of the Feywild grants you the ability to travel mentally or physically through dreamlands. When you finish a short rest, you can cast one of the following spells without expending a spell slot or material components: dream, scrying, or teleportation circle. This use of teleportation circle is special: rather than opening a portal to a permanent teleportation circle, it opens a portal to the last location where you finished a long rest on your current plane of existence. Once you use this feature, you can't use it again until you finish a long rest.",
+            desc: "At 14th level, when you finish a short rest you can cast dream (with you as the messenger), scrying, or teleportation circle without expending a spell slot or requiring material components. This special teleportation circle can instead open a portal to the last location where you finished a long rest on your current plane. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/LR
+            recharge: "lr",
           },
         ],
       },
