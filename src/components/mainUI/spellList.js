@@ -126,6 +126,14 @@ const LIFE_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["mass-cure-wounds", "raise-dead"] },
 ];
 
+const LIGHT_DOMAIN_SPELLS = [
+  { clericLevel: 1, spellLevel: 1, spells: ["burning-hands", "faerie-fire"] },
+  { clericLevel: 3, spellLevel: 2, spells: ["flaming-sphere", "scorching-ray"] },
+  { clericLevel: 5, spellLevel: 3, spells: ["daylight", "fireball"] },
+  { clericLevel: 7, spellLevel: 4, spells: ["guardian-of-faith", "wall-of-fire"] },
+  { clericLevel: 9, spellLevel: 5, spells: ["flame-strike", "scrying"] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -176,6 +184,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "grave" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
+  const hasLightBonusCantrip =
+    characterInfo?.characterClass === "cleric" &&
+    characterInfo?.subclass === "light" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -194,6 +207,7 @@ export const SpellList = (props) => {
   const [graveDomainSpellsByLevel, setGraveDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [knowledgeDomainSpellsByLevel, setKnowledgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [lifeDomainSpellsByLevel, setLifeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [lightDomainSpellsByLevel, setLightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -355,6 +369,70 @@ export const SpellList = (props) => {
     };
   }, [
     hasCircleOfMortality,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const BONUS_TAG = "light_domain_bonus_cantrip";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+
+    if (!hasLightBonusCantrip) {
+      const hasBonusLight = currentCantrips.some((s) => s?.index === "light" && s?.spelltrackerBonus === BONUS_TAG);
+      if (!hasBonusLight) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => !(s?.index === "light" && s?.spelltrackerBonus === BONUS_TAG));
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const alreadyHasAnyLight = currentCantrips.some((s) => s?.index === "light");
+    if (alreadyHasAnyLight) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/light")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusLight = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "light")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusLight],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasLightBonusCantrip,
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
@@ -769,6 +847,74 @@ export const SpellList = (props) => {
     load();
 
     return () => {
+        cancelled = true;
+      };
+    }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+
+  useEffect(() => {
+    const isLightCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "light";
+    if (!isLightCleric) {
+      setLightDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const clericLevel = Number(characterInfo?.characterLevel || 0);
+    const active = LIGHT_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
+    if (active.length === 0) {
+      setLightDomainSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setLightDomainSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setLightDomainSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
       cancelled = true;
     };
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
@@ -974,18 +1120,26 @@ export const SpellList = (props) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
-              {isCantrips && hasCircleOfMortality ? (
+               {isCantrips && hasCircleOfMortality ? (
+                 <Tooltip
+                   arrow
+                   title="Spare the Dying is granted by Circle of Mortality and doesnâ€™t count against cantrips known."
+                 >
+                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                 </Tooltip>
+               ) : null}
+              {isCantrips && hasLightBonusCantrip ? (
                 <Tooltip
                   arrow
-                  title="Spare the Dying is granted by Circle of Mortality and doesnâ€™t count against cantrips known."
+                  title="Light is granted by Bonus Cantrip and doesn’t count against cantrips known."
                 >
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
-            </Box>
-            {!isCantrips && (
-              <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
-            )}
+             </Box>
+             {!isCantrips && (
+               <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
+             )}
           </Box>
           {renderMagicalSecretsForLevel(numericalSpellLevel)}
           {renderSpiritSessionForLevel(numericalSpellLevel)}
@@ -1006,6 +1160,8 @@ export const SpellList = (props) => {
     const prepared = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? characterInfo.spellsPrepared[numericalSpellLevel]
       : [];
+
+    const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
 
     return (
       <div>
@@ -1033,6 +1189,28 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(21, 101, 192, 0.85)",
                         border: "1px solid rgba(21, 101, 192, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.index === "light" &&
+                  spell?.spelltrackerBonus === LIGHT_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Light Domain bonus cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="LD"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(239, 108, 0, 0.90)",
+                        border: "1px solid rgba(239, 108, 0, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
@@ -1273,6 +1451,10 @@ export const SpellList = (props) => {
       ? lifeDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
+    const lightAtLevel = Array.isArray(lightDomainSpellsByLevel?.[numericalSpellLevel])
+      ? lightDomainSpellsByLevel[numericalSpellLevel]
+      : [];
+
     const domainAtLevel = [
       ...arcanaAtLevel,
       ...deathAtLevel,
@@ -1280,6 +1462,7 @@ export const SpellList = (props) => {
       ...graveAtLevel,
       ...knowledgeAtLevel,
       ...lifeAtLevel,
+      ...lightAtLevel,
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
