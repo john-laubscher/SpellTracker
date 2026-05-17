@@ -1455,9 +1455,11 @@ export const ClassesData = {
           {
             id: "war_priest",
             name: "War Priest",
-            desc: "At 1st level, your god delivers bolts of inspiration to you while you are engaged in battle. When you use the Attack action, you can make one weapon attack as a bonus action. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.",
+            desc: "From 1st level, your god delivers bolts of inspiration to you while you are engaged in battle. When you use the Attack action, you can make one weapon attack as a bonus action.\n\nYou can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.",
             level: 1,
-            tracked: true, // Uses = Wisdom Modifier / LR
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "channel_divinity_guided_strike",
@@ -1489,11 +1491,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["divine_favor", "shield_of_faith"] },
-          { level: 3, spells: ["magic_weapon", "spiritual_weapon"] },
-          { level: 5, spells: ["crusaders_mantle", "spirit_guardians"] },
-          { level: 7, spells: ["freedom_of_movement", "stoneskin"] },
-          { level: 9, spells: ["flame_strike", "hold_monster"] },
+          { level: 1, spells: ["divine-favor", "shield-of-faith"] },
+          { level: 3, spells: ["magic-weapon", "spiritual-weapon"] },
+          { level: 5, spells: ["crusaders-mantle", "spirit-guardians"] },
+          { level: 7, spells: ["freedom-of-movement", "stoneskin"] },
+          { level: 9, spells: ["flame-strike", "hold-monster"] },
         ],
       },
     },
