@@ -1398,9 +1398,11 @@ export const ClassesData = {
           {
             id: "eyes_of_night",
             name: "Eyes of Night",
-            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. You can see in dim light as if it were bright light, and in darkness as if it were dim light. As an action, you can share this darkvision with willing creatures within 10 feet of you, up to a number of creatures equal to your proficiency bonus. The shared darkvision lasts for 1 hour. Once you use this action, you canâ€™t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to use it again.",
+            desc: "Starting at 1st level, you can see through the deepest gloom. You have darkvision out to a range of 300 feet. In that radius, you can see in dim light as if it were bright light and in darkness as if it were dim light.\nAs an action, you can magically share the darkvision of this feature with willing creatures you can see within 10 feet of you, up to a number of creatures equal to your Wisdom modifier (minimum of one creature). The shared darkvision lasts for 1 hour. Once you share it, you can't do so again until you finish a long rest, unless you expend a spell slot of any level to share it again.",
             level: 1,
-            tracked: true, // 1/LR, also spend a spell slot 
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "vigilant_blessing",
@@ -1421,7 +1423,9 @@ export const ClassesData = {
             name: "Steps of Night",
             desc: "Starting at 6th level, you can draw on the mystical power of night to rise into the air. As a bonus action when you are in dim light or darkness, you can magically give yourself a flying speed equal to your walking speed for 1 minute. You can use this bonus action a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 6,
-            tracked: true, // Uses = Proficiency Bonus, regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "divine_strike",
@@ -1439,11 +1443,11 @@ export const ClassesData = {
           },
         ],
         subclassSpells: [
-          { level: 1, spells: ["faerie_fire", "sleep"] },
-          { level: 3, spells: ["moonbeam", "see_invisibility"] },
-          { level: 5, spells: ["aura_of_vitality", "leomunds_tiny_hut"] },
-          { level: 7, spells: ["aura_of_life", "greater_invisibility"] },
-          { level: 9, spells: ["circle_of_power", "mislead"] },
+          { level: 1, spells: ["faerie-fire", "sleep"] },
+          { level: 3, spells: ["moonbeam", "see-invisibility"] },
+          { level: 5, spells: ["aura-of-vitality", "leomunds-tiny-hut"] },
+          { level: 7, spells: ["aura-of-life", "greater-invisibility"] },
+          { level: 9, spells: ["circle-of-power", "mislead"] },
         ],
       },
       war: {
@@ -1504,23 +1508,32 @@ export const ClassesData = {
       {
         id: "wild_shape",
         name: "Wild Shape",
-        desc: "Starting at 2nd level, you can use your action to magically assume the shape of a beast that you have seen before. You can use this feature twice, and regain expended uses when you finish a short or long rest. Your druid level determines the beasts you can transform into.",
+        desc: "Starting at 2nd level, you can use your action to magically assume the shape of a beast that you have seen before. You can use this feature twice, and you regain expended uses when you finish a short or long rest. Your druid level determines what beasts you can transform into.",
         level: 2,
-        tracked: 2, // 2/SR
+        tracked: true,
+        uses: 2,
+        recharge: "sr_or_lr",
+      },
+      {
+        id: "timeless_body",
+        name: "Timeless Body",
+        desc: "Starting at 18th level, the primal magic you wield causes you to age more slowly. For every 10 years that pass, your body ages only 1 year.",
+        level: 18,
+        tracked: false,
       },
       {
         id: "beast_spells",
         name: "Beast Spells",
-        desc: "Starting at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you arenâ€™t able to provide material components.",
+        desc: "Beginning at 18th level, you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you aren't able to provide material components.",
         level: 18,
-        tracked: false, 
+        tracked: false,
       },
       {
         id: "archdruid",
         name: "Archdruid",
-        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and arenâ€™t consumed by a spell.",
+        desc: "At 20th level, you can use your Wild Shape an unlimited number of times. Additionally, you can ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and aren't consumed by a spell (in both your normal shape and your beast shape).",
         level: 20,
-        tracked: false, 
+        tracked: false,
       },
     ],
     subclasses: {
@@ -1529,56 +1542,65 @@ export const ClassesData = {
           {
             id: "balm_of_the_summer_court",
             name: "Balm of the Summer Court",
-            desc: "At 2nd level, you become imbued with the blessings of the Summer Court. You gain a pool of fey energy represented by a number of d6s equal to your druid level. As a bonus action, you can choose an ally you can see within 120 feet of you and spend a number of those dice equal to half your druid level or less. Roll the spent dice and add them together. The target regains a number of hit points equal to the total, and the target also gains 1 temporary hit point per die spent. You regain all expended dice when you finish a long rest.",
+            desc: "At 2nd level, you gain a pool of fey energy represented by a number of d6s equal to your druid level. As a bonus action, you can choose an ally you can see within 120 feet and spend a number of dice equal to half your druid level or less; roll the spent dice to heal that ally, and the ally also gains 1 temporary hit point per die spent. You regain all expended dice when you finish a long rest.",
             level: 2,
             tracked: true, // Uses = Druid Level
+            trackedMode: "dicePool",
+            poolSize: "druid_level",
+            die: "d6",
+            spendLimit: "half_druid_level",
+            recharge: "lr",
           },
           {
             id: "hearth_of_moonlight_and_shadow",
             name: "Hearth of Moonlight and Shadow",
-            desc: "At 6th level, home can be wherever you are. During a short or long rest, you can invoke the shadowy power of the gloaming court to help guard your respite. At the start of the rest, you touch a point in space, and an invisible, 30-foot-radius sphere of magic appears, centered on that point. Total cover blocks the sphere. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) checks and Wisdom (Perception) checks, and any light from open flames in the sphere isnâ€™t visible outside it. The sphere vanishes at the end of the rest or when you leave the sphere.",
+            desc: "At 6th level, during a short or long rest you can create an invisible 30-foot-radius sphere that helps guard your respite. While within the sphere, you and your allies gain a +5 bonus to Dexterity (Stealth) and Wisdom (Perception) checks, and light from open flames in the sphere isn't visible outside it. The sphere vanishes at the end of the rest or when you leave it.",
             level: 6,
             tracked: false,
           },
           {
             id: "hidden_paths",
             name: "Hidden Paths",
-            desc: "Starting at 10th level, you can use the hidden, magical pathways that some fey use to traverse space in the blink of an eye. As a bonus action, you can teleport up to 60 feet to an unoccupied space you can see. Alternatively, you can use your action to teleport one willing creature you touch up to 30 feet to an unoccupied space you can see. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            desc: "Starting at 10th level, as a bonus action you can teleport up to 60 feet to an unoccupied space you can see; alternatively, as an action you can teleport one willing creature you touch up to 30 feet. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
             level: 10,
             tracked: true, // Uses = Wisdom Modifier
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "walker_in_dreams",
             name: "Walker in Dreams",
-            desc: "At 14th level, the magic of the Feywild grants you the ability to travel mentally or physically through dreamlands. When you finish a short rest, you can cast one of the following spells without expending a spell slot or material components: dream, scrying, or teleportation circle. This use of teleportation circle is special: rather than opening a portal to a permanent teleportation circle, it opens a portal to the last location where you finished a long rest on your current plane of existence. Once you use this feature, you can't use it again until you finish a long rest.",
+            desc: "At 14th level, when you finish a short rest you can cast dream (with you as the messenger), scrying, or teleportation circle without expending a spell slot or requiring material components. This special teleportation circle can instead open a portal to the last location where you finished a long rest on your current plane. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/LR
+            recharge: "lr",
           },
         ],
       },
-      land: {
-        features: [
-          {
-            id: "bonus_cantrip",
-            name: "Bonus Cantrip",
-            desc: "When you choose this circle at 2nd level, you learn one additional druid cantrip of your choice.",
-            level: 2,
-            tracked: false, 
-          },
-          {
-            id: "natural_recovery",
-            name: "Natural Recovery",
-            desc: "Starting at 2nd level, you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. Once you use this feature, you can't use it again until you finish a long rest.",
-            level: 2,
-            tracked: true, // 1/LR
-          },
-          {
-            id: "land_circle_spells",
-            name: "Land Circle Spells",
-            desc: "Your mystical connection to the land infuses you with the ability to cast certain spells. You gain access to a specific set of spells based on the land type you choose at 3rd level.",
-            level: 3,
-            tracked: false,
-          },
+	      land: {
+	        features: [
+	          {
+	            id: "bonus_cantrip",
+	            name: "Bonus Cantrip",
+	            desc: "When you choose this circle at 2nd level, you learn one additional druid cantrip of your choice.",
+	            level: 2,
+	            tracked: false, 
+	          },
+	          {
+	            id: "natural_recovery",
+	            name: "Natural Recovery",
+	            desc: "Starting at 2nd level, you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. Once you use this feature, you can't use it again until you finish a long rest.",
+	            level: 2,
+	            tracked: true, // 1/LR
+	            recharge: "lr",
+	          },
+	          {
+	            id: "land_circle_spells",
+	            name: "Land Circle Spells",
+	            desc: "Your mystical connection to the land infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+	            level: 3,
+	            tracked: false,
+	          },
           {
             id: "land_strides",
             name: "Land's Stride",

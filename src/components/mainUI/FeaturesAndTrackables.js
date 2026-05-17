@@ -11,7 +11,11 @@ import {
   AccordionSummary,
   AccordionDetails,
   Checkbox,
+  FormControl,
   IconButton,
+  Menu,
+  MenuItem,
+  Select,
   Tooltip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -180,6 +184,7 @@ const FeatureDisplay = ({
   proficiencyBonusValue,
   charismaModValue,
   wisdomModValue,
+  druidLevel,
   characterClass,
   characterLevel,
 }) => {
@@ -190,6 +195,7 @@ const FeatureDisplay = ({
   const [stackingChecksById, setStackingChecksById] = React.useState({});
   const [featureTrackers, setFeatureTrackers] = React.useState(() => loadFeatureTrackers());
   const [untrackedExpanded, setUntrackedExpanded] = React.useState(false);
+  const [activeDicePoolEditorKey, setActiveDicePoolEditorKey] = React.useState(null);
 
   React.useEffect(() => {
     return () => {
@@ -222,6 +228,7 @@ const FeatureDisplay = ({
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
     if (feature?.uses === "cha_mod") return Math.max(1, Number(charismaModValue) || 1);
     if (feature?.uses === "wis_mod") return Math.max(1, Number(wisdomModValue) || 1);
+    if (feature?.uses === "druid_level") return Math.max(0, Number(druidLevel) || 0);
     if (typeof feature?.uses === "number" && Number.isFinite(feature.uses) && feature.uses > 0) return feature.uses;
     return 1;
   };
@@ -308,6 +315,101 @@ const FeatureDisplay = ({
             const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
             const tracker = featureTrackers?.[trackerKey] || {};
 
+            const setTracker = (nextPartial) => {
+              setFeatureTrackers((prev) => ({
+                ...(prev || {}),
+                [trackerKey]: {
+                  ...(prev?.[trackerKey] || {}),
+                  ...(nextPartial || {}),
+                },
+              }));
+            };
+
+            const clampInt = (value, min, max) => {
+              const asNum = Number(value);
+              if (!Number.isFinite(asNum)) return min;
+              const asInt = Math.trunc(asNum);
+              return Math.max(min, Math.min(max, asInt));
+            };
+
+            if (feature?.trackedMode === "dicePool") {
+              const baseLevel =
+                feature?.poolSize === "druid_level"
+                  ? Number(druidLevel) || 0
+                  : Number(characterLevel) || 0;
+              const poolMax = Math.max(0, Math.trunc(baseLevel));
+              const spentDice = clampInt(tracker?.spentDice ?? 0, 0, poolMax);
+              const remainingDice = Math.max(0, poolMax - spentDice);
+              const isEditing = activeDicePoolEditorKey === trackerKey;
+
+              return (
+                <>
+                  {!isEditing ? (
+                    <Tooltip arrow title="Click to set remaining dice">
+                      <Typography
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (poolMax <= 0) return;
+                          setActiveDicePoolEditorKey(trackerKey);
+                        }}
+                        sx={{
+                          ml: 0.5,
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: poolMax <= 0 ? "default" : "pointer",
+                          color: remainingDice === 0 ? "#7c2d12" : "#0f766e",
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: "10px",
+                          border: `1px solid ${remainingDice === 0 ? "rgba(124, 45, 18, 0.35)" : "rgba(15, 118, 110, 0.35)"}`,
+                          background:
+                            remainingDice === 0 ? "rgba(252, 165, 165, 0.20)" : "rgba(167, 243, 208, 0.20)",
+                          userSelect: "none",
+                        }}
+                      >
+                        {remainingDice}/{poolMax} d6
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    <FormControl
+                      size="small"
+                      variant="standard"
+                      sx={{ ml: 0.5, minWidth: 62 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Select
+                        open
+                        value={remainingDice}
+                        onClose={(e) => {
+                          e?.stopPropagation?.();
+                          setActiveDicePoolEditorKey(null);
+                        }}
+                        onChange={(e) => {
+                          const nextRemaining = clampInt(e.target.value, 0, poolMax);
+                          const nextSpent = Math.max(0, poolMax - nextRemaining);
+                          setTracker({ spentDice: nextSpent });
+                          setActiveDicePoolEditorKey(null);
+                        }}
+                        sx={{ fontSize: "12px" }}
+                      >
+                        {Array.from({ length: poolMax + 1 }).map((_, idx) => (
+                          <MenuItem
+                            key={`${feature.id}:remaining:${idx}`}
+                            value={idx}
+                            sx={{ fontSize: "12px" }}
+                          >
+                            {idx}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (feature?.trackedMode === "stackingChecks") {
               const checkedCount = Math.max(
                 0,
@@ -359,16 +461,6 @@ const FeatureDisplay = ({
               const cooldownDays = Math.max(0, Math.min(Number(tracker?.cooldownDays) || 0, 7));
               const cooldownActive = Boolean(tracker?.cooldownActive);
               const needsLongRest = Boolean(tracker?.needsLongRest);
-
-              const setTracker = (nextPartial) => {
-                setFeatureTrackers((prev) => ({
-                  ...(prev || {}),
-                  [trackerKey]: {
-                    ...(prev?.[trackerKey] || {}),
-                    ...nextPartial,
-                  },
-                }));
-              };
 
               const statusLabel = cooldownActive
                 ? `Cooldown: ${cooldownDays}/7`
@@ -564,13 +656,20 @@ const FeatureDisplay = ({
 };
 
 const FeaturesAndTrackables = () => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
   const wisdomModValue = characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0;
+  const druidLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.druid;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterClass === "druid") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+    return 0;
+  }, [characterInfo?.classLevels?.druid, characterClass, characterLevel]);
 
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
@@ -585,6 +684,32 @@ const FeaturesAndTrackables = () => {
   const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
+  const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
+
+  const landDruidTypeOptions = React.useMemo(
+    () => ["arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp", "underdark"],
+    []
+  );
+
+  React.useEffect(() => {
+    const isLandDruid = characterClass === "druid" && subclass === "land";
+    if (!isLandDruid) return;
+    if (characterInfo?.druidLandType) return;
+    if (landDruidTypeOptions.length === 0) return;
+
+    setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
+  }, [characterClass, subclass, characterInfo?.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+
+  const currentLandType = characterInfo?.druidLandType || landDruidTypeOptions[0] || "arctic";
+  const isLandTypeMenuOpen = Boolean(landTypeMenuAnchorEl);
+  const openLandTypeMenu = (e) => {
+    e?.stopPropagation?.();
+    setLandTypeMenuAnchorEl(e.currentTarget);
+  };
+  const closeLandTypeMenu = (e) => {
+    e?.stopPropagation?.();
+    setLandTypeMenuAnchorEl(null);
+  };
 
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
@@ -891,9 +1016,9 @@ const FeaturesAndTrackables = () => {
 
   return (
     <div>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <FeatureDisplay
+	        <Grid container spacing={2}>
+	          <Grid item xs={12} md={6}>
+	            <FeatureDisplay
               title="Class Features"
               addTooltip="Add custom Class Feature"
               onAdd={() => setAddModal({ open: true, kind: "class" })}
@@ -904,6 +1029,7 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -955,7 +1081,7 @@ const FeaturesAndTrackables = () => {
                   </Tooltip>
                 );
               }}
-              renderUntrackedTrailingControls={(feature) => {
+		              renderUntrackedTrailingControls={(feature) => {
                 if (hasAdditionalMagicalSecrets && feature?.id === "additional_magical_secrets") {
                   const isOver = magicalSecretsCount > 2;
 
@@ -1075,7 +1201,7 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
-                if (hasArcaneMastery && feature?.id === "arcane_mastery") {
+		                if (hasArcaneMastery && feature?.id === "arcane_mastery") {
                   const isOver = arcaneMasteryCount > 4;
                   const isUnder = arcaneMasteryCount < 4;
 
@@ -1104,22 +1230,87 @@ const FeaturesAndTrackables = () => {
                       </IconButton>
                     </Tooltip>
                   );
-                }
+		                }
 
-                return null;
-              }}
-              proficiencyBonusValue={proficiencyBonusValue}
-              charismaModValue={charismaModValue}
+		                if (
+		                  characterClass === "druid" &&
+		                  subclass === "land" &&
+		                  feature?.id === "land_circle_spells"
+		                ) {
+		                  const label = String(currentLandType || "arctic");
+		                  const prettyLabel = label
+		                    .split("-")
+		                    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+		                    .join(" ");
+
+		                  return (
+		                    <Tooltip arrow title={`Land Type: ${prettyLabel} (click to change)`}>
+		                      <IconButton
+		                        size="small"
+		                        aria-label="Choose Land Type"
+		                        onClick={openLandTypeMenu}
+		                        sx={{
+		                          ml: 0.25,
+		                          p: 0.25,
+		                          color: "#5d4037",
+		                          border: "1px solid rgba(93, 64, 55, 0.25)",
+		                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+		                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+		                        }}
+		                      >
+		                        <MenuBookIcon fontSize="inherit" />
+		                      </IconButton>
+		                    </Tooltip>
+		                  );
+		                }
+
+			                return null;
+			              }}
+	              proficiencyBonusValue={proficiencyBonusValue}
+	              charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
           </Grid>
-        </Grid>
+	        </Grid>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <FeatureDisplay
+	        {characterClass === "druid" && subclass === "land" ? (
+	          <Menu
+	            anchorEl={landTypeMenuAnchorEl}
+	            open={isLandTypeMenuOpen}
+	            onClose={closeLandTypeMenu}
+	            onClick={(e) => e.stopPropagation()}
+	          >
+	            {landDruidTypeOptions.map((landType) => {
+	              const pretty = String(landType || "")
+	                .split("-")
+	                .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+	                .join(" ");
+	              const isSelected = String(currentLandType) === String(landType);
+
+	              return (
+	                <MenuItem
+	                  key={`land-druid:menu:${landType}`}
+	                  selected={isSelected}
+	                  onClick={(e) => {
+	                    e.stopPropagation();
+	                    const nextLand = String(landType || "");
+	                    setCharacterInfo((prev) => ({ ...prev, druidLandType: nextLand }));
+	                    closeLandTypeMenu(e);
+	                  }}
+	                >
+	                  {pretty}
+	                </MenuItem>
+	              );
+	            })}
+	          </Menu>
+	        ) : null}
+	
+	        <Grid container spacing={2}>
+	          <Grid item xs={12} md={4}>
+	            <FeatureDisplay
               title="Race Features"
               manageTooltip="Manage which race features are tracked"
               onManage={handleManageRaceFeatures}
@@ -1128,6 +1319,7 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1143,6 +1335,7 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1158,6 +1351,7 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />

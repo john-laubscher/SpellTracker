@@ -133,6 +133,7 @@ function App() {
       race: "Dwarf",
       subrace: "Hill",
       draconicAncestry: "",
+      druidLandType: "",
       // default characterClass should be "noClass" rather than empty string
       characterClass: "cleric",
       subclass: "death",
