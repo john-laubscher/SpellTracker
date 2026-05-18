@@ -258,6 +258,11 @@ const SPORES_CIRCLE_SPELLS = [
   { druidLevel: 9, spellLevel: 5, spells: ["cloudkill", "contagion"] },
 ];
 
+const STARS_CIRCLE_SPELLS = [
+  { druidLevel: 2, spellLevel: 0, spells: ["guidance"] },
+  { druidLevel: 2, spellLevel: 1, spells: ["guiding-bolt"] },
+];
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -375,6 +380,7 @@ export const SpellList = (props) => {
   const [trickeryDomainSpellsByLevel, setTrickeryDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [landCircleSpellsByLevel, setLandCircleSpellsByLevel] = React.useState(() => emptyByLevel());
   const [sporesCircleSpellsByLevel, setSporesCircleSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [starsCircleSpellsByLevel, setStarsCircleSpellsByLevel] = React.useState(() => emptyByLevel());
   const [twilightDomainSpellsByLevel, setTwilightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [warDomainSpellsByLevel, setWarDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
@@ -824,6 +830,87 @@ export const SpellList = (props) => {
         if (!cancelled) setSporesCircleSpellsByLevel(byLevel);
       } catch {
         if (!cancelled) setSporesCircleSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.druid,
+  ]);
+
+  useEffect(() => {
+    const isStarsDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "star";
+    if (!isStarsDruid) {
+      setStarsCircleSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const druidLevel = (() => {
+      const raw = characterInfo?.classLevels?.druid;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "druid")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const active = STARS_CIRCLE_SPELLS.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
+    if (active.length === 0) {
+      setStarsCircleSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setStarsCircleSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setStarsCircleSpellsByLevel(emptyByLevel());
       }
     };
 
@@ -2381,6 +2468,15 @@ export const SpellList = (props) => {
       spelltrackerAlwaysPreparedKind: "circle_spell",
     }));
 
+    const starsCircleAtLevelRaw = Array.isArray(starsCircleSpellsByLevel?.[numericalSpellLevel])
+      ? starsCircleSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const starsCircleAtLevel = starsCircleAtLevelRaw.map((s) => ({
+      ...(s || {}),
+      spelltrackerAlwaysPreparedKind: "circle_spell",
+    }));
+
     const warAtLevel = Array.isArray(warDomainSpellsByLevel?.[numericalSpellLevel])
       ? warDomainSpellsByLevel[numericalSpellLevel]
       : [];
@@ -2402,6 +2498,7 @@ export const SpellList = (props) => {
       ...warAtLevel,
       ...landCircleAtLevel,
       ...sporesCircleAtLevel,
+      ...starsCircleAtLevel,
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {

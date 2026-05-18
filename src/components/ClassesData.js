@@ -1766,39 +1766,51 @@ export const ClassesData = {
           {
             id: "star_map",
             name: "Star Map",
-            desc: "At 2nd level, you create a star map, an object that serves as your focus for starry magic. The map can take various forms (such as a scroll, stone, or crystal). While holding the map, you gain the following benefits:\n\n- You know the *guidance* cantrip.\n- You have the *guiding bolt* spell prepared. It doesn't count against the number of spells you can prepare.\n- You can cast *guiding bolt* without expending a spell slot. You can do so a number of times equal to your proficiency bonus, regaining all uses after a long rest.\n\nIf you lose your star map, you can perform a 1-hour ritual to create a replacement during a short or long rest. This ritual destroys the previous map.",
+            desc: "At 2nd level, you've created a star chart as part of your heavenly studies. It is a Tiny object and can serve as a spellcasting focus for your druid spells. You determine its form by rolling on the Star Map table or by choosing one.\n\nWhile holding this map, you have these benefits:\n\n- You know the Guidance cantrip.\n- You have the Guiding Bolt spell prepared. It counts as a druid spell for you, and it doesn't count against the number of spells you can have prepared.\n- You can cast Guiding Bolt without expending a spell slot.\n\nIf you lose the map, you can perform a 1-hour ceremony to magically create a replacement. This ceremony can be performed during a short or long rest, and it destroys the previous map.",
             level: 2,
-            tracked: false, //guiding bolt is equal to prof bonus
+            tracked: false,
+          },
+          {
+            id: "star_map_guiding_bolt",
+            name: "Guiding Bolt (Star Map)",
+            desc: "You can cast Guiding Bolt without expending a spell slot. You can do so a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            level: 2,
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "starry_form",
             name: "Starry Form",
-            desc: "At 2nd level, you gain the ability to harness constellations' power. As a bonus action, you can expend a use of your Wild Shape to take on a starry form, rather than transforming into a beast. While in your starry form, you retain your game statistics but appear as if you are made of starlight, and your joints glow like stars. This form lasts for 10 minutes or until you end it as a bonus action.\n\nWhen you activate this form, choose a constellation you embody, which gives benefits:\n\n- **Archer:** When you activate this form and as a bonus action on subsequent turns, you can make a ranged spell attack, hurling a luminous arrow that deals 1d8 + your Wisdom modifier radiant damage.\n- **Chalice:** Whenever you cast a spell that restores hit points, you or another creature within 30 feet regains additional hit points equal to 1d8 + your Wisdom modifier.\n- **Dragon:** You have advantage on Intelligence and Wisdom checks and can concentrate on spells while maintaining your Wild Shape.",
+            desc: "At 2nd level, you gain the ability to harness constellations' power to alter your form. As a bonus action, you can expend a use of your Wild Shape feature to take on a starry form, rather than transforming into a beast.\n\nWhile in your starry form, you retain your game statistics, but your body becomes luminous; your joints glimmer like stars, and glowing lines connect them as on a star chart. This form sheds bright light in a 10-foot radius and dim light for an additional 10 feet. The form lasts for 10 minutes. It ends early if you dismiss it (no action required), are incapacitated, die, or use this feature again.\n\nWhenever you assume your starry form, choose which of the following constellations glimmers on your body; your choice gives you certain benefits while in the form:\n\n- **Archer:** When you activate this form, and as a bonus action on your subsequent turns while it lasts, you can make a ranged spell attack, hurling a luminous arrow that targets one creature within 60 feet of you. On a hit, the attack deals radiant damage equal to 1d8 + your Wisdom modifier.\n- **Chalice:** Whenever you cast a spell using a spell slot that restores hit points to a creature, you or another creature within 30 feet of you can regain hit points equal to 1d8 + your Wisdom modifier.\n- **Dragon:** When you make an Intelligence or a Wisdom check or a Constitution saving throw to maintain concentration on a spell, you can treat a roll of 9 or lower on the d20 as a 10.",
             level: 2,
             tracked: false,
           },
           {
             id: "cosmic_omen",
             name: "Cosmic Omen",
-            desc: "Starting at 6th level, you learn to channel omens from the stars to influence your surroundings. When you finish a long rest, roll a die and choose one of two modes: Weal or Woe.\n\n- **Weal (Even):** When a creature within 30 feet of you makes an attack roll, saving throw, or ability check, you can use your reaction to add 1d6 to the roll.\n- **Woe (Odd):** When a creature within 30 feet of you makes an attack roll, saving throw, or ability check, you can use your reaction to subtract 1d6 from the roll.\n\nYou can use this reaction a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: "When you reach 6th level, you learn to use your star map to divine the will of the cosmos. Whenever you finish a long rest, you can consult your Star Map for omens. When you do so, roll a die. Until you finish your next long rest, you gain access to a special reaction based on whether you rolled an even or an odd number on the die:\n\n- **Weal (even):** Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and add the number rolled to the total.\n- **Woe (odd):** Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and subtract the number rolled from the total.\n\nYou can use this reaction a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 6,
-            tracked: true, // Proficiency Bonus/LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "twinkling_constellations",
             name: "Twinkling Constellations",
-            desc: "At 10th level, the constellations of your Starry Form improve:\n\n- **Archer:** The radiant damage increases to 2d8.\n- **Chalice:** The healing increases to 2d8.\n- **Dragon:** You gain a flying speed of 20 feet while in this form.\n\nAdditionally, you can change your constellation at the start of each turn.",
+            desc: "At 10th level, the constellations of your Starry Form improve. The 1d8 of the Archer and the Chalice becomes 2d8, and while the Dragon is active, you have a flying speed of 20 feet and can hover.\n\nMoreover, at the start of each of your turns while in your Starry Form, you can change which constellation glimmers on your body.",
             level: 10,
             tracked: false,
           },
           {
             id: "full_of_stars",
             name: "Full of Stars",
-            desc: "At 14th level, your Starry Form becomes permanent. While in your Starry Form, you become partially incorporeal, granting you resistance to bludgeoning, piercing, and slashing damage.",
+            desc: "At 14th level, while in your Starry Form, you become partially incorporeal, giving you resistance to bludgeoning, piercing, and slashing damage.",
             level: 14,
             tracked: false,
           },
         ],
+        subclassSpells: [{ level: 2, spells: ["guidance", "guiding-bolt"] }],
       },
       wildfire: {
         features: [
