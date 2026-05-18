@@ -256,6 +256,9 @@ const REAPER_CANTRIP_TOOLTIP =
 const ACOLYTE_OF_NATURE_CANTRIP_TOOLTIP =
   "Acolyte of Nature cantrip (counts as a cleric cantrip; does not count toward cantrips known).";
 
+const THOUSAND_FORMS_TOOLTIP =
+  "Thousand Forms: Alter Self can be cast at will (doesn't cost spell slots).";
+
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
 export const SpellList = (props) => {
@@ -282,6 +285,21 @@ export const SpellList = (props) => {
   const spiritSessionSpells = Array.isArray(characterInfo?.spiritSessionPrepared)
     ? characterInfo.spiritSessionPrepared
     : [];
+
+  const druidLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.druid;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterInfo?.characterClass === "druid") {
+      return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+    }
+    return 0;
+  }, [characterInfo?.classLevels?.druid, characterInfo?.characterClass, characterInfo?.characterLevel]);
+
+  const hasThousandForms =
+    characterInfo?.characterClass === "druid" &&
+    characterInfo?.subclass === "moon" &&
+    druidLevel >= 14;
 
   const hasArcanaInitiate =
     characterInfo?.characterClass === "cleric" &&
@@ -1845,6 +1863,7 @@ export const SpellList = (props) => {
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
            {renderReaperCantripForLevel(numericalSpellLevel)}
            {renderDomainSpellsForLevel(numericalSpellLevel)}
+           {renderThousandFormsForLevel(numericalSpellLevel)}
            {renderPreparedSpells(numericalSpellLevel)}
            <Box sx={{ mt: 0.5 }}>
              {renderSpellModal(numericalSpellLevel)}
@@ -2155,6 +2174,46 @@ export const SpellList = (props) => {
               </Tooltip>
             }
             actionButton={<PrepareReaperCantripButton spell={reaperCantrip} index={0} />}
+          />
+        </Box>
+      </Box>
+    );
+  };
+
+  const renderThousandFormsForLevel = (numericalSpellLevel) => {
+    if (!hasThousandForms) return null;
+    if (Number(numericalSpellLevel) !== 2) return null;
+
+    const alterSelf = {
+      index: "alter-self",
+      name: "Alter Self",
+      spelltrackerAlwaysPreparedKind: "thousand_forms",
+    };
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        <Box sx={{ py: 0.2 }}>
+          <SpellAccordian
+            numericalSpellLevel={numericalSpellLevel}
+            spell={alterSelf}
+            leadingControl={
+              <Tooltip arrow title={THOUSAND_FORMS_TOOLTIP}>
+                <Chip
+                  size="small"
+                  label="TF"
+                  sx={{
+                    height: 18,
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    opacity: 0.55,
+                    backgroundColor: "rgba(0,0,0,0.06)",
+                    color: "rgba(62, 39, 35, 0.72)",
+                    border: "1px solid rgba(62, 39, 35, 0.22)",
+                    "&:hover": { opacity: 0.85 },
+                  }}
+                />
+              </Tooltip>
+            }
           />
         </Box>
       </Box>

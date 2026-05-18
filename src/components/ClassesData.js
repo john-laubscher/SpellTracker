@@ -1636,7 +1636,7 @@ export const ClassesData = {
           {
             id: "circle_forms",
             name: "Circle Forms",
-            desc: "The rites of your circle grant you the ability to transform into more dangerous animal forms. Starting at 2nd level, you can use your Wild Shape to transform into a beast with a challenge rating as high as 1. Starting at 6th level, you can transform into a beast with a challenge rating equal to your druid level divided by 3 (rounded down).",
+            desc: "The rites of your circle grant you the ability to transform into more dangerous animal forms. Starting at 2nd level, you can use your Wild Shape to transform into a beast with a challenge rating as high as 1. You ignore the Max. CR column of the Beast Shapes table, but must abide by the other limitations there. Starting at 6th level, you can transform into a beast with a challenge rating as high as your druid level divided by 3, rounded down.",
             level: 2,
             tracked: false,
           },
@@ -1650,14 +1650,14 @@ export const ClassesData = {
           {
             id: "elemental_wild_shape",
             name: "Elemental Wild Shape",
-            desc: "At 10th level, you can expend two uses of Wild Shape at the same time to transform into an air elemental, earth elemental, fire elemental, or water elemental.",
+            desc: "At 10th level, you can expend two uses of Wild Shape at the same time to transform into an air elemental, an earth elemental, a fire elemental, or a water elemental.",
             level: 10,
             tracked: false,
           },
           {
             id: "thousand_forms",
             name: "Thousand Forms",
-            desc: "By 14th level, you have learned to use magic to alter your physical form in more subtle ways. You can cast the alter self spell at will.",
+            desc: "By 14th level, you have learned to use magic to alter your physical form in more subtle ways. You can cast the Alter Self spell at will.",
             level: 14,
             tracked: false,
           },
