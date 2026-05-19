@@ -657,7 +657,7 @@ const FeatureDisplay = ({
 
 const FeaturesAndTrackables = () => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-  const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility } = characterInfo;
+  const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility, fightingStyle } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
@@ -932,10 +932,27 @@ const FeaturesAndTrackables = () => {
   }, [allSubclassFeatures, applyTrackedOverride, subclassOverrideKey, subclassCustomForUi]);
 
   const visibleClassFeatures = React.useMemo(() => {
-    return classFeatures
+    const base = classFeatures
       .map((f) => applyTrackedOverride({ overrideKey: classOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: classOverrideKey, featureId: f.id }));
-  }, [classFeatures, applyTrackedOverride, classOverrideKey, isHidden]);
+
+    if (characterClass === "fighter" && fightingStyle) {
+      return base.map((feature) => {
+        if (feature?.id !== "fighting_style") return feature;
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+        return {
+          ...feature,
+          desc: [`Selected: ${fightingStyle}.`, ...descLines],
+        };
+      });
+    }
+
+    return base;
+  }, [classFeatures, applyTrackedOverride, classOverrideKey, isHidden, characterClass, fightingStyle]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
     return subclassFeatures

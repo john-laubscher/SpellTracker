@@ -1871,11 +1871,30 @@ export const ClassesData = {
     hitDice: "D10",
     isSpellCaster: "nonCaster",
     spellcastingAbility: "nonCaster",
+    fightingStyleOptions: [
+      "Archery",
+      "Blind Fighting",
+      "Defense",
+      "Dueling",
+      "Great Weapon Fighting",
+      "Interception",
+      "Protection",
+      "Superior Technique",
+      "Thrown Weapon Fighting",
+      "Two-Weapon Fighting",
+      "Unarmed Fighting",
+      "Close Quarters Shooter",
+      "Mariner",
+      "Tunnel Fighter",
+    ],
     classFeatures: [
       {
         id: "fighting_style",
         name: "Fighting Style",
-        desc: "At 1st level, you adopt a particular style of fighting as your specialty. Choose one Fighting Style option. You canâ€™t take a Fighting Style option more than once, even if you later get to choose again.",
+        desc: [
+          "You adopt a particular style of fighting as your specialty. Choose one Fighting Style option.",
+          "You can't take a Fighting Style option more than once, even if you later get to choose again.",
+        ],
         level: 1,
         tracked: false, 
         // "**NEED FEATURE: maybe make fighting styles part of state, and have user choose one as part of char creation. Rendering will choose only 1, and we need some way to tooltip just the selected fighting Style(s).**"
@@ -1883,30 +1902,55 @@ export const ClassesData = {
       {
         id: "second_wind",
         name: "Second Wind",
-        desc: "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again.",
+        desc: [
+          "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.",
+          "Once you use this feature, you must finish a short or long rest before you can use it again.",
+        ],
         level: 1,
-        tracked: 1, //1/sr 
+        tracked: true,
+        uses: 1,
+        recharge: "sr_or_lr",
       },
       {
         id: "action_surge",
         name: "Action Surge",
-        desc: "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action. Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.",
+        desc: [
+          "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action.",
+          "Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.",
+        ],
         level: 2,
-        tracked: 1, // 1/sr
+        tracked: true,
+        usesByLevel: [
+          { level: 2, uses: 1 },
+          { level: 17, uses: 2 },
+        ],
+        recharge: "sr_or_lr",
       },
       {
         id: "extra_attack",
         name: "Extra Attack",
-        desc: "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn. The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class.",
+        desc: [
+          "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.",
+          "The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class.",
+        ],
         level: 5,
         tracked: false, 
       },
       {
         id: "indomitable",
         name: "Indomitable",
-        desc: "Beginning at 9th level, you can reroll a saving throw that you fail. If you do so, you must use the new roll. You can use this feature once between long rests. You can use it twice between long rests starting at 13th level and three times between long rests starting at 17th level.",
+        desc: [
+          "Beginning at 9th level, you can reroll a saving throw that you fail. If you do so, you must use the new roll, and you can't use this feature again until you finish a long rest.",
+          "You can use this feature twice between long rests starting at 13th level and three times between long rests starting at 17th level.",
+        ],
         level: 9,
-        tracked: 1, //2x at lvl 13, 3x at lvl 17
+        tracked: true,
+        usesByLevel: [
+          { level: 9, uses: 1 },
+          { level: 13, uses: 2 },
+          { level: 17, uses: 3 },
+        ],
+        recharge: "lr",
       },
     ],
     subclasses: {
