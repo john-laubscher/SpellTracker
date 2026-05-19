@@ -83,6 +83,11 @@ export const CharacterCreationForm = (props) => {
     []
   );
 
+  const fighterFightingStyleOptions = React.useMemo(() => {
+    const raw = ClassesData?.fighter?.fightingStyleOptions || [];
+    return Array.isArray(raw) ? raw : [];
+  }, []);
+
   useEffect(() => {
     if (characterInfo.race === "Dragonborn") {
       if (!characterInfo.draconicAncestry && dragonbornAncestryOptions.length > 0) {
@@ -122,6 +127,24 @@ export const CharacterCreationForm = (props) => {
       setCharacterInfo((prev) => ({ ...prev, druidLandType: "" }));
     }
   }, [characterInfo.characterClass, characterInfo.subclass, characterInfo.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+
+  useEffect(() => {
+    if (characterInfo.characterClass === "fighter") {
+      if (!characterInfo.fightingStyle && fighterFightingStyleOptions.length > 0) {
+        setCharacterInfo((prev) => ({ ...prev, fightingStyle: fighterFightingStyleOptions[0] }));
+      }
+      return;
+    }
+
+    if (characterInfo.fightingStyle) {
+      setCharacterInfo((prev) => ({ ...prev, fightingStyle: "" }));
+    }
+  }, [
+    characterInfo.characterClass,
+    characterInfo.fightingStyle,
+    fighterFightingStyleOptions,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     const allowedSubraces = Subraces?.[characterInfo.race] || [];
@@ -203,6 +226,7 @@ export const CharacterCreationForm = (props) => {
 
 	      if (name === "characterClass") {
 	        next.subclass = NO_SUBCLASS;
+          next.fightingStyle = "";
 	      }
 
 	      if (name === "subclass") {
@@ -455,6 +479,28 @@ export const CharacterCreationForm = (props) => {
 	            </FormControl>
 	          </Box>
 	        ) : null}
+
+          {characterInfo.characterClass === "fighter" && fighterFightingStyleOptions.length > 0 ? (
+            <Box sx={{ mt: 1 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="fighter-fighting-style-select-label">Fighting Style</InputLabel>
+                <Select
+                  labelId="fighter-fighting-style-select-label"
+                  id="fighter-fighting-style-select"
+                  value={characterInfo.fightingStyle || ""}
+                  label="Fighting Style"
+                  name="fightingStyle"
+                  onChange={handleChange}
+                >
+                  {fighterFightingStyleOptions.map((style) => (
+                    <MenuItem key={style} value={style}>
+                      {style}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          ) : null}
 	      </Box>
 
       {renderWizardSpellCountMod()}
