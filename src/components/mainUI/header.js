@@ -73,6 +73,15 @@ const Header = () => {
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
   const isBattleMaster =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "battleMaster";
+  const isCavalier =
+    characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "cavalier";
+  const fighterLevel = (() => {
+    const raw = characterInfo?.classLevels?.fighter;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterInfo.characterClass === "fighter") return Math.max(0, Math.trunc(Number(characterInfo.characterLevel) || 0));
+    return 0;
+  })();
   const arcaneShotDc =
     8 + (proficiencyBonus[characterInfo.characterLevel] || 2) + (Number(characterInfo?.stats?.int?.mod) || 0);
   const maneuverSaveDc =
@@ -82,6 +91,10 @@ const Header = () => {
       Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0,
       Number(characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0) || 0
     );
+  const ferociousChargerDc =
+    8 +
+    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    (Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0);
 
 useEffect(() => {
 
@@ -208,6 +221,12 @@ useEffect(() => {
                     <Typography variant="h6" sx={theme.typography.body1}>
                       Maneuver Save DC: {maneuverSaveDc}
                     </Typography>
+                  ) : isCavalier ? (
+                    fighterLevel >= 15 ? (
+                      <Typography variant="h6" sx={theme.typography.body1}>
+                        Ferocious Charger DC: {ferociousChargerDc}
+                      </Typography>
+                    ) : null
                   ) : (
                     <Typography variant="h6" sx={theme.typography.body1}>
                       Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
