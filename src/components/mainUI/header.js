@@ -69,6 +69,10 @@ const Header = () => {
   };
 
   const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
+  const isArcaneArcher =
+    characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
+  const arcaneShotDc =
+    8 + (proficiencyBonus[characterInfo.characterLevel] || 2) + (Number(characterInfo?.stats?.int?.mod) || 0);
 
 useEffect(() => {
 
@@ -187,7 +191,15 @@ useEffect(() => {
                       ? "NonCaster"
                       : `Spell Attack Mod: + ${characterInfo.stats[spellcastingAbility].mod}`}
                   </Typography>                  
-                  <Typography variant="h6" sx={theme.typography.body1}>Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}</Typography>
+                  {isArcaneArcher ? (
+                    <Typography variant="h6" sx={theme.typography.body1}>
+                      Arcane Shot DC: {arcaneShotDc}
+                    </Typography>
+                  ) : (
+                    <Typography variant="h6" sx={theme.typography.body1}>
+                      Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
+                    </Typography>
+                  )}
                   <Typography variant="h6" sx={theme.typography.body1}>Armor Class: {characterInfo.ac}</Typography>
                 </div>
               </CardContent>

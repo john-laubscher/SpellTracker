@@ -93,6 +93,44 @@ const loadAcolyteOfNatureCantripFromStorage = () => {
   }
 };
 
+const loadArcaneArcherLoreCantripFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcaneArcherLoreCantrip");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.index || !parsed.name) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadArcaneShotOptionsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcaneShotOptions");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((x) => typeof x === "string" && x.trim().length > 0);
+  } catch {
+    return null;
+  }
+};
+
+const loadArcaneShotBonusOptionsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcaneShotBonusOptions");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const asNum = Number(parsed);
+    if (!Number.isFinite(asNum)) return null;
+    return Math.max(0, Math.trunc(asNum));
+  } catch {
+    return null;
+  }
+};
+
 const loadDomainSpellSwapsFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_domainSpellSwaps");
@@ -127,6 +165,9 @@ function App() {
     const persistedArcaneMastery = loadArcaneMasteryFromStorage();
     const persistedReaperCantrip = loadReaperCantripFromStorage();
     const persistedAcolyteOfNatureCantrip = loadAcolyteOfNatureCantripFromStorage();
+    const persistedArcaneArcherLoreCantrip = loadArcaneArcherLoreCantripFromStorage();
+    const persistedArcaneShotOptions = loadArcaneShotOptionsFromStorage();
+    const persistedArcaneShotBonusOptions = loadArcaneShotBonusOptionsFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     return {
       characterName: "Garetjax",
@@ -180,6 +221,9 @@ function App() {
       arcaneMasterySpells: Array.isArray(persistedArcaneMastery) ? persistedArcaneMastery : [],
       reaperCantrip: persistedReaperCantrip || null,
       acolyteOfNatureCantrip: persistedAcolyteOfNatureCantrip || null,
+      arcaneArcherLoreCantrip: persistedArcaneArcherLoreCantrip || null,
+      arcaneShotOptions: Array.isArray(persistedArcaneShotOptions) ? persistedArcaneShotOptions : [],
+      arcaneShotBonusOptions: Number.isFinite(persistedArcaneShotBonusOptions) ? persistedArcaneShotBonusOptions : 0,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
     };
   });
@@ -291,6 +335,39 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.acolyteOfNatureCantrip]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcaneArcherLoreCantrip",
+        JSON.stringify(characterInfo.arcaneArcherLoreCantrip || null)
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcaneArcherLoreCantrip]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcaneShotOptions",
+        JSON.stringify(characterInfo.arcaneShotOptions || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcaneShotOptions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcaneShotBonusOptions",
+        JSON.stringify(Number(characterInfo.arcaneShotBonusOptions) || 0)
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcaneShotBonusOptions]);
 
   useEffect(() => {
     try {
