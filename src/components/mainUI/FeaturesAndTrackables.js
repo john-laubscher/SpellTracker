@@ -40,7 +40,9 @@ import ReaperCantripModal from "./ReaperCantripModal";
 import AcolyteOfNatureModal from "./AcolyteOfNatureModal";
 import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
 import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
+import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import SpellAccordian from "./SpellAccordian";
+import SwordIcon from "./SwordIcon";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -189,6 +191,7 @@ const FeatureDisplay = ({
   charismaModValue,
   wisdomModValue,
   druidLevel,
+  fighterLevel,
   characterClass,
   characterLevel,
 }) => {
@@ -352,11 +355,45 @@ const FeatureDisplay = ({
             }
 
             if (feature?.trackedMode === "dicePool") {
-              const baseLevel =
-                feature?.poolSize === "druid_level"
-                  ? Number(druidLevel) || 0
-                  : Number(characterLevel) || 0;
-              const poolMax = Math.max(0, Math.trunc(baseLevel));
+              const levelValue = (() => {
+                if (feature?.trackedLevelSource === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                if (feature?.trackedLevelSource === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+              })();
+
+              const basePoolMax = (() => {
+                if (Array.isArray(feature?.poolSizeByLevel) && Number.isFinite(levelValue)) {
+                  const sorted = [...feature.poolSizeByLevel].sort((a, b) => (a?.level || 0) - (b?.level || 0));
+                  const match = sorted.reduce((acc, cur) => {
+                    if (!cur || !Number.isFinite(cur.level)) return acc;
+                    if (cur.level <= levelValue) return cur;
+                    return acc;
+                  }, null);
+                  if (match && Number.isFinite(match.size)) return Math.max(0, Math.trunc(match.size));
+                }
+
+                if (feature?.poolSize === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                if (feature?.poolSize === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                return Math.max(0, Math.trunc(levelValue));
+              })();
+
+              const poolBonusRaw = feature?.allowExtraDicePool ? tracker?.poolBonus : 0;
+              const poolBonus = feature?.allowExtraDicePool ? clampInt(poolBonusRaw ?? 0, -20, 20) : 0;
+              const poolMax = Math.max(0, Math.trunc(basePoolMax + poolBonus));
+
+              const dieLabel = (() => {
+                if (Array.isArray(feature?.dieByLevel) && Number.isFinite(levelValue)) {
+                  const sorted = [...feature.dieByLevel].sort((a, b) => (a?.level || 0) - (b?.level || 0));
+                  const match = sorted.reduce((acc, cur) => {
+                    if (!cur || !Number.isFinite(cur.level)) return acc;
+                    if (cur.level <= levelValue) return cur;
+                    return acc;
+                  }, null);
+                  if (match?.die) return String(match.die);
+                }
+                if (feature?.die) return String(feature.die);
+                return "d6";
+              })();
               const spentDice = clampInt(tracker?.spentDice ?? 0, 0, poolMax);
               const remainingDice = Math.max(0, poolMax - spentDice);
               const isEditing = activeDicePoolEditorKey === trackerKey;
@@ -386,7 +423,7 @@ const FeatureDisplay = ({
                           userSelect: "none",
                         }}
                       >
-                        {remainingDice}/{poolMax} d6
+                        {remainingDice}/{poolMax} {dieLabel}
                       </Typography>
                     </Tooltip>
                   ) : (
@@ -423,6 +460,42 @@ const FeatureDisplay = ({
                       </Select>
                     </FormControl>
                   )}
+
+                  {feature?.allowExtraDicePool ? (
+                    <>
+                      <Tooltip arrow title="Decrease max dice">
+                        <span>
+                          <IconButton
+                            size="small"
+                            aria-label="Decrease max dice"
+                            onClick={() => {
+                              const nextBonus = clampInt((tracker?.poolBonus ?? 0) - 1, -20, 20);
+                              setTracker({
+                                poolBonus: nextBonus,
+                                spentDice: clampInt(tracker?.spentDice ?? 0, 0, Math.max(0, basePoolMax + nextBonus)),
+                              });
+                            }}
+                            sx={{ ml: 0.25, p: 0.25, opacity: 0.9 }}
+                          >
+                            <RemoveIcon fontSize="inherit" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip arrow title="Increase max dice">
+                        <IconButton
+                          size="small"
+                          aria-label="Increase max dice"
+                          onClick={() => {
+                            const nextBonus = clampInt((tracker?.poolBonus ?? 0) + 1, -20, 20);
+                            setTracker({ poolBonus: nextBonus });
+                          }}
+                          sx={{ p: 0.25, opacity: 0.9 }}
+                        >
+                          <AddIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  ) : null}
 
                   {extraTrailing}
                 </>
@@ -723,6 +796,14 @@ const FeaturesAndTrackables = () => {
     return 0;
   }, [characterInfo?.classLevels?.druid, characterClass, characterLevel]);
 
+  const fighterLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.fighter;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterClass === "fighter") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+    return 0;
+  }, [characterInfo?.classLevels?.fighter, characterClass, characterLevel]);
+
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
   const [manageModal, setManageModal] = React.useState({ open: false, kind: "class" });
@@ -738,6 +819,7 @@ const FeaturesAndTrackables = () => {
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
   const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
   const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
+  const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -821,6 +903,15 @@ const FeaturesAndTrackables = () => {
     Number(characterLevel || 0) >= 3;
 
   const arcaneArcherLoreCantripCount = characterInfo?.arcaneArcherLoreCantrip?.index ? 1 : 0;
+
+  const hasBattleMaster =
+    characterClass === "fighter" &&
+    subclass === "battleMaster" &&
+    Number(fighterLevel || 0) >= 3;
+
+  const battleMasterManeuverCount = Array.isArray(characterInfo?.battleMasterManeuvers)
+    ? characterInfo.battleMasterManeuvers.length
+    : 0;
 
   React.useEffect(() => {
     if (!hasArcaneArcherLore) return;
@@ -1130,7 +1221,7 @@ const FeaturesAndTrackables = () => {
     <div>
 	        <Grid container spacing={2}>
 	          <Grid item xs={12} md={6}>
-	            <FeatureDisplay
+            <FeatureDisplay
               title="Class Features"
               addTooltip="Add custom Class Feature"
               onAdd={() => setAddModal({ open: true, kind: "class" })}
@@ -1142,6 +1233,7 @@ const FeaturesAndTrackables = () => {
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
+              fighterLevel={fighterLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1157,8 +1249,41 @@ const FeaturesAndTrackables = () => {
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
               renderDetailsHeaderForFeature={(feature) => {
-                if (!hasArcaneArcherLore) return null;
-                if (feature?.id === "arcane_shot") {
+                if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
+                  const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
+                  const dexMod = characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0;
+                  const dc = 8 + (Number(proficiencyBonusValue) || 2) + Math.max(Number(strMod) || 0, Number(dexMod) || 0);
+
+                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                  const allowed =
+                    level < 3
+                      ? 0
+                      : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
+
+                  const selectedIds = Array.isArray(characterInfo?.battleMasterManeuvers)
+                    ? characterInfo.battleMasterManeuvers
+                    : [];
+
+                  const allManeuvers = classesData?.fighter?.subclasses?.battleMaster?.maneuvers || [];
+                  const byId = new Map((Array.isArray(allManeuvers) ? allManeuvers : []).map((m) => [m?.id, m]));
+                  const selectedNames = selectedIds
+                    .map((id) => byId.get(id)?.name || id)
+                    .filter(Boolean);
+
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Maneuver Save DC:</strong> {dc}
+                      </p>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Selected maneuvers:</strong>{" "}
+                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (hasArcaneArcherLore && feature?.id === "arcane_shot") {
                   const intMod = characterInfo?.stats?.int?.mod ?? 0;
                   const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(intMod) || 0);
                   const selectedIds = Array.isArray(characterInfo?.arcaneShotOptions) ? characterInfo.arcaneShotOptions : [];
@@ -1189,7 +1314,7 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
-                if (feature?.id === "arcane_archer_lore") {
+                if (hasArcaneArcherLore && feature?.id === "arcane_archer_lore") {
                   const cantrip = characterInfo?.arcaneArcherLoreCantrip || null;
                   if (!cantrip?.index) return null;
                   return (
@@ -1291,6 +1416,43 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
+                  const selectedCount = battleMasterManeuverCount;
+                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                  const allowed =
+                    level < 3
+                      ? 0
+                      : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
+                  const isOver = selectedCount > allowed;
+                  const isUnder = selectedCount < allowed;
+
+                  return (
+                    <Tooltip arrow title={`Choose maneuvers (${selectedCount}/${allowed})`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose maneuvers"
+                        onClick={() => setBattleMasterManeuversModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <SwordIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasArcaneArcherLore && feature?.id === "arcane_archer_lore") {
                   const isOver = arcaneArcherLoreCantripCount > 1;
                   const isUnder = arcaneArcherLoreCantripCount < 1;
@@ -1559,6 +1721,7 @@ const FeaturesAndTrackables = () => {
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
+              fighterLevel={fighterLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
             />
@@ -1667,6 +1830,11 @@ const FeaturesAndTrackables = () => {
       <ArcaneShotOptionsModal
         open={arcaneShotOptionsModalOpen}
         onClose={() => setArcaneShotOptionsModalOpen(false)}
+      />
+
+      <BattleMasterManeuversModal
+        open={battleMasterManeuversModalOpen}
+        onClose={() => setBattleMasterManeuversModalOpen(false)}
       />
 
       <ArcaneMasteryModal
