@@ -38,6 +38,9 @@ import ArcanaInitiateModal from "./ArcanaInitiateModal";
 import ArcaneMasteryModal from "./ArcaneMasteryModal";
 import ReaperCantripModal from "./ReaperCantripModal";
 import AcolyteOfNatureModal from "./AcolyteOfNatureModal";
+import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
+import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
+import SpellAccordian from "./SpellAccordian";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -177,6 +180,7 @@ const FeatureDisplay = ({
   untrackedLabel,
   renderTrackedTrailingControls,
   renderUntrackedTrailingControls,
+  renderDetailsHeaderForFeature,
   addTooltip,
   onAdd,
   manageTooltip,
@@ -292,28 +296,38 @@ const FeatureDisplay = ({
         ) : null}
       </div>
 
-      {trackedFeatures.map((feature) => (
-        <FeatureAccordionRow
-          key={feature.id}
-          feature={feature}
-          detailsIdPrefix={`features-${title}`}
-          renderDetailsHeader={
-            feature?.trackedMode === "stackingChecks"
-              ? () => (
-                  <p style={{ margin: "2px 0" }}>
-                    <strong>Current DC:</strong>{" "}
-                    {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
-                  </p>
-                )
-              : null
-          }
-          renderTrailingControls={() => {
-            const extraTrailing = renderTrackedTrailingControls
-              ? renderTrackedTrailingControls(feature)
-              : null;
-            const usesCount = getUsesCount(feature);
-            const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
-            const tracker = featureTrackers?.[trackerKey] || {};
+      {trackedFeatures.map((feature) => {
+        const stackingHeader =
+          feature?.trackedMode === "stackingChecks" ? (
+            <p style={{ margin: "2px 0" }}>
+              <strong>Current DC:</strong> {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
+            </p>
+          ) : null;
+
+        const customHeader = renderDetailsHeaderForFeature ? renderDetailsHeaderForFeature(feature) : null;
+        const renderHeader =
+          stackingHeader || customHeader
+            ? () => (
+                <>
+                  {stackingHeader}
+                  {customHeader}
+                </>
+              )
+            : null;
+
+        return (
+          <FeatureAccordionRow
+            key={feature.id}
+            feature={feature}
+            detailsIdPrefix={`features-${title}`}
+            renderDetailsHeader={renderHeader}
+            renderTrailingControls={() => {
+              const extraTrailing = renderTrackedTrailingControls
+                ? renderTrackedTrailingControls(feature)
+                : null;
+              let usesCount = getUsesCount(feature);
+              const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
+              const tracker = featureTrackers?.[trackerKey] || {};
 
             const setTracker = (nextPartial) => {
               setFeatureTrackers((prev) => ({
@@ -331,6 +345,11 @@ const FeatureDisplay = ({
               const asInt = Math.trunc(asNum);
               return Math.max(min, Math.min(max, asInt));
             };
+
+            const extraUses = feature?.allowExtraUses ? clampInt(tracker?.extraUses ?? 0, 0, 20) : 0;
+            if (extraUses > 0 && typeof usesCount === "number") {
+              usesCount += extraUses;
+            }
 
             if (feature?.trackedMode === "dicePool") {
               const baseLevel =
@@ -591,27 +610,58 @@ const FeatureDisplay = ({
               );
             }
 
-            return (
-              <>
-                {Array.from({ length: usesCount }).map((_, idx) => (
-                  <Checkbox
-                    key={`${feature.id}:use:${idx}`}
-                    defaultChecked={false}
-                    size="small"
-                    sx={{
-                      ml: idx === 0 ? 0.25 : 0,
-                      p: 0.25,
-                      color: "#8B4513",
-                      "&.Mui-checked": { color: "#8B4513" },
-                    }}
-                  />
-                ))}
-                {extraTrailing}
-              </>
-            );
-          }}
-        />
-      ))}
+              return (
+                <>
+                  {Array.from({ length: usesCount }).map((_, idx) => (
+                    <Checkbox
+                      key={`${feature.id}:use:${idx}`}
+                      defaultChecked={false}
+                      size="small"
+                      sx={{
+                        ml: idx === 0 ? 0.25 : 0,
+                        p: 0.25,
+                        color: "#8B4513",
+                        "&.Mui-checked": { color: "#8B4513" },
+                      }}
+                    />
+                  ))}
+                  {feature?.allowExtraUses ? (
+                    <>
+                      <Tooltip arrow title="Decrease bonus uses">
+                        <span>
+                          <IconButton
+                            size="small"
+                            aria-label="Decrease bonus uses"
+                            onClick={() => setTracker({ extraUses: Math.max(0, extraUses - 1) })}
+                            disabled={extraUses <= 0}
+                            sx={{ ml: 0.25, p: 0.25 }}
+                          >
+                            <RemoveIcon fontSize="inherit" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037" }}>
+                        +{extraUses}
+                      </Typography>
+                      <Tooltip arrow title="Increase bonus uses">
+                        <IconButton
+                          size="small"
+                          aria-label="Increase bonus uses"
+                          onClick={() => setTracker({ extraUses: extraUses + 1 })}
+                          sx={{ p: 0.25 }}
+                        >
+                          <AddIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  ) : null}
+                  {extraTrailing}
+                </>
+              );
+            }}
+          />
+        );
+      })}
 
       {untrackedFeatures.length > 0 && (
         <Accordion
@@ -638,6 +688,7 @@ const FeatureDisplay = ({
               const trailing = renderUntrackedTrailingControls
                 ? renderUntrackedTrailingControls(feature)
                 : null;
+              const customHeader = renderDetailsHeaderForFeature ? renderDetailsHeaderForFeature(feature) : null;
 
               return (
                 <FeatureAccordionRow
@@ -645,6 +696,7 @@ const FeatureDisplay = ({
                   feature={feature}
                   detailsIdPrefix={`untracked-${title}`}
                   renderTrailingControls={trailing ? () => trailing : null}
+                  renderDetailsHeader={customHeader ? () => customHeader : null}
                 />
               );
             })}
@@ -684,6 +736,8 @@ const FeaturesAndTrackables = () => {
   const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
+  const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
+  const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -760,6 +814,28 @@ const FeaturesAndTrackables = () => {
     Number(characterLevel || 0) >= 1;
 
   const acolyteOfNatureCantripCount = characterInfo?.acolyteOfNatureCantrip?.index ? 1 : 0;
+
+  const hasArcaneArcherLore =
+    characterClass === "fighter" &&
+    subclass === "arcaneArcher" &&
+    Number(characterLevel || 0) >= 3;
+
+  const arcaneArcherLoreCantripCount = characterInfo?.arcaneArcherLoreCantrip?.index ? 1 : 0;
+
+  React.useEffect(() => {
+    if (!hasArcaneArcherLore) return;
+    if (characterInfo?.arcaneArcherLoreCantrip?.index) return;
+    setCharacterInfo((prev) => {
+      if (prev?.arcaneArcherLoreCantrip?.index) return prev;
+      return {
+        ...prev,
+        arcaneArcherLoreCantrip: {
+          index: "prestidigitation",
+          name: "Prestidigitation",
+        },
+      };
+    });
+  }, [hasArcaneArcherLore, characterInfo?.arcaneArcherLoreCantrip?.index, setCharacterInfo]);
 
   // Retrieve class data
   const classData = React.useMemo(() => classesData[characterClass] || {}, [characterClass]);
@@ -955,10 +1031,29 @@ const FeaturesAndTrackables = () => {
   }, [classFeatures, applyTrackedOverride, classOverrideKey, isHidden, characterClass, fightingStyle]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
-    return subclassFeatures
+    const base = subclassFeatures
       .map((f) => applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: subclassOverrideKey, featureId: f.id }));
-  }, [subclassFeatures, applyTrackedOverride, subclassOverrideKey, isHidden]);
+
+    if (!hasArcaneArcherLore) return base;
+
+    const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
+    const displayName = cantripName
+      ? `${cantripName} (Arcane Archer Lore)`
+      : "Choose Cantrip (Arcane Archer Lore)";
+
+    return base.map((feature) => {
+      if (feature?.id !== "arcane_archer_lore") return feature;
+      return { ...feature, name: displayName };
+    });
+  }, [
+    subclassFeatures,
+    applyTrackedOverride,
+    subclassOverrideKey,
+    isHidden,
+    hasArcaneArcherLore,
+    characterInfo?.arcaneArcherLoreCantrip?.name,
+  ]);
 
   const classTrackedById = React.useMemo(() => {
     const map = {};
@@ -1061,7 +1156,104 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
+              renderDetailsHeaderForFeature={(feature) => {
+                if (!hasArcaneArcherLore) return null;
+                if (feature?.id === "arcane_shot") {
+                  const intMod = characterInfo?.stats?.int?.mod ?? 0;
+                  const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(intMod) || 0);
+                  const selectedIds = Array.isArray(characterInfo?.arcaneShotOptions) ? characterInfo.arcaneShotOptions : [];
+                  const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
+                  const level = Math.max(0, Math.trunc(Number(characterLevel) || 0));
+                  const baseAllowed =
+                    level < 3
+                      ? 0
+                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0) + (level >= 18 ? 1 : 0);
+                  const allowed = baseAllowed + bonusSlots;
+
+                  const allOptions = classesData?.fighter?.subclasses?.arcaneArcher?.arcaneShotOptions || [];
+                  const byId = new Map((Array.isArray(allOptions) ? allOptions : []).map((o) => [o?.id, o]));
+                  const selectedNames = selectedIds
+                    .map((id) => byId.get(id)?.name || id)
+                    .filter(Boolean);
+
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Arcane Shot DC:</strong> {dc}
+                      </p>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Selected options:</strong>{" "}
+                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (feature?.id === "arcane_archer_lore") {
+                  const cantrip = characterInfo?.arcaneArcherLoreCantrip || null;
+                  if (!cantrip?.index) return null;
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Chosen cantrip:</strong>
+                      </p>
+                      <SpellAccordian numericalSpellLevel={0} spell={cantrip} />
+                    </div>
+                  );
+                }
+
+                return null;
+              }}
               renderTrackedTrailingControls={(feature) => {
+                if (hasArcaneArcherLore && feature?.id === "arcane_shot") {
+                  const selectedCount = Array.isArray(characterInfo?.arcaneShotOptions)
+                    ? characterInfo.arcaneShotOptions.length
+                    : 0;
+                  const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
+                  const level = Math.max(0, Math.trunc(Number(characterLevel) || 0));
+                  const baseAllowed =
+                    level < 3
+                      ? 0
+                      : 2 +
+                        (level >= 7 ? 1 : 0) +
+                        (level >= 10 ? 1 : 0) +
+                        (level >= 15 ? 1 : 0) +
+                        (level >= 18 ? 1 : 0);
+                  const allowed = baseAllowed + bonusSlots;
+                  const isOver = selectedCount > allowed;
+                  const isUnder = selectedCount < allowed;
+
+                  return (
+                    <Tooltip arrow title={`Choose Arcane Shot options (${selectedCount}/${allowed})`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Arcane Shot options"
+                        onClick={() => setArcaneShotOptionsModalOpen(true)}
+                        sx={{
+                          ml: 0.5,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(15, 118, 110, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(244, 233, 221, 0.65)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver
+                              ? "rgba(194, 65, 12, 0.14)"
+                              : isUnder
+                                ? "rgba(244, 233, 221, 0.85)"
+                                : "rgba(20, 184, 166, 0.14)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (!hasSpiritSession) return null;
                 if (feature?.id !== "spirit_session") return null;
 
@@ -1099,6 +1291,36 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                if (hasArcaneArcherLore && feature?.id === "arcane_archer_lore") {
+                  const isOver = arcaneArcherLoreCantripCount > 1;
+                  const isUnder = arcaneArcherLoreCantripCount < 1;
+                  return (
+                    <Tooltip arrow title={`Choose Arcane Archer Lore cantrip (${arcaneArcherLoreCantripCount}/1)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Arcane Archer Lore cantrip"
+                        onClick={() => setArcaneArcherLoreCantripModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasAdditionalMagicalSecrets && feature?.id === "additional_magical_secrets") {
                   const isOver = magicalSecretsCount > 2;
 
@@ -1435,6 +1657,16 @@ const FeaturesAndTrackables = () => {
       <AcolyteOfNatureModal
         open={acolyteOfNatureModalOpen}
         onClose={() => setAcolyteOfNatureModalOpen(false)}
+      />
+
+      <ArcaneArcherLoreCantripModal
+        open={arcaneArcherLoreCantripModalOpen}
+        onClose={() => setArcaneArcherLoreCantripModalOpen(false)}
+      />
+
+      <ArcaneShotOptionsModal
+        open={arcaneShotOptionsModalOpen}
+        onClose={() => setArcaneShotOptionsModalOpen(false)}
       />
 
       <ArcaneMasteryModal
