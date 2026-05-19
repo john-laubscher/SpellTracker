@@ -190,6 +190,8 @@ const FeatureDisplay = ({
   proficiencyBonusValue,
   charismaModValue,
   wisdomModValue,
+  strengthModValue,
+  constitutionModValue,
   druidLevel,
   fighterLevel,
   characterClass,
@@ -235,6 +237,14 @@ const FeatureDisplay = ({
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
     if (feature?.uses === "cha_mod") return Math.max(1, Number(charismaModValue) || 1);
     if (feature?.uses === "wis_mod") return Math.max(1, Number(wisdomModValue) || 1);
+    if (feature?.uses === "str_mod") {
+      const minUses = Math.max(0, Math.trunc(Number(feature?.minUses) || 0));
+      return Math.max(minUses, Math.trunc(Number(strengthModValue) || 0));
+    }
+    if (feature?.uses === "con_mod") {
+      const minUses = Math.max(0, Math.trunc(Number(feature?.minUses) || 0));
+      return Math.max(minUses, Math.trunc(Number(constitutionModValue) || 0));
+    }
     if (feature?.uses === "druid_level") return Math.max(0, Number(druidLevel) || 0);
     if (typeof feature?.uses === "number" && Number.isFinite(feature.uses) && feature.uses > 0) return feature.uses;
     return 1;
@@ -788,6 +798,8 @@ const FeaturesAndTrackables = () => {
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
   const wisdomModValue = characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0;
+  const strengthModValue = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
+  const constitutionModValue = characterInfo?.stats?.con?.mod ?? characterInfo?.stats?.constitution?.mod ?? 0;
   const druidLevel = React.useMemo(() => {
     const raw = characterInfo?.classLevels?.druid;
     const numeric = Number(raw);
@@ -1232,6 +1244,8 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              strengthModValue={strengthModValue}
+              constitutionModValue={constitutionModValue}
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
               characterClass={characterClass}
@@ -1251,6 +1265,8 @@ const FeaturesAndTrackables = () => {
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
+              strengthModValue={strengthModValue}
+              constitutionModValue={constitutionModValue}
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
               characterClass={characterClass}
