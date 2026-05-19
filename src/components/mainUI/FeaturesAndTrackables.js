@@ -1248,6 +1248,13 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               untrackedLabel="Untracked Subclass Features"
+              proficiencyBonusValue={proficiencyBonusValue}
+              charismaModValue={charismaModValue}
+              wisdomModValue={wisdomModValue}
+              druidLevel={druidLevel}
+              fighterLevel={fighterLevel}
+              characterClass={characterClass}
+              characterLevel={characterLevel}
               renderDetailsHeaderForFeature={(feature) => {
                 if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
                   const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
@@ -1667,12 +1674,6 @@ const FeaturesAndTrackables = () => {
 
 			                return null;
 			              }}
-	              proficiencyBonusValue={proficiencyBonusValue}
-	              charismaModValue={charismaModValue}
-              wisdomModValue={wisdomModValue}
-              druidLevel={druidLevel}
-              characterClass={characterClass}
-              characterLevel={characterLevel}
             />
           </Grid>
 	        </Grid>
