@@ -131,6 +131,30 @@ const loadArcaneShotBonusOptionsFromStorage = () => {
   }
 };
 
+const loadBattleMasterManeuversFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_battleMasterManeuvers");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((x) => typeof x === "string" && x.trim().length > 0);
+  } catch {
+    return null;
+  }
+};
+
+const loadShowManeuversInSpellTrackerFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_showManeuversInSpellTracker");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "boolean") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const loadDomainSpellSwapsFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_domainSpellSwaps");
@@ -168,6 +192,8 @@ function App() {
     const persistedArcaneArcherLoreCantrip = loadArcaneArcherLoreCantripFromStorage();
     const persistedArcaneShotOptions = loadArcaneShotOptionsFromStorage();
     const persistedArcaneShotBonusOptions = loadArcaneShotBonusOptionsFromStorage();
+    const persistedBattleMasterManeuvers = loadBattleMasterManeuversFromStorage();
+    const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     return {
       characterName: "Garetjax",
@@ -224,6 +250,8 @@ function App() {
       arcaneArcherLoreCantrip: persistedArcaneArcherLoreCantrip || null,
       arcaneShotOptions: Array.isArray(persistedArcaneShotOptions) ? persistedArcaneShotOptions : [],
       arcaneShotBonusOptions: Number.isFinite(persistedArcaneShotBonusOptions) ? persistedArcaneShotBonusOptions : 0,
+      battleMasterManeuvers: Array.isArray(persistedBattleMasterManeuvers) ? persistedBattleMasterManeuvers : [],
+      showManeuversInSpellTracker: typeof persistedShowManeuversInSpellTracker === "boolean" ? persistedShowManeuversInSpellTracker : false,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
     };
   });
@@ -368,6 +396,28 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.arcaneShotBonusOptions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_battleMasterManeuvers",
+        JSON.stringify(characterInfo.battleMasterManeuvers || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.battleMasterManeuvers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_showManeuversInSpellTracker",
+        JSON.stringify(Boolean(characterInfo.showManeuversInSpellTracker))
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.showManeuversInSpellTracker]);
 
   useEffect(() => {
     try {

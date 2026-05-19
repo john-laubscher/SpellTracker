@@ -71,8 +71,17 @@ const Header = () => {
   const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
   const isArcaneArcher =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
+  const isBattleMaster =
+    characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "battleMaster";
   const arcaneShotDc =
     8 + (proficiencyBonus[characterInfo.characterLevel] || 2) + (Number(characterInfo?.stats?.int?.mod) || 0);
+  const maneuverSaveDc =
+    8 +
+    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    Math.max(
+      Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0,
+      Number(characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0) || 0
+    );
 
 useEffect(() => {
 
@@ -194,6 +203,10 @@ useEffect(() => {
                   {isArcaneArcher ? (
                     <Typography variant="h6" sx={theme.typography.body1}>
                       Arcane Shot DC: {arcaneShotDc}
+                    </Typography>
+                  ) : isBattleMaster ? (
+                    <Typography variant="h6" sx={theme.typography.body1}>
+                      Maneuver Save DC: {maneuverSaveDc}
                     </Typography>
                   ) : (
                     <Typography variant="h6" sx={theme.typography.body1}>

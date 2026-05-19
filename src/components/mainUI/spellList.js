@@ -25,6 +25,9 @@ import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripBu
 import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
 import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
+import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
+import ManeuverAccordian from "./ManeuverAccordian";
+import SwordIcon from "./SwordIcon";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -284,6 +287,10 @@ const THOUSAND_FORMS_TOOLTIP =
 
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  const classKey = characterInfo?.characterClass;
+  const classMeta = ClassesData?.[classKey] || null;
+  const isNonCaster = classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster";
+  const isFighter = String(characterInfo?.characterClass || "") === "fighter";
   const hasGuidingWhispers =
     characterInfo?.characterClass === "bard" &&
     characterInfo?.subclass === "spirits" &&
@@ -316,6 +323,32 @@ export const SpellList = (props) => {
     }
     return 0;
   }, [characterInfo?.classLevels?.druid, characterInfo?.characterClass, characterInfo?.characterLevel]);
+
+  const fighterLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.fighter;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterInfo?.characterClass === "fighter") {
+      return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+    }
+    return 0;
+  }, [characterInfo?.classLevels?.fighter, characterInfo?.characterClass, characterInfo?.characterLevel]);
+
+  const isBattleMaster =
+    characterInfo?.characterClass === "fighter" &&
+    characterInfo?.subclass === "battleMaster" &&
+    fighterLevel >= 3;
+
+  const showManeuversInSpellTracker = Boolean(characterInfo?.showManeuversInSpellTracker);
+
+  const selectedBattleMasterManeuvers = Array.isArray(characterInfo?.battleMasterManeuvers)
+    ? characterInfo.battleMasterManeuvers
+    : [];
+
+  const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
+
+  const hideFighterSpellSection =
+    isNonCaster && isFighter && !(isBattleMaster && showManeuversInSpellTracker);
 
   const hasThousandForms =
     characterInfo?.characterClass === "druid" &&
@@ -2050,6 +2083,84 @@ export const SpellList = (props) => {
     }));
   };
 
+  const renderBattleMasterManeuvers = () => {
+    if (!isBattleMaster) return null;
+    if (!showManeuversInSpellTracker) return null;
+
+    const allowed =
+      fighterLevel < 3
+        ? 0
+        : 3 + (fighterLevel >= 7 ? 2 : 0) + (fighterLevel >= 10 ? 2 : 0) + (fighterLevel >= 15 ? 2 : 0);
+
+    const all = ClassesData?.fighter?.subclasses?.battleMaster?.maneuvers || [];
+    const maneuvers = Array.isArray(all) ? all : [];
+    const byId = new Map(maneuvers.map((m) => [m?.id, m]));
+
+    const selected = selectedBattleMasterManeuvers
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+
+    const selectedCount = selectedBattleMasterManeuvers.length;
+    const isOver = allowed > 0 && selectedCount > allowed;
+    const isUnder = allowed > 0 && selectedCount < allowed;
+
+    return (
+      <Box
+        sx={{
+          borderLeft: `4px solid ${isOver ? "#b71c1c" : "#7c2d12"}`,
+          borderRadius: "6px",
+          backgroundColor: "rgba(255,255,255,0.45)",
+          mb: 1.5,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+          <Typography
+            sx={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              fontSize: "15px",
+              color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#7c2d12",
+            }}
+          >
+            Maneuvers ({selectedCount}/{allowed})
+          </Typography>
+
+          <Tooltip arrow title="Choose maneuvers">
+            <IconButton
+              size="small"
+              aria-label="Choose maneuvers"
+              onClick={() => setBattleMasterManeuversModalOpen(true)}
+              sx={{
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "rgba(124, 45, 18, 0.95)",
+                border: "1px solid rgba(124, 45, 18, 0.22)",
+                backgroundColor: "rgba(124, 45, 18, 0.06)",
+                "&:hover": { backgroundColor: "rgba(124, 45, 18, 0.10)" },
+              }}
+            >
+              <SwordIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {selected.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75 }}>
+            <em>No maneuvers selected yet.</em>
+          </Typography>
+        ) : (
+          selected.map((maneuver) => (
+            <Box key={`maneuver:${maneuver.id}`} sx={{ py: 0.2 }}>
+              <ManeuverAccordian maneuver={maneuver} />
+            </Box>
+          ))
+        )}
+      </Box>
+    );
+  };
+
   const classes = togglePreparedSpellBtnStyle();
   // ***NEED FEATURE--CRITICAL--*** some subrace spells are not in the api, so will need a condition that instead shows a message saying that the description is not available
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
@@ -2727,20 +2838,62 @@ export const SpellList = (props) => {
     );
   };
 
+  if (hideFighterSpellSection) return null;
+
   return (
       <Box sx={{ mt: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        <PreparedSpellsStatus label="Spell Tracker" />
-        <Button
-          className={classes.prepareButton}
-          variant="contained"
-          size="small"
-          onClick={unprepareAllSpells}
-          sx={{ textTransform: 'none', fontSize: '11px' }}
-        >
-          Unprepare All
-        </Button>
+        {isNonCaster && isFighter ? (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "18px",
+                color: "#3e2723",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              Maneuvers
+            </Typography>
+            {isBattleMaster ? (
+              <Tooltip arrow title="Choose maneuvers">
+                <IconButton
+                  size="small"
+                  aria-label="Choose maneuvers"
+                  onClick={() => setBattleMasterManeuversModalOpen(true)}
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(124, 45, 18, 0.95)",
+                    border: "1px solid rgba(124, 45, 18, 0.22)",
+                    backgroundColor: "rgba(124, 45, 18, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(124, 45, 18, 0.10)" },
+                  }}
+                >
+                  <SwordIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+          </Box>
+        ) : (
+          <PreparedSpellsStatus label="Spell Tracker" />
+        )}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          {!isNonCaster ? (
+            <Button
+              className={classes.prepareButton}
+              variant="contained"
+              size="small"
+              onClick={unprepareAllSpells}
+              sx={{ textTransform: 'none', fontSize: '11px' }}
+            >
+              Unprepare All
+            </Button>
+          ) : null}
+        </Box>
       </Box>
+      {renderBattleMasterManeuvers()}
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}
@@ -2763,6 +2916,11 @@ export const SpellList = (props) => {
 	          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
 	        }
 	      />
+
+        <BattleMasterManeuversModal
+          open={battleMasterManeuversModalOpen}
+          onClose={() => setBattleMasterManeuversModalOpen(false)}
+        />
     </Box>
   );
 };

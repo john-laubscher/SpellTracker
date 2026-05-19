@@ -1954,6 +1954,191 @@ export const ClassesData = {
       },
     ],
     subclasses: {
+      battleMaster: {
+        // Source (feature + maneuver text): https://dnd5e.wikidot.com/fighter:battle-master and https://dnd5e.wikidot.com/fighter:battle-master:maneuvers (CC BY-SA 3.0)
+        features: [
+          {
+            id: "combat_superiority_maneuvers",
+            name: "Combat Superiority (Maneuvers)",
+            desc: [
+              "You learn 3 maneuvers at 3rd level, and you learn 2 more at 7th, 10th, and 15th level.",
+              "Some maneuvers require a saving throw: Maneuver save DC = 8 + your proficiency bonus + your Strength or Dexterity modifier (whichever is higher).",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "combat_superiority_dice",
+            name: "Combat Superiority (Superiority Dice)",
+            desc: [
+              "At 3rd level, you gain superiority dice, which are d8s, and you use them to fuel maneuvers.",
+              "You have 4 superiority dice. You regain all expended superiority dice when you finish a short or long rest.",
+              "You gain 1 more superiority die at 7th level and 1 more at 15th level.",
+              "Improved Combat Superiority: At 10th level your superiority dice become d10s; at 18th level they become d12s.",
+            ],
+            level: 3,
+            tracked: true,
+            trackedMode: "dicePool",
+            trackedLevelSource: "fighter_level",
+            allowExtraDicePool: true,
+            poolSizeByLevel: [
+              { level: 3, size: 4 },
+              { level: 7, size: 5 },
+              { level: 15, size: 6 },
+            ],
+            dieByLevel: [
+              { level: 3, die: "d8" },
+              { level: 10, die: "d10" },
+              { level: 18, die: "d12" },
+            ],
+            recharge: "sr_or_lr",
+          },
+          {
+            id: "know_your_enemy",
+            name: "Know Your Enemy",
+            desc: [
+              "Starting at 7th level, if you spend at least 1 minute observing or interacting with another creature outside combat, you can learn information about its capabilities compared to your own.",
+              "The DM tells you if the creature is your equal, superior, or inferior in regard to two characteristics of your choice: Strength, Dexterity, Constitution, Armor Class, current hit points, total class levels (if any), or Fighter class levels (if any).",
+            ],
+            level: 7,
+            tracked: false,
+          },
+          {
+            id: "improved_combat_superiority",
+            name: "Improved Combat Superiority",
+            desc: "At 10th level, your superiority dice turn into d10s. At 18th level, they turn into d12s.",
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "relentless",
+            name: "Relentless",
+            desc: "Starting at 15th level, when you roll initiative and have no superiority dice remaining, you regain 1 superiority die.",
+            level: 15,
+            tracked: false,
+          },
+        ],
+        maneuvers: [
+          {
+            id: "ambush",
+            name: "Ambush",
+            desc: "When you make a Dexterity (Stealth) check or an initiative roll, you can expend one superiority die and add the die to the roll, provided you aren't incapacitated.",
+          },
+          {
+            id: "bait_and_switch",
+            name: "Bait and Switch",
+            desc: [
+              "When you're within 5 feet of a creature on your turn, you can expend one superiority die and switch places with that creature, provided you spend at least 5 feet of movement and the creature is willing and isn't incapacitated. This movement doesn't provoke opportunity attacks.",
+              "Roll the superiority die. Until the start of your next turn, you or the other creature (your choice) gains a bonus to AC equal to the number rolled.",
+            ],
+          },
+          {
+            id: "brace",
+            name: "Brace",
+            desc: "When a creature you can see moves into the reach you have with the melee weapon you're wielding, you can use your reaction to expend one superiority die and make one attack against the creature, using that weapon. If the attack hits, add the superiority die to the weapon's damage roll.",
+          },
+          {
+            id: "commanders_strike",
+            name: "Commander's Strike",
+            desc: "When you take the Attack action on your turn, you can forgo one of your attacks and use a bonus action to direct one of your companions to strike. When you do so, choose a friendly creature who can see or hear you and expend one superiority die. That creature can immediately use its reaction to make one weapon attack, adding the superiority die to the attack's damage roll.",
+          },
+          {
+            id: "commanding_presence",
+            name: "Commanding Presence",
+            desc: "When you make a Charisma (Intimidation), a Charisma (Performance), or a Charisma (Persuasion) check, you can expend one superiority die and add the superiority die to the ability check.",
+          },
+          {
+            id: "disarming_attack",
+            name: "Disarming Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to disarm the target, forcing it to drop one item of your choice that it's holding. You add the superiority die to the attack's damage roll, and the target must make a Strength saving throw. On a failed save, it drops the object you choose. The object lands at its feet.",
+          },
+          {
+            id: "distracting_strike",
+            name: "Distracting Strike",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to distract the creature, giving your allies an opening. You add the superiority die to the attack's damage roll. The next attack roll against the target by an attacker other than you has advantage if the attack is made before the start of your next turn.",
+          },
+          {
+            id: "evasive_footwork",
+            name: "Evasive Footwork",
+            desc: "When you move, you can expend one superiority die, rolling the die and adding the number rolled to your AC until you stop moving.",
+          },
+          {
+            id: "feinting_attack",
+            name: "Feinting Attack",
+            desc: "You can expend one superiority die and use a bonus action on your turn to feint, choosing one creature within 5 feet of you as your target. You have advantage on your next attack roll against that creature this turn. If that attack hits, add the superiority die to the attack's damage roll.",
+          },
+          {
+            id: "goading_attack",
+            name: "Goading Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to goad the target into attacking you. You add the superiority die to the attack's damage roll, and the target must make a Wisdom saving throw. On a failed save, the target has disadvantage on all attack rolls against targets other than you until the end of your next turn.",
+          },
+          {
+            id: "grappling_strike",
+            name: "Grappling Strike",
+            desc: "Immediately after you hit a creature with a melee attack on your turn, you can expend one superiority die and then try to grapple the target as a bonus action (see the Player's Handbook for rules on grappling). Add the superiority die to your Strength (Athletics) check.",
+          },
+          {
+            id: "lunging_attack",
+            name: "Lunging Attack",
+            desc: "When you make a melee weapon attack on your turn, you can expend one superiority die to increase your reach for that attack by 5 feet. If you hit, you add the superiority die to the attack's damage roll.",
+          },
+          {
+            id: "maneuvering_attack",
+            name: "Maneuvering Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to maneuver one of your comrades into a more advantageous position. You add the superiority die to the attack's damage roll, and you choose a friendly creature who can see or hear you. That creature can use its reaction to move up to half its speed without provoking opportunity attacks from the target of your attack.",
+          },
+          {
+            id: "menacing_attack",
+            name: "Menacing Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to frighten the target. You add the superiority die to the attack's damage roll, and the target must make a Wisdom saving throw. On a failed save, it is frightened of you until the end of your next turn.",
+          },
+          {
+            id: "parry",
+            name: "Parry",
+            desc: "When another creature damages you with a melee attack, you can use your reaction and expend one superiority die to reduce the damage by the number you roll on your superiority die + your Dexterity modifier.",
+          },
+          {
+            id: "precision_attack",
+            name: "Precision Attack",
+            desc: "When you make a weapon attack roll against a creature, you can expend one superiority die to add it to the roll. You can use this maneuver before or after making the attack roll, but before any effects of the attack are applied.",
+          },
+          {
+            id: "pushing_attack",
+            name: "Pushing Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to drive the target back. You add the superiority die to the attack's damage roll, and if the target is Large or smaller, it must make a Strength saving throw. On a failed save, you push the target up to 15 feet away from you.",
+          },
+          {
+            id: "quick_toss",
+            name: "Quick Toss",
+            desc: "As a bonus action, you can expend one superiority die and make a ranged attack with a weapon that has the thrown property. You can draw the weapon as part of making this attack. If you hit, add the superiority die to the weapon's damage roll.",
+          },
+          {
+            id: "rally",
+            name: "Rally",
+            desc: "On your turn, you can use a bonus action and expend one superiority die to bolster the resolve of one of your companions. When you do so, choose a friendly creature who can see or hear you. That creature gains temporary hit points equal to the superiority die roll + your Charisma modifier.",
+          },
+          {
+            id: "riposte",
+            name: "Riposte",
+            desc: "When a creature misses you with a melee attack, you can use your reaction and expend one superiority die to make a melee weapon attack against the creature. If you hit, you add the superiority die to the attack's damage roll.",
+          },
+          {
+            id: "sweeping_attack",
+            name: "Sweeping Attack",
+            desc: "When you hit a creature with a melee weapon attack, you can expend one superiority die to attempt to damage another creature with the same attack. Choose another creature within 5 feet of the original target and within your reach. If the original attack roll would hit the second creature, it takes damage equal to the number you roll on your superiority die. The damage is of the same type dealt by the original attack.",
+          },
+          {
+            id: "tactical_assessment",
+            name: "Tactical Assessment",
+            desc: "When you make an Intelligence (Investigation), an Intelligence (History), or a Wisdom (Insight) check, you can expend one superiority die and add the superiority die to the ability check.",
+          },
+          {
+            id: "trip_attack",
+            name: "Trip Attack",
+            desc: "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to knock the target down. You add the superiority die to the attack's damage roll, and if the target is Large or smaller, it must make a Strength saving throw. On a failed save, you knock the target prone.",
+          },
+        ],
+      },
       arcaneArcher: {
         // Source (feature + option text): https://dnd5e.wikidot.com/fighter:arcane-archer (CC BY-SA 3.0)
         features: [
@@ -2124,38 +2309,6 @@ export const ClassesData = {
             id: "bulwark",
             name: "Bulwark",
             desc: "Beginning at 15th level, you can extend the benefit of your Indomitable feature to an ally. When you decide to use Indomitable to reroll an Intelligence, a Wisdom, or a Charisma saving throw and you aren't incapacitated, you can choose one ally within 60 feet of you that also failed its saving throw against the same effect. If that creature can see or hear you, it can reroll its saving throw and must use the new roll.",
-            level: 15,
-            tracked: false,
-          },
-        ],
-      },
-      battleMaster: {
-        features: [
-          {
-            id: "combat_superiority",
-            name: "Combat Superiority",
-            desc: "At 3rd level, you learn maneuvers that are fueled by special dice called superiority dice. You have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all expended superiority dice when you finish a short or long rest.",
-            level: 3,
-            tracked: true, // 4/SR initially, +1 at 7 and 15
-          },
-          {
-            id: "know_your_enemy",
-            name: "Know Your Enemy",
-            desc: "Starting at 7th level, if you spend at least 1 minute observing or interacting with another creature outside combat, you can learn certain information about its capabilities compared to your own. DM determines details.",
-            level: 7,
-            tracked: false,
-          },
-          {
-            id: "improved_combat_superiority",
-            name: "Improved Combat Superiority",
-            desc: "At 10th level, your superiority dice turn into d10s. At 18th level, they turn into d12s.",
-            level: 10,
-            tracked: false,
-          },
-          {
-            id: "relentless",
-            name: "Relentless",
-            desc: "Starting at 15th level, when you roll initiative and have no superiority dice remaining, you regain one superiority die.",
             level: 15,
             tracked: false,
           },
