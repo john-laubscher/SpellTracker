@@ -570,7 +570,9 @@ export const ClassesData = {
             name: "Universal Speech",
             desc: "You gain the ability to make your speech intelligible to all. As an action, choose up to a number of creatures equal to your Charisma modifier within 60 feet. For 1 hour, they can magically understand you, regardless of the language you speak.",
             level: 6,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "infectious_inspiration",
@@ -1815,40 +1817,51 @@ export const ClassesData = {
       wildfire: {
         features: [
           {
+            id: "circle_spells",
+            name: "Circle Spells",
+            desc: "Your connection to wildfire magic grants you a set of circle spells. You always have these spells prepared at the druid levels listed, and they don't count against the number of spells you can prepare each day.",
+            level: 2,
+            tracked: false,
+          },
+          {
             id: "summon_wildfire_spirit",
             name: "Summon Wildfire Spirit",
-            desc: "At 2nd level, you can summon a wildfire spirit as an action, using a use of your Wild Shape feature. The spirit appears in an unoccupied space of your choice within 30 feet of you. The spirit is friendly to you and your companions and obeys your commands. See its game statistics in the Wildfire Spirit stat block. When you summon the spirit, choose a space within 10 feet of it. Creatures of your choice within that space must succeed on a Dexterity saving throw against your spell save DC or take 2d6 fire damage.\n\nThe spirit remains for 1 hour, until it is reduced to 0 hit points, or until you use this feature to summon the spirit again.",
+            desc: "At 2nd level, You can summon the primal spirit bound to your soul. As an action, you can expend one use of your Wild Shape feature to summon your wildfire spirit, rather than assuming a beast form.\n\nThe spirit appears in an unoccupied space of your choice that you can see within 30 feet of you. Each creature within 10 feet of the spirit (other than you) when it appears must succeed on a Dexterity saving throw against your spell save DC or take 2d6 fire damage.\n\nThe spirit is friendly to you and your companions and obeys your commands. See this creature's game statistics in the Wildfire Spirit stat block, which uses your proficiency bonus (PB) in several places. You determine the spirit's appearance. Some spirits take the form of a humanoid figure made of gnarled branches covered in flame, while others look like beasts wreathed in fire.\n\nIn combat, the spirit shares your initiative count, but it takes its turn immediately after yours. The only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the spirit can take any action of its choice, not just Dodge.\n\nThe spirit manifests for 1 hour, until it is reduced to 0 hit points, until you use this feature to summon the spirit again, or until you die.",
             level: 2,
             tracked: false,
           },
           {
             id: "enhanced_bond",
             name: "Enhanced Bond",
-            desc: "Beginning at 6th level, your bond with your wildfire spirit enhances your destructive and restorative spells. Whenever you cast a spell that deals fire damage or restores hit points while your wildfire spirit is summoned, roll a d8, and you gain a bonus equal to the number rolled to one damage or healing roll of the spell. In addition, when you cast a spell with a range other than self, the spell can originate from you or your wildfire spirit.",
+            desc: "At 6th level, the bond with your wildfire spirit enhances your destructive and restorative spells. Whenever you cast a spell that deals fire damage or restores hit points while your wildfire spirit is summoned, roll a d8, and you gain a bonus equal to the number rolled to one damage or healing roll of the spell.\n\nIn addition, when you cast a spell with a range other than self, the spell can originate from you or your wildfire spirit.",
             level: 6,
             tracked: false,
           },
           {
             id: "cauterizing_flames",
             name: "Cauterizing Flames",
-            desc: "Starting at 10th level, when a Small or larger creature dies within 30 feet of you or your wildfire spirit, a harmless spectral flame springs up in the dead creatureâ€™s space and flickers there for 1 minute. When a creature you can see enters that space, you can use your reaction to extinguish the spectral flame and either heal the creature or deal fire damage to it. The healing or damage equals 2d10 + your Wisdom modifier.",
+            desc: "At 10th level, you gain the ability to turn death into magical flames that can heal or incinerate. When a Small or larger creature dies within 30 feet of you or your wildfire spirit, a harmless spectral flame springs forth in the dead creature's space and flickers there for 1 minute. When a creature you can see enters that space, you can use your reaction to extinguish the spectral flame there and either heal the creature or deal fire damage to it. The healing or damage equals 2d10 + your Wisdom modifier.",
             level: 10,
-            tracked: true, // prof bonus, Reaction, regain on LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "blazing_revival",
             name: "Blazing Revival",
-            desc: "At 14th level, the bond with your wildfire spirit can save you from death. If you are reduced to 0 hit points and thereby fall unconscious, you can cause your wildfire spirit to drop to 0 hit points instead. You then regain half your hit points and immediately rise to your feet. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
+            desc: "At 14th level, the bond with your wildfire spirit can save you from death. If the spirit is within 120 feet of you when you are reduced to 0 hit points and thereby fall unconscious, you can cause the spirit to drop to 0 hit points. You then regain half your hit points and immediately rise to your feet.",
             level: 14,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
-          { level: 3, spells: ["burning_hands", "cure_wounds"] },
-          { level: 5, spells: ["flaming_sphere", "scorching_ray"] },
-          { level: 7, spells: ["plant_growth", "revivify"] },
-          { level: 9, spells: ["aura_of_life", "fire_shield"] },
-          { level: 11, spells: ["flame_strike", "mass_cure_wounds"] },
+          { level: 2, spells: ["burning-hands", "cure-wounds"] },
+          { level: 3, spells: ["flaming-sphere", "scorching-ray"] },
+          { level: 5, spells: ["plant-growth", "revivify"] },
+          { level: 7, spells: ["aura-of-life", "fire-shield"] },
+          { level: 9, spells: ["flame-strike", "mass-cure-wounds"] },
         ],
       },
     },
@@ -4132,4 +4145,5 @@ export const ClassesData = {
 };
 
 export default ClassesData;
+
 
