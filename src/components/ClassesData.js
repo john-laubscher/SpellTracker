@@ -2380,6 +2380,7 @@ export const ClassesData = {
       },
       
       champion: {
+        // Source (feature text): https://dnd5e.wikidot.com/fighter:champion (CC BY-SA 3.0)
         features: [
           {
             id: "improved_critical",
@@ -2391,7 +2392,10 @@ export const ClassesData = {
           {
             id: "remarkable_athlete",
             name: "Remarkable Athlete",
-            desc: "Starting at 7th level, you can add half your proficiency bonus (round up) to any Strength, Dexterity, or Constitution check you make that doesnâ€™t already use your proficiency bonus. Additionally, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier.",
+            desc: [
+              "Starting at 7th level, you can add half your proficiency bonus (rounded up) to any Strength, Dexterity, or Constitution check you make that doesn't already use your proficiency bonus.",
+              "In addition, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier.",
+            ],
             level: 7,
             tracked: false,
           },
@@ -2412,7 +2416,7 @@ export const ClassesData = {
           {
             id: "survivor",
             name: "Survivor",
-            desc: "At 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half your hit points left. You donâ€™t gain this benefit if you have 0 hit points.",
+            desc: "At 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half your hit points left. You don't gain this benefit if you have 0 hit points.",
             level: 18,
             tracked: false,
           },
