@@ -42,6 +42,7 @@ import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
 import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import AdditionalFightingStyleModal from "./AdditionalFightingStyleModal";
+import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import { proficiencyBonus } from "./header";
@@ -843,6 +844,7 @@ const FeaturesAndTrackables = () => {
   const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
   const [additionalFightingStyleModalOpen, setAdditionalFightingStyleModalOpen] = React.useState(false);
+  const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -934,6 +936,15 @@ const FeaturesAndTrackables = () => {
 
   const battleMasterManeuverCount = Array.isArray(characterInfo?.battleMasterManeuvers)
     ? characterInfo.battleMasterManeuvers.length
+    : 0;
+
+  const hasRuneKnight =
+    characterClass === "fighter" &&
+    subclass === "runeKnight" &&
+    Number(fighterLevel || 0) >= 3;
+
+  const runeKnightRuneCount = Array.isArray(characterInfo?.runeKnightRunes)
+    ? characterInfo.runeKnightRunes.length
     : 0;
 
   const hasChampionAdditionalFightingStyle =
@@ -1198,6 +1209,31 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (hasRuneKnight && Number(fighterLevel || 0) >= 15) {
+      const runeList = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
+      const byId = new Map((Array.isArray(runeList) ? runeList : []).map((r) => [r?.id, r]));
+      const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
+
+      const selectedRunes = selectedIds
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+
+      if (selectedRunes.length > 0) {
+        const runeFeatures = selectedRunes.map((rune) => ({
+          id: `rune_knight_rune:${rune.id}`,
+          name: rune.name,
+          desc: rune.desc,
+          level: 15,
+          tracked: true,
+          uses: 2,
+          recharge: "sr_or_lr",
+        }));
+
+        next = [...next, ...runeFeatures];
+      }
+    }
+
     return next;
   }, [
     subclassFeatures,
@@ -1207,8 +1243,11 @@ const FeaturesAndTrackables = () => {
     hasArcaneArcherLore,
     characterInfo?.arcaneArcherLoreCantrip?.name,
     hasChampionAdditionalFightingStyle,
+    hasRuneKnight,
+    characterInfo?.runeKnightRunes,
     fightingStyle,
     additionalFightingStyle,
+    fighterLevel,
   ]);
 
   const classTrackedById = React.useMemo(() => {
@@ -1359,6 +1398,37 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
+                if (hasRuneKnight && feature?.id === "rune_carver") {
+                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                  const allowed =
+                    level < 3
+                      ? 0
+                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
+
+                  const selectedIds = Array.isArray(characterInfo?.runeKnightRunes)
+                    ? characterInfo.runeKnightRunes
+                    : [];
+
+                  const allRunes = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
+                  const byId = new Map((Array.isArray(allRunes) ? allRunes : []).map((r) => [r?.id, r]));
+                  const selectedNames = selectedIds
+                    .map((id) => byId.get(id)?.name || id)
+                    .filter(Boolean);
+
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Selected runes:</strong>{" "}
+                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
+                      </p>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Tracking:</strong>{" "}
+                        {level >= 15 ? "Runes are tracked (2 uses each)." : "Runes are not tracked until Master of Runes (Fighter 15)."}
+                      </p>
+                    </div>
+                  );
+                }
+
                 if (hasArcaneArcherLore && feature?.id === "arcane_shot") {
                   const intMod = characterInfo?.stats?.int?.mod ?? 0;
                   const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(intMod) || 0);
@@ -1406,6 +1476,43 @@ const FeaturesAndTrackables = () => {
                 return null;
               }}
               renderTrackedTrailingControls={(feature) => {
+                if (hasRuneKnight && feature?.id === "rune_carver") {
+                  const selectedCount = runeKnightRuneCount;
+                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                  const allowed =
+                    level < 3
+                      ? 0
+                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
+                  const isOver = selectedCount > allowed;
+                  const isUnder = selectedCount < allowed;
+
+                  return (
+                    <Tooltip arrow title={`Choose runes (${selectedCount}/${allowed})`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose runes"
+                        onClick={() => setRuneKnightRunesModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasArcaneArcherLore && feature?.id === "arcane_shot") {
                   const selectedCount = Array.isArray(characterInfo?.arcaneShotOptions)
                     ? characterInfo.arcaneShotOptions.length
@@ -1492,6 +1599,43 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                if (hasRuneKnight && feature?.id === "rune_carver") {
+                  const selectedCount = runeKnightRuneCount;
+                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                  const allowed =
+                    level < 3
+                      ? 0
+                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
+                  const isOver = selectedCount > allowed;
+                  const isUnder = selectedCount < allowed;
+
+                  return (
+                    <Tooltip arrow title={`Choose runes (${selectedCount}/${allowed})`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose runes"
+                        onClick={() => setRuneKnightRunesModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasChampionAdditionalFightingStyle && feature?.id === "additional_fighting_style") {
                   const selectedCount = additionalFightingStyleCount;
                   const isOver = selectedCount > 1;
@@ -1773,8 +1917,8 @@ const FeaturesAndTrackables = () => {
 		                  );
 		                }
 
-			                return null;
-			              }}
+                return null;
+              }}
             />
           </Grid>
 	        </Grid>
@@ -1942,6 +2086,11 @@ const FeaturesAndTrackables = () => {
       <AdditionalFightingStyleModal
         open={additionalFightingStyleModalOpen}
         onClose={() => setAdditionalFightingStyleModalOpen(false)}
+      />
+
+      <RuneKnightRunesModal
+        open={runeKnightRunesModalOpen}
+        onClose={() => setRuneKnightRunesModalOpen(false)}
       />
 
       <ArcaneMasteryModal

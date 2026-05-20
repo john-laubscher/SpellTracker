@@ -2663,48 +2663,146 @@ export const ClassesData = {
         ],
       },
       runeKnight: {
+        // Source (feature + rune text): https://dnd5e.wikidot.com/fighter:rune-knight (CC BY-SA 3.0)
         features: [
           {
-            id: "giant_might",
-            name: "Giant's Might",
-            desc: "At 3rd level, you can imbue yourself with the might of giants. As a bonus action, you can gain the following benefits for 1 minute:\n- If you are smaller than Large, you become Large, along with anything you are wearing. If there isnâ€™t enough room for you to become Large, your size doesnâ€™t change.\n- You have advantage on Strength checks and Strength saving throws.\n- Once on each of your turns, one of your attacks with a weapon or unarmed strike can deal an extra 1d8 damage to a target on a hit.\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            id: "bonus_proficiencies",
+            name: "Bonus Proficiencies",
+            desc: [
+              "When you choose this archetype at 3rd level, you gain proficiency with smith’s tools, and you learn to speak, read, and write Giant.",
+            ],
             level: 3,
-            tracked: true, // Uses = Prof bonus / LR
+            tracked: false,
           },
           {
             id: "rune_carver",
             name: "Rune Carver",
-            desc: "Starting at 3rd level, you can enhance your gear with magic runes. Choose two runes from the list of available runes. Whenever you finish a long rest, you can inscribe each rune onto one object you touch. To be eligible, an object must be a weapon, a suit of armor, a shield, a piece of jewelry, or something else you can wear or hold in a hand. Your rune remains on an object until you finish a long rest, and an object can bear only one of your runes at a time.",
+            desc: [
+              "Starting at 3rd level, you can use magic runes to enhance your gear. You learn two runes of your choice from among the runes described below, and each time you gain a level in this class, you can replace one rune you know with a different one from this feature.",
+              "You learn one additional rune at Fighter levels 7, 10, and 15.",
+              "Whenever you finish a long rest, you can touch a number of objects equal to the number of runes you know, and you inscribe a different rune onto each of the objects.",
+              "To be eligible, an object must be a weapon, a suit of armor, a shield, a piece of jewelry, or something else you can wear or hold in a hand.",
+              "Your rune remains on an object until you finish a long rest, and an object can bear only one of your runes at a time.",
+              "Rune Magic save DC: 8 + proficiency bonus + Constitution modifier.",
+            ],
             level: 3,
-            tracked: true, // 1/LR
+            tracked: false,
+          },
+          {
+            id: "giant_might",
+            name: "Giant's Might",
+            desc: [
+              "At 3rd level, you have learned how to imbue yourself with the might of giants. As a bonus action, you magically gain the following benefits, which last for 1 minute:",
+              "If you are smaller than Large, you become Large, along with anything you are wearing. If you lack the room to become Large, your size doesn't change.",
+              "You have advantage on Strength checks and Strength saving throws.",
+              "Once on each of your turns, one of your attacks with a weapon or an unarmed strike can deal an extra 1d6 damage to a target on a hit.",
+              "You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses of it when you finish a long rest.",
+            ],
+            level: 3,
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "runic_shield",
             name: "Runic Shield",
-            desc: "At 7th level, you learn how to use your runes to protect others. When another creature you can see within 60 feet of you is hit by an attack roll, you can use your reaction to force the attacker to reroll the d20 and use the new roll. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: [
+              "At 7th level, you learn to invoke your rune magic to protect your allies. When another creature you can see within 60 feet of you is hit by an attack roll, you can use your reaction to force the attacker to reroll the d20 and use the new roll.",
+              "You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            ],
             level: 7,
-            tracked: true, // Uses = Prof bonus / LR
+            tracked: false,
           },
           {
             id: "great_stature",
             name: "Great Stature",
-            desc: "At 10th level, the magic of your runes permanently alters you. When you gain this feature, roll 3d4. You grow a number of inches in height equal to the roll. Moreover, the extra damage you deal with your Giantâ€™s Might feature increases to 1d10.",
+            desc: [
+              "By 10th level, the magic of your runes permanently alters you. When you gain this feature, roll 3d4. You grow a number of inches in height equal to the roll.",
+              "Moreover, the extra damage you deal with your Giant's Might feature increases to 1d8.",
+            ],
             level: 10,
             tracked: false,
           },
           {
             id: "master_of_runes",
             name: "Master of Runes",
-            desc: "Starting at 15th level, you can invoke each rune you know twice, rather than once, and you regain all expended uses when you finish a short or long rest.",
+            desc: [
+              "At 15th level, you can invoke each rune you know from your Rune Carver feature twice, rather than once, and you regain all expended uses when you finish a short or long rest.",
+            ],
             level: 15,
             tracked: false,
           },
           {
             id: "runic_juggernaut",
             name: "Runic Juggernaut",
-            desc: "At 18th level, you learn how to amplify your runes. Your size increases to Huge. Moreover, the extra damage you deal with your Giantâ€™s Might feature increases to 1d12.",
+            desc: [
+              "At 18th level, you learn how to amplify your rune-powered transformation. As a result, the extra damage you deal with the Giant's Might feature increases to 1d10.",
+              "Moreover, when you use that feature, your size can increase to Huge, and while you are that size, your reach increases by 5 feet.",
+            ],
             level: 18,
             tracked: false,
+          },
+        ],
+        runes: [
+          {
+            id: "cloud",
+            name: "Cloud Rune",
+            levelRequirement: 3,
+            desc: [
+              "While wearing or carrying an object inscribed with this rune, you have advantage on Dexterity (Sleight of Hand) checks and Charisma (Deception) checks.",
+              "In addition, when you or a creature you can see within 30 feet of you is hit by an attack roll, you can use your reaction to invoke the rune and choose a different creature within 30 feet of you, other than the attacker. The chosen creature becomes the target of the attack, using the same roll. This magic can transfer the attack's effects regardless of the attack's range.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
+          },
+          {
+            id: "fire",
+            name: "Fire Rune",
+            levelRequirement: 3,
+            desc: [
+              "While wearing or carrying an object inscribed with this rune, your proficiency bonus is doubled for any ability check you make that uses your proficiency with a tool.",
+              "In addition, when you hit a creature with an attack using a weapon, you can invoke the rune to summon fiery shackles: the target takes an extra 2d6 fire damage, and it must succeed on a Strength saving throw or be restrained for 1 minute. While restrained by the shackles, the target takes 2d6 fire damage at the start of each of its turns. The target can repeat the saving throw at the end of each of its turns, banishing the shackles on a success.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
+          },
+          {
+            id: "frost",
+            name: "Frost Rune",
+            levelRequirement: 3,
+            desc: [
+              "While wearing or carrying an object inscribed with this rune, you have advantage on Wisdom (Animal Handling) checks and Charisma (Intimidation) checks.",
+              "In addition, you can invoke the rune as a bonus action to increase your sturdiness. For 10 minutes, you gain a +2 bonus to all ability checks and saving throws that use Strength or Constitution.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
+          },
+          {
+            id: "stone",
+            name: "Stone Rune",
+            levelRequirement: 3,
+            desc: [
+              "While wearing or carrying an object inscribed with this rune, you have advantage on Wisdom (Insight) checks, and you have darkvision out to a range of 120 feet.",
+              "In addition, when a creature you can see ends its turn within 30 feet of you, you can use your reaction to invoke the rune and force the creature to make a Wisdom saving throw. Unless the save succeeds, the creature is charmed by you for 1 minute. While charmed in this way, the creature has a speed of 0 and is incapacitated, descending into a dreamy stupor. The creature repeats the saving throw at the end of each of its turns, ending the effect on a success.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
+          },
+          {
+            id: "hill",
+            name: "Hill Rune",
+            levelRequirement: 7,
+            desc: [
+              "While wearing or carrying an object that bears this rune, you have advantage on saving throws against being poisoned, and you have resistance against poison damage.",
+              "In addition, you can invoke the rune as a bonus action, gaining resistance to bludgeoning, piercing, and slashing damage for 1 minute.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
+          },
+          {
+            id: "storm",
+            name: "Storm Rune",
+            levelRequirement: 7,
+            desc: [
+              "While wearing or carrying an object inscribed with this rune, you have advantage on Intelligence (Arcana) checks, and you can't be surprised as long as you aren't incapacitated.",
+              "In addition, you can invoke this rune as a bonus action to enter a prophetic state for 1 minute or until you're incapacitated. Until the state ends, when you or another creature you can see within 60 feet of you makes an attack roll, a saving throw, or an ability check, you can use your reaction to cause the roll to have advantage or disadvantage.",
+              "Once you invoke this rune, you can't do so again until you finish a short or long rest.",
+            ],
           },
         ],
       },
