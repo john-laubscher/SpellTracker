@@ -28,6 +28,7 @@ import DomainSpellSwapModal from "./DomainSpellSwapModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
+import MonkKiUsesPanel from "./MonkKiUsesPanel";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -359,6 +360,8 @@ export const SpellList = (props) => {
 
   const hideFighterSpellSection =
     effectiveIsNonCaster && isFighter && !(isBattleMaster && showManeuversInSpellTracker);
+
+  const isMonk = String(characterInfo?.characterClass || "") === "monk";
 
   const hasThousandForms =
     characterInfo?.characterClass === "druid" &&
@@ -2849,6 +2852,7 @@ export const SpellList = (props) => {
   };
 
   if (hideFighterSpellSection) return null;
+  if (isMonk) return <MonkKiUsesPanel />;
 
   return (
       <Box sx={{ mt: 2 }}>
