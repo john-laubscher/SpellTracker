@@ -181,6 +181,18 @@ const loadDomainSpellSwapsFromStorage = () => {
   }
 };
 
+const loadFourElementsDisciplinesFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_fourElementsDisciplines");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((x) => typeof x === "string" && x.trim().length > 0);
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -210,6 +222,7 @@ function App() {
     const persistedAdditionalFightingStyle = loadAdditionalFightingStyleFromStorage();
     const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
+    const persistedFourElementsDisciplines = loadFourElementsDisciplinesFromStorage();
     return {
       characterName: "Garetjax",
       race: "Dwarf",
@@ -274,6 +287,7 @@ function App() {
       battleMasterManeuvers: Array.isArray(persistedBattleMasterManeuvers) ? persistedBattleMasterManeuvers : [],
       showManeuversInSpellTracker: typeof persistedShowManeuversInSpellTracker === "boolean" ? persistedShowManeuversInSpellTracker : false,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
+      fourElementsDisciplines: Array.isArray(persistedFourElementsDisciplines) ? persistedFourElementsDisciplines : [],
     };
   });
 
@@ -461,6 +475,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.domainSpellSwaps]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_fourElementsDisciplines",
+        JSON.stringify(characterInfo.fourElementsDisciplines || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.fourElementsDisciplines]);
 
   return (
     <div className="App">
