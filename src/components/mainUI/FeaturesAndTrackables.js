@@ -672,6 +672,55 @@ const FeatureDisplay = ({
               );
             }
 
+            if (feature?.trackedMode === "poolDropdown") {
+              const maxPool = (() => {
+                if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                if (feature?.poolMax === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                if (feature?.poolMax === "character_level") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+                if (typeof feature?.poolMax === "number" && Number.isFinite(feature.poolMax)) {
+                  return Math.max(0, Math.trunc(feature.poolMax));
+                }
+                return 0;
+              })();
+
+              const valueKey = String(feature?.poolKey || "poolRemaining");
+              const current = clampInt(tracker?.[valueKey] ?? maxPool, 0, maxPool);
+              const options = Array.from({ length: maxPool + 1 }).map((_, idx) => maxPool - idx);
+
+              return (
+                <>
+                  <FormControl variant="standard" sx={{ ml: 0.5, minWidth: 52 }}>
+                    <Select
+                      value={current}
+                      onChange={(e) =>
+                        setTracker({ [valueKey]: clampInt(e.target.value, 0, maxPool) })
+                      }
+                      disableUnderline
+                      size="small"
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        color: "#5d4037",
+                        "& .MuiSelect-select": { py: 0, pr: 3 },
+                      }}
+                    >
+                      {options.map((n) => (
+                        <MenuItem key={`${feature.id}:pool:${n}`} value={n}>
+                          {n}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037" }}>
+                    /{maxPool}
+                  </Typography>
+
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (usesCount === "unlimited") {
               return (
                 <>
@@ -1342,6 +1391,80 @@ const FeaturesAndTrackables = () => {
               fighterLevel={fighterLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
+              renderDetailsHeaderForFeature={(feature) => {
+                if (characterClass !== "monk") return null;
+                if (feature?.id !== "ki") return null;
+
+                const level = Math.max(0, Math.trunc(Number(characterLevel) || 0));
+                const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(wisdomModValue) || 0);
+
+                const uses = [
+                  {
+                    name: "Flurry of Blows",
+                    cost: 1,
+                    desc: "After you take the Attack action on your turn, you can make two unarmed strikes as a bonus action.",
+                  },
+                  {
+                    name: "Patient Defense",
+                    cost: 1,
+                    desc: "You can take the Dodge action as a bonus action on your turn.",
+                  },
+                  {
+                    name: "Step of the Wind",
+                    cost: 1,
+                    desc: "You can take the Disengage or Dash action as a bonus action on your turn, and your jump distance is doubled for the turn.",
+                  },
+                ];
+
+                if (level >= 5) {
+                  uses.push({
+                    name: "Stunning Strike",
+                    cost: 1,
+                    desc: "When you hit another creature with a melee weapon attack, you can attempt to stun it. The target makes a Constitution saving throw or is stunned until the end of your next turn.",
+                  });
+                }
+
+                if (level >= 14) {
+                  uses.push({
+                    name: "Diamond Soul (reroll save)",
+                    cost: 1,
+                    desc: "When you make a saving throw and fail, you can reroll it and take the second result.",
+                  });
+                }
+
+                if (level >= 18) {
+                  uses.push(
+                    {
+                      name: "Empty Body (invisibility)",
+                      cost: 4,
+                      desc: "You become invisible for 1 minute, and during that time you have resistance to all damage but force damage.",
+                    },
+                    {
+                      name: "Empty Body (astral projection)",
+                      cost: 8,
+                      desc: "You cast astral projection without material components (you can't take any other creatures with you).",
+                    }
+                  );
+                }
+
+                return (
+                  <div style={{ margin: "2px 0 8px 0" }}>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Ki Save DC:</strong> {dc}
+                    </p>
+                    <p style={{ margin: "2px 0 6px 0" }}>
+                      <strong>Ki uses:</strong>
+                    </p>
+                    <ul style={{ margin: "0 0 0 18px", padding: 0 }}>
+                      {uses.map((u) => (
+                        <li key={u.name} style={{ margin: "2px 0" }}>
+                          <strong>{u.name}</strong> ({u.cost} ki): {u.desc}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              }}
             />
           </Grid>
 
