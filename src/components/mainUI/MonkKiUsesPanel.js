@@ -120,6 +120,31 @@ const buildMonkKiUses = (level, subclass) => {
         });
       }
     }
+
+    if (sc === "drunkenMaster") {
+      if (l >= 6) {
+        uses.push({
+          name: "Redirect Attack (Tipsy Sway)",
+          costLabel: "1 ki",
+          desc: [
+            "When a creature misses you with a melee attack roll, you can spend 1 ki point as a reaction",
+            "to cause that attack to hit one creature of your choice, other than the attacker,",
+            "that you can see within 5 feet of you.",
+          ],
+        });
+      }
+
+      if (l >= 11) {
+        uses.push({
+          name: "Drunkard's Luck",
+          costLabel: "2 ki",
+          desc: [
+            "When you make an ability check, an attack roll, or a saving throw and have disadvantage,",
+            "you can spend 2 ki points to cancel the disadvantage for that roll.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {
