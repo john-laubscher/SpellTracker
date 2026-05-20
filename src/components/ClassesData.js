@@ -2970,7 +2970,65 @@ export const ClassesData = {
       fourElements: "",
       kensei: "",
       longDeath: "",
-      mercy: "",
+      mercy: {
+        features: [
+          {
+            id: "hands_of_healing",
+            name: "Hands of Healing",
+            desc: [
+              "At 3rd level, your mystical touch can mend wounds.",
+              "As an action, you can spend 1 ki point to touch a creature and restore a number of hit points equal to a roll of your Martial Arts die + your Wisdom modifier.",
+              "When you use your Flurry of Blows, you can replace one of the unarmed strikes with a use of this feature without spending a ki point for the healing.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "hands_of_harm",
+            name: "Hands of Harm",
+            desc: [
+              "At 3rd level, you use your ki to inflict wounds.",
+              "When you hit a creature with an unarmed strike, you can spend 1 ki point to deal extra necrotic damage equal to one roll of your Martial Arts die + your Wisdom modifier.",
+              "You can use this feature only once per turn.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "physicians_touch",
+            name: "Physician's Touch",
+            desc: [
+              "Starting at 6th level, your healing and harming touches improve.",
+              "When you use Hands of Healing on a creature, you can also end one disease or one of the following conditions affecting the creature: blinded, deafened, paralyzed, poisoned, or stunned.",
+              "When you use Hands of Harm on a creature, you can subject that creature to the poisoned condition until the end of your next turn.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "flurry_of_healing_and_harm",
+            name: "Flurry of Healing and Harm",
+            desc: [
+              "Starting at 11th level, when you use Flurry of Blows, you can replace each of the unarmed strikes with a use of your Hands of Healing, without spending ki points for the healing.",
+              "In addition, when you make an unarmed strike with Flurry of Blows, you can use Hands of Harm with that strike without spending the ki point for Hands of Harm (still only once per turn).",
+            ],
+            level: 11,
+            tracked: false,
+          },
+          {
+            id: "hand_of_ultimate_mercy",
+            name: "Hand of Ultimate Mercy",
+            desc: [
+              "By 17th level, you can touch the corpse of a creature that died within the past 24 hours and expend 5 ki points to return it to life.",
+              "The creature regains hit points equal to 4d10 + your Wisdom modifier, and it revives with the following conditions removed (if present): blinded, deafened, paralyzed, poisoned, and stunned.",
+            ],
+            level: 17,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+        ],
+      },
       openHand: "",
       shadow: "",
       sunSoul: "",

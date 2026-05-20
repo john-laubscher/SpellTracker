@@ -31,9 +31,10 @@ const normalizeId = (s) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-const buildMonkKiUses = (level) => {
+const buildMonkKiUses = (level, subclass) => {
   const uses = [];
   const l = clampInt(level, 0, 20);
+  const sc = String(subclass || "");
 
   if (l < 2) return uses;
 
@@ -68,6 +69,31 @@ const buildMonkKiUses = (level) => {
         "When you reduce the damage of a ranged weapon attack to 0 using Deflect Missiles, you can spend 1 ki point to make a ranged attack with the caught missile as part of the same reaction.",
       ],
     });
+
+    if (sc === "mercy") {
+      uses.push(
+        {
+          name: "Hands of Healing",
+          costLabel: "1 ki",
+          desc: [
+            "As an action, spend 1 ki point to touch a creature and restore hit points equal to a roll of your Martial Arts die + your Wisdom modifier.",
+            "When you use Flurry of Blows, you can replace one unarmed strike with this healing without spending the ki point.",
+            "At Monk level 6, you can also end one disease or one condition on the creature (blinded, deafened, paralyzed, poisoned, or stunned).",
+            "At Monk level 11, you can replace each Flurry of Blows strike with this healing (no ki for the healing).",
+          ],
+        },
+        {
+          name: "Hands of Harm",
+          costLabel: "1 ki",
+          desc: [
+            "When you hit a creature with an unarmed strike, you can spend 1 ki point to deal extra necrotic damage equal to one roll of your Martial Arts die + your Wisdom modifier.",
+            "You can use this feature only once per turn.",
+            "At Monk level 6, you can poison the target until the end of your next turn.",
+            "At Monk level 11, you can use this with a Flurry of Blows unarmed strike without spending the ki point (still only once per turn).",
+          ],
+        }
+      );
+    }
   }
 
   if (l >= 5) {
@@ -199,14 +225,15 @@ const MonkKiUsesPanel = () => {
   const { characterInfo } = useContext(CharacterInfoContext);
 
   const level = clampInt(characterInfo?.characterLevel, 0, 20);
+  const subclass = String(characterInfo?.subclass || "");
   const wisdomMod = Number(characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0) || 0;
   const proficiencyBonus = proficiencyBonusForLevel(level);
   const kiSaveDc = 8 + proficiencyBonus + wisdomMod;
 
   const uses = React.useMemo(() => {
-    const list = buildMonkKiUses(level);
+    const list = buildMonkKiUses(level, subclass);
     return list.map((u) => ({ ...u, id: normalizeId(u.name) || normalizeId(u.id) || "ki_use" }));
-  }, [level]);
+  }, [level, subclass]);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -251,4 +278,3 @@ const MonkKiUsesPanel = () => {
 };
 
 export default MonkKiUsesPanel;
-
