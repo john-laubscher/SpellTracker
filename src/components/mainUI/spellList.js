@@ -290,6 +290,16 @@ export const SpellList = (props) => {
   const classKey = characterInfo?.characterClass;
   const classMeta = ClassesData?.[classKey] || null;
   const isNonCaster = classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster";
+  const subclassMeta = classMeta?.subclasses?.[characterInfo?.subclass] || null;
+  const subclassSpellcasting = subclassMeta?.spellcasting || null;
+  const characterLevel = Number(characterInfo?.characterLevel) || 0;
+  const hasSubclassSpellcasting =
+    Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
+  const spellTableKey = hasSubclassSpellcasting ? String(subclassSpellcasting?.spellTableKey || "") : String(classKey || "");
+  const spellListClassKey = hasSubclassSpellcasting
+    ? String(subclassSpellcasting?.spellListClassKey || "")
+    : String(classKey || "");
+  const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
   const isFighter = String(characterInfo?.characterClass || "") === "fighter";
   const hasGuidingWhispers =
     characterInfo?.characterClass === "bard" &&
@@ -348,7 +358,7 @@ export const SpellList = (props) => {
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
 
   const hideFighterSpellSection =
-    isNonCaster && isFighter && !(isBattleMaster && showManeuversInSpellTracker);
+    effectiveIsNonCaster && isFighter && !(isBattleMaster && showManeuversInSpellTracker);
 
   const hasThousandForms =
     characterInfo?.characterClass === "druid" &&
@@ -1979,7 +1989,7 @@ export const SpellList = (props) => {
       8: { loading: false, error: '' },
       9: { loading: false, error: '' },
     });
-  }, [characterInfo.characterClass]);
+  }, [spellListClassKey]);
 
   const loadClassSpellsForLevel = (numericalSpellLevel) => {
     if (spellListLoadStatus[numericalSpellLevel]?.loading) return;
@@ -1990,7 +2000,7 @@ export const SpellList = (props) => {
     }));
 
     axios
-      .get(`/allspells/${numericalSpellLevel}/${characterInfo.characterClass}`)
+      .get(`/allspells/${numericalSpellLevel}/${spellListClassKey}`)
       .then((res) => {
         const fetchedSpellsArr = res.data?.results || [];
         setSpells((prevSpells) => ({
@@ -2169,12 +2179,12 @@ export const SpellList = (props) => {
     const classMeta = ClassesData?.[classKey];
     if (!classMeta) return null;
 
-    if (classMeta.isSpellCaster === "nonCaster") {
+    if (effectiveIsNonCaster) {
       return null;
     }
 
     const levelKey = Number(characterInfo?.characterLevel) || 0;
-    const tableRow = spellTables?.[classKey]?.[levelKey];
+    const tableRow = spellTables?.[spellTableKey]?.[levelKey];
     if (!tableRow) return null;
 
     const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
@@ -2843,7 +2853,7 @@ export const SpellList = (props) => {
   return (
       <Box sx={{ mt: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        {isNonCaster && isFighter ? (
+        {effectiveIsNonCaster && isFighter ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Typography
               sx={{
@@ -2880,7 +2890,7 @@ export const SpellList = (props) => {
           <PreparedSpellsStatus label="Spell Tracker" />
         )}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-          {!isNonCaster ? (
+          {!effectiveIsNonCaster ? (
             <Button
               className={classes.prepareButton}
               variant="contained"

@@ -127,6 +127,31 @@ export const spellTables = {
     20: { cantrips: 0, spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
   },
 
+  // Third-casters (subclasses)
+  // Source: https://dnd5e.wikidot.com/fighter:eldritch-knight (CC BY-SA 3.0)
+  fighterEldritchKnight: {
+    1: { cantrips: 0, spellsKnown: 0, first: 0, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { cantrips: 0, spellsKnown: 0, first: 0, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { cantrips: 2, spellsKnown: 3, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { cantrips: 2, spellsKnown: 4, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { cantrips: 2, spellsKnown: 4, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { cantrips: 2, spellsKnown: 4, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { cantrips: 2, spellsKnown: 5, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { cantrips: 2, spellsKnown: 6, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { cantrips: 2, spellsKnown: 6, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { cantrips: 3, spellsKnown: 7, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { cantrips: 3, spellsKnown: 8, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    12: { cantrips: 3, spellsKnown: 8, first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    13: { cantrips: 3, spellsKnown: 9, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    14: { cantrips: 3, spellsKnown: 10, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    15: { cantrips: 3, spellsKnown: 10, first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    16: { cantrips: 3, spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    17: { cantrips: 3, spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    18: { cantrips: 3, spellsKnown: 11, first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    19: { cantrips: 3, spellsKnown: 12, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    20: { cantrips: 3, spellsKnown: 13, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+  },
+
   sorceror: {
     1: { cantrips: 4, spellsKnown: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     2: { cantrips: 4, spellsKnown: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
