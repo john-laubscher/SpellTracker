@@ -2478,8 +2478,26 @@ export const ClassesData = {
         ],
       },
       eldritchKnight: {
+        // Source (feature text + spellcasting table): https://dnd5e.wikidot.com/fighter:eldritch-knight (CC BY-SA 3.0)
+        spellcasting: {
+          startsAtLevel: 3,
+          spellTableKey: "fighterEldritchKnight",
+          spellListClassKey: "wizard",
+          spellcastingAbility: "int",
+        },
         features: [
-        // *****has own spellcasting rules and Table!! needs to be added to Spelltables?? ****FEATURE NEEDED****
+          {
+            id: "spellcasting",
+            name: "Spellcasting",
+            desc: [
+              "When you reach 3rd level, you augment your martial prowess with the ability to cast spells.",
+              "You learn two cantrips of your choice from the wizard spell list. You learn an additional wizard cantrip of your choice at 10th level.",
+              "You know three 1st-level wizard spells of your choice, two of which you must choose from abjuration and evocation spells.",
+              "Intelligence is your spellcasting ability for your wizard spells.",
+            ],
+            level: 3,
+            tracked: false,
+          },
           {
             id: "weapon_bond",
             name: "Weapon Bond",

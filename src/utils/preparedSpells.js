@@ -6,6 +6,18 @@ export const calculateTotalPreparedSpells = (characterInfo) => {
   const characterLevel = Number(characterInfo?.characterLevel) || 0;
   const spellcastingMod = Number(characterInfo?.spellcastingMod) || 0;
 
+  const classMeta = ClassesData?.[characterClass] || null;
+  const subclassMeta = classMeta?.subclasses?.[characterInfo?.subclass] || null;
+  const subclassSpellcasting = subclassMeta?.spellcasting || null;
+  const hasSubclassSpellcasting =
+    Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
+
+  if (hasSubclassSpellcasting) {
+    const tableKey = String(subclassSpellcasting?.spellTableKey || "");
+    const spellsKnown = spellTables?.[tableKey]?.[characterLevel]?.spellsKnown;
+    return Number(spellsKnown) || 0;
+  }
+
   const spellcastingAbility = ClassesData?.[characterClass]?.spellcastingAbility;
   if (!spellcastingAbility || spellcastingAbility === "nonCaster") return 0;
 
