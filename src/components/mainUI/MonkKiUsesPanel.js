@@ -191,6 +191,29 @@ const buildMonkKiUses = (level, subclass) => {
         });
       }
     }
+
+    if (sc === "longDeath") {
+      if (l >= 11) {
+        uses.push({
+          name: "Mastery of Death",
+          costLabel: "1 ki",
+          desc: [
+            "When you are reduced to 0 hit points, you can expend 1 ki point (no action required) to have 1 hit point instead.",
+          ],
+        });
+      }
+
+      if (l >= 17) {
+        uses.push({
+          name: "Touch of the Long Death",
+          costLabel: "1-10 ki",
+          desc: [
+            "As an action, you touch one creature within 5 feet of you and expend 1 to 10 ki points.",
+            "The target makes a Constitution saving throw, taking 2d10 necrotic damage per ki point spent on a failed save, or half as much on a successful one.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {
