@@ -2423,6 +2423,7 @@ export const ClassesData = {
         ],
       },
       echoKnight: {
+        // Source (feature text): https://dnd5e.wikidot.com/fighter:echo-knight (CC BY-SA 3.0)
         features: [
           {
             id: "manifest_echo",
@@ -2437,6 +2438,9 @@ export const ClassesData = {
             desc: "At 3rd level, you can heighten your echo's fury. Whenever you take the Attack action, you can make one additional melee attack from the echo's position. You can use this feature a number of times equal to your Constitution modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
             level: 3,
             tracked: true, // Con mod/LR
+            uses: "con_mod",
+            minUses: 1,
+            recharge: "lr",
           },
           {
             id: "echo_avatar",
@@ -2450,7 +2454,9 @@ export const ClassesData = {
             name: "Shadow Martyr",
             desc: "At 10th level, you can make your echo throw itself in front of an attack directed at another creature. As a reaction, when a creature you can see within 30 feet of you is hit by an attack roll, you can teleport your echo to an unoccupied space within 5 feet of the creature and the attack hits your echo instead. You can use this feature once per short or long rest.",
             level: 10,
-            tracked: true, // 1/SR
+            tracked: true, // 1/SR or LR
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "reclaim_potential",
@@ -2458,6 +2464,9 @@ export const ClassesData = {
             desc: "Starting at 15th level, you can absorb the energy of your echo's destruction. When your echo is destroyed by taking damage, you can gain temporary hit points equal to 2d6 + your Constitution modifier, provided you don't already have temporary hit points. You can use this feature a number of times equal to your Constitution modifier, and you regain all expended uses when you finish a long rest.",
             level: 15,
             tracked: true, // Con mod/LR
+            uses: "con_mod",
+            minUses: 1,
+            recharge: "lr",
           },
           {
             id: "legion_of_ones",
