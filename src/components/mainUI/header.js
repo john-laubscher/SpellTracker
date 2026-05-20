@@ -75,6 +75,7 @@ const Header = () => {
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "battleMaster";
   const isCavalier =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "cavalier";
+  const isMonk = characterInfo.characterClass === "monk";
   const fighterLevel = (() => {
     const raw = characterInfo?.classLevels?.fighter;
     const numeric = Number(raw);
@@ -95,6 +96,10 @@ const Header = () => {
     8 +
     (proficiencyBonus[characterInfo.characterLevel] || 2) +
     (Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0);
+  const kiSaveDc =
+    8 +
+    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    (Number(characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0) || 0);
 
 useEffect(() => {
 
@@ -227,6 +232,10 @@ useEffect(() => {
                         Ferocious Charger DC: {ferociousChargerDc}
                       </Typography>
                     ) : null
+                  ) : isMonk ? (
+                    <Typography variant="h6" sx={theme.typography.body1}>
+                      Ki Save DC: {kiSaveDc}
+                    </Typography>
                   ) : (
                     <Typography variant="h6" sx={theme.typography.body1}>
                       Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
