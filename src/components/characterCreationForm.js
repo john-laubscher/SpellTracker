@@ -136,12 +136,13 @@ export const CharacterCreationForm = (props) => {
       return;
     }
 
-    if (characterInfo.fightingStyle) {
-      setCharacterInfo((prev) => ({ ...prev, fightingStyle: "" }));
+    if (characterInfo.fightingStyle || characterInfo.additionalFightingStyle) {
+      setCharacterInfo((prev) => ({ ...prev, fightingStyle: "", additionalFightingStyle: "" }));
     }
   }, [
     characterInfo.characterClass,
     characterInfo.fightingStyle,
+    characterInfo.additionalFightingStyle,
     fighterFightingStyleOptions,
     setCharacterInfo,
   ]);
@@ -227,12 +228,18 @@ export const CharacterCreationForm = (props) => {
 	      if (name === "characterClass") {
 	        next.subclass = NO_SUBCLASS;
           next.fightingStyle = "";
+          next.additionalFightingStyle = "";
 	      }
 
 	      if (name === "subclass") {
 	        // Subclass-specific options reset when swapping subclasses.
 	        next.druidLandType = "";
+          next.additionalFightingStyle = "";
 	      }
+
+        if (name === "fightingStyle" && value && value === prev.additionalFightingStyle) {
+          next.additionalFightingStyle = "";
+        }
 
 	      return next;
 	    });

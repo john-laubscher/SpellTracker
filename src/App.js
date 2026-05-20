@@ -143,6 +143,20 @@ const loadBattleMasterManeuversFromStorage = () => {
   }
 };
 
+const loadAdditionalFightingStyleFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_additionalFightingStyle");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "string") return null;
+    const trimmed = parsed.trim();
+    if (!trimmed) return null;
+    return trimmed;
+  } catch {
+    return null;
+  }
+};
+
 const loadShowManeuversInSpellTrackerFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_showManeuversInSpellTracker");
@@ -193,6 +207,7 @@ function App() {
     const persistedArcaneShotOptions = loadArcaneShotOptionsFromStorage();
     const persistedArcaneShotBonusOptions = loadArcaneShotBonusOptionsFromStorage();
     const persistedBattleMasterManeuvers = loadBattleMasterManeuversFromStorage();
+    const persistedAdditionalFightingStyle = loadAdditionalFightingStyleFromStorage();
     const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     return {
@@ -202,6 +217,12 @@ function App() {
       draconicAncestry: "",
       druidLandType: "",
       fightingStyle: "Defense",
+      additionalFightingStyle:
+        typeof persistedAdditionalFightingStyle === "string" &&
+        persistedAdditionalFightingStyle &&
+        persistedAdditionalFightingStyle !== "Defense"
+          ? persistedAdditionalFightingStyle
+          : "",
       // default characterClass should be "noClass" rather than empty string
       characterClass: "fighter",
       subclass: "champion",
@@ -407,6 +428,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.battleMasterManeuvers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_additionalFightingStyle",
+        JSON.stringify(String(characterInfo.additionalFightingStyle || ""))
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.additionalFightingStyle]);
 
   useEffect(() => {
     try {

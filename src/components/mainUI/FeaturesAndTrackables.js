@@ -41,6 +41,7 @@ import AcolyteOfNatureModal from "./AcolyteOfNatureModal";
 import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
 import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
+import AdditionalFightingStyleModal from "./AdditionalFightingStyleModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import { proficiencyBonus } from "./header";
@@ -792,7 +793,16 @@ const FeatureDisplay = ({
 
 const FeaturesAndTrackables = () => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-  const { characterClass, characterLevel, subclass, race, subrace, halfElfVersatility, fightingStyle } = characterInfo;
+  const {
+    characterClass,
+    characterLevel,
+    subclass,
+    race,
+    subrace,
+    halfElfVersatility,
+    fightingStyle,
+    additionalFightingStyle,
+  } = characterInfo;
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
@@ -832,6 +842,7 @@ const FeaturesAndTrackables = () => {
   const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
   const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
+  const [additionalFightingStyleModalOpen, setAdditionalFightingStyleModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -924,6 +935,13 @@ const FeaturesAndTrackables = () => {
   const battleMasterManeuverCount = Array.isArray(characterInfo?.battleMasterManeuvers)
     ? characterInfo.battleMasterManeuvers.length
     : 0;
+
+  const hasChampionAdditionalFightingStyle =
+    characterClass === "fighter" &&
+    subclass === "champion" &&
+    Number(fighterLevel || 0) >= 10;
+
+  const additionalFightingStyleCount = additionalFightingStyle ? 1 : 0;
 
   React.useEffect(() => {
     if (!hasArcaneArcherLore) return;
@@ -1115,7 +1133,7 @@ const FeaturesAndTrackables = () => {
       .map((f) => applyTrackedOverride({ overrideKey: classOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: classOverrideKey, featureId: f.id }));
 
-    if (characterClass === "fighter" && fightingStyle) {
+    if (characterClass === "fighter" && (fightingStyle || additionalFightingStyle)) {
       return base.map((feature) => {
         if (feature?.id !== "fighting_style") return feature;
         const descLines = Array.isArray(feature?.desc)
@@ -1123,32 +1141,64 @@ const FeaturesAndTrackables = () => {
           : typeof feature?.desc === "string"
             ? [feature.desc]
             : [];
+        const prefixes = [];
+        if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+        if (additionalFightingStyle) prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
         return {
           ...feature,
-          desc: [`Selected: ${fightingStyle}.`, ...descLines],
+          desc: [...prefixes, ...descLines],
         };
       });
     }
 
     return base;
-  }, [classFeatures, applyTrackedOverride, classOverrideKey, isHidden, characterClass, fightingStyle]);
+  }, [
+    classFeatures,
+    applyTrackedOverride,
+    classOverrideKey,
+    isHidden,
+    characterClass,
+    fightingStyle,
+    additionalFightingStyle,
+  ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
     const base = subclassFeatures
       .map((f) => applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: subclassOverrideKey, featureId: f.id }));
 
-    if (!hasArcaneArcherLore) return base;
+    let next = base;
 
-    const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
-    const displayName = cantripName
-      ? `${cantripName} (Arcane Archer Lore)`
-      : "Choose Cantrip (Arcane Archer Lore)";
+    if (hasArcaneArcherLore) {
+      const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
+      const displayName = cantripName ? `${cantripName} (Arcane Archer Lore)` : "Choose Cantrip (Arcane Archer Lore)";
 
-    return base.map((feature) => {
-      if (feature?.id !== "arcane_archer_lore") return feature;
-      return { ...feature, name: displayName };
-    });
+      next = next.map((feature) => {
+        if (feature?.id !== "arcane_archer_lore") return feature;
+        return { ...feature, name: displayName };
+      });
+    }
+
+    if (hasChampionAdditionalFightingStyle) {
+      next = next.map((feature) => {
+        if (feature?.id !== "additional_fighting_style") return feature;
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+        const prefixes = [];
+        if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+        if (additionalFightingStyle) {
+          prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
+        } else {
+          prefixes.push("Champion Fighting Style: Choose one.");
+        }
+        return { ...feature, desc: [...prefixes, ...descLines] };
+      });
+    }
+
+    return next;
   }, [
     subclassFeatures,
     applyTrackedOverride,
@@ -1156,6 +1206,9 @@ const FeaturesAndTrackables = () => {
     isHidden,
     hasArcaneArcherLore,
     characterInfo?.arcaneArcherLoreCantrip?.name,
+    hasChampionAdditionalFightingStyle,
+    fightingStyle,
+    additionalFightingStyle,
   ]);
 
   const classTrackedById = React.useMemo(() => {
@@ -1439,6 +1492,38 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                if (hasChampionAdditionalFightingStyle && feature?.id === "additional_fighting_style") {
+                  const selectedCount = additionalFightingStyleCount;
+                  const isOver = selectedCount > 1;
+                  const isUnder = selectedCount < 1;
+
+                  return (
+                    <Tooltip arrow title={`Choose fighting style (${selectedCount}/1)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose additional fighting style"
+                        onClick={() => setAdditionalFightingStyleModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <SwordIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
                   const selectedCount = battleMasterManeuverCount;
                   const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
@@ -1852,6 +1937,11 @@ const FeaturesAndTrackables = () => {
       <BattleMasterManeuversModal
         open={battleMasterManeuversModalOpen}
         onClose={() => setBattleMasterManeuversModalOpen(false)}
+      />
+
+      <AdditionalFightingStyleModal
+        open={additionalFightingStyleModalOpen}
+        onClose={() => setAdditionalFightingStyleModalOpen(false)}
       />
 
       <ArcaneMasteryModal
