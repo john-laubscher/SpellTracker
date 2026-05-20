@@ -5,10 +5,15 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
+import classesData from "../../components/ClassesData";
+import FourElementsDisciplinesModal from "./FourElementsDisciplinesModal";
 
 const clampInt = (v, min, max) => {
   const n = Number(v);
@@ -30,6 +35,22 @@ const normalizeId = (s) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+
+const allowedExtraDisciplinesByLevel = (monkLevel) => {
+  const l = clampInt(monkLevel, 0, 20);
+  if (l < 3) return 0;
+  return 1 + (l >= 6 ? 1 : 0) + (l >= 11 ? 1 : 0) + (l >= 17 ? 1 : 0);
+};
+
+// PHB: Way of the Four Elements "Spells and Ki Points" table (as shown on wikidot).
+const maxKiPointsForSpellByLevel = (monkLevel) => {
+  const l = clampInt(monkLevel, 0, 20);
+  if (l < 5) return null;
+  if (l <= 8) return 3;
+  if (l <= 12) return 4;
+  if (l <= 16) return 5;
+  return 6;
+};
 
 const buildMonkKiUses = (level, subclass) => {
   const uses = [];
@@ -190,6 +211,32 @@ const buildMonkKiUses = (level, subclass) => {
   return uses;
 };
 
+const buildFourElementsDisciplineUses = (fourElementsExtraIds) => {
+  const disciplineDefs = classesData?.monk?.subclasses?.fourElements?.disciplines || [];
+  const list = Array.isArray(disciplineDefs) ? disciplineDefs : [];
+  const extraIds = Array.isArray(fourElementsExtraIds) ? fourElementsExtraIds : [];
+
+  const normalizedExtraIds = extraIds
+    .map((x) => String(x || "").trim())
+    .filter(Boolean)
+    .filter((id, idx, arr) => arr.indexOf(id) === idx);
+
+  const knownIds = ["elemental_attunement", ...normalizedExtraIds];
+
+  const uses = [];
+  knownIds.forEach((id) => {
+    const def = list.find((d) => String(d?.id || "") === id);
+    if (!def?.name) return;
+    uses.push({
+      name: def.name,
+      costLabel: String(def?.costLabel || ""),
+      desc: def?.desc || "",
+    });
+  });
+
+  return uses;
+};
+
 const KiUseAccordionRow = ({ useItem }) => {
   const [expanded, setExpanded] = React.useState(false);
   const descLines = Array.isArray(useItem?.desc) ? useItem.desc : useItem?.desc ? [useItem.desc] : [];
@@ -273,7 +320,7 @@ const KiUseAccordionRow = ({ useItem }) => {
 };
 
 const MonkKiUsesPanel = () => {
-  const { characterInfo } = useContext(CharacterInfoContext);
+  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const level = clampInt(characterInfo?.characterLevel, 0, 20);
   const subclass = String(characterInfo?.subclass || "");
@@ -281,10 +328,53 @@ const MonkKiUsesPanel = () => {
   const proficiencyBonus = proficiencyBonusForLevel(level);
   const kiSaveDc = 8 + proficiencyBonus + wisdomMod;
 
+  const isFourElements = subclass === "fourElements";
+  const allowedExtraDisciplines = React.useMemo(() => allowedExtraDisciplinesByLevel(level), [level]);
+  const selectedExtraDisciplines = React.useMemo(() => {
+    return Array.isArray(characterInfo?.fourElementsDisciplines) ? characterInfo.fourElementsDisciplines : [];
+  }, [characterInfo?.fourElementsDisciplines]);
+  const selectedExtraCount = selectedExtraDisciplines.length;
+
+  const [disciplinesModalOpen, setDisciplinesModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isFourElements) return;
+    if (allowedExtraDisciplines <= 0) return;
+    if (selectedExtraCount > 0) return;
+    const defs = classesData?.monk?.subclasses?.fourElements?.disciplines || [];
+    const list = Array.isArray(defs) ? defs : [];
+    const defaultId =
+      list.find((d) => d?.id === "fangs_of_the_fire_snake")?.id ||
+      list.find((d) => d?.id && d.id !== "elemental_attunement")?.id ||
+      "";
+    if (!defaultId) return;
+    setCharacterInfo((prev) => {
+      const current = Array.isArray(prev?.fourElementsDisciplines) ? prev.fourElementsDisciplines : [];
+      if (current.length > 0) return prev;
+      return { ...prev, fourElementsDisciplines: [defaultId] };
+    });
+  }, [isFourElements, allowedExtraDisciplines, selectedExtraCount, setCharacterInfo]);
+
   const uses = React.useMemo(() => {
     const list = buildMonkKiUses(level, subclass);
     return list.map((u) => ({ ...u, id: normalizeId(u.name) || normalizeId(u.id) || "ki_use" }));
   }, [level, subclass]);
+
+  const disciplineUses = React.useMemo(() => {
+    if (!isFourElements) return [];
+    if (level < 3) return [];
+    const list = buildFourElementsDisciplineUses(selectedExtraDisciplines);
+    return list.map((u) => ({ ...u, id: normalizeId(u.name) || normalizeId(u.id) || "discipline" }));
+  }, [isFourElements, level, selectedExtraDisciplines]);
+
+  const disciplineStatus = React.useMemo(() => {
+    const total = Math.max(0, Number(allowedExtraDisciplines) || 0);
+    const actual = Math.max(0, Number(selectedExtraCount) || 0);
+    if (total <= 0) return { state: "locked", color: "rgba(124, 45, 18, 0.95)" };
+    if (actual > total) return { state: "over", color: "#b71c1c" };
+    if (actual < total) return { state: "under", color: "#075985" };
+    return { state: "at", color: "rgba(46, 125, 50, 0.95)" };
+  }, [allowedExtraDisciplines, selectedExtraCount]);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -296,7 +386,6 @@ const MonkKiUsesPanel = () => {
               fontWeight: 700,
               fontSize: "18px",
               color: "#3e2723",
-              textTransform: "uppercase",
               letterSpacing: "1px",
             }}
           >
@@ -319,11 +408,147 @@ const MonkKiUsesPanel = () => {
           {uses.map((u) => (
             <KiUseAccordionRow key={u.id} useItem={u} />
           ))}
-          <Typography sx={{ mt: 1, fontSize: "12px", opacity: 0.7 }}>
-            Some monk subclasses add additional ki options.
-          </Typography>
+          {isFourElements && disciplineUses.length > 0 ? (
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                <Tooltip
+                  arrow
+                  placement="top"
+                  title={
+                    <Typography variant="body2" sx={{ fontWeight: 800, py: 0.25 }}>
+                      Max Ki Points for a Spell:{" "}
+                      {maxKiPointsForSpellByLevel(level) == null
+                        ? "— (Monk level 5+)"
+                        : maxKiPointsForSpellByLevel(level)}
+                    </Typography>
+                  }
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "'Cinzel', serif",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#3e2723",
+                      letterSpacing: "1px",
+                      opacity: 0.95,
+                      cursor: "help",
+                    }}
+                  >
+                    Elemental Disciplines
+                  </Typography>
+                </Tooltip>
+                <Tooltip
+                  arrow
+                  placement="top"
+                  title={
+                      <Box sx={{ py: 0.25 }}>
+                        {allowedExtraDisciplines <= 0 ? (
+                          <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                            Unlocks at Monk level 3.
+                          </Typography>
+                        ) : (
+                          <>
+                            <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                              Allowed choices: {allowedExtraDisciplines}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                              Selected: {selectedExtraCount}
+                            </Typography>
+                            {disciplineStatus.state === "over" ? (
+                              <Typography variant="body2" sx={{ mt: 0.75, fontWeight: 900 }}>
+                                *Too many disciplines selected*
+                              </Typography>
+                            ) : disciplineStatus.state === "under" ? (
+                              <Typography variant="body2" sx={{ mt: 0.75, fontWeight: 900 }}>
+                                *You can choose more disciplines*
+                              </Typography>
+                            ) : disciplineStatus.state === "at" ? (
+                              <Typography variant="body2" sx={{ mt: 0.75, fontWeight: 900 }}>
+                                *Correct number of disciplines selected*
+                              </Typography>
+                            ) : null}
+                            <Typography variant="body2" sx={{ mt: 0.75, opacity: 0.9 }}>
+                              Elemental Attunement is always known.
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    }
+                  >
+                    <IconButton
+                      size="small"
+                      aria-label="Choose elemental disciplines"
+                      onClick={() => setDisciplinesModalOpen(true)}
+                      sx={{
+                        p: 0.25,
+                        color: disciplineStatus.color,
+                        border: `1px solid ${disciplineStatus.state === "over"
+                          ? "rgba(183, 28, 28, 0.40)"
+                          : disciplineStatus.state === "under"
+                            ? "rgba(2, 132, 199, 0.40)"
+                            : disciplineStatus.state === "at"
+                              ? "rgba(46, 125, 50, 0.40)"
+                              : "rgba(124, 45, 18, 0.22)"}`,
+                        backgroundColor:
+                          disciplineStatus.state === "over"
+                            ? "rgba(183, 28, 28, 0.06)"
+                            : disciplineStatus.state === "under"
+                              ? "rgba(2, 132, 199, 0.06)"
+                              : disciplineStatus.state === "at"
+                                ? "rgba(46, 125, 50, 0.06)"
+                                : "rgba(124, 45, 18, 0.06)",
+                        "&:hover": {
+                          backgroundColor:
+                            disciplineStatus.state === "over"
+                              ? "rgba(183, 28, 28, 0.10)"
+                              : disciplineStatus.state === "under"
+                                ? "rgba(2, 132, 199, 0.10)"
+                                : disciplineStatus.state === "at"
+                                  ? "rgba(46, 125, 50, 0.10)"
+                                  : "rgba(124, 45, 18, 0.10)",
+                        },
+                        ...(disciplineStatus.state === "over"
+                          ? {
+                              "@keyframes disciplinesIconOverPulse": {
+                                "0%": { transform: "translateY(0px) scale(1)" },
+                                "100%": { transform: "translateY(-1px) scale(1.06)" },
+                              },
+                              animation: "disciplinesIconOverPulse 1.6s ease-in-out infinite alternate",
+                            }
+                          : disciplineStatus.state === "under"
+                            ? {
+                                "@keyframes disciplinesIconUnderPulse": {
+                                  "0%": { transform: "translateY(0px) scale(1)" },
+                                  "100%": { transform: "translateY(-1px) scale(1.04)" },
+                                },
+                                animation: "disciplinesIconUnderPulse 1.8s ease-in-out infinite alternate",
+                              }
+                            : null),
+                      }}
+                    >
+                      <WhatshotIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              {disciplineUses.map((u) => (
+                <KiUseAccordionRow key={u.id} useItem={u} />
+              ))}
+            </Box>
+          ) : (
+            <Typography sx={{ mt: 1, fontSize: "12px", opacity: 0.7 }}>
+              Some monk subclasses add additional ki options.
+            </Typography>
+          )}
         </Box>
       )}
+
+      <FourElementsDisciplinesModal
+        open={disciplinesModalOpen}
+        onClose={() => setDisciplinesModalOpen(false)}
+      />
     </Box>
   );
 };
