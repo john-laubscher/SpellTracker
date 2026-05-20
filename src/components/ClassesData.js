@@ -2811,14 +2811,22 @@ export const ClassesData = {
           {
             id: "fighting_spirit",
             name: "Fighting Spirit",
-            desc: "Starting at 3rd level, as a bonus action, you can give yourself advantage on weapon attack rolls until the end of the current turn. When you do so, you also gain 5 temporary hit points. The number of temporary hit points increases to 10 at 10th level and 15 at 15th level. You can use this feature three times, and you regain all expended uses when you finish a long rest.",
+            desc: [
+              "Starting at 3rd level, your intensity in battle can shield you and help you strike true. As a bonus action on your turn, you can give yourself advantage on all weapon attack rolls until the end of the current turn. When you do so, you also gain 5 temporary hit points. The number of hit points increases when you reach certain levels in this class, increasing to 10 at 10th level and 15 at 15th level.",
+              "You can use this feature three times. You regain all expended uses of it when you finish a long rest.",
+            ],
             level: 3,
-            tracked: true, // Uses = 3 / LR
+            tracked: true,
+            uses: 3,
+            recharge: "lr",
           },
           {
             id: "elegant_courtier",
             name: "Elegant Courtier",
-            desc: "Starting at 7th level, your discipline and attention to detail allow you to excel in social situations. Whenever you make a Persuasion check, you gain a bonus to the check equal to your Wisdom modifier. You also gain proficiency in Wisdom saving throws. If you already have this proficiency, you instead gain proficiency in Intelligence or Charisma saving throws (your choice).",
+            desc: [
+              "Starting at 7th level, your discipline and attention to detail allow you to excel in social situations. Whenever you make a Charisma (Persuasion) check, you gain a bonus to the check equal to your Wisdom modifier.",
+              "Your self-control also causes you to gain proficiency in Wisdom saving throws. If you already have this proficiency, you instead gain proficiency in Intelligence or Charisma saving throws (your choice).",
+            ],
             level: 7,
             tracked: false,
           },
@@ -2832,16 +2840,21 @@ export const ClassesData = {
           {
             id: "rapid_strike",
             name: "Rapid Strike",
-            desc: "Starting at 15th level, you can trade precision for speed. If you take the Attack action on your turn and have advantage on an attack roll against one of the targets, you can forgo that advantage for that roll to make an additional weapon attack against that target, as part of the same action.",
+            desc: "Starting at 15th level, you learn to trade accuracy for swift strikes. If you take the Attack action on your turn and have advantage on an attack roll against one of the targets, you can forgo the advantage for that roll to make an additional weapon attack against that target, as part of the same action. You can do so no more than once per turn.",
             level: 15,
             tracked: false,
           },
           {
             id: "strength_before_death",
             name: "Strength Before Death",
-            desc: "Starting at 18th level, your fighting spirit can delay the grasp of death. If you take damage that reduces you to 0 hit points and doesnâ€™t kill you outright, you can use your reaction to delay falling unconscious, and you can immediately take an extra turn, interrupting the current turn. While you have 0 hit points during that extra turn, taking damage causes death saving throw failures as normal. Once the extra turn ends, you fall unconscious if you still have 0 hit points. Once you use this feature, you canâ€™t use it again until you finish a long rest.",
+            desc: [
+              "Starting at 18th level, your fighting spirit can delay the grasp of death. If you take damage that reduces you to 0 hit points, you can use your reaction to delay falling unconscious, and you can immediately take an extra turn. While you have 0 hit points during that extra turn, taking damage causes death saving throw failures as normal, and three death saving throw failures can still kill you. When the extra turn ends, you fall unconscious if you still have 0 hit points.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
             level: 18,
-            tracked: true, // 1 / LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
       },
@@ -4673,5 +4686,6 @@ export const ClassesData = {
 };
 
 export default ClassesData;
+
 
 
