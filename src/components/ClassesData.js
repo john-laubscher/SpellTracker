@@ -3312,7 +3312,91 @@ export const ClassesData = {
           },
         ],
       },
-      kensei: "",
+      // Source (feature text): https://dnd5e.wikidot.com/monk:kensei (CC BY-SA 3.0)
+      kensei: {
+        features: [
+          {
+            id: "kensei_weapons",
+            name: "Kensei Weapons",
+            desc: [
+              "Choose two types of weapons to be your kensei weapons: one melee and one ranged.",
+              "Each must be a simple or martial weapon that lacks the heavy and special properties (longbow is also allowed).",
+              "You gain proficiency with these weapons if you don't already have it.",
+              "Weapons of the chosen types are monk weapons for you, and many tradition features work only with your kensei weapons.",
+              "When you reach Monk levels 6, 11, and 17, you can choose another weapon type (melee or ranged) to be a kensei weapon, using the same criteria.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "agile_parry",
+            name: "Agile Parry",
+            desc: [
+              "If you make an unarmed strike as part of the Attack action on your turn and are holding a kensei weapon, you can use it to defend yourself (melee weapon only).",
+              "You gain a +2 bonus to AC until the start of your next turn while the weapon is in your hand and you aren't incapacitated.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "kenseis_shot",
+            name: "Kensei's Shot",
+            desc: [
+              "As a bonus action, you make your ranged attacks with a kensei weapon more deadly.",
+              "Until the end of the current turn, any target you hit with a ranged attack using a kensei weapon takes an extra 1d4 damage of the weapon's type.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "way_of_the_brush",
+            name: "Way of the Brush",
+            desc: ["You gain proficiency with your choice of calligrapher's supplies or painter's supplies."],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "magic_kensei_weapons",
+            name: "Magic Kensei Weapons",
+            desc: [
+              "At 6th level, your attacks with your kensei weapons count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "deft_strike",
+            name: "Deft Strike",
+            desc: [
+              "When you hit a target with a kensei weapon, you can spend 1 ki point to cause the weapon to deal extra damage equal to your Martial Arts die.",
+              "You can use this feature only once on each of your turns.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "sharpen_the_blade",
+            name: "Sharpen the Blade",
+            desc: [
+              "As a bonus action, you can expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls.",
+              "The bonus equals the number of ki points spent and lasts for 1 minute (or until you use this feature again).",
+              "This has no effect on a magic weapon that already has a bonus to attack and damage rolls.",
+            ],
+            level: 11,
+            tracked: false,
+          },
+          {
+            id: "unerring_accuracy",
+            name: "Unerring Accuracy",
+            desc: [
+              "If you miss with an attack roll using a monk weapon on your turn, you can reroll it.",
+              "You can use this feature only once on each of your turns.",
+            ],
+            level: 17,
+            tracked: false,
+          },
+        ],
+      },
       longDeath: "",
       mercy: {
         features: [

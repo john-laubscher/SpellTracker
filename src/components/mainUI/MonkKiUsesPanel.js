@@ -166,6 +166,31 @@ const buildMonkKiUses = (level, subclass) => {
         });
       }
     }
+
+    if (sc === "kensei") {
+      if (l >= 6) {
+        uses.push({
+          name: "Deft Strike",
+          costLabel: "1 ki",
+          desc: [
+            "When you hit a target with a kensei weapon, you can spend 1 ki point to deal extra damage equal to your Martial Arts die.",
+            "You can use this only once on each of your turns.",
+          ],
+        });
+      }
+
+      if (l >= 11) {
+        uses.push({
+          name: "Sharpen the Blade",
+          costLabel: "1-3 ki",
+          desc: [
+            "As a bonus action, you can expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls.",
+            "The bonus equals the number of ki points spent and lasts for 1 minute (or until you use this feature again).",
+            "This has no effect on a magic weapon that already has a bonus to attack and damage rolls.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {
