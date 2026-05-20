@@ -94,6 +94,57 @@ const buildMonkKiUses = (level, subclass) => {
         }
       );
     }
+
+    if (sc === "astralSelf") {
+      uses.push({
+        name: "Arms of the Astral Self",
+        costLabel: "1 ki",
+        desc: [
+          "As a bonus action, you can spend 1 ki point to summon the arms of your astral self for 10 minutes.",
+          "When you do so, each creature of your choice that you can see within 10 feet of you must succeed on a Dexterity saving throw or take force damage equal to two rolls of your Martial Arts die.",
+          "While the arms are present, you can use Wisdom in place of Strength for Strength checks and saving throws.",
+          "You can make unarmed strikes with the arms: reach +5 feet, can use Wisdom for attack/damage, and the damage type is force.",
+        ],
+      });
+
+      if (l >= 6) {
+        uses.push({
+          name: "Visage of the Astral Self",
+          costLabel: "1 ki",
+          desc: [
+            "As a bonus action (or as part of summoning your astral arms), you can spend 1 ki point to summon your astral visage for 10 minutes.",
+            "Astral Sight: see normally in magical and nonmagical darkness out to 120 feet.",
+            "Wisdom of the Spirit: advantage on Insight and Intimidation checks.",
+            "Word of the Spirit: direct your speech to a creature you can see within 60 feet so only it can hear you, or amplify your voice to be heard within 600 feet.",
+          ],
+        });
+      }
+    }
+
+    if (sc === "drunkenMaster") {
+      if (l >= 6) {
+        uses.push({
+          name: "Redirect Attack (Tipsy Sway)",
+          costLabel: "1 ki",
+          desc: [
+            "When a creature misses you with a melee attack roll, you can spend 1 ki point as a reaction",
+            "to cause that attack to hit one creature of your choice, other than the attacker,",
+            "that you can see within 5 feet of you.",
+          ],
+        });
+      }
+
+      if (l >= 11) {
+        uses.push({
+          name: "Drunkard's Luck",
+          costLabel: "2 ki",
+          desc: [
+            "When you make an ability check, an attack roll, or a saving throw and have disadvantage,",
+            "you can spend 2 ki points to cancel the disadvantage for that roll.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {
