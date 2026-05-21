@@ -3867,37 +3867,50 @@ export const ClassesData = {
           {
             id: "channel_divinity_champions_challenge",
             name: "Channel Divinity: Champion's Challenge",
-            desc: "You can use your Channel Divinity to issue a challenge that compels other creatures to do battle with you. As an action, you force each creature of your choice within 30 feet of you to make a Wisdom saving throw. On a failed save, a creature can't willingly move more than 30 feet away from you. This effect ends on the creature if you are incapacitated or die or if the creature is more than 30 feet away from you.",
+            // Source: https://dnd5e.wikidot.com/paladin:crown (CC BY-SA 3.0)
+            desc: "As a bonus action, you issue a challenge that compels other creatures to do battle with you. Each creature of your choice that you can see within 30 feet of you must make a Wisdom saving throw. On a failed save, a creature can't willingly move more than 30 feet away from you. This effect ends on the creature if you are incapacitated or die or if the creature is more than 30 feet away from you.",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_turn_the_tide",
             name: "Channel Divinity: Turn the Tide",
-            desc: "You can use your Channel Divinity to bolster injured creatures with your holy power. As a bonus action, you grant temporary hit points to each creature of your choice within 30 feet of you. Each creature regains hit points equal to 1d6 + your Charisma modifier (minimum of 1) if it has no more than half its hit points.",
+            // Source: https://dnd5e.wikidot.com/paladin:crown (CC BY-SA 3.0)
+            desc: "As a bonus action, you can bolster injured creatures with your Channel Divinity. Each creature of your choice that can hear you within 30 feet of you regains hit points equal to 1d6 + your Charisma modifier (minimum of 1) if it has no more than half of its hit points.",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "divine_allegiance",
             name: "Divine Allegiance",
-            desc: "Starting at 7th level, when a creature within 5 feet of you takes damage, you can use your reaction to magically take that damage, instead of the creature taking it. This damage bypasses any resistance or immunity you have.",
+            // Source: https://dnd5e.wikidot.com/paladin:crown (CC BY-SA 3.0)
+            desc: "Starting at 7th level, when a creature within 5 feet of you takes damage, you can use your reaction to magically substitute your own health for that of the target creature, causing that creature not to take the damage. Instead, you take the damage. This damage to you can't be reduced or prevented in any way.",
             level: 7,
             tracked: false,
           },
           {
             id: "unyielding_saint",
             name: "Unyielding Saint",
-            desc: "Starting at 15th level, your devotion to protecting the innocent strengthens your resolve. You have advantage on saving throws to avoid being paralyzed or stunned.",
+            // Source: https://dnd5e.wikidot.com/paladin:crown (CC BY-SA 3.0)
+            desc: "Starting at 15th level, you have advantage on saving throws to avoid becoming paralyzed or stunned.",
             level: 15,
             tracked: false,
           },
           {
             id: "exalted_champion",
             name: "Exalted Champion",
-            desc: "At 20th level, you can use your action to become an avatar of peace and resolve. For 1 minute, you gain the following benefits:\n- You have resistance to all damage dealt by other creatures.\n- Your allies within 30 feet of you have advantage on saving throws against being frightened or charmed.\n- Whenever a creature hits you with a melee attack, it takes radiant damage equal to your Charisma modifier.\nOnce you use this feature, you can't use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:crown (CC BY-SA 3.0)
+            desc: "At 20th level, your presence on the field of battle is an inspiration to those dedicated to your cause. You can use your action to gain the following benefits for 1 hour:\n- You have resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons.\n- Your allies have advantage on death saving throws while within 30 feet of you.\n- You have advantage on Wisdom saving throws, as do your allies within 30 feet of you.\nThis effect ends early if you are incapacitated or die. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
