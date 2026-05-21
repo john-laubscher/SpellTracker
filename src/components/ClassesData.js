@@ -3926,16 +3926,32 @@ export const ClassesData = {
           {
             id: "channel_divinity_sacred_weapon",
             name: "Channel Divinity: Sacred Weapon",
-            desc: "You can use your Channel Divinity to imbue one weapon that you are holding with positive energy. As an action, you add your Charisma modifier to attack rolls made with that weapon (with a minimum bonus of +1). The weapon also emits bright light in a 20-foot radius and dim light for an additional 20 feet. This effect lasts for 1 minute. If the weapon is not already magical, it becomes magical for the duration. This effect ends early if you drop the weapon or fall unconscious.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "As an action, you can imbue one weapon you are holding with positive energy, using your Channel Divinity.",
+              "For 1 minute, you add your Charisma modifier to attack rolls made with that weapon (minimum bonus of +1). The weapon emits bright light in a 20-foot radius and dim light for 20 feet beyond that. If the weapon isn't already magical, it becomes magical for the duration.",
+              "You can end this effect on your turn as part of any other action. The effect also ends if you are no longer holding or carrying this weapon, or if you fall unconscious.",
+            ],
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_turn_the_unholy",
             name: "Channel Divinity: Turn the Unholy",
-            desc: "You can use your Channel Divinity to utter ancient words that are painful for fiends and undead to hear. As an action, you present your holy symbol and speak a prayer censuring fiends and undead. Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "As an action, you present your holy symbol and speak a prayer censuring fiends and undead, using your Channel Divinity.",
+              "Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+              "A turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action.",
+            ],
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_devotion",
@@ -3954,9 +3970,16 @@ export const ClassesData = {
           {
             id: "holy_nimbus",
             name: "Holy Nimbus",
-            desc: "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. The aura is a 30-foot radius of bright light and dim light for an additional 30 feet. Whenever an enemy starts its turn in the bright light, it takes 10 radiant damage. Additionally, allies in the light have advantage on saving throws against spells cast by fiends or undead. Once you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. Bright light shines from you in a 30-foot radius, and dim light shines 30 feet beyond that.",
+              "Whenever an enemy creature starts its turn in the bright light, the creature takes 10 radiant damage. In addition, you have advantage on saving throws against spells cast by fiends or undead for the duration.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
