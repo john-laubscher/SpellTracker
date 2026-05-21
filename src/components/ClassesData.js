@@ -3926,16 +3926,32 @@ export const ClassesData = {
           {
             id: "channel_divinity_sacred_weapon",
             name: "Channel Divinity: Sacred Weapon",
-            desc: "You can use your Channel Divinity to imbue one weapon that you are holding with positive energy. As an action, you add your Charisma modifier to attack rolls made with that weapon (with a minimum bonus of +1). The weapon also emits bright light in a 20-foot radius and dim light for an additional 20 feet. This effect lasts for 1 minute. If the weapon is not already magical, it becomes magical for the duration. This effect ends early if you drop the weapon or fall unconscious.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "As an action, you can imbue one weapon you are holding with positive energy, using your Channel Divinity.",
+              "For 1 minute, you add your Charisma modifier to attack rolls made with that weapon (minimum bonus of +1). The weapon emits bright light in a 20-foot radius and dim light for 20 feet beyond that. If the weapon isn't already magical, it becomes magical for the duration.",
+              "You can end this effect on your turn as part of any other action. The effect also ends if you are no longer holding or carrying this weapon, or if you fall unconscious.",
+            ],
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_turn_the_unholy",
             name: "Channel Divinity: Turn the Unholy",
-            desc: "You can use your Channel Divinity to utter ancient words that are painful for fiends and undead to hear. As an action, you present your holy symbol and speak a prayer censuring fiends and undead. Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "As an action, you present your holy symbol and speak a prayer censuring fiends and undead, using your Channel Divinity.",
+              "Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+              "A turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action.",
+            ],
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_devotion",
@@ -3954,9 +3970,16 @@ export const ClassesData = {
           {
             id: "holy_nimbus",
             name: "Holy Nimbus",
-            desc: "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. The aura is a 30-foot radius of bright light and dim light for an additional 30 feet. Whenever an enemy starts its turn in the bright light, it takes 10 radiant damage. Additionally, allies in the light have advantage on saving throws against spells cast by fiends or undead. Once you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:devotion (CC BY-SA 3.0)
+            desc: [
+              "At 20th level, as an action, you can emanate an aura of sunlight for 1 minute. Bright light shines from you in a 30-foot radius, and dim light shines 30 feet beyond that.",
+              "Whenever an enemy creature starts its turn in the bright light, the creature takes 10 radiant damage. In addition, you have advantage on saving throws against spells cast by fiends or undead for the duration.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
@@ -3972,30 +3995,64 @@ export const ClassesData = {
           {
             id: "channel_divinity_peerless_athlete",
             name: "Channel Divinity: Peerless Athlete",
-            desc: "You can use your Channel Divinity to augment your athleticism with divine favor. As a bonus action, you gain advantage on Strength (Athletics) and Dexterity (Acrobatics) checks for the next 10 minutes. During this time, you can also carry, push, drag, and lift twice as much weight as normal, and the distance of your long and high jumps increases by 10 feet.",
+            // Source: https://dnd5e.wikidot.com/paladin:glory (CC BY-SA 3.0)
+            desc: "As a bonus action, you can use your Channel Divinity to augment your athleticism. For the next 10 minutes, you have advantage on Strength (Athletics) and Dexterity (Acrobatics) checks; you can carry, push, drag, and lift twice as much weight as normal; and the distance of your long and high jumps increases by 10 feet (this extra distance costs movement as normal).",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
+          },
+          {
+            id: "channel_divinity_inspiring_smite",
+            name: "Channel Divinity: Inspiring Smite",
+            // Source: https://dnd5e.wikidot.com/paladin:glory (CC BY-SA 3.0)
+            desc: "Immediately after you deal damage to a creature with your Divine Smite feature, you can use your Channel Divinity as a bonus action and distribute temporary hit points to creatures of your choice within 30 feet of you, which can include you. The total number of temporary hit points equals 2d8 + your level in this class, divided among the chosen creatures however you like.",
+            level: 3,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_alacrity",
             name: "Aura of Alacrity",
-            desc: "Starting at 7th level, you emanate an aura while you aren't incapacitated. Your walking speed increases by 10 feet, and your allies within 10 feet of you also gain this benefit. At 18th level, the range of this aura increases to 30 feet.",
+            // Source: https://dnd5e.wikidot.com/paladin:glory (CC BY-SA 3.0)
+            desc: [
+              "At 7th level, you emanate an aura that fills you and your companions with supernatural speed, allowing you to race across a battlefield in formation. Your walking speed increases by 10 feet. In addition, if you aren't incapacitated, the walking speed of any ally who starts their turn within 5 feet of you increases by 10 feet until the end of that turn.",
+              "When you reach 18th level in this class, the range of the aura increases to 10 feet.",
+            ],
             level: 7,
             tracked: false,
           },
           {
             id: "glorious_defense",
             name: "Glorious Defense",
-            desc: "Starting at 15th level, when a creature within 10 feet of you makes an attack roll against you or another creature, you can use your reaction to add your Charisma modifier to the target's AC. If the attack still hits, you can make one weapon attack against the attacker as part of this reaction.\nYou can use this feature a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:glory (CC BY-SA 3.0)
+            desc: [
+              "When you reach 15th level, you can turn defense into a sudden strike. When you or another creature you can see within 10 feet of you is hit by an attack roll, you can use your reaction to grant a bonus to the target's AC against that attack, potentially causing it to miss. The bonus equals your Charisma modifier (minimum of +1). If the attack misses, you can make one weapon attack against the attacker as part of this reaction, provided the attacker is within your weapon's range.",
+              "You can use this feature a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            ],
             level: 15,
-            tracked: true, // Cha mod/LR
+            tracked: true,
+            uses: "cha_mod",
+            recharge: "lr",
           },
           {
             id: "living_legend",
             name: "Living Legend",
-            desc: "At 20th level, as a bonus action, you can empower yourself with an otherworldly presence for 1 minute. For the duration:\n- You have advantage on all Charisma checks.\n- Once per turn, when you miss with an attack roll, you can make the roll again.\n- If you fail a saving throw, you can use your reaction to reroll it.\nOnce you use this feature, you can't use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:glory (CC BY-SA 3.0)
+            desc: [
+              "At 20th level, you can empower yourself with the legends — whether true or exaggerated — of your great deeds. As a bonus action, you gain the following benefits for 1 minute:",
+              "- You are blessed with an otherworldly presence, gaining advantage on all Charisma checks.",
+              "- Once on each of your turns when you make a weapon attack and miss, you can cause that attack to hit instead.",
+              "- If you fail a saving throw, you can use your reaction to reroll it. You must use this new roll.",
+              "Once you use this feature, you can’t use it again until you finish a long rest, unless you expend a 5th-level spell slot to use it again.",
+            ],
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
