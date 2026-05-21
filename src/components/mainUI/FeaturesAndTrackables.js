@@ -842,7 +842,7 @@ const FeatureDisplay = ({
                 <>
                   {Array.from({ length: usesCount }).map((_, idx) => (
                     idx === 0 && isUsedByOther ? (
-                      <Tooltip arrow title="Channel Divinity only has 1 use per short rest.">
+                      <Tooltip arrow title="Channel Divinity only has 1 use per short or long rest.">
                         <span>
                           <Checkbox
                             key={`${feature.id}:pooluse:${idx}`}
