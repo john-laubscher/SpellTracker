@@ -3753,9 +3753,26 @@ export const ClassesData = {
           {
             id: "channel_divinity_natures_wrath",
             name: "Channel Divinity: Nature's Wrath",
-            desc: "You can use your Channel Divinity to invoke primeval forces to ensnare a foe. As an action, you can cause spectral vines to spring up and reach for a creature within 10 feet of you that you can see. The creature must succeed on a Strength or Dexterity saving throw (its choice) or be restrained. While restrained by the vines, the creature repeats the saving throw at the end of each of its turns, ending the effect on itself on a success.",
+            desc: "You can use your Channel Divinity to invoke primeval forces to ensnare a foe. As an action, you can cause spectral vines to spring up and reach for a creature within 10 feet of you that you can see. The creature must succeed on a Strength or Dexterity saving throw (its choice) or be restrained. While restrained by the vines, the creature repeats the saving throw at the end of each of its turns. On a success, it frees itself and the vines vanish.",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
+          },
+          {
+            id: "channel_divinity_turn_the_faithless",
+            name: "Channel Divinity: Turn the Faithless",
+            desc: [
+              "You can use your Channel Divinity to utter ancient words that are painful for fey and fiends to hear. As an action, you present your holy symbol, and each fey or fiend within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+              "A turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action.",
+              "If the creature's true form is concealed by an illusion, shapeshifting, or other effect, that form is revealed while it is turned.",
+            ],
+            level: 3,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_warding",
@@ -3770,13 +3787,17 @@ export const ClassesData = {
             desc: "At 15th level, when you are reduced to 0 hit points and not killed outright, you can choose to drop to 1 hit point instead. Once you use this feature, you can't use it again until you finish a long rest. Additionally, you suffer none of the drawbacks of old age, and you can't be aged magically.",
             level: 15,
             tracked: true, // 1/LR
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "elder_champion",
             name: "Elder Champion",
-            desc: "At 20th level, you can assume the form of an ancient force of nature using your action. For 1 minute, you gain the following benefits:\n- At the start of each of your turns, regain 10 hit points.\n- Spells you cast that have a casting time of 1 action instead have a casting time of 1 bonus action.\n- Enemies within 10 feet of you have disadvantage on saving throws against your paladin spells and Channel Divinity options.\nOnce you use this feature, you can't use it again until you finish a long rest.",
+            desc: "At 20th level, you can assume the form of an ancient force of nature using your action. For 1 minute, you gain the following benefits:\n- At the start of each of your turns, regain 10 hit points.\n- Whenever you cast a paladin spell that has a casting time of 1 action, you can cast it using a bonus action instead.\n- Enemy creatures within 10 feet of you have disadvantage on saving throws against your paladin spells and Channel Divinity options.\nOnce you use this feature, you can't use it again until you finish a long rest.",
             level: 20,
             tracked: true, // 1/LR
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [

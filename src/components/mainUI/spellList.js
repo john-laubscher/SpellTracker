@@ -119,6 +119,14 @@ const GRAVE_DOMAIN_SPELLS = [
   { clericLevel: 9, spellLevel: 5, spells: ["antilife-shell", "raise-dead"] },
 ];
 
+const PALADIN_OATH_SPELL_LEVEL_BY_PALADIN_LEVEL = {
+  3: 1,
+  5: 2,
+  9: 3,
+  13: 4,
+  17: 5,
+};
+
 const KNOWLEDGE_DOMAIN_SPELLS = [
   { clericLevel: 1, spellLevel: 1, spells: ["command", "identify"] },
   { clericLevel: 3, spellLevel: 2, spells: ["augury", "suggestion"] },
@@ -451,6 +459,7 @@ export const SpellList = (props) => {
   const [wildfireCircleSpellsByLevel, setWildfireCircleSpellsByLevel] = React.useState(() => emptyByLevel());
   const [twilightDomainSpellsByLevel, setTwilightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [warDomainSpellsByLevel, setWarDomainSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [oathSpellsByLevel, setOathSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -837,6 +846,111 @@ export const SpellList = (props) => {
     characterInfo?.characterLevel,
     characterInfo?.classLevels?.druid,
     characterInfo?.druidLandType,
+  ]);
+
+  useEffect(() => {
+    const isPaladin = characterInfo?.characterClass === "paladin";
+    if (!isPaladin) {
+      setOathSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const subclassKey = String(characterInfo?.subclass || "").trim();
+    const subclassMeta = ClassesData?.paladin?.subclasses?.[subclassKey] || null;
+    const subclassRowsRaw = Array.isArray(subclassMeta?.subclassSpells) ? subclassMeta.subclassSpells : [];
+    if (subclassRowsRaw.length === 0) {
+      setOathSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    const paladinLevel = (() => {
+      const raw = characterInfo?.classLevels?.paladin;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "paladin")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const subclassRows = subclassRowsRaw
+      .map((row) => {
+        const rowLevel = Math.trunc(Number(row?.level) || 0);
+        const spellLevel = PALADIN_OATH_SPELL_LEVEL_BY_PALADIN_LEVEL[rowLevel];
+        const spells = Array.isArray(row?.spells)
+          ? row.spells.map((s) => String(s || "").trim().replace(/_/g, "-")).filter(Boolean)
+          : [];
+
+        return {
+          paladinLevel: rowLevel,
+          spellLevel,
+          spells,
+        };
+      })
+      .filter((row) => Number.isFinite(Number(row?.paladinLevel)) && Number.isFinite(Number(row?.spellLevel)));
+
+    const active = subclassRows.filter((row) => paladinLevel >= Number(row?.paladinLevel || 0));
+    if (active.length === 0) {
+      setOathSpellsByLevel(emptyByLevel());
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const byLevel = emptyByLevel();
+        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
+          Number.isFinite(n)
+        );
+
+        const responses = await Promise.all(
+          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
+        );
+
+        const listsByLevel = new Map();
+        responses.forEach(({ lvl, res }) => {
+          listsByLevel.set(Number(lvl), res?.data?.results || []);
+        });
+
+        active.forEach((row) => {
+          const spellLevel = Number(row.spellLevel);
+          const all = listsByLevel.get(spellLevel) || [];
+          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+
+          (row.spells || []).forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+            const found = all.find((s) => String(s?.index || "") === key) || null;
+            const toAdd = found?.index
+              ? found
+              : {
+                  index: key,
+                  name: humanizeSpellIndex(key),
+                };
+
+            if (toAdd?.index && !seen.has(String(toAdd.index))) {
+              seen.add(String(toAdd.index));
+              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
+            }
+          });
+        });
+
+        if (!cancelled) setOathSpellsByLevel(byLevel);
+      } catch {
+        if (!cancelled) setOathSpellsByLevel(emptyByLevel());
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.paladin,
   ]);
 
   useEffect(() => {
@@ -2798,6 +2912,15 @@ export const SpellList = (props) => {
       ? twilightDomainSpellsByLevel[numericalSpellLevel]
       : [];
 
+    const oathAtLevelRaw = Array.isArray(oathSpellsByLevel?.[numericalSpellLevel])
+      ? oathSpellsByLevel[numericalSpellLevel]
+      : [];
+
+    const oathAtLevel = oathAtLevelRaw.map((s) => ({
+      ...(s || {}),
+      spelltrackerAlwaysPreparedKind: "oath_spell",
+    }));
+
     const landCircleAtLevelRaw = Array.isArray(landCircleSpellsByLevel?.[numericalSpellLevel])
       ? landCircleSpellsByLevel[numericalSpellLevel]
       : [];
@@ -2853,6 +2976,7 @@ export const SpellList = (props) => {
       ...trickeryAtLevel,
       ...twilightAtLevel,
       ...warAtLevel,
+      ...oathAtLevel,
       ...landCircleAtLevel,
       ...sporesCircleAtLevel,
       ...starsCircleAtLevel,
@@ -2860,6 +2984,10 @@ export const SpellList = (props) => {
     ];
     const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
     const domainSlotsAtLevel = domainAtLevel.map((original) => {
+      const kind = String(original?.spelltrackerAlwaysPreparedKind || "");
+      if (kind === "oath_spell") {
+        return { original, spell: original };
+      }
       const originalIndex = String(original?.index || "");
       const swapped = originalIndex ? swapsForCurrentDomain?.[originalIndex] : null;
       return {
@@ -2897,10 +3025,13 @@ export const SpellList = (props) => {
             String(original?.spelltrackerAlwaysPreparedKind || spell?.spelltrackerAlwaysPreparedKind || "") ||
             "domain_spell";
           const isCircleSpell = kind === "circle_spell";
-          const chipLabel = isCircleSpell ? "CS" : "DS";
-          const chipTooltip = isCircleSpell
-            ? "Circle Spell (always prepared; does not count toward prepared spells)."
-            : "Domain Spell (always prepared; does not count toward prepared spells).";
+          const isOathSpell = kind === "oath_spell";
+          const chipLabel = isOathSpell ? "OS" : isCircleSpell ? "CS" : "DS";
+          const chipTooltip = isOathSpell
+            ? "Oath Spell (always prepared; does not count toward prepared spells)."
+            : isCircleSpell
+              ? "Circle Spell (always prepared; does not count toward prepared spells)."
+              : "Domain Spell (always prepared; does not count toward prepared spells).";
 
           return (
           <Box key={`ds:${spell.index}`} sx={{ py: 0.2 }}>
@@ -2925,7 +3056,7 @@ export const SpellList = (props) => {
                   />
                 </Tooltip>
               }
-              actionButton={
+              actionButton={!isOathSpell ? (
                 <Tooltip arrow title="Swap this always-prepared spell (class/custom only).">
 	                  <IconButton
                     size="small"
@@ -2949,7 +3080,7 @@ export const SpellList = (props) => {
                     <SwapHorizIcon fontSize="inherit" />
                   </IconButton>
                 </Tooltip>
-              }
+              ) : null}
             />
           </Box>
           );
