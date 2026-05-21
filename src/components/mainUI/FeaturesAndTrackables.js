@@ -17,6 +17,7 @@ import {
   MenuItem,
   Select,
   Tooltip,
+  TextField,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -42,6 +43,7 @@ import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
 import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import AdditionalFightingStyleModal from "./AdditionalFightingStyleModal";
+import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
@@ -196,6 +198,7 @@ const FeatureDisplay = ({
   constitutionModValue,
   druidLevel,
   fighterLevel,
+  paladinLevel,
   characterClass,
   characterLevel,
 }) => {
@@ -237,6 +240,10 @@ const FeatureDisplay = ({
       if (typeof match?.uses === "number" && Number.isFinite(match.uses) && match.uses > 0) return match.uses;
     }
     if (feature?.uses === "pb") return Number(proficiencyBonusValue) || 1;
+    if (feature?.uses === "1_plus_cha_mod") {
+      const chaMod = Math.trunc(Number(charismaModValue) || 0);
+      return Math.max(1, 1 + chaMod);
+    }
     if (feature?.uses === "cha_mod") return Math.max(1, Number(charismaModValue) || 1);
     if (feature?.uses === "wis_mod") return Math.max(1, Number(wisdomModValue) || 1);
     if (feature?.uses === "str_mod") {
@@ -676,6 +683,8 @@ const FeatureDisplay = ({
               const maxPool = (() => {
                 if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
                 if (feature?.poolMax === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                if (feature?.poolMax === "paladin_level") return Math.max(0, Math.trunc(Number(paladinLevel) || 0));
+                if (feature?.poolMax === "paladin_level_x5") return Math.max(0, Math.trunc(Number(paladinLevel) || 0)) * 5;
                 if (feature?.poolMax === "character_level") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
                 if (typeof feature?.poolMax === "number" && Number.isFinite(feature.poolMax)) {
                   return Math.max(0, Math.trunc(feature.poolMax));
@@ -716,6 +725,66 @@ const FeatureDisplay = ({
                     /{maxPool}
                   </Typography>
 
+                  {extraTrailing}
+                </>
+              );
+            }
+
+            if (feature?.trackedMode === "poolInput") {
+              const maxPool = (() => {
+                if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                if (feature?.poolMax === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                if (feature?.poolMax === "paladin_level") return Math.max(0, Math.trunc(Number(paladinLevel) || 0));
+                if (feature?.poolMax === "paladin_level_x5") return Math.max(0, Math.trunc(Number(paladinLevel) || 0)) * 5;
+                if (feature?.poolMax === "character_level") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+                if (typeof feature?.poolMax === "number" && Number.isFinite(feature.poolMax)) {
+                  return Math.max(0, Math.trunc(feature.poolMax));
+                }
+                return 0;
+              })();
+
+              const valueKey = String(feature?.poolKey || "poolRemaining");
+              const current = clampInt(tracker?.[valueKey] ?? maxPool, 0, maxPool);
+
+              return (
+                <>
+                  <TextField
+                    value={String(current)}
+                    onChange={(e) => {
+                      const raw = String(e.target.value ?? "");
+                      if (raw.trim() === "") {
+                        setTracker({ [valueKey]: 0 });
+                        return;
+                      }
+                      const parsed = Number(raw);
+                      if (!Number.isFinite(parsed)) return;
+                      setTracker({ [valueKey]: clampInt(parsed, 0, maxPool) });
+                    }}
+                    variant="standard"
+                    size="small"
+                    inputProps={{
+                      inputMode: "numeric",
+                      pattern: "[0-9]*",
+                      style: { textAlign: "right" },
+                    }}
+                    sx={{
+                      ml: 0.5,
+                      width: 44,
+                      "& .MuiInputBase-root": {
+                        px: 0,
+                      },
+                      "& .MuiInputBase-input": {
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        color: "#5d4037",
+                        p: 0,
+                        pr: 0.25,
+                      },
+                    }}
+                  />
+                  <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037" }}>
+                    /{maxPool}
+                  </Typography>
                   {extraTrailing}
                 </>
               );
@@ -876,6 +945,14 @@ const FeaturesAndTrackables = () => {
     return 0;
   }, [characterInfo?.classLevels?.fighter, characterClass, characterLevel]);
 
+  const paladinLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.paladin;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterClass === "paladin") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+    return 0;
+  }, [characterInfo?.classLevels?.paladin, characterClass, characterLevel]);
+
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
   const [manageModal, setManageModal] = React.useState({ open: false, kind: "class" });
@@ -893,6 +970,7 @@ const FeaturesAndTrackables = () => {
   const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
   const [additionalFightingStyleModalOpen, setAdditionalFightingStyleModalOpen] = React.useState(false);
+  const [blessedWarriorCantripsModalOpen, setBlessedWarriorCantripsModalOpen] = React.useState(false);
   const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
@@ -1000,6 +1078,15 @@ const FeaturesAndTrackables = () => {
     characterClass === "fighter" &&
     subclass === "champion" &&
     Number(fighterLevel || 0) >= 10;
+
+  const hasBlessedWarrior =
+    characterClass === "paladin" &&
+    String(fightingStyle || "") === "Blessed Warrior" &&
+    Number(characterLevel || 0) >= 2;
+
+  const blessedWarriorCantripCount = Array.isArray(characterInfo?.blessedWarriorCantrips)
+    ? characterInfo.blessedWarriorCantrips.length
+    : 0;
 
   const additionalFightingStyleCount = additionalFightingStyle ? 1 : 0;
 
@@ -1211,6 +1298,33 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "paladin" && fightingStyle) {
+      const chosenCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
+        ? characterInfo.blessedWarriorCantrips
+        : [];
+      const chosenNames = chosenCantrips
+        .map((s) => String(s?.name || "").trim())
+        .filter(Boolean);
+
+      return base.map((feature) => {
+        if (feature?.id !== "fighting_style") return feature;
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+        const prefixes = [`Fighting Style: ${fightingStyle}.`];
+        if (hasBlessedWarrior) {
+          prefixes.push(
+            chosenNames.length > 0
+              ? `Blessed Warrior cantrips: ${chosenNames.join(", ")}.`
+              : "Blessed Warrior cantrips: Choose cantrips."
+          );
+        }
+        return { ...feature, desc: [...prefixes, ...descLines] };
+      });
+    }
+
     return base;
   }, [
     classFeatures,
@@ -1220,6 +1334,8 @@ const FeaturesAndTrackables = () => {
     characterClass,
     fightingStyle,
     additionalFightingStyle,
+    characterInfo?.blessedWarriorCantrips,
+    hasBlessedWarrior,
   ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
@@ -1389,6 +1505,7 @@ const FeaturesAndTrackables = () => {
               constitutionModValue={constitutionModValue}
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
+              paladinLevel={paladinLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
               renderDetailsHeaderForFeature={() => null}
@@ -1411,6 +1528,7 @@ const FeaturesAndTrackables = () => {
               constitutionModValue={constitutionModValue}
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
+              paladinLevel={paladinLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
               renderDetailsHeaderForFeature={(feature) => {
@@ -1649,6 +1767,37 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                if (hasBlessedWarrior && feature?.id === "fighting_style") {
+                  const isOver = blessedWarriorCantripCount > 2;
+                  const isUnder = blessedWarriorCantripCount < 2;
+
+                  return (
+                    <Tooltip arrow title={`Choose Blessed Warrior cantrips (${blessedWarriorCantripCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Blessed Warrior cantrips"
+                        onClick={() => setBlessedWarriorCantripsModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(2, 132, 199, 0.10)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasRuneKnight && feature?.id === "rune_carver") {
                   const selectedCount = runeKnightRuneCount;
                   const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
@@ -2106,6 +2255,11 @@ const FeaturesAndTrackables = () => {
       <ArcanaInitiateModal
         open={arcanaInitiateModalOpen}
         onClose={() => setArcanaInitiateModalOpen(false)}
+      />
+
+      <BlessedWarriorCantripsModal
+        open={blessedWarriorCantripsModalOpen}
+        onClose={() => setBlessedWarriorCantripsModalOpen(false)}
       />
 
       <ReaperCantripModal

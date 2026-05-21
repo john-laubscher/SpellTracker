@@ -3638,47 +3638,79 @@ export const ClassesData = {
     hitDice: "D10",
     isSpellCaster: "halfCaster",
     spellcastingAbility: "cha",
+    // Source (feature text + fighting style list): https://dnd5e.wikidot.com/paladin (CC BY-SA 3.0)
+    fightingStyleOptions: [
+      "Blind Fighting",
+      "Defense",
+      "Dueling",
+      "Great Weapon Fighting",
+      "Interception",
+      "Protection",
+      "Blessed Warrior",
+      "Close Quarters Shooter",
+      "Mariner",
+      "Thrown Weapon Fighting",
+      "Tunnel Fighter",
+      "Unarmed Fighting",
+    ],
     classFeatures: [
       {
         id: "divine_sense",
         name: "Divine Sense",
-        desc: "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover.",
+        desc: [
+          "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover. You know the type (celestial, fiend, or undead) of any being whose presence you sense, but not its identity (the vampire Count Strahd von Zarovich, for instance).",
+          "Within the same radius, you also detect the presence of any place or object that has been consecrated or desecrated, as with the Hallow spell.",
+          "You can use this feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you regain all expended uses.",
+        ],
         level: 1,
-        tracked: 1, // 1+ cha mod, Regain on LR.
+        tracked: true,
+        uses: "1_plus_cha_mod",
+        recharge: "lr",
       },
       {
         id: "lay_on_hands",
         name: "Lay on Hands",
-        desc: "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you finish a long rest. With that pool, you can restore a total number of hit points equal to your paladin level Ãƒâ€” 5.",
+        desc: [
+          "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level x 5.",
+          "As an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool.",
+          "Alternatively, you can expend 5 hit points from your pool of healing to cure the target of one disease or neutralize one poison affecting it. You can cure multiple diseases and neutralize multiple poisons with a single use of Lay on Hands, expending hit points separately for each one.",
+          "This feature has no effect on undead and constructs.",
+        ],
         level: 1,
-        tracked: 1, // 5x Paladin LVL. Need to render small input that can be changed. Probably also need to add to state?
+        tracked: true,
+        trackedMode: "poolInput",
+        poolMax: "paladin_level_x5",
+        recharge: "lr",
       },
       {
         id: "fighting_style",
         name: "Fighting Style",
-        desc: "You adopt a style of fighting as your specialty.",
+        desc: [
+          "Starting at 2nd level, you adopt a particular style of fighting as your specialty. Choose one of the following options.",
+          "You can't take a Fighting Style option more than once, even if you later get to choose again.",
+        ],
         level: 2,
-        tracked: false, // **NEED FEATURE: maybe make fighting styles part of state, and have user choose one as part of char creation. Rendering will choose only 1, and we need some way to tooltip just the selected fighting Style(s).**
+        tracked: false,
       },
       {
         id: "divine_smite",
         name: "Divine Smite",
-        desc: "When you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon's damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8.",
+        desc: [
+          "Starting at 2nd level, when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon's damage.",
+          "The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8. The damage increases by 1d8 if the target is an undead or a fiend, to a maximum of 6d8.",
+        ],
         level: 2,
         tracked: false, //Use spell slots to cast
       },
       {
         id: "channel_divinity",
         name: "Channel Divinity",
-        desc: "At 3rd level, you gain the ability to channel divine energy to fuel magical effects unique to your Oath.",
+        desc: [
+          "Your oath allows you to channel divine energy to fuel magical effects. Each Channel Divinity option provided by your oath explains how to use it.",
+          "When you use your Channel Divinity, you choose which option to use. You must then finish a short or long rest to use your Channel Divinity again.",
+          "Some Channel Divinity effects require saving throws. When you use such an effect from this class, the DC equals your paladin spell save DC.",
+        ],
         level: 3,
-        tracked: 1, // 1/sr
-      },
-      {
-        id: "extra_attack",
-        name: "Extra Attack",
-        desc: "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.",
-        level: 5,
         tracked: false,
       },
       {
@@ -3705,9 +3737,14 @@ export const ClassesData = {
       {
         id: "cleansing_touch",
         name: "Cleansing Touch",
-        desc: "Beginning at 14th level, you can use your action to end one spell on yourself or on one willing creature that you touch.",
+        desc: [
+          "Beginning at 14th level, you can use your action to end one spell on yourself or on one willing creature that you touch.",
+          "You can use this feature a number of times equal to your Charisma modifier (a minimum of once). You regain expended uses when you finish a long rest.",
+        ],
         level: 14,
-        tracked: false,
+        tracked: true,
+        uses: "cha_mod",
+        recharge: "lr",
       },
     ],
     subclasses: {
