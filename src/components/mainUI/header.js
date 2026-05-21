@@ -183,72 +183,75 @@ useEffect(() => {
       </Box>
 
       <Card sx={theme.components.CharacterHeader.styleOverrides.root}>
-      <Grid container sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
-        <Grid item>
-          <IconButton onClick={toggleDetails}>
-            {showDetails ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
-          </IconButton>
+      <Grid container spacing={1} sx={theme.components.CharacterHeader.styleOverrides.gridContainer}>
+        {/* Top row: name/hp + key combat stats */}
+        <Grid item xs={12} md={5}>
+          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <IconButton onClick={toggleDetails} size="small" sx={{ p: 0.5 }}>
+              {showDetails ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+            </IconButton>
+            <Typography variant="h5" sx={{ lineHeight: 1.1, fontWeight: 800 }}>
+              {characterInfo.characterName}
+            </Typography>
+            <TextField
+              className="EditableHP"
+              variant="outlined"
+              label="HP"
+              size="small"
+              value={characterInfo.hp}
+              onChange={(e) =>
+                setCharacterInfo((prev) => ({
+                  ...prev,
+                  hp: parseInt(e.target.value, 10) || 0,
+                }))
+              }
+              sx={{ width: 96 }}
+            />
+          </Box>
         </Grid>
-        <Grid item sx={theme.components.CharacterHeader.styleOverrides.gridItem}>
-          <Typography variant="h5">{characterInfo.characterName}</Typography>
-          <TextField
-            className="EditableHP"
-            variant="outlined"
-            label="HP"
-            value={characterInfo.hp}
-            onChange={(e) =>
-              setCharacterInfo((prev) => ({
-                ...prev,
-                hp: parseInt(e.target.value, 10) || 0, // Convert input to number or fallback to 0
-              }))
-            }
-            sx={{ width: "100px" }} // Optional: Adjust size
-          />
+
+        <Grid item xs={12} md={7}>
+          <Card sx={{ backgroundColor: "rgba(139,69,19,0.04)", display: "inline-block" }}>
+            <CardContent sx={{ py: 1, px: 1.25, "&:last-child": { pb: 1 } }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "baseline" }}>
+                {ClassesData[characterInfo.characterClass].spellcastingAbility !== "nonCaster" ? (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Spell Atk: +{characterInfo.stats[spellcastingAbility].mod}
+                  </Typography>
+                ) : null}
+                {isArcaneArcher ? (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Arcane Shot DC: {arcaneShotDc}
+                  </Typography>
+                ) : isBattleMaster ? (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Maneuver DC: {maneuverSaveDc}
+                  </Typography>
+                ) : isCavalier ? (
+                  fighterLevel >= 15 ? (
+                    <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                      Charger DC: {ferociousChargerDc}
+                    </Typography>
+                  ) : null
+                ) : isMonk ? (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Ki Save DC: {kiSaveDc}
+                  </Typography>
+                ) : (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
+                  </Typography>
+                )}
+                <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>AC: {characterInfo.ac}</Typography>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
-        <Grid item xs={12} md={6}> 
-            <Card>
-              <CardContent>
-                <div>
-                  {/* Despite some classes not being spellcasters, we can still render this info, many races or items give non-casters spells or require a DC like monks stunning strike */}
-                  {/* Maybe tooltips for calculated stats */}
-                  {/* Needs card for weapon attacks--They should be horizontal */}
-                  {/* Move header outside of the background? Refactor styling? */}
-                  <Typography variant="h6" sx={theme.typography.body1}>
-                    {ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster" 
-                      ? "NonCaster"
-                      : `Spell Attack Mod: + ${characterInfo.stats[spellcastingAbility].mod}`}
-                  </Typography>                  
-                  {isArcaneArcher ? (
-                    <Typography variant="h6" sx={theme.typography.body1}>
-                      Arcane Shot DC: {arcaneShotDc}
-                    </Typography>
-                  ) : isBattleMaster ? (
-                    <Typography variant="h6" sx={theme.typography.body1}>
-                      Maneuver Save DC: {maneuverSaveDc}
-                    </Typography>
-                  ) : isCavalier ? (
-                    fighterLevel >= 15 ? (
-                      <Typography variant="h6" sx={theme.typography.body1}>
-                        Ferocious Charger DC: {ferociousChargerDc}
-                      </Typography>
-                    ) : null
-                  ) : isMonk ? (
-                    <Typography variant="h6" sx={theme.typography.body1}>
-                      Ki Save DC: {kiSaveDc}
-                    </Typography>
-                  ) : (
-                    <Typography variant="h6" sx={theme.typography.body1}>
-                      Spell Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
-                    </Typography>
-                  )}
-                  <Typography variant="h6" sx={theme.typography.body1}>Armor Class: {characterInfo.ac}</Typography>
-                </div>
-              </CardContent>
-            </Card>
-            <Grid>
-              <WeaponsDisplay characterInfo={characterInfo} />
-            </Grid>
-        </Grid> 
+
+        {/* Weapons row: full width */}
+        <Grid item xs={12}>
+          <WeaponsDisplay characterInfo={characterInfo} />
+        </Grid>
       </Grid>
 
       {/* Expanded Details */}

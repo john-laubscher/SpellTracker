@@ -247,6 +247,8 @@ function App() {
         {
           name: "Longsword",
           dmgType: "slashing",
+          diceCount: 1,
+          diceSize: 8,
           mod: 1,
           statMod: "str",
           proficient: true,
