@@ -4,7 +4,18 @@ import spellTables from "../components/spellTables";
 export const calculateTotalPreparedSpells = (characterInfo) => {
   const characterClass = characterInfo?.characterClass;
   const characterLevel = Number(characterInfo?.characterLevel) || 0;
-  const spellcastingMod = Number(characterInfo?.spellcastingMod) || 0;
+
+  const spellcastingAbility = ClassesData?.[characterClass]?.spellcastingAbility;
+  const stats = characterInfo?.stats || {};
+  const statModRaw =
+    spellcastingAbility && spellcastingAbility !== "nonCaster"
+      ? stats?.[spellcastingAbility]?.mod
+      : undefined;
+  const statMod = Number.isFinite(Number(statModRaw)) ? Number(statModRaw) : undefined;
+  // Back-compat fallback (older state stored this separately).
+  const spellcastingMod = Number.isFinite(statMod)
+    ? statMod
+    : Number(characterInfo?.spellcastingMod) || 0;
 
   const classMeta = ClassesData?.[characterClass] || null;
   const subclassMeta = classMeta?.subclasses?.[characterInfo?.subclass] || null;
@@ -18,7 +29,6 @@ export const calculateTotalPreparedSpells = (characterInfo) => {
     return Number(spellsKnown) || 0;
   }
 
-  const spellcastingAbility = ClassesData?.[characterClass]?.spellcastingAbility;
   if (!spellcastingAbility || spellcastingAbility === "nonCaster") return 0;
 
   const isSpellCaster = ClassesData?.[characterClass]?.isSpellCaster;
@@ -30,7 +40,9 @@ export const calculateTotalPreparedSpells = (characterInfo) => {
   }
 
   if (isSpellCaster === "halfCaster") {
-    return Math.floor(0.5 * characterLevel + spellcastingMod);
+    // Paladins/Rangers don't get spellcasting until level 2.
+    if (characterLevel < 2) return 0;
+    return Math.max(1, Math.floor(0.5 * characterLevel + spellcastingMod));
   }
 
   if (characterClass === "wizard") {

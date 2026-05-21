@@ -22,9 +22,13 @@ import PreparedSpellsStatus from "./PreparedSpellsStatus";
 import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
 import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripButton";
+import PrepareBlessedWarriorCantripButton from "./PrepareBlessedWarriorCantripButton";
 import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
 import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
+import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
+import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
+import ThorHammerIcon from "./ThorHammerIcon";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
@@ -398,8 +402,17 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "nature" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
+  const hasBlessedWarrior =
+    characterInfo?.characterClass === "paladin" &&
+    String(characterInfo?.fightingStyle || "") === "Blessed Warrior" &&
+    Number(characterInfo?.characterLevel || 0) >= 2;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
+    : [];
+
+  const blessedWarriorCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
+    ? characterInfo.blessedWarriorCantrips
     : [];
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
@@ -444,6 +457,13 @@ export const SpellList = (props) => {
     domainKey: "",
     originalSpell: null,
   });
+
+  const [bwSwapModal, setBwSwapModal] = React.useState({
+    open: false,
+    originalSpell: null,
+  });
+
+  const [bwPickerModalOpen, setBwPickerModalOpen] = React.useState(false);
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
     0: { loading: false, error: '' },
@@ -2251,6 +2271,7 @@ export const SpellList = (props) => {
            {renderMagicalSecretsForLevel(numericalSpellLevel)}
            {renderSpiritSessionForLevel(numericalSpellLevel)}
            {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
+           {renderBlessedWarriorCantripsForLevel(numericalSpellLevel)}
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
            {renderReaperCantripForLevel(numericalSpellLevel)}
            {renderDomainSpellsForLevel(numericalSpellLevel)}
@@ -2492,6 +2513,119 @@ export const SpellList = (props) => {
                 </Tooltip>
               }
               actionButton={<PrepareArcanaInitiateCantripButton spell={spell} index={idx} />}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderBlessedWarriorCantripsForLevel = (numericalSpellLevel) => {
+    if (!hasBlessedWarrior) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+
+    const isOver = blessedWarriorCantrips.length > 2;
+    const selectedCount = blessedWarriorCantrips.length;
+
+    return (
+      <Box
+        sx={{
+          borderLeft: `4px solid ${isOver ? "#b71c1c" : "#5d4037"}`,
+          borderRadius: "6px",
+          backgroundColor: "rgba(255,255,255,0.45)",
+          mb: 1,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "15px",
+                color: isOver ? "#b71c1c" : "#5d4037",
+              }}
+            >
+              Blessed Warrior Cantrips ({selectedCount}/2)
+            </Typography>
+            <Tooltip arrow title="Choose Blessed Warrior cantrips (cleric spell list)">
+              <IconButton
+                size="small"
+                aria-label="Choose Blessed Warrior cantrips"
+                onClick={() => setBwPickerModalOpen(true)}
+                sx={{
+                  p: 0.25,
+                  color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.92)",
+                  border: "1px solid rgba(93, 64, 55, 0.22)",
+                  backgroundColor: "rgba(93, 64, 55, 0.06)",
+                  "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                }}
+              >
+                <ThorHammerIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        {blessedWarriorCantrips.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
+            No Blessed Warrior cantrips chosen yet.
+          </Typography>
+        ) : null}
+
+        {blessedWarriorCantrips.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Blessed Warrior cantrip (over limit — only 2 allowed)."
+                      : "Blessed Warrior cantrip (counts as a paladin spell)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="BW"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.65,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(93, 64, 55, 0.90)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(93, 64, 55, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Tooltip arrow title="Swap cantrip (Blessed Warrior)">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Blessed Warrior cantrip"
+                      onClick={() => setBwSwapModal({ open: true, originalSpell: spell })}
+                      sx={{
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.90)",
+                        border: "1px solid rgba(93, 64, 55, 0.22)",
+                        backgroundColor: "rgba(93, 64, 55, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                  <PrepareBlessedWarriorCantripButton spell={spell} index={idx} />
+                </Box>
+              }
             />
           </Box>
         ))}
@@ -2908,6 +3042,7 @@ export const SpellList = (props) => {
         </Box>
       </Box>
       {renderBattleMasterManeuvers()}
+      {renderBlessedWarriorCantripsForLevel(0)}
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}
@@ -2930,6 +3065,17 @@ export const SpellList = (props) => {
 	          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
 	        }
 	      />
+
+        <BlessedWarriorCantripSwapModal
+          open={bwSwapModal.open}
+          originalSpell={bwSwapModal.originalSpell}
+          onClose={() => setBwSwapModal({ open: false, originalSpell: null })}
+        />
+
+        <BlessedWarriorCantripsModal
+          open={bwPickerModalOpen}
+          onClose={() => setBwPickerModalOpen(false)}
+        />
 
         <BattleMasterManeuversModal
           open={battleMasterManeuversModalOpen}

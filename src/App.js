@@ -55,6 +55,18 @@ const loadArcanaInitiateFromStorage = () => {
   }
 };
 
+const loadBlessedWarriorCantripsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_blessedWarriorCantrips");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const loadArcaneMasteryFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_arcaneMasterySpells");
@@ -212,6 +224,7 @@ function App() {
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
     const persistedSpiritSession = loadSpiritSessionFromStorage();
     const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
+    const persistedBlessedWarriorCantrips = loadBlessedWarriorCantripsFromStorage();
     const persistedArcaneMastery = loadArcaneMasteryFromStorage();
     const persistedReaperCantrip = loadReaperCantripFromStorage();
     const persistedAcolyteOfNatureCantrip = loadAcolyteOfNatureCantripFromStorage();
@@ -280,6 +293,7 @@ function App() {
       magicalSecretsPrepared: Array.isArray(persistedMagicalSecrets) ? persistedMagicalSecrets : [],
       spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
       arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
+      blessedWarriorCantrips: Array.isArray(persistedBlessedWarriorCantrips) ? persistedBlessedWarriorCantrips : [],
       arcaneMasterySpells: Array.isArray(persistedArcaneMastery) ? persistedArcaneMastery : [],
       reaperCantrip: persistedReaperCantrip || null,
       acolyteOfNatureCantrip: persistedAcolyteOfNatureCantrip || null,
@@ -367,6 +381,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.arcanaInitiateCantrips]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_blessedWarriorCantrips",
+        JSON.stringify(characterInfo.blessedWarriorCantrips || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.blessedWarriorCantrips]);
 
   useEffect(() => {
     try {

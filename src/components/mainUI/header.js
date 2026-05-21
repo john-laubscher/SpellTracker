@@ -76,6 +76,7 @@ const Header = () => {
   const isCavalier =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "cavalier";
   const isMonk = characterInfo.characterClass === "monk";
+  const proficiencyBonusValue = proficiencyBonus[characterInfo.characterLevel] || 2;
   const fighterLevel = (() => {
     const raw = characterInfo?.classLevels?.fighter;
     const numeric = Number(raw);
@@ -83,22 +84,30 @@ const Header = () => {
     if (characterInfo.characterClass === "fighter") return Math.max(0, Math.trunc(Number(characterInfo.characterLevel) || 0));
     return 0;
   })();
+
+  const spellcastingModValue =
+    spellcastingAbility && spellcastingAbility !== "nonCaster"
+      ? Number(characterInfo?.stats?.[spellcastingAbility]?.mod ?? 0) || 0
+      : 0;
+  const spellAttackBonus = proficiencyBonusValue + spellcastingModValue;
+  const spellSaveDc = 8 + proficiencyBonusValue + spellcastingModValue;
+
   const arcaneShotDc =
-    8 + (proficiencyBonus[characterInfo.characterLevel] || 2) + (Number(characterInfo?.stats?.int?.mod) || 0);
+    8 + proficiencyBonusValue + (Number(characterInfo?.stats?.int?.mod) || 0);
   const maneuverSaveDc =
     8 +
-    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    proficiencyBonusValue +
     Math.max(
       Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0,
       Number(characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0) || 0
     );
   const ferociousChargerDc =
     8 +
-    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    proficiencyBonusValue +
     (Number(characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0) || 0);
   const kiSaveDc =
     8 +
-    (proficiencyBonus[characterInfo.characterLevel] || 2) +
+    proficiencyBonusValue +
     (Number(characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0) || 0);
 
 useEffect(() => {
@@ -215,9 +224,14 @@ useEffect(() => {
             <CardContent sx={{ py: 1, px: 1.25, "&:last-child": { pb: 1 } }}>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "baseline" }}>
                 {ClassesData[characterInfo.characterClass].spellcastingAbility !== "nonCaster" ? (
-                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
-                    Spell Atk: +{characterInfo.stats[spellcastingAbility].mod}
-                  </Typography>
+                  <Tooltip
+                    arrow
+                    title={`${proficiencyBonusValue} (proficiency bonus) + ${spellcastingModValue} (${formatSpellcastingAbility(spellcastingAbility)} modifier) = ${spellAttackBonus}`}
+                  >
+                    <Typography sx={{ fontSize: "14px", fontWeight: 800, cursor: "help" }}>
+                      Spell Atk: +{spellAttackBonus}
+                    </Typography>
+                  </Tooltip>
                 ) : null}
                 {isArcaneArcher ? (
                   <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
@@ -238,9 +252,14 @@ useEffect(() => {
                     Ki Save DC: {kiSaveDc}
                   </Typography>
                 ) : (
-                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
-                    Save DC: {characterInfo.spellcastingMod + proficiencyBonus[characterInfo.characterLevel] + 8}
-                  </Typography>
+                  <Tooltip
+                    arrow
+                    title={`8 + ${proficiencyBonusValue} (proficiency bonus) + ${spellcastingModValue} (${formatSpellcastingAbility(spellcastingAbility)} modifier) = ${spellSaveDc}`}
+                  >
+                    <Typography sx={{ fontSize: "14px", fontWeight: 800, cursor: "help" }}>
+                      Save DC: {spellSaveDc}
+                    </Typography>
+                  </Tooltip>
                 )}
                 <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>AC: {characterInfo.ac}</Typography>
               </Box>
