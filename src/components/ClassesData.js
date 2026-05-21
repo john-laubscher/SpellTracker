@@ -3489,7 +3489,54 @@ export const ClassesData = {
           },
         ],
       },
-      openHand: "",
+      // Source (feature text): https://dnd5e.wikidot.com/monk:open-hand (CC BY-SA 3.0)
+      openHand: {
+        features: [
+          {
+            id: "open_hand_technique",
+            name: "Open Hand Technique",
+            desc: [
+              "Starting at 3rd level, you can manipulate an enemy's ki when you use Flurry of Blows.",
+              "Whenever you hit a creature with one of the Flurry of Blows attacks, choose one effect: knock it prone (Dex save), push it up to 15 feet away (Str save), or prevent it from taking reactions until the end of your next turn.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
+            id: "wholeness_of_body",
+            name: "Wholeness of Body",
+            desc: [
+              "At 6th level, you can heal yourself as an action, regaining hit points equal to three times your monk level.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
+            level: 6,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+          {
+            id: "tranquility",
+            name: "Tranquility",
+            desc: [
+              "Beginning at 11th level, at the end of a long rest you gain the effect of Sanctuary until the start of your next long rest (it can end early as normal).",
+              "The saving throw DC is 8 + your proficiency bonus + your Wisdom modifier.",
+            ],
+            level: 11,
+            tracked: false,
+          },
+          {
+            id: "quivering_palm",
+            name: "Quivering Palm",
+            desc: [
+              "At 17th level, when you hit a creature with an unarmed strike, you can spend 3 ki points to start subtle vibrations in the target.",
+              "Before the vibrations expire (days equal to your monk level), you can use your action to end them if you're on the same plane. The target makes a Constitution save; on a failure it drops to 0 hit points, and on a success it takes 10d10 necrotic damage.",
+              "Only one creature can be affected at a time; you can also end the vibrations harmlessly.",
+            ],
+            level: 17,
+            tracked: false,
+          },
+        ],
+      },
       shadow: "",
       sunSoul: "",
       tranquility: "",

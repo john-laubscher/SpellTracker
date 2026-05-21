@@ -214,6 +214,20 @@ const buildMonkKiUses = (level, subclass) => {
         });
       }
     }
+
+    if (sc === "openHand") {
+      if (l >= 17) {
+        uses.push({
+          name: "Quivering Palm",
+          costLabel: "3 ki",
+          desc: [
+            "When you hit a creature with an unarmed strike, you can spend 3 ki points to start subtle vibrations in it.",
+            "Before the vibrations expire, you can use your action to end them if you're on the same plane. The target makes a Constitution save: on a failure it drops to 0 hit points; on a success it takes 10d10 necrotic damage.",
+            "Only one creature can be affected at a time; you can also end the vibrations harmlessly.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {
