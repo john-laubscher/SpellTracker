@@ -497,6 +497,12 @@ function App() {
     return 4;
   };
 
+  const normalizeOptionalNumber = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  };
+
   useEffect(() => {
     const isSunSoulMonk = characterInfo.characterClass === "monk" && String(characterInfo.subclass || "") === "sunSoul";
     const level = Math.max(0, Math.trunc(Number(characterInfo.characterLevel) || 0));
@@ -562,8 +568,8 @@ function App() {
         String(current?.statMod || "") === next.statMod &&
         Boolean(current?.proficient) === next.proficient &&
         Boolean(current?.isRanged) === Boolean(next.isRanged) &&
-        Number(current?.rangeNormalFt ?? NaN) === Number(next.rangeNormalFt ?? NaN) &&
-        Number(current?.rangeLongFt ?? NaN) === Number(next.rangeLongFt ?? NaN) &&
+        normalizeOptionalNumber(current?.rangeNormalFt) === normalizeOptionalNumber(next.rangeNormalFt) &&
+        normalizeOptionalNumber(current?.rangeLongFt) === normalizeOptionalNumber(next.rangeLongFt) &&
         String(current?.notes || "") === next.notes;
 
       if (isSame) return prev;
