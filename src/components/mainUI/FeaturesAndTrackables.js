@@ -202,8 +202,12 @@ const FeatureDisplay = ({
   characterClass,
   characterLevel,
 }) => {
-  const trackedFeatures = features.filter((feature) => feature.tracked);
-  const untrackedFeatures = features.filter((feature) => !feature.tracked);
+  const trackedFeatures = features.filter(
+    (feature) => feature?.tracked || Boolean(feature?.sharedUsePoolKey)
+  );
+  const untrackedFeatures = features.filter(
+    (feature) => !(feature?.tracked || Boolean(feature?.sharedUsePoolKey))
+  );
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
@@ -350,12 +354,27 @@ const FeatureDisplay = ({
               let usesCount = getUsesCount(feature);
               const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
               const tracker = featureTrackers?.[trackerKey] || {};
+              const sharedPoolKey = feature?.sharedUsePoolKey
+                ? `${String(characterClass || "unknown")}:${String(feature.sharedUsePoolKey)}`
+                : null;
+              const poolTracker = sharedPoolKey ? featureTrackers?.[sharedPoolKey] || {} : null;
 
             const setTracker = (nextPartial) => {
               setFeatureTrackers((prev) => ({
                 ...(prev || {}),
                 [trackerKey]: {
                   ...(prev?.[trackerKey] || {}),
+                  ...(nextPartial || {}),
+                },
+              }));
+            };
+
+            const setPoolTracker = (nextPartial) => {
+              if (!sharedPoolKey) return;
+              setFeatureTrackers((prev) => ({
+                ...(prev || {}),
+                [sharedPoolKey]: {
+                  ...(prev?.[sharedPoolKey] || {}),
                   ...(nextPartial || {}),
                 },
               }));
@@ -369,6 +388,7 @@ const FeatureDisplay = ({
             };
 
             const extraUses = feature?.allowExtraUses ? clampInt(tracker?.extraUses ?? 0, 0, 20) : 0;
+            const baseUsesCount = typeof usesCount === "number" ? usesCount : 0;
             if (extraUses > 0 && typeof usesCount === "number") {
               usesCount += extraUses;
             }
@@ -813,54 +833,125 @@ const FeatureDisplay = ({
               );
             }
 
+            if (sharedPoolKey) {
+              const poolSpentBy = String(poolTracker?.spentBy || "");
+              const isUsedByThis = poolSpentBy === String(feature?.id || "");
+              const isUsedByOther = Boolean(poolSpentBy) && !isUsedByThis;
+
               return (
                 <>
                   {Array.from({ length: usesCount }).map((_, idx) => (
-                    <Checkbox
-                      key={`${feature.id}:use:${idx}`}
-                      defaultChecked={false}
-                      size="small"
-                      sx={{
-                        ml: idx === 0 ? 0.25 : 0,
-                        p: 0.25,
-                        color: "#8B4513",
-                        "&.Mui-checked": { color: "#8B4513" },
-                      }}
-                    />
-                  ))}
-                  {feature?.allowExtraUses ? (
-                    <>
-                      <Tooltip arrow title="Decrease bonus uses">
+                    idx === 0 && isUsedByOther ? (
+                      <Tooltip arrow title="Channel Divinity only has 1 use per short rest.">
                         <span>
-                          <IconButton
+                          <Checkbox
+                            key={`${feature.id}:pooluse:${idx}`}
+                            checked={isUsedByThis}
+                            disabled
+                            onChange={() => {}}
                             size="small"
-                            aria-label="Decrease bonus uses"
-                            onClick={() => setTracker({ extraUses: Math.max(0, extraUses - 1) })}
-                            disabled={extraUses <= 0}
-                            sx={{ ml: 0.25, p: 0.25 }}
-                          >
-                            <RemoveIcon fontSize="inherit" />
-                          </IconButton>
+                            sx={{
+                              ml: 0.25,
+                              p: 0.25,
+                              color: "#8B4513",
+                              "&.Mui-checked": { color: "#8B4513" },
+                            }}
+                          />
                         </span>
                       </Tooltip>
-                      <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037" }}>
-                        +{extraUses}
-                      </Typography>
-                      <Tooltip arrow title="Increase bonus uses">
-                        <IconButton
-                          size="small"
-                          aria-label="Increase bonus uses"
-                          onClick={() => setTracker({ extraUses: extraUses + 1 })}
-                          sx={{ p: 0.25 }}
-                        >
-                          <AddIcon fontSize="inherit" />
-                        </IconButton>
-                      </Tooltip>
-                    </>
-                  ) : null}
+                    ) : (
+                      <Checkbox
+                        key={`${feature.id}:pooluse:${idx}`}
+                        checked={idx === 0 ? isUsedByThis : false}
+                        disabled={idx === 0 ? isUsedByOther : true}
+                        onChange={(e) => {
+                          if (idx !== 0) return;
+                          if (isUsedByOther) return;
+                          const nextChecked = Boolean(e.target.checked);
+                          setPoolTracker({ spentBy: nextChecked ? String(feature?.id || "") : null });
+                        }}
+                        size="small"
+                        sx={{
+                          ml: idx === 0 ? 0.25 : 0,
+                          p: 0.25,
+                          color: "#8B4513",
+                          "&.Mui-checked": { color: "#8B4513" },
+                        }}
+                      />
+                    )
+                  ))}
                   {extraTrailing}
                 </>
               );
+            }
+
+            const spentUses = clampInt(tracker?.spentUses ?? 0, 0, typeof usesCount === "number" ? usesCount : 0);
+
+            return (
+              <>
+                {Array.from({ length: usesCount }).map((_, idx) => (
+                  <Checkbox
+                    key={`${feature.id}:use:${idx}`}
+                    checked={idx < spentUses}
+                    onChange={(e) => {
+                      const nextChecked = Boolean(e.target.checked);
+                      if (nextChecked) {
+                        if (idx !== spentUses) return;
+                        setTracker({ spentUses: clampInt(spentUses + 1, 0, usesCount) });
+                        return;
+                      }
+                      if (idx >= spentUses) return;
+                      setTracker({ spentUses: clampInt(spentUses - 1, 0, usesCount) });
+                    }}
+                    size="small"
+                    sx={{
+                      ml: idx === 0 ? 0.25 : 0,
+                      p: 0.25,
+                      color: "#8B4513",
+                      "&.Mui-checked": { color: "#8B4513" },
+                    }}
+                  />
+                ))}
+                {feature?.allowExtraUses ? (
+                  <>
+                    <Tooltip arrow title="Decrease bonus uses">
+                      <span>
+                        <IconButton
+                          size="small"
+                          aria-label="Decrease bonus uses"
+                          onClick={() => {
+                            const nextBonus = Math.max(0, extraUses - 1);
+                            const nextMaxUses = Math.max(0, baseUsesCount + nextBonus);
+                            setTracker({
+                              extraUses: nextBonus,
+                              spentUses: clampInt(spentUses, 0, nextMaxUses),
+                            });
+                          }}
+                          disabled={extraUses <= 0}
+                          sx={{ ml: 0.25, p: 0.25 }}
+                        >
+                          <RemoveIcon fontSize="inherit" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037" }}>
+                      +{extraUses}
+                    </Typography>
+                    <Tooltip arrow title="Increase bonus uses">
+                      <IconButton
+                        size="small"
+                        aria-label="Increase bonus uses"
+                        onClick={() => setTracker({ extraUses: extraUses + 1 })}
+                        sx={{ p: 0.25 }}
+                      >
+                        <AddIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                ) : null}
+                {extraTrailing}
+              </>
+            );
             }}
           />
         );
@@ -1269,9 +1360,11 @@ const FeaturesAndTrackables = () => {
   }, [allClassFeatures, applyTrackedOverride, classOverrideKey, classCustomForUi]);
 
   const managedSubclassFeatures = React.useMemo(() => {
-    const base = (allSubclassFeatures || []).map((f) =>
-      applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f })
-    );
+    const base = (allSubclassFeatures || []).map((f) => {
+      const next = applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f });
+      if (next?.sharedUsePoolKey === "channel_divinity") return { ...next, tracked: true };
+      return next;
+    });
     return [...base, ...subclassCustomForUi];
   }, [allSubclassFeatures, applyTrackedOverride, subclassOverrideKey, subclassCustomForUi]);
 
@@ -1343,7 +1436,10 @@ const FeaturesAndTrackables = () => {
       .map((f) => applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: subclassOverrideKey, featureId: f.id }));
 
-    let next = base;
+    let next = base.map((feature) => {
+      if (feature?.sharedUsePoolKey === "channel_divinity") return { ...feature, tracked: true };
+      return feature;
+    });
 
     if (hasArcaneArcherLore) {
       const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
