@@ -10,10 +10,12 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import classesData from "../../components/ClassesData";
 import FourElementsDisciplinesModal from "./FourElementsDisciplinesModal";
+import SpellAccordian from "./SpellAccordian";
 
 const clampInt = (v, min, max) => {
   const n = Number(v);
@@ -299,6 +301,14 @@ const buildFourElementsDisciplineUses = (fourElementsExtraIds) => {
   return uses;
 };
 
+const SHADOW_ARTS_SPELLS = [
+  { level: 0, index: "minor-illusion", name: "Minor Illusion", kiCostLabel: "0 ki" },
+  { level: 2, index: "darkness", name: "Darkness", kiCostLabel: "2 ki" },
+  { level: 2, index: "darkvision", name: "Darkvision", kiCostLabel: "2 ki" },
+  { level: 2, index: "pass-without-trace", name: "Pass without Trace", kiCostLabel: "2 ki" },
+  { level: 2, index: "silence", name: "Silence", kiCostLabel: "2 ki" },
+];
+
 const KiUseAccordionRow = ({ useItem }) => {
   const [expanded, setExpanded] = React.useState(false);
   const descLines = Array.isArray(useItem?.desc) ? useItem.desc : useItem?.desc ? [useItem.desc] : [];
@@ -391,6 +401,7 @@ const MonkKiUsesPanel = () => {
   const kiSaveDc = 8 + proficiencyBonus + wisdomMod;
 
   const isFourElements = subclass === "fourElements";
+  const isShadow = subclass === "shadow" && level >= 3;
   const allowedExtraDisciplines = React.useMemo(() => allowedExtraDisciplinesByLevel(level), [level]);
   const selectedExtraDisciplines = React.useMemo(() => {
     return Array.isArray(characterInfo?.fourElementsDisciplines) ? characterInfo.fourElementsDisciplines : [];
@@ -470,6 +481,65 @@ const MonkKiUsesPanel = () => {
           {uses.map((u) => (
             <KiUseAccordionRow key={u.id} useItem={u} />
           ))}
+          {isShadow ? (
+            <Box sx={{ mt: 2 }}>
+              <Tooltip
+                arrow
+                placement="top"
+                title={
+                  <Typography variant="body2" sx={{ fontWeight: 800, py: 0.25 }}>
+                    Minor Illusion is 0 ki. Darkness, Darkvision, Pass without Trace, and Silence are 2 ki (Action).
+                  </Typography>
+                }
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0, cursor: "help", mb: 0.75 }}>
+                  <DarkModeIcon sx={{ fontSize: "18px", color: "rgba(15, 23, 42, 0.72)" }} />
+                  <Typography
+                    sx={{
+                      fontFamily: "'Cinzel', serif",
+                      fontWeight: 800,
+                      fontSize: "16px",
+                      color: "#0f172a",
+                      letterSpacing: "1px",
+                      opacity: 0.95,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Shadow Arts
+                  </Typography>
+                </Box>
+              </Tooltip>
+
+              {SHADOW_ARTS_SPELLS.map((s) => (
+                <SpellAccordian
+                  key={s.index}
+                  numericalSpellLevel={s.level}
+                  spell={{ index: s.index, name: s.name }}
+                  actionButton={
+                    <Chip
+                      size="small"
+                      label={s.kiCostLabel}
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.85,
+                        backgroundColor:
+                          s.kiCostLabel === "0 ki" ? "rgba(96, 125, 139, 0.10)" : "rgba(46, 125, 50, 0.10)",
+                        color: s.kiCostLabel === "0 ki" ? "rgba(55, 71, 79, 0.95)" : "rgba(46, 125, 50, 0.95)",
+                        border:
+                          s.kiCostLabel === "0 ki"
+                            ? "1px solid rgba(96, 125, 139, 0.30)"
+                            : "1px solid rgba(46, 125, 50, 0.30)",
+                      }}
+                    />
+                  }
+                />
+              ))}
+            </Box>
+          ) : null}
           {isFourElements && disciplineUses.length > 0 ? (
             <Box sx={{ mt: 2 }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
@@ -599,11 +669,11 @@ const MonkKiUsesPanel = () => {
                 <KiUseAccordionRow key={u.id} useItem={u} />
               ))}
             </Box>
-          ) : (
+          ) : !isShadow ? (
             <Typography sx={{ mt: 1, fontSize: "12px", opacity: 0.7 }}>
               Some monk subclasses add additional ki options.
             </Typography>
-          )}
+          ) : null}
         </Box>
       )}
 
