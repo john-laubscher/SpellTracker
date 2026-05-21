@@ -702,10 +702,6 @@ const MonkKiUsesPanel = () => {
                 <KiUseAccordionRow key={u.id} useItem={u} />
               ))}
             </Box>
-          ) : !isShadow ? (
-            <Typography sx={{ mt: 1, fontSize: "12px", opacity: 0.7 }}>
-              Some monk subclasses add additional ki options.
-            </Typography>
           ) : null}
         </Box>
       )}

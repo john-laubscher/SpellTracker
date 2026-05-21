@@ -529,6 +529,9 @@ function App() {
         diceSize: desiredDieSize,
         statMod: "dex",
         proficient: true,
+        isRanged: true,
+        rangeNormalFt: 30,
+        rangeLongFt: null,
         notes: "Ranged spell attack (30 ft). Use DEX for attack & damage. Damage die scales with Martial Arts.",
       };
 
@@ -545,6 +548,9 @@ function App() {
         diceSize: desiredWeapon.diceSize,
         statMod: desiredWeapon.statMod,
         proficient: desiredWeapon.proficient,
+        isRanged: desiredWeapon.isRanged,
+        rangeNormalFt: desiredWeapon.rangeNormalFt,
+        rangeLongFt: desiredWeapon.rangeLongFt,
         notes: desiredWeapon.notes,
       };
 
@@ -555,6 +561,9 @@ function App() {
         Number(current?.diceSize) === next.diceSize &&
         String(current?.statMod || "") === next.statMod &&
         Boolean(current?.proficient) === next.proficient &&
+        Boolean(current?.isRanged) === Boolean(next.isRanged) &&
+        Number(current?.rangeNormalFt ?? NaN) === Number(next.rangeNormalFt ?? NaN) &&
+        Number(current?.rangeLongFt ?? NaN) === Number(next.rangeLongFt ?? NaN) &&
         String(current?.notes || "") === next.notes;
 
       if (isSame) return prev;

@@ -13,6 +13,43 @@ const formatDamageDice = (weapon) => {
   return `${diceCount}d${diceSize}`;
 };
 
+const parseFtValue = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  const i = Math.trunc(n);
+  if (i <= 0) return null;
+  return i;
+};
+
+const sanitizeFtField = (value) => {
+  const parsed = parseFtValue(value);
+  return parsed === null ? "" : parsed;
+};
+
+const normalizeWeaponRanges = (weaponLike) => {
+  const isRanged = Boolean(weaponLike?.isRanged);
+  if (!isRanged) return { isRanged: false, rangeNormalFt: null, rangeLongFt: null };
+
+  const normal = parseFtValue(weaponLike?.rangeNormalFt);
+  const long = parseFtValue(weaponLike?.rangeLongFt);
+
+  if (!normal) return { isRanged: true, rangeNormalFt: null, rangeLongFt: null };
+  if (!long || long === normal) return { isRanged: true, rangeNormalFt: normal, rangeLongFt: null };
+
+  return { isRanged: true, rangeNormalFt: normal, rangeLongFt: long };
+};
+
+const formatWeaponRange = (weapon) => {
+  if (!weapon?.isRanged) return "";
+  const normal = parseFtValue(weapon?.rangeNormalFt);
+  if (!normal) return "";
+  const long = parseFtValue(weapon?.rangeLongFt);
+  if (!long || long === normal) return `Range ${normal}`;
+  return `Range ${normal}/${long}`;
+};
+
 const QuillIcon = (props) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
     {/* Feather body */}
@@ -33,6 +70,9 @@ const sanitizeWeaponForEdit = (weapon) => ({
   diceSize: Number.isFinite(Number(weapon?.diceSize)) ? Number(weapon.diceSize) : 6,
   statMod: String(weapon?.statMod || "str"),
   proficient: Boolean(weapon?.proficient),
+  isRanged: Boolean(weapon?.isRanged),
+  rangeNormalFt: sanitizeFtField(weapon?.rangeNormalFt),
+  rangeLongFt: sanitizeFtField(weapon?.rangeLongFt),
 });
 
 export const WeaponsDisplay = ({ characterInfo }) => {
@@ -55,10 +95,11 @@ export const WeaponsDisplay = ({ characterInfo }) => {
   const handleSave = () => {
     if (editingIndex === null || !editingWeapon) return;
     if (!editingWeapon.name.trim() || !editingWeapon.dmgType.trim()) return;
+    const normalizedRanges = normalizeWeaponRanges(editingWeapon);
     setCharacterInfo((prev) => {
       const nextWeapons = Array.isArray(prev.weapons) ? [...prev.weapons] : [];
       if (!nextWeapons[editingIndex]) return prev;
-      nextWeapons[editingIndex] = { ...nextWeapons[editingIndex], ...editingWeapon };
+      nextWeapons[editingIndex] = { ...nextWeapons[editingIndex], ...editingWeapon, ...normalizedRanges };
       return { ...prev, weapons: nextWeapons };
     });
     closeEditor();
@@ -74,6 +115,8 @@ export const WeaponsDisplay = ({ characterInfo }) => {
           const modifierColor = totalModifier >= 0 ? "#2e7d32" : "#c62828";
           const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
           const damageText = `${formatDamageDice(weapon)} ${capitalize(weapon.dmgType)}`;
+          const rangeText = formatWeaponRange(weapon);
+          const footerText = rangeText || "Melee";
 
           return (
             <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
@@ -150,6 +193,10 @@ export const WeaponsDisplay = ({ characterInfo }) => {
 
                       <Typography sx={{ fontSize: "13px", lineHeight: 1.2, color: "text.secondary" }}>
                         {damageText}
+                      </Typography>
+
+                      <Typography sx={{ fontSize: "12px", lineHeight: 1.1, color: "text.secondary" }}>
+                        {footerText}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -273,6 +320,74 @@ export const WeaponsDisplay = ({ characterInfo }) => {
                   }}
                 />
               </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={editingWeapon.isRanged}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setEditingWeapon((prev) => ({
+                          ...prev,
+                          isRanged: checked,
+                          rangeNormalFt: checked ? prev.rangeNormalFt : "",
+                          rangeLongFt: checked ? prev.rangeLongFt : "",
+                        }));
+                      }}
+                      sx={{
+                        color: "#8B4513",
+                        "&.Mui-checked": { color: "#8B4513" },
+                        p: 0.5,
+                      }}
+                    />
+                  }
+                  label="Ranged"
+                  sx={{
+                    mr: 0,
+                    "& .MuiFormControlLabel-label": {
+                      fontSize: "12px",
+                      fontFamily: "'Cinzel', serif",
+                      fontWeight: 600,
+                      color: "#3e2723",
+                    },
+                  }}
+                />
+              </Grid>
+
+              {editingWeapon.isRanged ? (
+                <>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Range (ft)"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      type="number"
+                      inputProps={{ min: 1 }}
+                      value={editingWeapon.rangeNormalFt}
+                      onChange={(e) =>
+                        setEditingWeapon((prev) => ({ ...prev, rangeNormalFt: e.target.value }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Long (ft)"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      type="number"
+                      inputProps={{ min: 1 }}
+                      value={editingWeapon.rangeLongFt}
+                      onChange={(e) =>
+                        setEditingWeapon((prev) => ({ ...prev, rangeLongFt: e.target.value }))
+                      }
+                    />
+                  </Grid>
+                </>
+              ) : null}
             </Grid>
           ) : null}
         </DialogContent>
@@ -301,16 +416,26 @@ const WeaponManager = () => {
     diceCount: 1,
     diceSize: 6,
     statMod: "str", // Default to strength
-    proficient: false
+    proficient: false,
+    isRanged: false,
+    rangeNormalFt: "",
+    rangeLongFt: "",
   });
 
 
 
   const handleAddWeapon = () => {
     if (!newWeapon.name || !newWeapon.dmgType) return; // Ensure required fields are filled
+    const normalizedRanges = normalizeWeaponRanges(newWeapon);
+    const weaponToAdd = {
+      ...newWeapon,
+      name: String(newWeapon.name).trim(),
+      dmgType: String(newWeapon.dmgType).trim(),
+      ...normalizedRanges,
+    };
     setCharacterInfo((prev) => ({
       ...prev,
-      weapons: [...prev.weapons, newWeapon],
+      weapons: [...(Array.isArray(prev.weapons) ? prev.weapons : []), weaponToAdd],
     }));
     setNewWeapon({
       name: "",
@@ -319,6 +444,9 @@ const WeaponManager = () => {
       diceSize: 6,
       statMod: "str",
       proficient: false,
+      isRanged: false,
+      rangeNormalFt: "",
+      rangeLongFt: "",
     }); // Reset form
   };
 
@@ -431,6 +559,68 @@ const WeaponManager = () => {
           />
         </Grid>
         <Grid item>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={newWeapon.isRanged}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setNewWeapon((prev) => ({
+                    ...prev,
+                    isRanged: checked,
+                    rangeNormalFt: checked ? prev.rangeNormalFt : "",
+                    rangeLongFt: checked ? prev.rangeLongFt : "",
+                  }));
+                }}
+                sx={{
+                  color: "#8B4513",
+                  "&.Mui-checked": { color: "#8B4513" },
+                  p: 0.5,
+                }}
+              />
+            }
+            label="Ranged"
+            sx={{
+              mr: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: "12px",
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 600,
+                color: "#3e2723",
+              },
+            }}
+          />
+        </Grid>
+        {newWeapon.isRanged ? (
+          <>
+            <Grid item xs={6} sm={2}>
+              <TextField
+                label="Range (ft)"
+                variant="outlined"
+                size="small"
+                fullWidth
+                type="number"
+                inputProps={{ min: 1 }}
+                value={newWeapon.rangeNormalFt}
+                onChange={(e) => setNewWeapon((prev) => ({ ...prev, rangeNormalFt: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6} sm={2}>
+              <TextField
+                label="Long (ft)"
+                variant="outlined"
+                size="small"
+                fullWidth
+                type="number"
+                inputProps={{ min: 1 }}
+                value={newWeapon.rangeLongFt}
+                onChange={(e) => setNewWeapon((prev) => ({ ...prev, rangeLongFt: e.target.value }))}
+              />
+            </Grid>
+          </>
+        ) : null}
+        <Grid item>
           <IconButton
             onClick={handleAddWeapon}
             disabled={!canAdd}
@@ -461,6 +651,8 @@ const WeaponManager = () => {
             (weapon.proficient ? characterInfo.proficiencyMod : 0);
           const modifierColor = totalModifier >= 0 ? "#2e7d32" : "#c62828";
           const modifierText = totalModifier >= 0 ? `+${totalModifier}` : totalModifier;
+          const rangeText = formatWeaponRange(weapon);
+          const footerText = rangeText || "Melee";
           return (
             <Grid item key={index} xs={6} sm={4}>
               <Tooltip
@@ -492,6 +684,9 @@ const WeaponManager = () => {
                     </Typography>
                     <Typography sx={{ fontSize: "12px" }}>
                       Dmg: {formatDamageDice(weapon)} {capitalize(weapon.dmgType)}
+                    </Typography>
+                    <Typography sx={{ fontSize: "12px", color: "text.secondary" }}>
+                      {footerText}
                     </Typography>
                   </CardContent>
                 </Card>
