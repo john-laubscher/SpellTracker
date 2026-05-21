@@ -4068,44 +4068,55 @@ export const ClassesData = {
           {
             id: "channel_divinity_emissary_of_peace",
             name: "Channel Divinity: Emissary of Peace",
+            // Source: https://dnd5e.wikidot.com/paladin:redemption (CC BY-SA 3.0)
             desc: "You can use your Channel Divinity to augment your presence with divine power. As a bonus action, you grant yourself a +5 bonus to Charisma (Persuasion) checks for the next 10 minutes.",
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_rebuke_the_violent",
             name: "Channel Divinity: Rebuke the Violent",
+            // Source: https://dnd5e.wikidot.com/paladin:redemption (CC BY-SA 3.0)
             desc: "You can use your Channel Divinity to rebuke those who use violence. Immediately after an attacker within 30 feet of you deals damage with an attack against a creature other than you, you can use your reaction to force the attacker to make a Wisdom saving throw. On a failed save, the attacker takes radiant damage equal to the damage it just dealt. On a successful save, it takes half as much damage.",
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_the_guardian",
             name: "Aura of the Guardian",
-            desc: "Starting at 7th level, you can shield your allies from harm at the cost of your own health. When a creature within 10 feet of you takes damage, you can use your reaction to magically take that damage, instead of that creature taking it. This damage bypasses any resistance or immunity you have. At 18th level, the range of this aura increases to 30 feet.",
+            // Source: https://dnd5e.wikidot.com/paladin:redemption (CC BY-SA 3.0)
+            desc: "Starting at 7th level, you can shield your allies from harm at the cost of your own health. When a creature within 10 feet of you takes damage, you can use your reaction to magically take that damage, instead of that creature taking it. This feature doesn't transfer any other effects that might accompany the damage, and this damage can't be reduced in any way. At 18th level, the range of this aura increases to 30 feet.",
             level: 7,
             tracked: false,
           },
           {
             id: "protective_spirit",
             name: "Protective Spirit",
-            desc: "Starting at 15th level, a holy presence mends your wounds in battle. If you end your turn with fewer than half of your hit points remaining and you arenÃ¢â‚¬â„¢t incapacitated, you regain hit points equal to 1d6 + your Charisma modifier.",
+            // Source: https://dnd5e.wikidot.com/paladin:redemption (CC BY-SA 3.0)
+            desc: "Starting at 15th level, a holy presence mends your wounds in combat. You regain hit points equal to 1d6 + half your paladin level if you end your turn in combat with fewer than half of your hit points remaining and you aren't incapacitated.",
             level: 15,
             tracked: false,
           },
           {
             id: "emissary_of_redemption",
             name: "Emissary of Redemption",
-            desc: "At 20th level, you become an avatar of peace, gaining the following benefits for 1 minute:\n- You have resistance to all damage dealt by other creatures.\n- Whenever a creature damages you, it takes radiant damage equal to half the amount it dealt to you.\nIf you attack a creature, force it to make a saving throw, or deal damage to it, this benefit ends. Once you use this feature, you can't use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:redemption (CC BY-SA 3.0)
+            desc: "At 20th level, you become an avatar of peace, which gives you two benefits:\n- You have resistance to all damage dealt by other creatures (their attacks, spells, and other effects).\n- Whenever a creature hits you with an attack, it takes radiant damage equal to half the damage you take from the attack.\nIf you attack a creature, cast a spell on it, or deal damage to it by any means but this feature, neither benefit works against that creature until you finish a long rest.",
             level: 20,
-            tracked: true, // 1/LR
+            tracked: false,
           },
         ],
         subclassSpells: [
           { level: 3, spells: ["sanctuary", "sleep"] },
           { level: 5, spells: ["calm_emotions", "hold_person"] },
           { level: 9, spells: ["counterspell", "hypnotic_pattern"] },
-          { level: 13, spells: ["otilukes_resilient_sphere", "banishment"] },
+          { level: 13, spells: ["otilukes_resilient_sphere", "stoneskin"] },
           { level: 17, spells: ["hold_monster", "wall_of_force"] },
         ],
       },
