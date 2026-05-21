@@ -230,6 +230,39 @@ const buildMonkKiUses = (level, subclass) => {
         });
       }
     }
+
+    if (sc === "sunSoul") {
+      uses.push({
+        name: "Radiant Sun Bolt",
+        costLabel: "1 ki",
+        desc: [
+          "When you take the Attack action on your turn and use Radiant Sun Bolt as part of it, you can spend 1 ki point to make the special attack twice as a bonus action.",
+        ],
+      });
+
+      if (l >= 6) {
+        uses.push({
+          name: "Searing Arc Strike",
+          costLabel: "2+ ki",
+          desc: [
+            "Immediately after you take the Attack action on your turn, you can spend 2 ki points to cast the Burning Hands spell as a bonus action.",
+            "Each additional ki point you spend increases the spell's level by 1 (max total ki spent equals half your monk level).",
+          ],
+        });
+      }
+
+      if (l >= 11) {
+        uses.push({
+          name: "Searing Sunburst",
+          costLabel: "0-3 ki",
+          desc: [
+            "As an action, you create an orb and hurl it at a point you choose within 150 feet, where it erupts into a 20-foot-radius sphere of radiant light.",
+            "Each creature in the area must succeed on a Constitution saving throw or take 2d6 radiant damage (no save needed if behind opaque total cover).",
+            "You can increase the damage by spending ki points: each point, up to a maximum of 3, increases the damage by 2d6.",
+          ],
+        });
+      }
+    }
   }
 
   if (l >= 5) {

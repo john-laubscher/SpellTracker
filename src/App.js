@@ -247,6 +247,8 @@ function App() {
         {
           name: "Longsword",
           dmgType: "slashing",
+          diceCount: 1,
+          diceSize: 8,
           mod: 1,
           statMod: "str",
           proficient: true,
@@ -486,6 +488,81 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.fourElementsDisciplines]);
+
+  const monkMartialArtsDieSizeForLevel = (level) => {
+    const l = Math.max(0, Math.min(20, Math.trunc(Number(level) || 0)));
+    if (l >= 17) return 10;
+    if (l >= 11) return 8;
+    if (l >= 5) return 6;
+    return 4;
+  };
+
+  useEffect(() => {
+    const isSunSoulMonk = characterInfo.characterClass === "monk" && String(characterInfo.subclass || "") === "sunSoul";
+    const level = Math.max(0, Math.trunc(Number(characterInfo.characterLevel) || 0));
+
+    if (!isSunSoulMonk || level < 3) return;
+
+    setCharacterInfo((prev) => {
+      const stillSunSoulMonk = prev.characterClass === "monk" && String(prev.subclass || "") === "sunSoul";
+      const prevLevel = Math.max(0, Math.trunc(Number(prev.characterLevel) || 0));
+      if (!stillSunSoulMonk || prevLevel < 3) return prev;
+
+      const desiredDieSize = monkMartialArtsDieSizeForLevel(prevLevel);
+      const desiredId = "radiant_sun_bolt";
+      const desiredName = "Radiant Sun Bolt";
+
+      const existingWeapons = Array.isArray(prev.weapons) ? prev.weapons : [];
+      const nextWeapons = [...existingWeapons];
+
+      const byIdIndex = nextWeapons.findIndex((w) => String(w?.id || "") === desiredId);
+      const byNameIndex = nextWeapons.findIndex(
+        (w) => String(w?.name || "").trim().toLowerCase() === desiredName.toLowerCase()
+      );
+      const idx = byIdIndex >= 0 ? byIdIndex : byNameIndex;
+
+      const desiredWeapon = {
+        id: desiredId,
+        name: desiredName,
+        dmgType: "radiant",
+        diceCount: 1,
+        diceSize: desiredDieSize,
+        statMod: "dex",
+        proficient: true,
+        notes: "Ranged spell attack (30 ft). Use DEX for attack & damage. Damage die scales with Martial Arts.",
+      };
+
+      if (idx < 0) {
+        return { ...prev, weapons: [...nextWeapons, desiredWeapon] };
+      }
+
+      const current = nextWeapons[idx] || {};
+      const next = {
+        ...current,
+        id: desiredId,
+        dmgType: desiredWeapon.dmgType,
+        diceCount: desiredWeapon.diceCount,
+        diceSize: desiredWeapon.diceSize,
+        statMod: desiredWeapon.statMod,
+        proficient: desiredWeapon.proficient,
+        notes: desiredWeapon.notes,
+      };
+
+      const isSame =
+        String(current?.id || "") === next.id &&
+        String(current?.dmgType || "") === next.dmgType &&
+        Number(current?.diceCount) === next.diceCount &&
+        Number(current?.diceSize) === next.diceSize &&
+        String(current?.statMod || "") === next.statMod &&
+        Boolean(current?.proficient) === next.proficient &&
+        String(current?.notes || "") === next.notes;
+
+      if (isSame) return prev;
+
+      nextWeapons[idx] = next;
+      return { ...prev, weapons: nextWeapons };
+    });
+  }, [characterInfo.characterClass, characterInfo.subclass, characterInfo.characterLevel, characterInfo.weapons, setCharacterInfo]);
 
   return (
     <div className="App">
