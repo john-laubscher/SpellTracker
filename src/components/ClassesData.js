@@ -3813,37 +3813,45 @@ export const ClassesData = {
           {
             id: "channel_divinity_conquering_presence",
             name: "Channel Divinity: Conquering Presence",
-            desc: "You can use your Channel Divinity to exude a terrifying presence. As an action, you force each creature of your choice that you can see within 30 feet of you to make a Wisdom saving throw. On a failed save, a creature becomes frightened of you for 1 minute. A frightened creature can repeat this saving throw at the end of each of its turns, ending the effect on itself on a success.",
+            desc: "You can use your Channel Divinity to exude a terrifying presence. As an action, you force each creature of your choice that you can see within 30 feet of you to make a Wisdom saving throw. On a failed save, a creature becomes frightened of you for 1 minute. The frightened creature can repeat this saving throw at the end of each of its turns, ending the effect on itself on a success.",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_guided_strike",
             name: "Channel Divinity: Guided Strike",
             desc: "You can use your Channel Divinity to strike with supernatural accuracy. When you make an attack roll, you can use your Channel Divinity to gain a +10 bonus to the roll. You make this choice after you see the roll, but before the DM says whether the attack hits or misses.",
             level: 3,
-            tracked: false
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_conquest",
             name: "Aura of Conquest",
-            desc: "Starting at 7th level, you emanate a menacing aura while you're not incapacitated. The aura extends 10 feet from you in every direction, but not through total cover.\n- If a creature is frightened of you, its speed is reduced to 0 while in the aura, and it takes psychic damage equal to half your paladin level if it starts its turn there.\nAt 18th level, the range of this aura increases to 30 feet.",
+            desc: "Starting at 7th level, you constantly emanate a menacing aura while you're not incapacitated. The aura extends 10 feet from you in every direction, but not through total cover.\n\nIf a creature is frightened of you, its speed is reduced to 0 while in the aura, and that creature takes psychic damage equal to half your paladin level if it starts its turn there.\n\nAt 18th level, the range of this aura increases to 30 feet.",
             level: 7,
             tracked: false,
           },
           {
             id: "scornful_rebuke",
             name: "Scornful Rebuke",
-            desc: "Starting at 15th level, when a creature hits you with an attack, it takes psychic damage equal to your Charisma modifier (minimum of 1).",
+            desc: "Starting at 15th level, those who dare to strike you are psychically punished for their audacity. Whenever a creature hits you with an attack, that creature takes psychic damage equal to your Charisma modifier (minimum of 1) if you're not incapacitated.",
             level: 15,
             tracked: false,
           },
           {
             id: "invincible_conqueror",
             name: "Invincible Conqueror",
-            desc: "At 20th level, you can use your action to harness extraordinary martial power for 1 minute, gaining the following benefits:\n- Attack rolls against you have disadvantage.\n- Your weapon attacks score a critical hit on a roll of 19 or 20.\n- You make an additional attack when you take the Attack action on your turn.\nOnce you use this feature, you can't use it again until you finish a long rest.",
+            desc: "At 20th level, you gain the ability to harness extraordinary martial prowess. As an action, you can magically become an avatar of conquest, gaining the following benefits for 1 minute:\n- You have resistance to all damage.\n- When you take the Attack action on your turn, you can make one additional attack as part of that action.\n- Your melee weapon attacks score a critical hit on a roll of 19 or 20 on the d20.\nOnce you use this feature, you can't use it again until you finish a long rest.",
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
