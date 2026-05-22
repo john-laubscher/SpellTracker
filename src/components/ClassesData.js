@@ -4254,15 +4254,42 @@ export const ClassesData = {
       oathbreaker: {
         features: [
           {
+            id: "channel_divinity_control_undead",
+            name: "Channel Divinity: Control Undead",
+            // Source: https://dnd5e.wikidot.com/paladin:oathbreaker (CC BY-SA 3.0)
+            desc: "As an action, you target one undead creature you can see within 30 feet of you. The target must make a Wisdom saving throw. On a failed save, the target must obey your commands for the next 24 hours, or until you use this Channel Divinity option again. An undead whose challenge rating is equal to or greater than your paladin level is immune to this effect.",
+            level: 3,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
+          },
+          {
+            id: "channel_divinity_dreadful_aspect",
+            name: "Channel Divinity: Dreadful Aspect",
+            // Source: https://dnd5e.wikidot.com/paladin:oathbreaker (CC BY-SA 3.0)
+            desc: "As an action, you channel the darkest emotions and focus them into a burst of magical menace. Each creature of your choice within 30 feet of you must make a Wisdom saving throw if it can see you. On a failed save, the target is frightened of you for 1 minute. If a creature frightened by this effect ends its turn more than 30 feet away from you, it can attempt another Wisdom saving throw to end the effect on it.",
+            level: 3,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
+          },
+          {
             id: "aura_of_hate",
             name: "Aura of Hate",
-            desc: "Starting at 7th level, you and friendly creatures within 10 feet of you deal an additional amount of necrotic damage equal to your Charisma modifier when you hit with melee weapon attacks. At 18th level, the range of this aura increases to 30 feet.",
+            // Source: https://dnd5e.wikidot.com/paladin:oathbreaker (CC BY-SA 3.0)
+            desc: [
+              "Starting at 7th level you, as well any fiends and undead within 10 feet of you, gain a bonus to melee weapon damage rolls equal to your Charisma modifier (minimum of +1). A creature can benefit from this feature from only one paladin at a time.",
+              "At 18th level, the range of this aura increases to 30 feet.",
+            ],
             level: 7,
             tracked: false,
           },
           {
             id: "supernatural_resistance",
             name: "Supernatural Resistance",
+            // Source: https://dnd5e.wikidot.com/paladin:oathbreaker (CC BY-SA 3.0)
             desc: "Starting at 15th level, you gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons.",
             level: 15,
             tracked: false,
@@ -4270,9 +4297,16 @@ export const ClassesData = {
           {
             id: "dread_lord",
             name: "Dread Lord",
-            desc: "At 20th level, as an action, you can channel the power of darkness to become a Dread Lord for 1 minute. You gain the following benefits:\n- Hostile creatures within 30 feet of you have disadvantage on saving throws against your spells and Channel Divinity options.\n- Whenever a creature that is frightened by you starts its turn in this aura, it takes 4d10 psychic damage.\n- You can use your action to make an attack against each creature of your choice within 30 feet.\nOnce you use this feature, you can't use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:oathbreaker (CC BY-SA 3.0)
+            desc: [
+              "At 20th level, you can, as an action, surround yourself with an aura of gloom that lasts for 1 minute. The aura reduces any bright light in a 30-foot radius around you to dim light. Whenever an enemy that is frightened by you starts its turn in the aura, it takes 4d10 psychic damage. Additionally, you and any creatures of your choosing in the aura are draped in deeper shadow. Creatures that rely on sight have disadvantage on attack rolls against creatures draped in this shadow.",
+              "While the aura lasts, you can use a bonus action on your turn to cause the shadows in the aura to attack one creature. Make a melee spell attack against the target. If the attack hits, the target takes necrotic damage equal to 3d10 + your Charisma modifier.",
+              "After activating the aura, you can't do so again until you finish a long rest.",
+            ],
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
@@ -4281,7 +4315,7 @@ export const ClassesData = {
           { level: 9, spells: ["animate_dead", "bestow_curse"] },
           { level: 13, spells: ["blight", "confusion"] },
           { level: 17, spells: ["contagion", "dominate_person"] },
-        ]
+        ],
       },
     },
   },
