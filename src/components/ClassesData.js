@@ -2980,7 +2980,7 @@ export const ClassesData = {
               "The unarmed strikes you make with the arms can use your Wisdom modifier in place of your Strength or Dexterity modifier for the attack and damage rolls, and their damage type is force.",
             ],
             level: 3,
-            tracked: false,
+            tracked: true,
           },
           {
             id: "visage_of_the_astral_self",
@@ -4184,37 +4184,63 @@ export const ClassesData = {
           {
             id: "channel_divinity_watchers_will",
             name: "Channel Divinity: Watcher's Will",
-            desc: "As an action, you can use your Channel Divinity to invest your presence with divine power. For 1 minute, you and your allies within 30 feet of you have advantage on Intelligence, Wisdom, and Charisma saving throws.",
+            // Source: https://dnd5e.wikidot.com/paladin:watchers (CC BY-SA 3.0)
+            desc: [
+              "As an action, you can use your Channel Divinity to invest your presence with the warding power of your faith.",
+              "You can choose a number of creatures you can see within 30 feet of you, up to a number equal to your Charisma modifier (minimum of one creature). For 1 minute, you and the chosen creatures have advantage on Intelligence, Wisdom, and Charisma saving throws.",
+            ],
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_abjure_the_extraplanar",
             name: "Channel Divinity: Abjure the Extraplanar",
-            desc: "As an action, you can present your holy symbol and use your Channel Divinity to castigate unworldly beings. Each aberration, celestial, elemental, fey, or fiend within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+            // Source: https://dnd5e.wikidot.com/paladin:watchers (CC BY-SA 3.0)
+            desc: [
+              "As an action, you can present your holy symbol and use your Channel Divinity to castigate unworldly beings.",
+              "Each aberration, celestial, elemental, fey, or fiend within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+              "A turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly end its move in a space within 30 feet of you. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can take the Dodge action.",
+            ],
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "aura_of_the_sentinel",
             name: "Aura of the Sentinel",
-            desc: "Starting at 7th level, you and your allies within 10 feet of you gain a bonus to initiative rolls equal to your Charisma modifier. At 18th level, the range of this aura increases to 30 feet.",
+            // Source: https://dnd5e.wikidot.com/paladin:watchers (CC BY-SA 3.0)
+            desc: "At 7th level, you emit an aura of alertness while you aren't incapacitated. When you and any creatures of your choice within 10 feet of you roll initiative, you all gain a bonus to initiative equal to your proficiency bonus. At 18th level, the range of this aura increases to 30 feet.",
             level: 7,
             tracked: false,
           },
           {
             id: "vigilant_rebuke",
             name: "Vigilant Rebuke",
-            desc: "Starting at 15th level, when you or a creature within 10 feet of you succeeds on an Intelligence, Wisdom, or Charisma saving throw, you can use your reaction to deal 2d8 + your Charisma modifier force damage to the creature that forced the saving throw.",
+            // Source: https://dnd5e.wikidot.com/paladin:watchers (CC BY-SA 3.0)
+            desc: "At 15th level, you've learned how to chastise anyone who dares wield beguilements against you and your wards. Whenever you or a creature you can see within 30 feet of you succeeds on an Intelligence, a Wisdom, or a Charisma saving throw, you can use your reaction to deal 2d8 + your Charisma modifier force damage to the creature that forced the saving throw.",
             level: 15,
             tracked: false,
           },
           {
             id: "mortal_bulwark",
             name: "Mortal Bulwark",
-            desc: "At 20th level, as an action, you manifest an otherworldly presence for 1 minute, gaining the following benefits:\n- True sight out to 120 feet.\n- Advantage on attack rolls against fiends, aberrations, and undead.\n- You can use your reaction when you hit a creature with an attack to force it to make a Charisma saving throw. On a failure, the creature is banished to its native plane.\nOnce you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a long rest.",
+            // Source: https://dnd5e.wikidot.com/paladin:watchers (CC BY-SA 3.0)
+            desc: [
+              "At 20th level, as a bonus action, you manifest a spark of divine power in defense of the mortal realms. For 1 minute, you gain the following benefits:",
+              "- You gain truesight with a range of 120 feet.",
+              "- You have advantage on attack rolls against aberrations, celestials, elementals, fey, and fiends.",
+              "- When you hit a creature with an attack roll and deal damage to it, you can also force it to make a Charisma saving throw against your spell save DC. On a failed save, the creature is magically banished to its native plane of existence if it's currently not there. On a successful save, the creature can't be banished by this feature for 24 hours.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
