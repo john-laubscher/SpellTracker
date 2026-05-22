@@ -47,6 +47,8 @@ import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
+import BowIcon from "./BowIcon";
+import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -1175,11 +1177,20 @@ const FeaturesAndTrackables = () => {
     String(fightingStyle || "") === "Blessed Warrior" &&
     Number(characterLevel || 0) >= 2;
 
+  const hasDruidicWarrior =
+    characterClass === "ranger" &&
+    String(fightingStyle || "") === "Druidic Warrior" &&
+    Number(characterLevel || 0) >= 2;
+
   const blessedWarriorCantripCount = Array.isArray(characterInfo?.blessedWarriorCantrips)
     ? characterInfo.blessedWarriorCantrips.length
     : 0;
 
   const additionalFightingStyleCount = additionalFightingStyle ? 1 : 0;
+
+  const [rangerFavoredEnemyOptions, setRangerFavoredEnemyOptions] = React.useState([]);
+  const [rangerNaturalExplorerOptions, setRangerNaturalExplorerOptions] = React.useState([]);
+  const [rangerOptionsModal, setRangerOptionsModal] = React.useState({ open: false, kind: "" });
 
   React.useEffect(() => {
     if (!hasArcaneArcherLore) return;
@@ -1418,6 +1429,56 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "ranger") {
+      const favoredEnemies = Array.isArray(rangerFavoredEnemyOptions) ? rangerFavoredEnemyOptions : [];
+      const favoredTerrains = Array.isArray(rangerNaturalExplorerOptions) ? rangerNaturalExplorerOptions : [];
+
+      const chosenCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
+        ? characterInfo.druidicWarriorCantrips
+        : [];
+      const chosenNames = chosenCantrips
+        .map((s) => String(s?.name || "").trim())
+        .filter(Boolean);
+
+      return base.map((feature) => {
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        if (feature?.id === "fighting_style") {
+          const prefixes = fightingStyle ? [`Fighting Style: ${fightingStyle}.`] : [];
+          if (hasDruidicWarrior) {
+            prefixes.push(
+              chosenNames.length > 0
+                ? `Druidic Warrior cantrips: ${chosenNames.join(", ")}.`
+                : "Druidic Warrior cantrips: Choose cantrips."
+            );
+          }
+          return { ...feature, desc: [...prefixes, ...descLines] };
+        }
+
+        if (feature?.id === "favored_enemy") {
+          const prefix =
+            favoredEnemies.length > 0
+              ? `Favored enemies: ${favoredEnemies.join(", ")}.`
+              : "Favored enemies: (none selected).";
+          return { ...feature, desc: [prefix, ...descLines] };
+        }
+
+        if (feature?.id === "natural_explorer") {
+          const prefix =
+            favoredTerrains.length > 0
+              ? `Favored terrains: ${favoredTerrains.join(", ")}.`
+              : "Favored terrains: (none selected).";
+          return { ...feature, desc: [prefix, ...descLines] };
+        }
+
+        return feature;
+      });
+    }
+
     return base;
   }, [
     classFeatures,
@@ -1428,7 +1489,11 @@ const FeaturesAndTrackables = () => {
     fightingStyle,
     additionalFightingStyle,
     characterInfo?.blessedWarriorCantrips,
+    characterInfo?.druidicWarriorCantrips,
     hasBlessedWarrior,
+    hasDruidicWarrior,
+    rangerFavoredEnemyOptions,
+    rangerNaturalExplorerOptions,
   ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
@@ -1594,6 +1659,40 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "class" })}
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel="Untracked Class Features"
+              renderUntrackedTrailingControls={(feature) => {
+                if (characterClass !== "ranger") return null;
+                if (feature?.id !== "favored_enemy" && feature?.id !== "natural_explorer") return null;
+
+                const label =
+                  feature?.id === "favored_enemy"
+                    ? "Edit Favored Enemy options"
+                    : "Edit Natural Explorer options";
+
+                return (
+                  <Tooltip arrow title={label}>
+                    <IconButton
+                      size="small"
+                      aria-label={label}
+                      onClick={() =>
+                        setRangerOptionsModal({
+                          open: true,
+                          kind: feature.id === "favored_enemy" ? "favored_enemy" : "natural_explorer",
+                        })
+                      }
+                      sx={{
+                        ml: 0.25,
+                        p: 0.25,
+                        color: "rgba(93, 64, 55, 0.92)",
+                        border: "1px solid rgba(93, 64, 55, 0.25)",
+                        backgroundColor: "rgba(244, 233, 221, 0.65)",
+                        "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                      }}
+                    >
+                      <BowIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               wisdomModValue={wisdomModValue}
@@ -2464,6 +2563,27 @@ const FeaturesAndTrackables = () => {
           if (deleting) return;
           setDeletingCustom(null);
         }}
+      />
+
+      <UntrackedOptionsModal
+        open={Boolean(rangerOptionsModal?.open)}
+        onClose={() => setRangerOptionsModal({ open: false, kind: "" })}
+        title={
+          rangerOptionsModal?.kind === "favored_enemy"
+            ? "Favored Enemy (Untracked)"
+            : "Natural Explorer (Untracked)"
+        }
+        helperText="Add, edit, or remove your personal notes. These are not tracked as resources/uses."
+        options={
+          rangerOptionsModal?.kind === "favored_enemy"
+            ? rangerFavoredEnemyOptions
+            : rangerNaturalExplorerOptions
+        }
+        onChange={(next) => {
+          if (rangerOptionsModal?.kind === "favored_enemy") setRangerFavoredEnemyOptions(next);
+          if (rangerOptionsModal?.kind === "natural_explorer") setRangerNaturalExplorerOptions(next);
+        }}
+        maxLen={25}
       />
     </div>
   );
