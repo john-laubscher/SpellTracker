@@ -23,12 +23,16 @@ import PrepareMagicalSecretButton from "./PrepareMagicalSecretButton";
 import PrepareSpiritSessionButton from "./PrepareSpiritSessionButton";
 import PrepareArcanaInitiateCantripButton from "./PrepareArcanaInitiateCantripButton";
 import PrepareBlessedWarriorCantripButton from "./PrepareBlessedWarriorCantripButton";
+import PrepareDruidicWarriorCantripButton from "./PrepareDruidicWarriorCantripButton";
 import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
 import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
 import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
+import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
+import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import ThorHammerIcon from "./ThorHammerIcon";
+import BowIcon from "./BowIcon";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
@@ -415,12 +419,21 @@ export const SpellList = (props) => {
     String(characterInfo?.fightingStyle || "") === "Blessed Warrior" &&
     Number(characterInfo?.characterLevel || 0) >= 2;
 
+  const hasDruidicWarrior =
+    characterInfo?.characterClass === "ranger" &&
+    String(characterInfo?.fightingStyle || "") === "Druidic Warrior" &&
+    Number(characterInfo?.characterLevel || 0) >= 2;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
 
   const blessedWarriorCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
     ? characterInfo.blessedWarriorCantrips
+    : [];
+
+  const druidicWarriorCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
+    ? characterInfo.druidicWarriorCantrips
     : [];
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
@@ -473,6 +486,13 @@ export const SpellList = (props) => {
   });
 
   const [bwPickerModalOpen, setBwPickerModalOpen] = React.useState(false);
+
+  const [dwSwapModal, setDwSwapModal] = React.useState({
+    open: false,
+    originalSpell: null,
+  });
+
+  const [dwPickerModalOpen, setDwPickerModalOpen] = React.useState(false);
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
     0: { loading: false, error: '' },
@@ -2634,6 +2654,119 @@ export const SpellList = (props) => {
     );
   };
 
+  const renderDruidicWarriorCantripsForLevel = (numericalSpellLevel) => {
+    if (!hasDruidicWarrior) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+
+    const isOver = druidicWarriorCantrips.length > 2;
+    const selectedCount = druidicWarriorCantrips.length;
+
+    return (
+      <Box
+        sx={{
+          borderLeft: `4px solid ${isOver ? "#b71c1c" : "#5d4037"}`,
+          borderRadius: "6px",
+          backgroundColor: "rgba(255,255,255,0.45)",
+          mb: 1,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "15px",
+                color: isOver ? "#b71c1c" : "#5d4037",
+              }}
+            >
+              Druidic Warrior Cantrips ({selectedCount}/2)
+            </Typography>
+            <Tooltip arrow title="Choose Druidic Warrior cantrips (druid spell list)">
+              <IconButton
+                size="small"
+                aria-label="Choose Druidic Warrior cantrips"
+                onClick={() => setDwPickerModalOpen(true)}
+                sx={{
+                  p: 0.25,
+                  color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.92)",
+                  border: "1px solid rgba(93, 64, 55, 0.22)",
+                  backgroundColor: "rgba(93, 64, 55, 0.06)",
+                  "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                }}
+              >
+                <BowIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        {druidicWarriorCantrips.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
+            No Druidic Warrior cantrips chosen yet.
+          </Typography>
+        ) : null}
+
+        {druidicWarriorCantrips.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Druidic Warrior cantrip (over limit — only 2 allowed)."
+                      : "Druidic Warrior cantrip (counts as a ranger spell)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="DW"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.65,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(93, 64, 55, 0.90)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(93, 64, 55, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Tooltip arrow title="Swap cantrip (Druidic Warrior)">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Druidic Warrior cantrip"
+                      onClick={() => setDwSwapModal({ open: true, originalSpell: spell })}
+                      sx={{
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.90)",
+                        border: "1px solid rgba(93, 64, 55, 0.22)",
+                        backgroundColor: "rgba(93, 64, 55, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                  <PrepareDruidicWarriorCantripButton spell={spell} index={idx} />
+                </Box>
+              }
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
   const renderBlessedWarriorCantripsForLevel = (numericalSpellLevel) => {
     if (!hasBlessedWarrior) return null;
     if (Number(numericalSpellLevel) !== 0) return null;
@@ -3174,6 +3307,7 @@ export const SpellList = (props) => {
       </Box>
       {renderBattleMasterManeuvers()}
       {renderBlessedWarriorCantripsForLevel(0)}
+      {renderDruidicWarriorCantripsForLevel(0)}
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}
@@ -3206,6 +3340,17 @@ export const SpellList = (props) => {
         <BlessedWarriorCantripsModal
           open={bwPickerModalOpen}
           onClose={() => setBwPickerModalOpen(false)}
+        />
+
+        <DruidicWarriorCantripSwapModal
+          open={dwSwapModal.open}
+          originalSpell={dwSwapModal.originalSpell}
+          onClose={() => setDwSwapModal({ open: false, originalSpell: null })}
+        />
+
+        <DruidicWarriorCantripsModal
+          open={dwPickerModalOpen}
+          onClose={() => setDwPickerModalOpen(false)}
         />
 
         <BattleMasterManeuversModal

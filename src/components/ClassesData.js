@@ -4319,18 +4319,74 @@ export const ClassesData = {
       },
     },
   },
-// Desc might be too short or not complete
   ranger: {
     hitDice: "D10",
     isSpellCaster: "refer to spellTables",
     spellcastingAbility: "wis",
+    // Source (feature text + fighting style list): https://dnd5e.wikidot.com/ranger (CC BY-SA 3.0)
+    fightingStyleOptions: [
+      "Archery",
+      "Blind Fighting",
+      "Defense",
+      "Druidic Warrior",
+      "Dueling",
+      "Thrown Weapon Fighting",
+      "Two-Weapon Fighting",
+      "Close Quarters Shooter (UA)",
+      "Interception (UA)",
+      "Mariner (UA)",
+      "Tunnel Fighter (UA)",
+      "Unarmed Fighting (UA)",
+    ],
     classFeatures: [
+      {
+        id: "favored_enemy",
+        name: "Favored Enemy",
+        desc: [
+          "Beginning at 1st level, you have significant experience studying, tracking, hunting, and even talking to a certain type of enemy.",
+          "Choose a type of favored enemy: aberrations, beasts, celestials, constructs, dragons, elementals, fey, fiends, giants, monstrosities, oozes, plants, or undead. Alternatively, you can select two races of humanoid (such as gnolls and orcs) as favored enemies.",
+          "You have advantage on Wisdom (Survival) checks to track your favored enemies, as well as on Intelligence checks to recall information about them.",
+          "When you gain this feature, you also learn one language of your choice that is spoken by your favored enemies, if they speak one at all.",
+          "You choose one additional favored enemy, as well as an associated language, at 6th and 14th level. As you gain levels, your choices should reflect the types of monsters you have encountered on your adventures.",
+        ],
+        level: 1,
+        tracked: false,
+      },
+      {
+        id: "natural_explorer",
+        name: "Natural Explorer",
+        desc: [
+          "Also at 1st level, you are particularly familiar with one type of natural environment and are adept at traveling and surviving in such regions. Choose one type of favored terrain: arctic, coast, desert, forest, grassland, mountain, swamp, or the Underdark.",
+          "When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you’re proficient in.",
+          "While traveling for an hour or more in your favored terrain, you gain the following benefits:",
+          "• Difficult terrain doesn’t slow your group’s travel.",
+          "• Your group can’t become lost except by magical means.",
+          "• Even when you are engaged in another activity while traveling (such as foraging, navigating, or tracking), you remain alert to danger.",
+          "• If you are traveling alone, you can move stealthily at a normal pace.",
+          "• When you forage, you find twice as much food as you normally would.",
+          "• While tracking other creatures, you also learn their exact number, their sizes, and how long ago they passed through the area.",
+          "You choose additional favored terrain types at 6th and 10th level.",
+        ],
+        level: 1,
+        tracked: false,
+      },
       {
         id: "fighting_style",
         name: "Fighting Style",
-        desc: "You adopt a style of fighting as your specialty.",
+        desc: [
+          "At 2nd level, you adopt a particular style of fighting as your specialty. Choose one Fighting Style option.",
+          "You can't take a Fighting Style option more than once, even if you later get to choose again.",
+        ],
         level: 2,
-        tracked: false, // **NEED FEATURE: maybe make fighting styles part of state, and have user choose one as part of char creation. Rendering will choose only 1, and we need some way to tooltip just the selected fighting Style(s).**
+        tracked: false,
+      },
+      {
+        id: "primeval_awareness",
+        name: "Primeval Awareness",
+        desc:
+          "Beginning at 3rd level, you can use your action and expend one ranger spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense whether the following types of creatures are present within 1 mile of you (or within up to 6 miles if you are in your favored terrain): aberrations, celestials, dragons, elementals, fey, fiends, and undead. This feature doesn’t reveal the creatures’ location or number.",
+        level: 3,
+        tracked: false,
       },
       {
         id: "extra_attack",
@@ -4342,28 +4398,45 @@ export const ClassesData = {
       {
         id: "land_stride",
         name: "Land's Stride",
-        desc: "Starting at 8th level, moving through nonmagical difficult terrain costs you no extra movement. You can also pass through plants without being slowed by them and without taking damage from them if they are toxic or hazardous.",
+        desc: [
+          "Starting at 8th level, moving through nonmagical difficult terrain costs you no extra movement. You can also pass through nonmagical plants without being slowed by them and without taking damage from them if they have thorns, spines, or a similar hazard.",
+          "In addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such as those created by the Entangle spell.",
+        ],
         level: 8,
+        tracked: false,
+      },
+      {
+        id: "hide_in_plain_sight",
+        name: "Hide in Plain Sight",
+        desc: [
+          "Starting at 10th level, you can spend 1 minute creating camouflage for yourself. You must have access to fresh mud, dirt, plants, soot, and other naturally occurring materials with which to create your camouflage.",
+          "Once you are camouflaged in this way, you can try to hide by pressing yourself up against a solid surface, such as a tree or wall, that is at least as tall and wide as you are. You gain a +10 bonus to Dexterity (Stealth) checks as long as you remain there without moving or taking actions. Once you move or take an action or a reaction, you must camouflage yourself again to gain this benefit.",
+        ],
+        level: 10,
         tracked: false,
       },
       {
         id: "vanish",
         name: "Vanish",
-        desc: "Starting at 14th level, you can use the Hide action as a bonus action on your turn.",
+        desc: "Starting at 14th level, you can use the Hide action as a bonus action on your turn. Also, you can't be tracked by nonmagical means, unless you choose to leave a trail.",
         level: 14,
         tracked: false,
       },
       {
         id: "feral_senses",
         name: "Feral Senses",
-        desc: "At 18th level, you gain preternatural senses that help you fight creatures you can't see.",
+        desc: [
+          "At 18th level, you gain preternatural senses that help you fight creatures you can't see. When you attack a creature you can't see, your inability to see it doesn't impose disadvantage on your attack rolls against it.",
+          "You are also aware of the location of any invisible creature within 30 feet of you, provided that the creature isn't hidden from you and you aren't blinded or deafened.",
+        ],
         level: 18,
         tracked: false,
       },
       {
         id: "foe_slayer",
         name: "Foe Slayer",
-        desc: "At 20th level, you become an unparalleled hunter of your enemies.",
+        desc:
+          "At 20th level, you become an unparalleled hunter of your enemies. Once on each of your turns, you can add your Wisdom modifier to the attack roll or the damage roll of an attack you make against one of your favored enemies. You can choose to use this feature before or after the roll, but before any effects of the roll are applied.",
         level: 20,
         tracked: false,
       },

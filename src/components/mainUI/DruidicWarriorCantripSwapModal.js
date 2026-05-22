@@ -15,7 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { CharacterInfoContext } from "../../Contexts/Context";
 import SpellAccordian from "./SpellAccordian";
 
-const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
+const DruidicWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const [spells, setSpells] = React.useState([]);
@@ -34,7 +34,7 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
 
     setLoadStatus((s) => ({ ...s, loading: true, error: "" }));
     axios
-      .get("/allspells/0/cleric")
+      .get("/allspells/0/druid")
       .then((res) => {
         const fetched = res.data?.results || [];
         setSpells(fetched);
@@ -45,7 +45,7 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
           ...s,
           loading: false,
           loaded: false,
-          error: "Failed to load cleric cantrips. Is the backend running on port 3001?",
+          error: "Failed to load druid cantrips. Is the backend running on port 3001?",
         }));
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,20 +54,20 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
   const originalIndex = String(originalSpell?.index || "");
 
   const chosenIndexes = useMemo(() => {
-    const chosen = Array.isArray(characterInfo?.blessedWarriorCantrips)
-      ? characterInfo.blessedWarriorCantrips
+    const chosen = Array.isArray(characterInfo?.druidicWarriorCantrips)
+      ? characterInfo.druidicWarriorCantrips
       : [];
     return new Set(chosen.map((s) => String(s?.index || "")).filter(Boolean));
-  }, [characterInfo?.blessedWarriorCantrips]);
+  }, [characterInfo?.druidicWarriorCantrips]);
 
   const handleSwap = (nextSpell) => {
     const nextIndex = String(nextSpell?.index || "");
     if (!originalIndex || !nextIndex) return;
 
     setCharacterInfo((prev) => {
-      const current = Array.isArray(prev?.blessedWarriorCantrips) ? prev.blessedWarriorCantrips : [];
+      const current = Array.isArray(prev?.druidicWarriorCantrips) ? prev.druidicWarriorCantrips : [];
       const next = current.map((s) => (String(s?.index || "") === originalIndex ? nextSpell : s));
-      return { ...prev, blessedWarriorCantrips: next };
+      return { ...prev, druidicWarriorCantrips: next };
     });
 
     onClose?.();
@@ -85,7 +85,7 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
             textTransform: "none",
           }}
         >
-          Swap Blessed Warrior Cantrip
+          Swap Druidic Warrior Cantrip
         </Typography>
         <IconButton
           aria-label="Close"
@@ -112,7 +112,7 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
 
         {loadStatus.loading ? (
           <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
-            Loading cleric cantrips…
+            Loading druid cantripsâ€¦
           </Typography>
         ) : null}
         {loadStatus.error ? (
@@ -133,7 +133,7 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
           const isAlreadyChosenElsewhere = idxKey && chosenIndexes.has(idxKey) && !isCurrent;
           const disabled = !spell?.index || isAlreadyChosenElsewhere;
           const tooltip = isAlreadyChosenElsewhere
-            ? "Already chosen as another Blessed Warrior cantrip."
+            ? "Already chosen as another Druidic Warrior cantrip."
             : isCurrent
               ? "Already selected."
               : "Swap to this cantrip.";
@@ -171,4 +171,4 @@ const BlessedWarriorCantripSwapModal = ({ open, originalSpell, onClose }) => {
   );
 };
 
-export default BlessedWarriorCantripSwapModal;
+export default DruidicWarriorCantripSwapModal;

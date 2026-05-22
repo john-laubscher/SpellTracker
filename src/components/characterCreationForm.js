@@ -19,6 +19,7 @@ import Divider from "@mui/material/Divider";
 
 import AuthControls from "./AuthControls";
 import BlessedWarriorCantripsModal from "./mainUI/BlessedWarriorCantripsModal";
+import DruidicWarriorCantripsModal from "./mainUI/DruidicWarriorCantripsModal";
 
 export const CharacterCreationForm = (props) => {
   const NO_RACE = "noRace";
@@ -39,6 +40,7 @@ export const CharacterCreationForm = (props) => {
   const [continueAttempted, setContinueAttempted] = React.useState(false);
   const [animateMissing, setAnimateMissing] = React.useState(false);
   const [blessedWarriorModalOpen, setBlessedWarriorModalOpen] = React.useState(false);
+  const [druidicWarriorModalOpen, setDruidicWarriorModalOpen] = React.useState(false);
 
   const isMissingRace = !characterInfo.race || characterInfo.race === NO_RACE;
   const isMissingSubrace = !characterInfo.subrace || characterInfo.subrace === NO_SUBRACE;
@@ -92,6 +94,11 @@ export const CharacterCreationForm = (props) => {
 
   const paladinFightingStyleOptions = React.useMemo(() => {
     const raw = ClassesData?.paladin?.fightingStyleOptions || [];
+    return Array.isArray(raw) ? raw : [];
+  }, []);
+
+  const rangerFightingStyleOptions = React.useMemo(() => {
+    const raw = ClassesData?.ranger?.fightingStyleOptions || [];
     return Array.isArray(raw) ? raw : [];
   }, []);
 
@@ -153,6 +160,16 @@ export const CharacterCreationForm = (props) => {
       return;
     }
 
+    if (characterInfo.characterClass === "ranger") {
+      if (!characterInfo.fightingStyle && rangerFightingStyleOptions.length > 0) {
+        const preferred = rangerFightingStyleOptions.includes("Archery")
+          ? "Archery"
+          : rangerFightingStyleOptions[0];
+        setCharacterInfo((prev) => ({ ...prev, fightingStyle: preferred }));
+      }
+      return;
+    }
+
     if (characterInfo.fightingStyle || characterInfo.additionalFightingStyle) {
       setCharacterInfo((prev) => ({ ...prev, fightingStyle: "", additionalFightingStyle: "" }));
     }
@@ -162,6 +179,7 @@ export const CharacterCreationForm = (props) => {
     characterInfo.additionalFightingStyle,
     fighterFightingStyleOptions,
     paladinFightingStyleOptions,
+    rangerFightingStyleOptions,
     setCharacterInfo,
   ]);
 
@@ -268,6 +286,14 @@ export const CharacterCreationForm = (props) => {
       String(characterInfo?.characterClass || "") === "paladin"
     ) {
       setBlessedWarriorModalOpen(true);
+    }
+
+    if (
+      name === "fightingStyle" &&
+      String(value || "") === "Druidic Warrior" &&
+      String(characterInfo?.characterClass || "") === "ranger"
+    ) {
+      setDruidicWarriorModalOpen(true);
     }
 	  };
 
@@ -514,7 +540,8 @@ export const CharacterCreationForm = (props) => {
 	        ) : null}
 
           {(characterInfo.characterClass === "fighter" && fighterFightingStyleOptions.length > 0) ||
-          (characterInfo.characterClass === "paladin" && paladinFightingStyleOptions.length > 0) ? (
+          (characterInfo.characterClass === "paladin" && paladinFightingStyleOptions.length > 0) ||
+          (characterInfo.characterClass === "ranger" && rangerFightingStyleOptions.length > 0) ? (
             <Box sx={{ mt: 1 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="fighting-style-select-label">Fighting Style</InputLabel>
@@ -528,7 +555,9 @@ export const CharacterCreationForm = (props) => {
                 >
                   {(characterInfo.characterClass === "fighter"
                     ? fighterFightingStyleOptions
-                    : paladinFightingStyleOptions
+                    : characterInfo.characterClass === "paladin"
+                      ? paladinFightingStyleOptions
+                      : rangerFightingStyleOptions
                   ).map((style) => (
                     <MenuItem key={style} value={style}>
                       {style}
@@ -543,6 +572,11 @@ export const CharacterCreationForm = (props) => {
       <BlessedWarriorCantripsModal
         open={blessedWarriorModalOpen}
         onClose={() => setBlessedWarriorModalOpen(false)}
+      />
+
+      <DruidicWarriorCantripsModal
+        open={druidicWarriorModalOpen}
+        onClose={() => setDruidicWarriorModalOpen(false)}
       />
 
       {renderWizardSpellCountMod()}
