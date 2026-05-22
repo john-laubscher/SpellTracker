@@ -4125,26 +4125,36 @@ export const ClassesData = {
           {
             id: "channel_divinity_abjure_enemy",
             name: "Channel Divinity: Abjure Enemy",
+            // Source: https://dnd5e.wikidot.com/paladin:vengeance (CC BY-SA 3.0)
             desc: "As an action, you can present your holy symbol and speak a prayer of denunciation, using your Channel Divinity. Choose one creature within 60 feet of you that you can see. That creature must make a Wisdom saving throw unless it is immune to being frightened. Fiends and undead have disadvantage on this saving throw. On a failed save, the creature is frightened for 1 minute or until it takes any damage. While frightened, the creature's speed is 0 and it can't benefit from any bonus to its speed. On a successful save, the creature's speed is halved for 1 minute or until the creature takes any damage.",
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "channel_divinity_vow_of_enmity",
             name: "Channel Divinity: Vow of Enmity",
+            // Source: https://dnd5e.wikidot.com/paladin:vengeance (CC BY-SA 3.0)
             desc: "As a bonus action, you can use your Channel Divinity to utter a vow of enmity against a creature you can see within 10 feet of you, gaining advantage on attack rolls against the creature for 1 minute or until it drops to 0 hit points or falls unconscious.",
             level: 3,
-            tracked: false,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+            sharedUsePoolKey: "channel_divinity",
           },
           {
             id: "relentless_avenger",
+            // Source: https://dnd5e.wikidot.com/paladin:vengeance (CC BY-SA 3.0)
             name: "Relentless Avenger",
-            desc: "Starting at 7th level, when you hit a creature with an opportunity attack, you can move up to half your speed immediately after the attack and as part of the same reaction. This movement doesnÃ¢â‚¬â„¢t provoke opportunity attacks.",
+            desc: "By 7th level, your supernatural focus helps you close off a foe's retreat. When you hit a creature with an opportunity attack, you can move up to half your speed immediately after the attack and as part of the same reaction. This movement doesn't provoke opportunity attacks.",
             level: 7,
             tracked: false,
           },
           {
             id: "soul_of_vengeance",
+            // Source: https://dnd5e.wikidot.com/paladin:vengeance (CC BY-SA 3.0)
             name: "Soul of Vengeance",
             desc: "Starting at 15th level, when a creature under the effect of your Vow of Enmity makes an attack, you can use your reaction to make a melee weapon attack against that creature if it is within range.",
             level: 15,
@@ -4152,14 +4162,17 @@ export const ClassesData = {
           },
           {
             id: "avenging_angel",
+            // Source: https://dnd5e.wikidot.com/paladin:vengeance (CC BY-SA 3.0)
             name: "Avenging Angel",
-            desc: "At 20th level, as an action, you can assume the form of an angelic avenger for 1 hour. You gain the following benefits:\n- Wings sprout from your back, granting you a flying speed of 60 feet.\n- You emanate an aura of menace in a 30-foot radius. The first time any enemy creature enters the aura or starts its turn there during combat, it must succeed on a Wisdom saving throw or become frightened of you for 1 minute. Once a creature succeeds on this saving throw, it is immune to the aura for 24 hours.\nOnce you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a long rest.",
+            desc: "At 20th level, you can assume the form of an angelic avenger. Using your action, you undergo a transformation. For 1 hour, you gain the following benefits:\n- Wings sprout from your back and grant you a flying speed of 60 feet.\n- You emanate an aura of menace in a 30-foot radius. The first time any enemy creature enters the aura or starts its turn there during a battle, the creature must succeed on a Wisdom saving throw or become frightened of you for 1 minute or until it takes any damage. Attack rolls against the frightened creature have advantage.\nOnce you use this feature, you can't use it again until you finish a long rest.",
             level: 20,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [
-          { level: 3, spells: ["bane", "hunter's_mark"] },
+          { level: 3, spells: ["bane", "hunters_mark"] },
           { level: 5, spells: ["hold_person", "misty_step"] },
           { level: 9, spells: ["haste", "protection_from_energy"] },
           { level: 13, spells: ["banishment", "dimension_door"] },
