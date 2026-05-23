@@ -1211,7 +1211,7 @@ const FeaturesAndTrackables = () => {
   const classData = React.useMemo(() => classesData[characterClass] || {}, [characterClass]);
   const classFeatures = React.useMemo(() => {
     const all = classData.classFeatures || [];
-    return all.filter((f) => f.level <= characterLevel);
+    return all.filter((f) => f.level <= characterLevel && f?.id !== "extra_attack");
   }, [classData.classFeatures, characterLevel]);
 
   // Placeholder data for subclass and racial/misc features
