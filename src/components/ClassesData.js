@@ -4550,45 +4550,67 @@
           {
             id: "dreadful_strikes",
             name: "Dreadful Strikes",
-            desc: "At 3rd level, your attacks carry a psychic resonance. Once per turn, when you hit a creature with a weapon attack, you can deal an additional 1d4 psychic damage. This damage increases at higher levels.",
+            desc: [
+              "At 3rd level, once per turn when you hit a creature with a weapon, you can deal an extra 1d4 psychic damage to the target.",
+              "The extra damage increases to 1d6 when you reach 11th level in this class.",
+            ],
             level: 3,
             tracked: false,
           },
           {
-            id: "otherworldly_glamour",
-            name: "Otherworldly Glamour",
-            desc: "Starting at 3rd level, you gain proficiency in one Charisma skill of your choice, and you add your Wisdom modifier to Charisma checks.",
+            id: "fey_wanderer_magic",
+            name: "Fey Wanderer Magic",
+            desc: [
+              "At 3rd level, you learn additional spells at certain ranger levels: Charm Person (3rd), Misty Step (5th), Dispel Magic (9th), Dimension Door (13th), and Mislead (17th).",
+              "Each spell counts as a ranger spell for you and doesn't count against the number of ranger spells you know.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "beguiling_twist",
             name: "Beguiling Twist",
-            desc: "At 7th level, you gain the ability to twist fey magic. When a creature within 120 feet succeeds on a saving throw against being charmed or frightened, you can use your reaction to force a different creature to make a Wisdom saving throw against your spell save DC or be charmed or frightened for 1 minute.",
+            desc: [
+              "Beginning at 7th level, you have advantage on saving throws against being charmed or frightened.",
+              "In addition, whenever you or a creature you can see within 120 feet of you succeeds on a saving throw against being charmed or frightened, you can use your reaction to force a different creature you can see within 120 feet of you to make a Wisdom saving throw against your spell save DC.",
+              "On a failed save, the target is charmed or frightened by you (your choice) for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a successful save.",
+            ],
             level: 7,
             tracked: false, // Reaction
           },
           {
             id: "fey_reinforcements",
             name: "Fey Reinforcements",
-            desc: "At 11th level, the royal courts of the Feywild have blessed you with the assistance of fey beings: you know the spell Summon Fey. It doesn't count against the number of ranger spells you know, and you can cast it without a material component. You can also cast it once without using a spell slot, and you regain the ability to do so when you finish a long rest. Whenever you start casting the spell, you can modify it so that it doesn't require concentration. If you do so, the spell's duration becomes 1 minute for that casting.",
+            desc: [
+              "At 11th level, you learn the spell Summon Fey. It counts as a ranger spell for you, but it doesn't count against the number of ranger spells you know.",
+              "You can cast Summon Fey without a material component. You can also cast it once without expending a spell slot, and you regain the ability to do so when you finish a long rest.",
+              "Whenever you start casting Summon Fey, you can choose to make that casting not require concentration. If you do, the spell's duration becomes 1 minute for that casting.",
+            ],
             level: 11,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "misty_wanderer",
             name: "Misty Wanderer",
-            desc: "When you reach 15th level, you can slip in and out of the Feywild to move in a blink of an eye: you can cast Misty Step without expending a spell slot. You can do so a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest. In addition, whenever you cast Misty Step, you can bring along one willing creature you can see within 5 feet of you. That creature teleports to an unoccupied space of your choice within 5 feet of your destination space.",
+            desc: [
+              "At 15th level, you can cast Misty Step without expending a spell slot. You can do so a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+              "In addition, whenever you cast Misty Step, you can bring along one willing creature you can see within 5 feet of you. That creature teleports to an unoccupied space of your choice within 5 feet of your destination space.",
+            ],
             level: 15,
-            tracked: false,
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
         ],
         subclassSpells: [
           { level: 3, spells: ["charm_person"] },
           { level: 5, spells: ["misty_step"] },
           { level: 9, spells: ["dispel_magic"] },
+          { level: 11, spells: ["summon_fey"] },
           { level: 13, spells: ["dimension_door"] },
-          { level: 17, spells: ["mislead"]}
+          { level: 17, spells: ["mislead"]},
         ],
       },
       
