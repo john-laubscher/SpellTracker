@@ -48,6 +48,7 @@ import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
+import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import { proficiencyBonus } from "./header";
 import {
@@ -59,6 +60,13 @@ import {
   setFeatureTrackedOverride,
   setFeatureHiddenOverride,
 } from "../../utils/featureOverrides";
+import {
+  getChoiceKey,
+  getFeatureChoice,
+  loadUntrackedFeatureChoices,
+  saveUntrackedFeatureChoices,
+  setFeatureChoice,
+} from "../../utils/untrackedFeatureChoices";
 
 const FEATURE_TRACKERS_STORAGE_KEY = "spelltracker_featureTrackers_v1";
 
@@ -1410,6 +1418,20 @@ const FeaturesAndTrackables = () => {
   const [rangerNaturalExplorerOptions, setRangerNaturalExplorerOptions] = React.useState([]);
   const [rangerOptionsModal, setRangerOptionsModal] = React.useState({ open: false, kind: "" });
 
+  const [untrackedFeatureChoices, setUntrackedFeatureChoices] = React.useState(() =>
+    loadUntrackedFeatureChoices()
+  );
+  const [featureChoiceModal, setFeatureChoiceModal] = React.useState({ open: false, featureId: "" });
+
+  const subclassChoiceKey = React.useMemo(
+    () => getChoiceKey({ kind: "subclass", characterClass, subclass }),
+    [characterClass, subclass]
+  );
+
+  React.useEffect(() => {
+    saveUntrackedFeatureChoices(untrackedFeatureChoices);
+  }, [untrackedFeatureChoices]);
+
   React.useEffect(() => {
     if (!hasArcaneArcherLore) return;
     if (characterInfo?.arcaneArcherLoreCantrip?.index) return;
@@ -1778,6 +1800,40 @@ const FeaturesAndTrackables = () => {
       }
     }
 
+    if (characterClass === "ranger" && subclass === "hunter") {
+      next = next.map((feature) => {
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+          ? feature.untrackedChoiceOptions
+          : [];
+        if (choiceOptions.length === 0) return feature;
+
+        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+
+        const baseDescLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        const selectedDescLines = selected
+          ? Array.isArray(selected?.desc)
+            ? selected.desc
+            : typeof selected?.desc === "string"
+              ? [selected.desc]
+              : []
+          : [];
+
+        const prefixLines = selected
+          ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
+          : ["Chosen: (none selected). Click the bow icon to choose one."];
+
+        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+
+        return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+      });
+    }
+
     return next;
   }, [
     subclassFeatures,
@@ -1792,7 +1848,19 @@ const FeaturesAndTrackables = () => {
     fightingStyle,
     additionalFightingStyle,
     fighterLevel,
+    characterClass,
+    subclass,
+    untrackedFeatureChoices,
+    subclassChoiceKey,
   ]);
+
+  const activeChoiceFeature = React.useMemo(() => {
+    const featureId = String(featureChoiceModal?.featureId || "");
+    if (!featureChoiceModal?.open || !featureId) return null;
+    const raw = classesData?.[characterClass]?.subclasses?.[subclass]?.features || [];
+    const list = Array.isArray(raw) ? raw : [];
+    return list.find((f) => f?.id === featureId) || null;
+  }, [featureChoiceModal?.open, featureChoiceModal?.featureId, characterClass, subclass]);
 
   const classTrackedById = React.useMemo(() => {
     const map = {};
@@ -2529,6 +2597,40 @@ const FeaturesAndTrackables = () => {
 		                  );
 		                }
 
+                if (characterClass === "ranger" && subclass === "hunter") {
+                  const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+                    ? feature.untrackedChoiceOptions
+                    : [];
+                  if (choiceOptions.length > 0) {
+                    const baseName = String(feature?.name || "").replace(/\s*\(.*\)\s*$/, "") || "Feature";
+                    const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+                    const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+                    const label = selected?.name
+                      ? `Change ${baseName} (${selected.name})`
+                      : `Choose ${baseName}`;
+
+                    return (
+                      <Tooltip arrow title={label}>
+                        <IconButton
+                          size="small"
+                          aria-label={label}
+                          onClick={() => setFeatureChoiceModal({ open: true, featureId: feature.id })}
+                          sx={{
+                            ml: 0.25,
+                            p: 0.25,
+                            color: "rgba(93, 64, 55, 0.92)",
+                            border: "1px solid rgba(93, 64, 55, 0.25)",
+                            backgroundColor: "rgba(244, 233, 221, 0.65)",
+                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                          }}
+                        >
+                          <BowIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    );
+                  }
+                }
+
                 return null;
               }}
             />
@@ -2708,6 +2810,27 @@ const FeaturesAndTrackables = () => {
       <RuneKnightRunesModal
         open={runeKnightRunesModalOpen}
         onClose={() => setRuneKnightRunesModalOpen(false)}
+      />
+
+      <FeatureChoiceModal
+        open={Boolean(featureChoiceModal?.open)}
+        onClose={() => setFeatureChoiceModal({ open: false, featureId: "" })}
+        title={activeChoiceFeature?.name || "Choose Option"}
+        helperText="Choose one option. This feature is untracked (no uses are tracked here)."
+        options={activeChoiceFeature?.untrackedChoiceOptions || []}
+        selectedId={getFeatureChoice(
+          untrackedFeatureChoices,
+          subclassChoiceKey,
+          String(featureChoiceModal?.featureId || "")
+        )}
+        onSelect={(optionId) => {
+          const featureId = String(featureChoiceModal?.featureId || "");
+          if (!featureId) return;
+          setUntrackedFeatureChoices((prev) =>
+            setFeatureChoice(prev, subclassChoiceKey, featureId, optionId)
+          );
+          setFeatureChoiceModal({ open: false, featureId: "" });
+        }}
       />
 
       <ArcaneMasteryModal
