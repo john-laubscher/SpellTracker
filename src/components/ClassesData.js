@@ -4617,39 +4617,55 @@
       gloomStalker: {
         features: [
           {
+            id: "gloom_stalker_magic",
+            name: "Gloom Stalker Magic",
+            desc: [
+              "Starting at 3rd level, you learn an additional spell when you reach certain levels in this class, as shown in the Gloom Stalker Spells table.",
+              "The spell counts as a ranger spell for you, but it doesn't count against the number of ranger spells you know.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
             id: "dread_ambusher",
             name: "Dread Ambusher",
-            desc: "At 3rd level, you gain the ability to act swiftly in combat. When you take the Attack action on the first turn of combat, you can make one additional weapon attack. Additionally, your walking speed increases by 10 feet, which lasts until the end of your turn.",
+            desc: [
+              "At 3rd level, you master the art of the ambush. You can give yourself a bonus to your initiative rolls equal to your Wisdom modifier.",
+              "At the start of your first turn of each combat, your walking speed increases by 10 feet, which lasts until the end of that turn. If you take the Attack action on that turn, you can make one additional weapon attack as part of that action. If that attack hits, the target takes an extra 1d8 damage of the weapon's damage type.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "umbral_sight",
             name: "Umbral Sight",
-            desc: "You gain darkvision out to 60 feet, or an additional 30 feet if you already have darkvision. You are also invisible to creatures that rely on darkvision to see you in darkness.",
+            desc: [
+              "At 3rd level, you gain darkvision out to a range of 60 feet. If you already have darkvision from your race, its range increases by 30 feet.",
+              "You are also adept at evading creatures that rely on darkvision. While in darkness, you are invisible to any creature that relies on darkvision to see you in that darkness.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "iron_mind",
             name: "Iron Mind",
-            desc: "At 7th level, you gain proficiency in Wisdom saving throws. If you already have this proficiency, you instead gain proficiency in Intelligence or Charisma saving throws (your choice).",
+            desc: "By 7th level, you have honed your ability to resist the mind-altering powers of your prey. You gain proficiency in Wisdom saving throws. If you already have this proficiency, you instead gain proficiency in Intelligence or Charisma saving throws (your choice).",
             level: 7,
             tracked: false,
           },
           {
             id: "stalker's_flurry",
             name: "Stalker's Flurry",
-            desc: "At 11th level, when you miss with a weapon attack, you can make another weapon attack as part of the same action.",
+            desc: "At 11th level, you learn to attack with such unexpected speed that you can turn a miss into another strike. Once on each of your turns when you miss with a weapon attack, you can make another weapon attack as part of the same action.",
             level: 11,
             tracked: false,
           },
           {
             id: "shadowy_dodge",
             name: "Shadowy Dodge",
-            desc: "At 15th level, when a creature you can see attacks you, you can use your reaction to impose disadvantage on the attack roll.",
+            desc: "Starting at 15th level, you can dodge in unforeseen ways, with wisps of supernatural shadow around you. Whenever a creature makes an attack roll against you and doesn't have advantage on the roll, you can use your reaction to impose disadvantage on it. You must use this feature before you know the outcome of the attack roll.",
             level: 15,
-            tracked: true, // Reaction
+            tracked: false,
           },
         ],
         subclassSpells: [
