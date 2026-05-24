@@ -89,6 +89,8 @@ const FeatureAccordionRow = ({
   renderDetailsHeader,
 }) => {
   const [expanded, setExpanded] = React.useState(false);
+  const [inlineSpellState, setInlineSpellState] = React.useState({});
+  const inlineSpellRequestControllersRef = React.useRef(new Map());
 
   const descLines = React.useMemo(() => {
     if (!feature) return [];
@@ -96,6 +98,139 @@ const FeatureAccordionRow = ({
     if (typeof feature.desc === "string") return [feature.desc];
     return [];
   }, [feature]);
+
+  const activeInlineSpellIndexes = React.useMemo(() => {
+    if (!inlineSpellState || typeof inlineSpellState !== "object") return [];
+    return Object.keys(inlineSpellState).filter((idx) => inlineSpellState?.[idx]?.open);
+  }, [inlineSpellState]);
+
+  const handleInlineSpellToggle = React.useCallback(
+    (spellIndex, spellName) => {
+      const idx = String(spellIndex || "").trim();
+      if (!idx) return;
+
+      setInlineSpellState((prev) => {
+        const cur = prev && typeof prev === "object" ? prev : {};
+        const existing = cur[idx] || {};
+        return {
+          ...cur,
+          [idx]: {
+            ...existing,
+            name: existing?.name || spellName || idx,
+            open: !existing?.open,
+          },
+        };
+      });
+    },
+    [setInlineSpellState]
+  );
+
+  React.useEffect(() => {
+    const controllers = inlineSpellRequestControllersRef.current;
+    return () => {
+      controllers.forEach((controller) => controller.abort());
+      controllers.clear();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const openSet = new Set(activeInlineSpellIndexes);
+
+    // Abort any in-flight requests for spells that were closed.
+    inlineSpellRequestControllersRef.current.forEach((controller, spellIndex) => {
+      if (!openSet.has(spellIndex)) {
+        controller.abort();
+        inlineSpellRequestControllersRef.current.delete(spellIndex);
+      }
+    });
+
+    if (activeInlineSpellIndexes.length === 0) return;
+
+    activeInlineSpellIndexes.forEach((spellIndex) => {
+      const entry = inlineSpellState?.[spellIndex] || {};
+      if (!entry?.open) return;
+      if (entry?.details) return;
+      if (entry?.loading) return;
+      if (entry?.error) return;
+      if (inlineSpellRequestControllersRef.current.has(spellIndex)) return;
+
+      const controller = new AbortController();
+      inlineSpellRequestControllersRef.current.set(spellIndex, controller);
+
+      setInlineSpellState((prev) => ({
+        ...(prev && typeof prev === "object" ? prev : {}),
+        [spellIndex]: { ...(prev?.[spellIndex] || {}), loading: true, error: false },
+      }));
+
+      axios
+        .get(`/singlespell/${spellIndex}`, { signal: controller.signal })
+        .then((res) => {
+          if (controller.signal.aborted) return;
+          const details = res?.data || null;
+          setInlineSpellState((prev) => ({
+            ...(prev && typeof prev === "object" ? prev : {}),
+            [spellIndex]: { ...(prev?.[spellIndex] || {}), details, loading: false, error: false },
+          }));
+        })
+        .catch(() => {
+          if (controller.signal.aborted) return;
+          setInlineSpellState((prev) => ({
+            ...(prev && typeof prev === "object" ? prev : {}),
+            [spellIndex]: { ...(prev?.[spellIndex] || {}), loading: false, error: true },
+          }));
+        })
+        .finally(() => {
+          inlineSpellRequestControllersRef.current.delete(spellIndex);
+        });
+    });
+  }, [activeInlineSpellIndexes, inlineSpellState]);
+
+  const renderDescLine = React.useCallback(
+    (line) => {
+      const text = String(line ?? "");
+      const pattern = /\[\[spell:([a-zA-Z0-9_-]+)\|([^\]]+)\]\]/g;
+
+      let lastIdx = 0;
+      let match = null;
+      const parts = [];
+
+      // eslint-disable-next-line no-cond-assign
+      while ((match = pattern.exec(text))) {
+        const fullMatch = match[0] || "";
+        const spellIndex = String(match[1] || "").trim();
+        const spellName = String(match[2] || "").trim() || spellIndex;
+        const start = match.index || 0;
+
+        if (start > lastIdx) parts.push(text.slice(lastIdx, start));
+
+        parts.push(
+          <span
+            key={`spellref:${spellIndex}:${start}`}
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.preventDefault();
+              handleInlineSpellToggle(spellIndex, spellName);
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              handleInlineSpellToggle(spellIndex, spellName);
+            }}
+            style={{ textDecoration: "underline", cursor: "pointer", fontWeight: 600 }}
+          >
+            {spellName}
+          </span>
+        );
+
+        lastIdx = start + fullMatch.length;
+      }
+
+      if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+      return parts.length === 0 ? text : parts;
+    },
+    [handleInlineSpellToggle]
+  );
 
   const safeIdPrefix = React.useMemo(() => {
     const raw = String(detailsIdPrefix || "feature");
@@ -173,8 +308,91 @@ const FeatureAccordionRow = ({
               <em>No description available.</em>
             </p>
           ) : (
-            descLines.map((line, idx) => <p key={idx}>{line}</p>)
+            descLines.map((line, idx) => <p key={idx}>{renderDescLine(line)}</p>)
           )}
+
+          {activeInlineSpellIndexes.map((spellIndex) => {
+            const entry = inlineSpellState?.[spellIndex] || {};
+            const details = entry?.details || null;
+            const loading = entry?.loading === true;
+            const error = entry?.error === true;
+            const name = String(entry?.name || spellIndex);
+
+            const desc = Array.isArray(details?.desc) ? details.desc : typeof details?.desc === "string" ? [details.desc] : [];
+            const components = Array.isArray(details?.components)
+              ? details.components.join(", ")
+              : details?.components;
+
+            return (
+              <div
+                key={`inline-spell:${spellIndex}`}
+                style={{
+                  marginTop: 8,
+                  padding: "8px 10px",
+                  backgroundColor: "rgba(255,255,255,0.6)",
+                  borderRadius: 4,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <strong style={{ fontSize: 13 }}>{name}</strong>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleInlineSpellToggle(spellIndex, name)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      handleInlineSpellToggle(spellIndex, name);
+                    }}
+                    style={{ cursor: "pointer", textDecoration: "underline", fontSize: 12, opacity: 0.9 }}
+                  >
+                    Hide
+                  </span>
+                </div>
+
+                {loading ? (
+                  <p style={{ opacity: 0.7 }}>
+                    <em>Loading spell details…</em>
+                  </p>
+                ) : null}
+                {error ? (
+                  <p style={{ opacity: 0.7 }}>
+                    <em>Spell details unavailable.</em>
+                  </p>
+                ) : null}
+
+                {details ? (
+                  <>
+                    <p>
+                      <strong>Range:</strong> {details?.range}
+                    </p>
+                    <p>
+                      <strong>Duration:</strong> {details?.duration}
+                    </p>
+                    <p>
+                      <strong>Casting time:</strong> {details?.casting_time}
+                    </p>
+                    <p>
+                      <strong>Components:</strong> {components}
+                    </p>
+                    {details?.concentration ? (
+                      <p style={{ fontStyle: "italic" }}>
+                        <strong>Concentration</strong>
+                      </p>
+                    ) : null}
+                    {details?.ritual ? (
+                      <p style={{ fontStyle: "italic" }}>
+                        <strong>Ritual</strong>
+                      </p>
+                    ) : null}
+                    {desc.map((d, i) => (
+                      <p key={i}>{d}</p>
+                    ))}
+                  </>
+                ) : null}
+              </div>
+            );
+          })}
         </Typography>
       </AccordionDetails>
     </Accordion>

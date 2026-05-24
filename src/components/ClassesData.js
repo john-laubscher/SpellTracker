@@ -4679,37 +4679,71 @@
       horizonWalker: {
         features: [
           {
+            id: "horizon_walker_magic",
+            name: "Horizon Walker Magic",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "Starting at 3rd level, you learn an additional spell when you reach certain levels in this class, as shown in the Horizon Walker Spells table. The spell counts as a ranger spell for you, but it doesn’t count against the number of ranger spells you know.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
             id: "detect_portals",
             name: "Detect Portals",
-            desc: "At 3rd level, you gain the ability to magically sense the presence of a planar portal. As an action, you detect the distance and direction to the closest planar portal within 1 mile. You can use this feature a number of times equal to your Wisdom modifier, regaining all uses after a long rest.",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "At 3rd level, you gain the ability to magically sense the presence of a planar portal. As an action, you detect the distance and direction to the closest planar portal within 1 mile of you.",
+              "Once you use this feature, you can't use it again until you finish a short or long rest.",
+              'See the "Planar Travel" section in chapter 2 of the Dungeon Master\'s Guide for examples of planar portals.',
+            ],
             level: 3,
-            tracked: true, // 1/SR
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "planar_warrior",
             name: "Planar Warrior",
-            desc: "At 3rd level, you learn to channel your attacks with planar energy. As a bonus action, choose one creature you can see within 30 feet of you. Until the end of this turn, your attacks deal force damage instead of their normal damage type and deal an extra 1d8 force damage. At 11th level, the extra damage increases to 2d8.",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "At 3rd level, you learn to draw on the energy of the multiverse to augment your attacks.",
+              "As a bonus action, choose one creature you can see within 30 feet of you. The next time you hit that creature on this turn with a weapon attack, all damage dealt by the attack becomes force damage, and the creature takes an extra 1d8 force damage from the attack. When you reach 11th level in this class, the extra damage increases to 2d8.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "ethereal_step",
             name: "Ethereal Step",
-            desc: "At 7th level, you can step into the Ethereal Plane. As a bonus action, you can cast the *etherealness* spell without expending a spell slot, but the spell ends at the end of your current turn. Once you use this feature, you can't use it again until you finish a short or long rest.",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "At 7th level, you learn to step through the Ethereal Plane. As a bonus action on your turn, you can cast the [[spell:etherealness|Etherealness]] spell with this feature, without expending a spell slot, but the spell ends at the end of the current turn.",
+              "Once you use this feature, you can’t use it again until you finish a short or long rest.",
+            ],
             level: 7,
-            tracked: true, // 1/SR or LR
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "distant_strike",
             name: "Distant Strike",
-            desc: "At 11th level, when you take the Attack action, you can teleport up to 10 feet before each attack to an unoccupied space you can see. If you attack at least two different creatures with the action, you can make one additional attack against a third creature.",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "At 11th level, you gain the ability to pass between the planes in a blink of an eye. When you use the Attack action, you can teleport up to 10 feet before each attack to an unoccupied space you can see.",
+              "If you attack at least two different creatures with the action, you can make one additional attack with it against a third creature.",
+            ],
             level: 11,
             tracked: false,
           },
           {
             id: "spectral_defense",
             name: "Spectral Defense",
-            desc: "At 15th level, your ability to move between planes grants you protection. When you take damage from an attack, you can use your reaction to give yourself resistance to all of that attack's damage on this turn.",
+            // Source: https://dnd5e.wikidot.com/ranger:horizon-walker (CC BY-SA 3.0)
+            desc: [
+              "At 15th level, your ability to move between planes enables you to slip through the planar boundaries to lessen the harm done to you during battle. When you take damage from an attack, you can use your reaction to give yourself resistance to all of that attack's damage on this turn.",
+            ],
             level: 15,
             tracked: false,
           },
