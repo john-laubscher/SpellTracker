@@ -1,4 +1,4 @@
-export const ClassesData = {
+﻿export const ClassesData = {
   // Nesting goes as follows: Class, Subclass, level, ability gained from subclass (name: descritption).
   // Includes subclasses***
   noClass: {
@@ -4442,39 +4442,47 @@ export const ClassesData = {
       },
     ],
     subclasses: {
-      beastMaster:{ 
+      // Source (feature text): https://dnd5e.wikidot.com/ranger:beast-master (CC BY-SA 3.0)
+      beastMaster: {
         features: [
           {
             id: "ranger_companion",
             name: "Ranger's Companion",
-            desc: "At 3rd level, you gain a beast companion that accompanies you on your adventures. The companion obeys your commands, and its statistics are determined by a creature of CR 1/4 or lower from the game's bestiary. It takes its turn on your initiative, and you determine its actions. If it dies, you can revive it or replace it with another creature after 8 hours of work and the expenditure of 25 gp.",
+            desc: [
+              "At 3rd level, you gain a beast companion that accompanies you on your adventures and is trained to fight alongside you. Choose a beast that is no larger than Medium and that has a challenge rating of 1/4 or lower (Player's Handbook Appendix D presents statistics for the hawk, mastiff, and panther as examples). Add your proficiency bonus to the beast's AC, attack rolls, and damage rolls, as well as to any saving throws and skills it is proficient in.",
+              "Its hit point maximum equals its normal maximum or four times your ranger level, whichever is higher. Like any creature, the beast can spend Hit Dice during a short rest.",
+              "The beast obeys your commands as best as it can. It takes its turn on your initiative. On your turn, you can verbally command the beast where to move (no action required by you). You can use your action to verbally command it to take the Attack, Dash, Disengage, or Help action. If you don't issue a command, the beast takes the Dodge action. Once you have the Extra Attack feature, you can make one weapon attack yourself when you command the beast to take the Attack action.",
+              "While traveling through your favored terrain with only the beast, you can move stealthily at a normal pace.",
+              "If you are incapacitated or absent, the beast acts on its own, focusing on protecting you and itself. The beast never requires your command to use its reaction, such as when making an opportunity attack.",
+              "If the beast dies, you can obtain another one by spending 8 hours magically bonding with another beast that isn't hostile to you, either the same type of beast as before or a different one.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "exceptional_training",
             name: "Exceptional Training",
-            desc: "Starting at 7th level, your beast companionÃ¢â‚¬â„¢s attacks count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage. In addition, you can use a bonus action to command it to take the Dash, Disengage, or Help action on its turn.",
+            desc: "Beginning at 7th level, on any of your turns when your beast companion doesn't attack, you can use a bonus action to command the beast to take the Dash, Disengage, or Help action on its turn. In addition, the beast's attacks now count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage.",
             level: 7,
             tracked: false,
           },
           {
             id: "bestial_fury",
             name: "Bestial Fury",
-            desc: "Beginning at 11th level, your beast companion can make two attacks when it takes the Attack action.",
+            desc: "Starting at 11th level, when you command your beast companion to take the Attack action, the beast can make two attacks, or it can take the Multiattack action if it has that action.",
             level: 11,
             tracked: false,
           },
           {
             id: "share_spells",
             name: "Share Spells",
-            desc: "At 15th level, when you cast a spell targeting yourself, you can also affect your beast companion with the spell if the companion is within 30 feet of you.",
+            desc: "Beginning at 15th level, when you cast a spell targeting yourself, you can also affect your beast companion with the spell if the beast is within 30 feet of you.",
             level: 15,
             tracked: false,
           },
         ],
-    },
-      
+      },
+
       drakewarden: {
         features: [
           {
