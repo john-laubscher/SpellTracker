@@ -64,6 +64,6 @@ export const calculateActualPreparedSpells = (characterInfo) => {
     // Cantrips (level 0) do not count toward prepared spell totals.
     if (String(levelKey) === "0") return acc;
     if (!Array.isArray(value)) return acc;
-    return acc + value.length;
+    return acc + value.filter((spell) => !spell?.spelltrackerDoesNotCount).length;
   }, 0);
 };

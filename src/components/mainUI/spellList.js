@@ -34,6 +34,7 @@ import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
+import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 
 const spellLevelColors = {
@@ -780,6 +781,111 @@ export const SpellList = (props) => {
       cancelled = true;
     };
   }, [hasDraconicGift, characterInfo?.spellsPrepared, setCharacterInfo]);
+
+  useEffect(() => {
+    const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
+    const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
+
+    const isFeyWanderer =
+      characterInfo?.characterClass === "ranger" && String(characterInfo?.subclass || "") === "feyWanderer";
+
+    const rangerLevel = (() => {
+      const raw = characterInfo?.classLevels?.ranger;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "ranger")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const magicTable = [
+      { rangerLevel: 3, spellLevel: 1, index: "charm-person" },
+      { rangerLevel: 5, spellLevel: 2, index: "misty-step" },
+      { rangerLevel: 9, spellLevel: 3, index: "dispel-magic" },
+      { rangerLevel: 13, spellLevel: 4, index: "dimension-door" },
+      { rangerLevel: 17, spellLevel: 5, index: "mislead" },
+    ];
+
+    const reinforcements = [{ rangerLevel: 11, spellLevel: 3, index: "summon-fey" }];
+
+    const activeMagic = isFeyWanderer ? magicTable.filter((row) => rangerLevel >= row.rangerLevel) : [];
+    const activeReinforcements = isFeyWanderer ? reinforcements.filter((row) => rangerLevel >= row.rangerLevel) : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      // Remove any Fey Wanderer bonus spells when subclass/level no longer qualifies.
+      const allowedMagic = new Map(activeMagic.map((r) => [String(r.index), r]));
+      const allowedReinforcements = new Map(activeReinforcements.map((r) => [String(r.index), r]));
+
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag === FEY_WANDERER_MAGIC_BONUS_TAG) return allowedMagic.has(String(s?.index || ""));
+          if (tag === FEY_REINFORCEMENTS_BONUS_TAG) return allowedReinforcements.has(String(s?.index || ""));
+          return true;
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isFeyWanderer) {
+        const ensureSpell = (row, tag) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === row.index);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== tag || existing?.spelltrackerDoesNotCount !== true;
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || humanizeSpellIndex(row.index),
+              spelltrackerBonus: tag,
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: row.index,
+              name: humanizeSpellIndex(row.index),
+              spelltrackerBonus: tag,
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        };
+
+        activeMagic.forEach((row) => ensureSpell(row, FEY_WANDERER_MAGIC_BONUS_TAG));
+        activeReinforcements.forEach((row) => ensureSpell(row, FEY_REINFORCEMENTS_BONUS_TAG));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.ranger,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     const isArcanaCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "arcana";
@@ -2490,6 +2596,24 @@ export const SpellList = (props) => {
               }}>
                 {heading}
               </Typography>
+              {isCantrips && hasDruidicWarrior ? (
+                <Tooltip arrow title="Choose Druidic Warrior cantrips (druid spell list)">
+                  <IconButton
+                    size="small"
+                    aria-label="Choose Druidic Warrior cantrips"
+                    onClick={() => setDwPickerModalOpen(true)}
+                    sx={{
+                      p: 0.25,
+                      color: "rgba(93, 64, 55, 0.92)",
+                      border: "1px solid rgba(93, 64, 55, 0.22)",
+                      backgroundColor: "rgba(93, 64, 55, 0.06)",
+                      "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                    }}
+                  >
+                    <BowIcon fontSize="inherit" />
+                  </IconButton>
+                </Tooltip>
+              ) : null}
               {isCantrips && hasGuidingWhispers ? (
                 <Tooltip
                   arrow
@@ -2541,27 +2665,13 @@ export const SpellList = (props) => {
            {renderReaperCantripForLevel(numericalSpellLevel)}
            {renderDomainSpellsForLevel(numericalSpellLevel)}
            {renderThousandFormsForLevel(numericalSpellLevel)}
-           {renderPreparedSpells(numericalSpellLevel)}
-           {renderDruidicWarriorCantripsInline(numericalSpellLevel)}
-           {isCantrips && hasDruidicWarrior ? (
-             <Box sx={{ mb: 0.5 }}>
-               <Tooltip arrow title="Choose Druidic Warrior cantrips (druid spell list)">
-                 <Button
-                   size="small"
-                   variant="outlined"
-                   onClick={() => setDwPickerModalOpen(true)}
-                   sx={{ textTransform: "none", fontSize: "12px" }}
-                 >
-                   Choose Druidic Warrior cantrips
-                 </Button>
-               </Tooltip>
+            {renderPreparedSpells(numericalSpellLevel)}
+            {renderDruidicWarriorCantripsInline(numericalSpellLevel)}
+            {!shouldRenderBonusCantripSection ? (
+              <Box sx={{ mt: 0.5 }}>
+                {renderSpellModal(numericalSpellLevel)}
              </Box>
-           ) : null}
-           {!shouldRenderBonusCantripSection ? (
-             <Box sx={{ mt: 0.5 }}>
-               {renderSpellModal(numericalSpellLevel)}
-            </Box>
-           ) : null}
+            ) : null}
         </Box>
       );
   };
@@ -2575,6 +2685,8 @@ export const SpellList = (props) => {
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
+    const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
+    const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
 
     return (
       <div>
@@ -2631,9 +2743,9 @@ export const SpellList = (props) => {
                 ) : numericalSpellLevel === 0 &&
                   spell?.index === "thaumaturgy" &&
                   spell?.spelltrackerBonus === DRACONIC_GIFT_BONUS_TAG ? (
-                  <Tooltip
-                    arrow
-                    title="Draconic Gift cantrip (counts as a ranger spell)."
+                   <Tooltip
+                     arrow
+                     title="Draconic Gift cantrip (counts as a ranger spell)."
                   >
                     <Chip
                       size="small"
@@ -2646,6 +2758,46 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(106, 27, 154, 0.85)",
                         border: "1px solid rgba(106, 27, 154, 0.22)",
+                       "&:hover": { opacity: 0.85 },
+                     }}
+                   />
+                 </Tooltip>
+                ) : spell?.spelltrackerBonus === FEY_WANDERER_MAGIC_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Fey Wanderer Magic spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="FW"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(0, 105, 92, 0.90)",
+                        border: "1px solid rgba(0, 105, 92, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === FEY_REINFORCEMENTS_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Fey Reinforcements spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="FR"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(123, 31, 162, 0.85)",
+                        border: "1px solid rgba(123, 31, 162, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
