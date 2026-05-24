@@ -31,8 +31,6 @@ import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
 import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
-import ThorHammerIcon from "./ThorHammerIcon";
-import BowIcon from "./BowIcon";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
@@ -424,6 +422,11 @@ export const SpellList = (props) => {
     String(characterInfo?.fightingStyle || "") === "Druidic Warrior" &&
     Number(characterInfo?.characterLevel || 0) >= 2;
 
+  const hasDraconicGift =
+    characterInfo?.characterClass === "ranger" &&
+    characterInfo?.subclass === "drakewarden" &&
+    Number(characterInfo?.characterLevel || 0) >= 3;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -715,6 +718,68 @@ export const SpellList = (props) => {
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    const BONUS_TAG = "draconic_gift_thaumaturgy";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+
+    if (!hasDraconicGift) {
+      const hasBonusThaum = currentCantrips.some(
+        (s) => s?.index === "thaumaturgy" && s?.spelltrackerBonus === BONUS_TAG
+      );
+      if (!hasBonusThaum) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => !(s?.index === "thaumaturgy" && s?.spelltrackerBonus === BONUS_TAG));
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const alreadyHasAnyThaumaturgy = currentCantrips.some((s) => s?.index === "thaumaturgy");
+    if (alreadyHasAnyThaumaturgy) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/thaumaturgy")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusThaumaturgy = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "thaumaturgy")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusThaumaturgy],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasDraconicGift, characterInfo?.spellsPrepared, setCharacterInfo]);
 
   useEffect(() => {
     const isArcanaCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "arcana";
@@ -2345,12 +2410,64 @@ export const SpellList = (props) => {
     if (!tableRow) return null;
 
     const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
-    if (slotCount === 0) return null;
-      const levelColor = spellLevelColors[numericalSpellLevel] || '#607d8b';
-      const isCantrips = textualSpellLevel === 'cantrips';
-      const heading = isCantrips
-        ? `Cantrips Known: ${slotCount}`
-        : `${capitalize(textualSpellLevel)} Level Spell Slots`;
+    const isCantrips = textualSpellLevel === "cantrips";
+    const preparedAtLevel = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+      ? characterInfo.spellsPrepared[numericalSpellLevel]
+      : [];
+    const shouldRenderBonusCantripSection = isCantrips && slotCount === 0 && preparedAtLevel.length > 0;
+    const shouldRenderFeatureCantripSection =
+      isCantrips &&
+      slotCount === 0 &&
+      (shouldRenderBonusCantripSection ||
+        hasDruidicWarrior ||
+        hasBlessedWarrior ||
+        hasArcanaInitiate ||
+        hasAcolyteOfNature ||
+        hasReaper ||
+        hasCircleOfMortality ||
+        hasLightBonusCantrip ||
+        hasGuidingWhispers);
+    if (slotCount === 0 && !shouldRenderFeatureCantripSection) return null;
+
+    const levelColor = spellLevelColors[numericalSpellLevel] || '#607d8b';
+
+    const cantripFeatureSources = [];
+    if (hasDruidicWarrior) cantripFeatureSources.push("Druidic Warrior");
+    if (hasBlessedWarrior) cantripFeatureSources.push("Blessed Warrior");
+    if (hasDraconicGift) cantripFeatureSources.push("Draconic Gift");
+    if (hasArcanaInitiate) cantripFeatureSources.push("Arcana Initiate");
+    if (hasGuidingWhispers) cantripFeatureSources.push("Guiding Whispers");
+    if (hasCircleOfMortality) cantripFeatureSources.push("Circle of Mortality");
+    if (hasLightBonusCantrip) cantripFeatureSources.push("Bonus Cantrip");
+    if (hasReaper) cantripFeatureSources.push("Reaper");
+    if (hasAcolyteOfNature) cantripFeatureSources.push("Acolyte of Nature");
+
+    const druidicSelectedCount = druidicWarriorCantrips.length;
+    const blessedSelectedCount = blessedWarriorCantrips.length;
+
+    const cantripHeading = (() => {
+      if (slotCount > 0) return `Cantrips Known: ${slotCount}`;
+      const hasPreparedCantrips = preparedAtLevel.length > 0;
+      const hasExtraPreparedCantrips = (() => {
+        if (!hasPreparedCantrips) return false;
+        if (cantripFeatureSources.length === 0) return false;
+        if (hasDraconicGift && !hasDruidicWarrior && !hasBlessedWarrior) {
+          // Draconic Gift adds thaumaturgy into prepared cantrips; don't treat that as a second source.
+          return preparedAtLevel.some((s) => s?.index && s.index !== "thaumaturgy");
+        }
+        return true;
+      })();
+
+      const hasMultipleSources = cantripFeatureSources.length > 1 || hasExtraPreparedCantrips;
+      if (!hasMultipleSources && cantripFeatureSources.length <= 1) {
+        if (hasDruidicWarrior) return `Druidic Warrior Cantrips (${druidicSelectedCount}/2)`;
+        if (hasBlessedWarrior) return `Blessed Warrior Cantrips (${blessedSelectedCount}/2)`;
+        if (hasDraconicGift) return "Draconic Gift Cantrips";
+      }
+      return "Cantrips";
+    })();
+
+    const heading = isCantrips ? cantripHeading : `${capitalize(textualSpellLevel)} Level Spell Slots`;
 
       return (
         <Box
@@ -2405,15 +2522,46 @@ export const SpellList = (props) => {
            {renderMagicalSecretsForLevel(numericalSpellLevel)}
            {renderSpiritSessionForLevel(numericalSpellLevel)}
            {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
-           {renderBlessedWarriorCantripsForLevel(numericalSpellLevel)}
+           {renderBlessedWarriorCantripsInline(numericalSpellLevel)}
+           {isCantrips && hasBlessedWarrior ? (
+             <Box sx={{ mb: 0.5 }}>
+               <Tooltip arrow title="Choose Blessed Warrior cantrips (cleric spell list)">
+                 <Button
+                   size="small"
+                   variant="outlined"
+                   onClick={() => setBwPickerModalOpen(true)}
+                   sx={{ textTransform: "none", fontSize: "12px" }}
+                 >
+                   Choose Blessed Warrior cantrips
+                 </Button>
+               </Tooltip>
+             </Box>
+           ) : null}
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
            {renderReaperCantripForLevel(numericalSpellLevel)}
            {renderDomainSpellsForLevel(numericalSpellLevel)}
            {renderThousandFormsForLevel(numericalSpellLevel)}
            {renderPreparedSpells(numericalSpellLevel)}
-           <Box sx={{ mt: 0.5 }}>
-             {renderSpellModal(numericalSpellLevel)}
-          </Box>
+           {renderDruidicWarriorCantripsInline(numericalSpellLevel)}
+           {isCantrips && hasDruidicWarrior ? (
+             <Box sx={{ mb: 0.5 }}>
+               <Tooltip arrow title="Choose Druidic Warrior cantrips (druid spell list)">
+                 <Button
+                   size="small"
+                   variant="outlined"
+                   onClick={() => setDwPickerModalOpen(true)}
+                   sx={{ textTransform: "none", fontSize: "12px" }}
+                 >
+                   Choose Druidic Warrior cantrips
+                 </Button>
+               </Tooltip>
+             </Box>
+           ) : null}
+           {!shouldRenderBonusCantripSection ? (
+             <Box sx={{ mt: 0.5 }}>
+               {renderSpellModal(numericalSpellLevel)}
+            </Box>
+           ) : null}
         </Box>
       );
   };
@@ -2426,6 +2574,7 @@ export const SpellList = (props) => {
       : [];
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
+    const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
 
     return (
       <div>
@@ -2475,6 +2624,28 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(239, 108, 0, 0.90)",
                         border: "1px solid rgba(239, 108, 0, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.index === "thaumaturgy" &&
+                  spell?.spelltrackerBonus === DRACONIC_GIFT_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Draconic Gift cantrip (counts as a ranger spell)."
+                  >
+                    <Chip
+                      size="small"
+                      label="DG"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(106, 27, 154, 0.85)",
+                        border: "1px solid rgba(106, 27, 154, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
@@ -2654,6 +2825,8 @@ export const SpellList = (props) => {
     );
   };
 
+  /*
+  Deprecated: cantrips now render in a single unified cantrip section.
   const renderDruidicWarriorCantripsForLevel = (numericalSpellLevel) => {
     if (!hasDruidicWarrior) return null;
     if (Number(numericalSpellLevel) !== 0) return null;
@@ -2766,7 +2939,82 @@ export const SpellList = (props) => {
       </Box>
     );
   };
+  */
 
+  const renderDruidicWarriorCantripsInline = (numericalSpellLevel) => {
+    if (!hasDruidicWarrior) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+
+    const isOver = druidicWarriorCantrips.length > 2;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {druidicWarriorCantrips.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75 }}>
+            <em>No Druidic Warrior cantrips chosen yet.</em>
+          </Typography>
+        ) : null}
+
+        {druidicWarriorCantrips.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Druidic Warrior cantrip (over limit â€” only 2 allowed)."
+                      : "Druidic Warrior cantrip (counts as a ranger spell)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="DW"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.65,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(93, 64, 55, 0.90)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(93, 64, 55, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Tooltip arrow title="Swap cantrip (Druidic Warrior)">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Druidic Warrior cantrip"
+                      onClick={() => setDwSwapModal({ open: true, originalSpell: spell })}
+                      sx={{
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.90)",
+                        border: "1px solid rgba(93, 64, 55, 0.22)",
+                        backgroundColor: "rgba(93, 64, 55, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                  <PrepareDruidicWarriorCantripButton spell={spell} index={idx} />
+                </Box>
+              }
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  /*
+  Deprecated: cantrips now render in a single unified cantrip section.
   const renderBlessedWarriorCantripsForLevel = (numericalSpellLevel) => {
     if (!hasBlessedWarrior) return null;
     if (Number(numericalSpellLevel) !== 0) return null;
@@ -2833,6 +3081,79 @@ export const SpellList = (props) => {
                   title={
                     isOver
                       ? "Blessed Warrior cantrip (over limit — only 2 allowed)."
+                      : "Blessed Warrior cantrip (counts as a paladin spell)."
+                  }
+                >
+                  <Chip
+                    size="small"
+                    label="BW"
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: isOver ? 0.9 : 0.65,
+                      backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: isOver ? "rgba(183, 28, 28, 0.80)" : "rgba(93, 64, 55, 0.90)",
+                      border: isOver ? "1px solid rgba(183, 28, 28, 0.30)" : "1px solid rgba(93, 64, 55, 0.22)",
+                      "&:hover": { opacity: 0.85 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Tooltip arrow title="Swap cantrip (Blessed Warrior)">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Blessed Warrior cantrip"
+                      onClick={() => setBwSwapModal({ open: true, originalSpell: spell })}
+                      sx={{
+                        p: 0.25,
+                        color: isOver ? "#b71c1c" : "rgba(93, 64, 55, 0.90)",
+                        border: "1px solid rgba(93, 64, 55, 0.22)",
+                        backgroundColor: "rgba(93, 64, 55, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                  <PrepareBlessedWarriorCantripButton spell={spell} index={idx} />
+                </Box>
+              }
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+  */
+
+  const renderBlessedWarriorCantripsInline = (numericalSpellLevel) => {
+    if (!hasBlessedWarrior) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+
+    const isOver = blessedWarriorCantrips.length > 2;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {blessedWarriorCantrips.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75 }}>
+            <em>No Blessed Warrior cantrips chosen yet.</em>
+          </Typography>
+        ) : null}
+
+        {blessedWarriorCantrips.map((spell, idx) => (
+          <Box key={spell.index} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={spell}
+              leadingControl={
+                <Tooltip
+                  arrow
+                  title={
+                    isOver
+                      ? "Blessed Warrior cantrip (over limit â€” only 2 allowed)."
                       : "Blessed Warrior cantrip (counts as a paladin spell)."
                   }
                 >
@@ -3306,8 +3627,6 @@ export const SpellList = (props) => {
         </Box>
       </Box>
       {renderBattleMasterManeuvers()}
-      {renderBlessedWarriorCantripsForLevel(0)}
-      {renderDruidicWarriorCantripsForLevel(0)}
       {renderPCSpells("cantrips", 0)}
       {renderPCSpells("first", 1)}
       {renderPCSpells("second", 2)}

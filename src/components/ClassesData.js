@@ -4488,37 +4488,59 @@
           {
             id: "draconic_gift",
             name: "Draconic Gift", 
-            des: "At 3rd level, the bond you share with your drake creates a connection to dragonkind, granting you understanding and empowering your presence. You gain the following benefits: Thaumaturgy. You learn the Thaumaturgy cantrip, which is a ranger spell for you.Tongue of Dragons. You learn to speak, read, and write Draconic or one other language of your choice.",
+            desc: [
+              "At 3rd level, the bond you share with your drake creates a connection to dragonkind, granting you understanding and empowering your presence.",
+              "• Thaumaturgy. You learn the *thaumaturgy* cantrip, which is a ranger spell for you.",
+              "• Tongue of Dragons. You learn to speak, read, and write Draconic or one other language of your choice.",
+            ],
             level: 3,
             tracked: false
           },
           {
             id: "drake_companion",
             name: "Drake Companion",
-            desc: "At 3rd level, you gain a drake companion. The drake is friendly to you and obeys your commands. It has its own stat block and shares your initiative, acting immediately after your turn. The drake can serve as a mount and has the ability to exhale a 15-foot cone of elemental energy.",
+            desc: [
+              "At 3rd level, as an action, you can magically summon the drake that is bound to you. It appears in an unoccupied space of your choice within 30 feet of you.",
+              "The drake is friendly to you and your companions, and it obeys your commands. In combat, it shares your initiative count, but it takes its turn immediately after yours.",
+              "Once you summon the drake, you can’t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to summon it.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "bond_of_fang_and_scale",
             name: "Bond of Fang and Scale",
-            desc: "Starting at 7th level, your drake grows wings, gaining a flying speed of 40 feet if it isnÃ¢â‚¬â„¢t wearing heavy armor. Additionally, the drake can now use its reaction to reduce damage dealt to another creature within 5 feet by its proficiency bonus.",
+            desc: [
+              "At 7th level, when you summon your drake it grows wings on its back and gains a flying speed equal to its walking speed.",
+              "In addition, while your drake is summoned you can use it as a mount (it grows to Medium size), the drake’s Bite deals extra damage based on its Draconic Essence, and you gain resistance to the drake’s chosen damage type.",
+            ],
             level: 7,
             tracked: false,
           },
           {
             id: "drake's_breath",
             name: "Drake's Breath",
-            desc: "At 11th level, as an action, you can expend a spell slot to have your drake exhale a 30-foot cone of elemental energy. The damage increases with the spell slot level used.",
+            desc: [
+              "At 11th level, as an action, you can exhale a 30-foot cone of damaging breath or cause your drake to exhale it. Each creature in the cone must make a Dexterity saving throw against your spell save DC, taking 8d6 damage on a failed save, or half as much damage on a successful one.",
+              "The damage increases to 10d6 when you reach 15th level in this class.",
+              "Once you use this feature, you can’t do so again until you finish a long rest.",
+            ],
             level: 11,
-            tracked: true, // Uses spell slots
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
           {
             id: "perfected_bond",
-            name: "Perfected Bond",
-            desc: "At 15th level, your bond to your drake reaches its peak. The drake gains a bonus to damage rolls equal to your proficiency bonus, and when it uses Drake's Breath, you and your drake both gain resistance to the type of damage it deals for 1 minute.",
+            name: "Perfected Bond (Reflexive Resistance)",
+            desc: [
+              "At 15th level, while your drake is summoned, when either you or the drake takes damage while you’re within 30 feet of each other, you can use your reaction to give yourself or the drake resistance to that instance of damage.",
+              "Uses equal to your proficiency bonus; you regain all uses when you finish a long rest.",
+            ],
             level: 15,
-            tracked: false,
+            tracked: true, // Reaction
+            uses: "pb",
+            recharge: "lr",
           },
         ],
       },
