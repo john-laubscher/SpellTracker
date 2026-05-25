@@ -1086,6 +1086,105 @@ export const SpellList = (props) => {
   ]);
 
   useEffect(() => {
+    const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
+
+    const isMonsterSlayer =
+      characterInfo?.characterClass === "ranger" && String(characterInfo?.subclass || "") === "monsterSlayer";
+
+    const rangerLevel = (() => {
+      const raw = characterInfo?.classLevels?.ranger;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "ranger")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const magicTable = [
+      { rangerLevel: 3, spellLevel: 1, index: "protection-from-evil-and-good" },
+      { rangerLevel: 5, spellLevel: 2, index: "zone-of-truth" },
+      { rangerLevel: 9, spellLevel: 3, index: "magic-circle" },
+      { rangerLevel: 13, spellLevel: 4, index: "banishment" },
+      { rangerLevel: 17, spellLevel: 5, index: "hold-monster" },
+    ];
+
+    const activeMagic = isMonsterSlayer ? magicTable.filter((row) => rangerLevel >= row.rangerLevel) : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      // Remove any Monster Slayer bonus spells when subclass/level no longer qualifies.
+      const allowedMagic = new Map(activeMagic.map((r) => [String(r.index), r]));
+
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag === MONSTER_SLAYER_MAGIC_BONUS_TAG) return allowedMagic.has(String(s?.index || ""));
+          return true;
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isMonsterSlayer) {
+        const ensureSpell = (row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === row.index);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== MONSTER_SLAYER_MAGIC_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true;
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || humanizeSpellIndex(row.index),
+              spelltrackerBonus: MONSTER_SLAYER_MAGIC_BONUS_TAG,
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: row.index,
+              name: humanizeSpellIndex(row.index),
+              spelltrackerBonus: MONSTER_SLAYER_MAGIC_BONUS_TAG,
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        };
+
+        activeMagic.forEach((row) => ensureSpell(row));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.ranger,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
     const isArcanaCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "arcana";
     if (!isArcanaCleric) {
       setArcanaDomainSpellsByLevel(emptyByLevel());
@@ -2887,6 +2986,7 @@ export const SpellList = (props) => {
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
+    const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
 
     return (
       <div>
@@ -3038,6 +3138,26 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(106, 27, 154, 0.85)",
                         border: "1px solid rgba(106, 27, 154, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === MONSTER_SLAYER_MAGIC_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Monster Slayer Magic spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="MS"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(198, 40, 40, 0.88)",
+                        border: "1px solid rgba(198, 40, 40, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
