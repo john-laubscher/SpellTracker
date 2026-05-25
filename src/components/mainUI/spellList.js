@@ -428,6 +428,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "drakewarden" &&
     Number(characterInfo?.characterLevel || 0) >= 3;
 
+  const hasSwarmkeeperMagic =
+    characterInfo?.characterClass === "ranger" &&
+    (String(characterInfo?.subclass || "") === "swarmKeeper" || String(characterInfo?.subclass || "") === "swarmkeeper") &&
+    Number(characterInfo?.characterLevel || 0) >= 3;
+
   const arcanaInitiateCantrips = Array.isArray(characterInfo?.arcanaInitiateCantrips)
     ? characterInfo.arcanaInitiateCantrips
     : [];
@@ -1164,6 +1169,107 @@ export const SpellList = (props) => {
               index: row.index,
               name: humanizeSpellIndex(row.index),
               spelltrackerBonus: MONSTER_SLAYER_MAGIC_BONUS_TAG,
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        };
+
+        activeMagic.forEach((row) => ensureSpell(row));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.ranger,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const SWARMKEEPER_MAGIC_BONUS_TAG = "swarmkeeper_magic_bonus_spell";
+
+    const isSwarmkeeper =
+      characterInfo?.characterClass === "ranger" &&
+      (String(characterInfo?.subclass || "") === "swarmKeeper" || String(characterInfo?.subclass || "") === "swarmkeeper");
+
+    const rangerLevel = (() => {
+      const raw = characterInfo?.classLevels?.ranger;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "ranger")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const magicTable = [
+      { rangerLevel: 3, spellLevel: 0, index: "mage-hand" },
+      { rangerLevel: 3, spellLevel: 1, index: "faerie-fire" },
+      { rangerLevel: 5, spellLevel: 2, index: "web" },
+      { rangerLevel: 9, spellLevel: 3, index: "gaseous-form" },
+      { rangerLevel: 13, spellLevel: 4, index: "arcane-eye" },
+      { rangerLevel: 17, spellLevel: 5, index: "insect-plague" },
+    ];
+
+    const activeMagic = isSwarmkeeper ? magicTable.filter((row) => rangerLevel >= row.rangerLevel) : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      // Remove any Swarmkeeper Magic bonus spells when subclass/level no longer qualifies.
+      const allowedMagic = new Map(activeMagic.map((r) => [String(r.index), r]));
+
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag === SWARMKEEPER_MAGIC_BONUS_TAG) return allowedMagic.has(String(s?.index || ""));
+          return true;
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isSwarmkeeper) {
+        const ensureSpell = (row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === row.index);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== SWARMKEEPER_MAGIC_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true;
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || humanizeSpellIndex(row.index),
+              spelltrackerBonus: SWARMKEEPER_MAGIC_BONUS_TAG,
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: row.index,
+              name: humanizeSpellIndex(row.index),
+              spelltrackerBonus: SWARMKEEPER_MAGIC_BONUS_TAG,
               spelltrackerDoesNotCount: true,
             },
           ];
@@ -2838,6 +2944,7 @@ export const SpellList = (props) => {
     if (hasDruidicWarrior) cantripFeatureSources.push("Druidic Warrior");
     if (hasBlessedWarrior) cantripFeatureSources.push("Blessed Warrior");
     if (hasDraconicGift) cantripFeatureSources.push("Draconic Gift");
+    if (hasSwarmkeeperMagic) cantripFeatureSources.push("Swarmkeeper Magic");
     if (hasArcanaInitiate) cantripFeatureSources.push("Arcana Initiate");
     if (hasGuidingWhispers) cantripFeatureSources.push("Guiding Whispers");
     if (hasCircleOfMortality) cantripFeatureSources.push("Circle of Mortality");
@@ -2866,6 +2973,7 @@ export const SpellList = (props) => {
         if (hasDruidicWarrior) return `Druidic Warrior Cantrips (${druidicSelectedCount}/2)`;
         if (hasBlessedWarrior) return `Blessed Warrior Cantrips (${blessedSelectedCount}/2)`;
         if (hasDraconicGift) return "Draconic Gift Cantrips";
+        if (hasSwarmkeeperMagic) return "Swarmkeeper Magic Cantrips";
       }
       return "Cantrips";
     })();
@@ -2987,6 +3095,7 @@ export const SpellList = (props) => {
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
     const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
+    const SWARMKEEPER_MAGIC_BONUS_TAG = "swarmkeeper_magic_bonus_spell";
 
     return (
       <div>
@@ -3158,6 +3267,26 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(198, 40, 40, 0.88)",
                         border: "1px solid rgba(198, 40, 40, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === SWARMKEEPER_MAGIC_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Swarmkeeper Magic spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="SK"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(21, 101, 192, 0.85)",
+                        border: "1px solid rgba(21, 101, 192, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
