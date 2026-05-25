@@ -4878,37 +4878,76 @@
       monsterSlayer: {
         features: [
           {
+            id: "monster_slayer_magic",
+            name: "Monster Slayer Magic",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "Starting at 3rd level, you learn an additional spell when you reach certain levels in this class, as shown in the Monster Slayer Spells table.",
+              "The spell counts as a ranger spell for you, but it doesn't count against the number of ranger spells you know.",
+            ],
+            level: 3,
+            tracked: false,
+          },
+          {
             id: "hunter's_sense",
             name: "Hunter's Sense",
-            desc: "At 3rd level, you gain the ability to peer at a creature and discern its weaknesses. As an action, you can choose one creature you can see within 60 feet of you. You immediately learn whether it has any damage immunities, resistances, or vulnerabilities and what they are. You can use this feature a number of times equal to your Wisdom modifier, regaining all uses after a long rest.",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "At 3rd level, you gain the ability to peer at a creature and magically discern how best to hurt it. As an action, choose one creature you can see within 60 feet of you.",
+              "You immediately learn whether the creature has any damage immunities, resistances, or vulnerabilities and what they are. If the creature is hidden from divination magic, you sense that it has no damage immunities, resistances, or vulnerabilities.",
+              "You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses of it when you finish a long rest.",
+            ],
             level: 3,
-            tracked: true, // wis mod/LR
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "slayer's_prey",
             name: "Slayer's Prey",
-            desc: "Starting at 3rd level, you can designate one creature you can see within 60 feet of you as your prey. The first time each turn that you hit the target with a weapon attack, it takes an extra 1d6 damage. This effect lasts until you finish a short or long rest.",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "Starting at 3rd level, you can focus your ire on one foe, increasing the harm you inflict on it. As a bonus action, you designate one creature you can see within 60 feet of you as the target of this feature.",
+              "The first time each turn that you hit that target with a weapon attack, it takes an extra 1d6 damage from the weapon.",
+              "This benefit lasts until you finish a short or long rest. It ends early if you designate a different creature.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "supernatural_defense",
             name: "Supernatural Defense",
-            desc: "At 7th level, you gain extra resilience against your prey's attacks. You gain a bonus to saving throws and checks against the target of your Slayer's Prey equal to 1d6.",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "At 7th level, you gain extra resilience against your prey's assaults on your mind and body.",
+              "Whenever the target of your Slayer's Prey forces you to make a saving throw and whenever you make an ability check to escape that target's grapple, add 1d6 to your roll.",
+            ],
             level: 7,
             tracked: false,
           },
           {
             id: "magic_user's_nemesis",
             name: "Magic User's Nemesis",
-            desc: "At 11th level, you can use your reaction to force a creature within 60 feet of you to make a Wisdom saving throw whenever it casts a spell. On a failed save, the creatureÃ¢â‚¬â„¢s spell fails and is wasted. Once you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a short or long rest.",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "At 11th level, you gain the ability to thwart someone else's magic. When you see a creature casting a spell or teleporting within 60 feet of you, you can use your reaction to try to magically foil it.",
+              "The creature must succeed on a Wisdom saving throw against your spell save DC, or its spell or teleport fails and is wasted.",
+              "Once you use this feature, you can't use it again until you finish a short or long rest.",
+            ],
             level: 11,
-            tracked: true, // 1/SR or LR
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
           {
             id: "slayer's_counter",
             name: "Slayer's Counter",
-            desc: "At 15th level, if the target of your Slayer's Prey forces you to make a saving throw, you can use your reaction to make one weapon attack against the target. You make this attack immediately before rolling the saving throw. If your attack hits, your save automatically succeeds.",
+            // Source: https://dnd5e.wikidot.com/ranger:monster-slayer (CC BY-SA 3.0)
+            desc: [
+              "At 15th level, you gain the ability to counterattack when your prey tries to sabotage you.",
+              "If the target of your Slayer's Prey forces you to make a saving throw, you can use your reaction to make one weapon attack against the quarry. You make this attack immediately before making the saving throw.",
+              "If the attack hits, your save automatically succeeds, in addition to the attack's normal effects.",
+            ],
             level: 15,
             tracked: false,
           },
