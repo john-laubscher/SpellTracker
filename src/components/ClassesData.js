@@ -5052,58 +5052,81 @@
       {
         id: "sneak_attack",
         name: "Sneak Attack",
-        desc: "You know how to strike subtly and exploit a foeÃ¢â‚¬â„¢s distraction.",
+        desc: [
+          "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal extra damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon.",
+          "You don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.",
+          "The amount of the extra damage increases as you gain levels in this class, as shown in the Sneak Attack column of the Rogue table.",
+        ],
         level: 1,
         tracked: false,
       },
       {
         id: "cunning_action",
         name: "Cunning Action",
-        desc: "You can take a bonus action on each of your turns to Dash, Disengage, or Hide.",
+        desc: [
+          "Starting at 2nd level, your quick thinking and agility allow you to move and act quickly.",
+          "You can take a bonus action on each of your turns in combat. This action can be used only to take the Dash, Disengage, or Hide action.",
+        ],
         level: 2,
         tracked: false,
       },
       {
         id: "uncanny_dodge",
         name: "Uncanny Dodge",
-        desc: "When an attacker you can see hits you with an attack, you can use your reaction to halve the attack's damage.",
+        desc: [
+          "Starting at 5th level, when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you.",
+        ],
         level: 5,
         tracked: false,
       },
       {
         id: "evasion",
         name: "Evasion",
-        desc: "When subjected to an effect that allows a Dexterity saving throw for half damage, you instead take no damage if you succeed.",
+        desc: [
+          "Beginning at 7th level, you can nimbly dodge out of the way of certain area effects, such as a red dragon's fiery breath or an Ice Storm spell.",
+          "When you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.",
+        ],
         level: 7,
         tracked: false,
       },
       {
         id: "blindsense",
         name: "Blindsense",
-        desc: "If you are able to hear, you are aware of the location of any hidden or invisible creature within 10 feet of you.",
+        desc: [
+          "Starting at 14th level, if you are able to hear, you are aware of the location of any hidden or invisible creature within 10 feet of you.",
+        ],
         level: 14,
         tracked: false,
       },
       {
         id: "slippery_mind",
         name: "Slippery Mind",
-        desc: "You gain proficiency in Wisdom saving throws.",
+        desc: ["By 15th level, you have acquired greater mental strength. You gain proficiency in Wisdom saving throws."],
         level: 15,
         tracked: false,
       },
       {
         id: "elusive",
         name: "Elusive",
-        desc: "No attack roll has advantage against you while you arenÃ¢â‚¬â„¢t incapacitated.",
+        desc: [
+          "Beginning at 18th level, you are so evasive that attackers rarely gain the upper hand against you.",
+          "No attack roll has advantage against you while you aren't incapacitated.",
+        ],
         level: 18,
         tracked: false,
       },
       {
         id: "stroke_of_luck",
         name: "Stroke of Luck",
-        desc: "If your attack misses a target, you can turn it into a hit.",
+        desc: [
+          "At 20th level, you have an uncanny knack for succeeding when you need to.",
+          "If your attack misses a target within range, you can turn the miss into a hit. Alternatively, if you fail an ability check, you can treat the d20 roll as a 20.",
+          "Once you use this feature, you can't use it again until you finish a short or long rest.",
+        ],
         level: 20,
-        tracked: 1, // Comment: 1/SR
+        tracked: true,
+        uses: 1,
+        recharge: "sr_or_lr",
       },
     ],
     subclasses: {
