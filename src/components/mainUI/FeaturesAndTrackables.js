@@ -70,6 +70,20 @@ import {
 
 const FEATURE_TRACKERS_STORAGE_KEY = "spelltracker_featureTrackers_v1";
 
+const getRogueSneakAttackDice = (rogueLevel) => {
+  const level = Number(rogueLevel || 0);
+  if (level >= 19) return "10d6";
+  if (level >= 17) return "9d6";
+  if (level >= 15) return "8d6";
+  if (level >= 13) return "7d6";
+  if (level >= 11) return "6d6";
+  if (level >= 9) return "5d6";
+  if (level >= 7) return "4d6";
+  if (level >= 5) return "3d6";
+  if (level >= 3) return "2d6";
+  return "1d6";
+};
+
 const loadFeatureTrackers = () => {
   try {
     const raw = localStorage.getItem(FEATURE_TRACKERS_STORAGE_KEY);
@@ -1719,6 +1733,19 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "rogue") {
+      const dice = getRogueSneakAttackDice(characterLevel);
+      return base.map((feature) => {
+        if (feature?.id !== "sneak_attack") return feature;
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+        return { ...feature, desc: [`Current Sneak Attack extra damage: ${dice}.`, ...descLines] };
+      });
+    }
+
     return base;
   }, [
     classFeatures,
@@ -1734,6 +1761,7 @@ const FeaturesAndTrackables = () => {
     hasDruidicWarrior,
     rangerFavoredEnemyOptions,
     rangerNaturalExplorerOptions,
+    characterLevel,
   ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
