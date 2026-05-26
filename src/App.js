@@ -217,6 +217,18 @@ const loadFourElementsDisciplinesFromStorage = () => {
   }
 };
 
+const loadArcaneTricksterMageHandOptOutFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_arcaneTricksterMageHandOptOut");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "boolean") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // Should this be routes or just a modal that needs to be finished before access is given to the mainUI?
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -249,6 +261,7 @@ function App() {
     const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     const persistedFourElementsDisciplines = loadFourElementsDisciplinesFromStorage();
+    const persistedArcaneTricksterMageHandOptOut = loadArcaneTricksterMageHandOptOutFromStorage();
     return {
       characterName: "Garetjax",
       race: "Dwarf",
@@ -318,6 +331,7 @@ function App() {
       showManeuversInSpellTracker: typeof persistedShowManeuversInSpellTracker === "boolean" ? persistedShowManeuversInSpellTracker : false,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
       fourElementsDisciplines: Array.isArray(persistedFourElementsDisciplines) ? persistedFourElementsDisciplines : [],
+      arcaneTricksterMageHandOptOut: typeof persistedArcaneTricksterMageHandOptOut === "boolean" ? persistedArcaneTricksterMageHandOptOut : false,
     };
   });
 
@@ -538,6 +552,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.fourElementsDisciplines]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_arcaneTricksterMageHandOptOut",
+        JSON.stringify(Boolean(characterInfo.arcaneTricksterMageHandOptOut))
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.arcaneTricksterMageHandOptOut]);
 
   const monkMartialArtsDieSizeForLevel = (level) => {
     const l = Math.max(0, Math.min(20, Math.trunc(Number(level) || 0)));

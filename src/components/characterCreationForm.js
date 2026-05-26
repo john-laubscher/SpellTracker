@@ -456,16 +456,23 @@ export const CharacterCreationForm = (props) => {
                 name="subclass"
                 onChange={handleChange}
                 displayEmpty
-                renderValue={(selected) => (selected === NO_SUBCLASS ? "Select a subclass" : capitalize(selected))}
+                renderValue={(selected) => {
+                  if (selected === NO_SUBCLASS) return "Select a subclass";
+                  const meta = ClassesData?.[characterInfo.characterClass]?.subclasses?.[selected] || null;
+                  return meta?.name || capitalize(selected);
+                }}
               >
                 <MenuItem value={NO_SUBCLASS} disabled>
                   Select a subclass
                 </MenuItem>
-                {Object.keys(ClassesData?.[characterInfo.characterClass]?.subclasses || {}).map((subclass) => (
-                  <MenuItem key={subclass} value={subclass}>
-                    {capitalize(subclass)}
-                  </MenuItem>
-                ))}
+                {Object.keys(ClassesData?.[characterInfo.characterClass]?.subclasses || {}).map((subclass) => {
+                  const meta = ClassesData?.[characterInfo.characterClass]?.subclasses?.[subclass] || null;
+                  return (
+                    <MenuItem key={subclass} value={subclass}>
+                      {meta?.name || capitalize(subclass)}
+                    </MenuItem>
+                  );
+                })}
               </Select>
             </FormControl>
           </Grid>
