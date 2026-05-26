@@ -5131,18 +5131,39 @@
     ],
     subclasses: {
       arcaneTrickster: {
+        // Source (feature text + spellcasting table): https://dnd5e.wikidot.com/rogue:arcane-trickster (CC BY-SA 3.0)
+        name: "Arcane Trickster",
+        spellcasting: {
+          startsAtLevel: 3,
+          spellTableKey: "rogueArcaneTrickster",
+          spellListClassKey: "wizard",
+          spellcastingAbility: "int",
+        },
         features: [
           {
             id: "spellcasting",
             name: "Spellcasting",
-            desc: "At 3rd level, you gain the ability to cast spells from the wizard spell list. You can cast and prepare spells as described in the Arcane Trickster Spellcasting feature. Intelligence is your spellcasting ability for these spells.",
+            desc: [
+              "When you reach 3rd level, you augment your martial prowess with the ability to cast spells.",
+              "You learn three cantrips: Mage Hand and two other cantrips of your choice from the wizard spell list. You learn another wizard cantrip of your choice at 10th level.",
+              "The Arcane Trickster Spellcasting table shows how many spell slots you have to cast your wizard spells of 1st level and higher. You regain all expended spell slots when you finish a long rest.",
+              "You know three 1st-level wizard spells of your choice, two of which you must choose from enchantment and illusion spells on the wizard spell list.",
+              "Intelligence is your spellcasting ability for your wizard spells.",
+            ],
             level: 3,
-            tracked: false, //do they have their own spellList on the spellsTable? 
+            tracked: false,
           },
           {
             id: "mage_hand_legerdemain",
             name: "Mage Hand Legerdemain",
-            desc: "At 3rd level, you can use your Mage Hand to perform additional tasks, including picking locks and disarming traps at range. You can make the hand invisible, and you can use it to perform actions that require Sleight of Hand checks.",
+            desc: [
+              "Starting at 3rd level, when you cast Mage Hand, you can make the spectral hand invisible, and you can perform the following additional tasks with it:",
+              "You can stow one object the hand is holding in a container worn or carried by another creature.",
+              "You can retrieve an object in a container worn or carried by another creature.",
+              "You can use thieves' tools to pick locks and disarm traps at range.",
+              "You can perform one of these tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check.",
+              "In addition, you can use the bonus action granted by your Cunning Action to control the hand.",
+            ],
             level: 3,
             tracked: false,
           },
@@ -5156,16 +5177,24 @@
           {
             id: "versatile_trickster",
             name: "Versatile Trickster",
-            desc: "At 13th level, you can use your Mage Hand to distract a target, granting you advantage on attack rolls against it until the end of your turn.",
+            desc: "At 13th level, you gain the ability to distract targets with your Mage Hand. As a bonus action on your turn, you can designate a creature within 5 feet of the spectral hand. Doing so gives you advantage on attack rolls against that creature until the end of the turn.",
             level: 13,
             tracked: false,
           },
           {
             id: "spell_thief",
             name: "Spell Thief",
-            desc: "At 17th level, when a creature casts a spell targeting you or within 30 feet of you, you can use your reaction to force the creature to make a saving throw against your spell save DC. On a failed save, you negate the spell's effect, and you learn the spell until you cast it or finish a long rest.",
+            desc: [
+              "At 17th level, you gain the ability to magically steal the knowledge of how to cast a spell from another spellcaster.",
+              "Immediately after a creature casts a spell that targets you or includes you in its area of effect, you can use your reaction to force the creature to make a saving throw with its spellcasting ability modifier. The DC equals your spell save DC.",
+              "On a failed save, you negate the spell's effect against you, and you steal the knowledge of the spell if it is at least 1st level and of a level you can cast (it doesn't need to be a wizard spell).",
+              "For the next 8 hours, you know the spell and can cast it using your spell slots. The creature can't cast that spell until the 8 hours have passed.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
             level: 17,
-            tracked: true, // 1/LR
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
           },
         ],
         subclassSpells: [],

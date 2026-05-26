@@ -68,7 +68,19 @@ const Header = () => {
     return abilityMap[ability.toLowerCase()] || ability.toUpperCase();
   };
 
-  const spellcastingAbility = ClassesData[characterInfo.characterClass]?.spellcastingAbility;
+  const classKey = String(characterInfo?.characterClass || "");
+  const classMeta = ClassesData?.[classKey] || null;
+  const subclassKey = String(characterInfo?.subclass || "");
+  const subclassMeta = classMeta?.subclasses?.[subclassKey] || null;
+  const characterLevel = Number(characterInfo?.characterLevel) || 0;
+  const subclassSpellcasting = subclassMeta?.spellcasting || null;
+  const hasSubclassSpellcasting =
+    Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
+  const spellcastingAbility = hasSubclassSpellcasting
+    ? String(subclassSpellcasting?.spellcastingAbility || classMeta?.spellcastingAbility || "nonCaster")
+    : String(classMeta?.spellcastingAbility || "nonCaster");
+  const subclassDisplayName = subclassMeta?.name || (subclassKey ? capitalize(subclassKey) : "");
+  const effectiveIsNonCaster = spellcastingAbility === "nonCaster";
   const isArcaneArcher =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
   const isBattleMaster =
@@ -76,7 +88,7 @@ const Header = () => {
   const isCavalier =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "cavalier";
   const isMonk = characterInfo.characterClass === "monk";
-  const proficiencyBonusValue = proficiencyBonus[characterInfo.characterLevel] || 2;
+  const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const fighterLevel = (() => {
     const raw = characterInfo?.classLevels?.fighter;
     const numeric = Number(raw);
@@ -116,7 +128,7 @@ useEffect(() => {
 
   const totalPreparedSpells = calculateTotalPreparedSpells(characterInfo);
   
-  if (spellcastingAbility === "nonCaster") {
+  if (effectiveIsNonCaster) {
     setSpellData(prevState => ({
       ...prevState,
       spellcastingAbility: "Non-caster",
@@ -140,10 +152,10 @@ useEffect(() => {
       }));
     }
   }
-}, [characterInfo, spellcastingAbility, spellsFromWizLevel]);
+}, [characterInfo, effectiveIsNonCaster, spellcastingAbility, spellsFromWizLevel]);
 
   const determineNoncasters = () => {
-    if (ClassesData[characterInfo.characterClass].spellcastingAbility === "nonCaster") {
+    if (effectiveIsNonCaster) {
       return (
         <Typography variant="h6" sx={theme.typography.body1}>
           {characterInfo.characterName} is not a caster
@@ -223,7 +235,7 @@ useEffect(() => {
           <Card sx={{ backgroundColor: "rgba(139,69,19,0.04)", display: "inline-block" }}>
             <CardContent sx={{ py: 1, px: 1.25, "&:last-child": { pb: 1 } }}>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "baseline" }}>
-                {ClassesData[characterInfo.characterClass].spellcastingAbility !== "nonCaster" ? (
+                {!effectiveIsNonCaster ? (
                   <Tooltip
                     arrow
                     title={`${proficiencyBonusValue} (proficiency bonus) + ${spellcastingModValue} (${formatSpellcastingAbility(spellcastingAbility)} modifier) = ${spellAttackBonus}`}
@@ -284,7 +296,7 @@ useEffect(() => {
                   {ClassesData[characterInfo.characterClass].hitDice} hit dice
                 </Typography>
                 <Typography variant="body2">
-                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)} ({capitalize(characterInfo.subclass)})
+                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)} ({subclassDisplayName})
                 </Typography>
                 <Typography variant="body2">
                   Race: {getRaceDisplay()}

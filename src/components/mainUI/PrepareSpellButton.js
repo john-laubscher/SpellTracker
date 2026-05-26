@@ -4,6 +4,7 @@ import { CharacterInfoContext } from "../../Contexts/Context";
 import {useContext} from 'react'
 import { useState } from 'react';
 import { makeStyles } from '@mui/styles';
+import ConfirmDialog from "./ConfirmDialog";
 
 export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     prepareButton: {
@@ -45,9 +46,16 @@ export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
 export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
+    const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
     
     const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
     const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
+    const isArcaneTricksterMageHand =
+      Number(numericalSpellLevel) === 0 &&
+      String(spell?.index || "") === "mage-hand" &&
+      String(spell?.spelltrackerBonus || "") === "arcane_trickster_mage_hand" &&
+      String(characterInfo?.characterClass || "") === "rogue" &&
+      String(characterInfo?.subclass || "") === "arcaneTrickster";
 
     const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some(
         (preparedSpell) => preparedSpell.index === spell.index
@@ -73,6 +81,7 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
       
             return {
               ...characterInfo,
+              ...(isArcaneTricksterMageHand ? { arcaneTricksterMageHandOptOut: true } : {}),
               spellsPrepared: {
                 ...characterInfo.spellsPrepared,
                 [numericalSpellLevel]: updatedSpellsPrepared,
@@ -90,23 +99,45 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
     const unpreparedLabel = isCantrip ? 'Learn Cantrip' : 'Prepare Spell';
 
     return (
-            <Button
-              className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
-              variant="contained"
-              onClick={() => {
-                if (isSpellAlreadyPrepared) {
-                  setClickedButtons([...clickedButtons, `remove-${index}`]);
-                  togglePreparedSpell(spell, numericalSpellLevel);
-                  setTimeout(() => {
-                    setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`));
-                  }, 300);
-                } else {
-                  togglePreparedSpell(spell, numericalSpellLevel);
-                }
-              }}
-            >
-              {isSpellAlreadyPrepared ? preparedLabel : unpreparedLabel}
-            </Button>
+      <>
+        <Button
+          className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
+          variant="contained"
+          onClick={() => {
+            if (isSpellAlreadyPrepared) {
+              if (isArcaneTricksterMageHand) {
+                setConfirmRemoveOpen(true);
+                return;
+              }
+              setClickedButtons([...clickedButtons, `remove-${index}`]);
+              togglePreparedSpell(spell, numericalSpellLevel);
+              setTimeout(() => {
+                setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`));
+              }, 300);
+            } else {
+              togglePreparedSpell(spell, numericalSpellLevel);
+            }
+          }}
+        >
+          {isSpellAlreadyPrepared ? preparedLabel : unpreparedLabel}
+        </Button>
+
+        <ConfirmDialog
+          open={confirmRemoveOpen}
+          title="Remove Mage Hand?"
+          body="Arcane Tricksters always know Mage Hand. Removing it will reduce your cantrips known and may make your character sheet inaccurate."
+          confirmLabel="Remove"
+          onClose={() => setConfirmRemoveOpen(false)}
+          onConfirm={() => {
+            setConfirmRemoveOpen(false);
+            setClickedButtons([...clickedButtons, `remove-${index}`]);
+            togglePreparedSpell(spell, numericalSpellLevel);
+            setTimeout(() => {
+              setClickedButtons((prev) => prev.filter((btnIndex) => btnIndex !== `remove-${index}`));
+            }, 300);
+          }}
+        />
+      </>
     )
 }
 

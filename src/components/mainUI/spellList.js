@@ -428,6 +428,11 @@ export const SpellList = (props) => {
     characterInfo?.subclass === "drakewarden" &&
     Number(characterInfo?.characterLevel || 0) >= 3;
 
+  const hasArcaneTrickster =
+    characterInfo?.characterClass === "rogue" &&
+    String(characterInfo?.subclass || "") === "arcaneTrickster" &&
+    Number(characterInfo?.characterLevel || 0) >= 3;
+
   const hasSwarmkeeperMagic =
     characterInfo?.characterClass === "ranger" &&
     (String(characterInfo?.subclass || "") === "swarmKeeper" || String(characterInfo?.subclass || "") === "swarmkeeper") &&
@@ -786,6 +791,85 @@ export const SpellList = (props) => {
       cancelled = true;
     };
   }, [hasDraconicGift, characterInfo?.spellsPrepared, setCharacterInfo]);
+
+  useEffect(() => {
+    const BONUS_TAG = "arcane_trickster_mage_hand";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+
+    const rogueLevel = (() => {
+      const raw = characterInfo?.classLevels?.rogue;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "rogue") {
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      }
+      return 0;
+    })();
+
+    const shouldHaveArcaneTricksterMageHand = hasArcaneTrickster && rogueLevel >= 3;
+    const arcaneTricksterMageHandOptOut = Boolean(characterInfo?.arcaneTricksterMageHandOptOut);
+
+    if (!shouldHaveArcaneTricksterMageHand) {
+      const hasTaggedMageHand = currentCantrips.some(
+        (s) => s?.index === "mage-hand" && s?.spelltrackerBonus === BONUS_TAG
+      );
+      if (!hasTaggedMageHand) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter(
+          (s) => !(s?.index === "mage-hand" && s?.spelltrackerBonus === BONUS_TAG)
+        );
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    if (arcaneTricksterMageHandOptOut) return;
+
+    const alreadyHasAnyMageHand = currentCantrips.some((s) => s?.index === "mage-hand");
+    if (alreadyHasAnyMageHand) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/mage-hand")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const arcaneTricksterMageHand = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "mage-hand")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, arcaneTricksterMageHand],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasArcaneTrickster, characterInfo?.arcaneTricksterMageHandOptOut, characterInfo?.classLevels?.rogue, characterInfo?.characterClass, characterInfo?.characterLevel, characterInfo?.spellsPrepared, setCharacterInfo]);
 
   useEffect(() => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -2956,7 +3040,10 @@ export const SpellList = (props) => {
     const blessedSelectedCount = blessedWarriorCantrips.length;
 
     const cantripHeading = (() => {
-      if (slotCount > 0) return `Cantrips Known: ${slotCount}`;
+      if (slotCount > 0) {
+        if (hasArcaneTrickster) return `Cantrips Known: ${slotCount} (includes Mage Hand)`;
+        return `Cantrips Known: ${slotCount}`;
+      }
       const hasPreparedCantrips = preparedAtLevel.length > 0;
       const hasExtraPreparedCantrips = (() => {
         if (!hasPreparedCantrips) return false;
