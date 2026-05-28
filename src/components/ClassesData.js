@@ -5422,39 +5422,37 @@
       },
       
       scout: {
+        // Source (feature text): https://dnd5e.wikidot.com/rogue:scout (CC BY-SA 3.0)
+        name: "Scout",
         features: [
           {
             id: "skirmisher",
             name: "Skirmisher",
-            desc: "At 3rd level, you can move up to half your speed as a reaction when an enemy ends its turn within 5 feet of you, without provoking opportunity attacks.",
-            level: 3,
-            tracked: false,
-          },
-          {
-            id: "survivalist",
-            name: "Survivalist",
-            desc: "At 3rd level, you gain expertise in the Nature and Survival skills, if you are proficient in them.",
+            desc: "Starting at 3rd level, you are difficult to pin down during a fight. You can move up to half your speed as a reaction when an enemy ends its turn within 5 feet of you. This movement doesn't provoke opportunity attacks.",
             level: 3,
             tracked: false,
           },
           {
             id: "superior_mobility",
             name: "Superior Mobility",
-            desc: "Starting at 9th level, your walking speed increases by 10 feet. If you have a climbing or swimming speed, it increases by 10 feet as well.",
+            desc: "At 9th level, your walking speed increases by 10 feet. If you have a climbing or swimming speed, this increase applies to that speed as well.",
             level: 9,
             tracked: false,
           },
           {
             id: "ambush_master",
             name: "Ambush Master",
-            desc: "At 13th level, you excel in leading ambushes. You have advantage on initiative rolls. In addition, the first creature you hit during the first round of combat has disadvantage on attack rolls against targets other than you until the start of your next turn.",
+            desc: [
+              "Starting at 13th level, you excel at leading ambushes and acting first in a fight.",
+              "You have advantage on initiative rolls. In addition, the first creature you hit during the first round of a combat becomes easier for you and others to strike; attack rolls against that target have advantage until the start of your next turn.",
+            ],
             level: 13,
             tracked: false,
           },
           {
             id: "sudden_strike",
             name: "Sudden Strike",
-            desc: "At 17th level, if you take the Attack action, you can make one additional weapon attack as a bonus action. This attack can benefit from your Sneak Attack, even if you've already used it this turn.",
+            desc: "Starting at 17th level, you can strike with deadly speed. If you take the Attack action on your turn, you can make one additional attack as a bonus action. This attack can benefit from your Sneak Attack even if you have already used it this turn, but you can't use your Sneak Attack against the same target more than once in a turn.",
             level: 17,
             tracked: false,
           },
