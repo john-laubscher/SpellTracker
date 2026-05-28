@@ -5250,46 +5250,56 @@
       },
 
       inquisitive: {
+        // Source (feature text): https://dnd5e.wikidot.com/rogue:inquisitive (CC BY-SA 3.0)
+        name: "Inquisitive",
         features: [
           {
             id: "ear_for_deceit",
             name: "Ear for Deceit",
-            desc: "Starting at 3rd level, whenever you make an Insight check to determine whether a creature is lying, treat a roll of 7 or lower on the d20 as an 8.",
+            desc: "When you choose this archetype at 3rd level, whenever you make a Wisdom (Insight) check to determine whether a creature is lying, treat a roll of 7 or lower on the d20 as an 8.",
             level: 3,
             tracked: false,
           },
           {
             id: "eye_for_detail",
             name: "Eye for Detail",
-            desc: "At 3rd level, you can use a bonus action to make a Perception check to spot a hidden creature or object, or an Investigation check to uncover or decipher clues.",
+            desc: "Starting at 3rd level, you can use a bonus action to make a Wisdom (Perception) check to spot a hidden creature or object, or an Intelligence (Investigation) check to uncover or decipher clues.",
             level: 3,
             tracked: false,
           },
           {
             id: "insightful_fighting",
             name: "Insightful Fighting",
-            desc: "At 3rd level, as a bonus action, you can target a creature you can see within 30 feet and make an Insight check contested by its Deception check. On a success, you can use Sneak Attack against it even if you donÃ¢â‚¬â„¢t have advantage, for up to 1 minute or until you use this feature on a different target.",
+            desc: [
+              "At 3rd level, as a bonus action, you make a Wisdom (Insight) check against a creature you can see that isn't incapacitated, contested by the target's Charisma (Deception) check.",
+              "On a success, you can use Sneak Attack against that target even if you don't have advantage on the attack roll (but not if you have disadvantage). This benefit lasts for 1 minute or until you successfully use this feature against a different target.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "steady_eye",
             name: "Steady Eye",
-            desc: "Starting at 9th level, you have advantage on Perception and Investigation checks if you move no more than half your speed on the same turn.",
+            desc: "At 9th level, you have advantage on any Wisdom (Perception) or Intelligence (Investigation) check if you move no more than half your speed on the same turn.",
             level: 9,
             tracked: false,
           },
           {
             id: "unerring_eye",
             name: "Unerring Eye",
-            desc: "At 13th level, as an action, you can sense the presence of illusions, shapechangers, or other forms of magic designed to deceive within 30 feet. You can use this feature a number of times equal to your Wisdom modifier, regaining all uses after a long rest.",
+            desc: [
+              "At 13th level, as an action, you sense the presence of illusions, shapechangers not in their original form, and other magic designed to deceive the senses within 30 feet of you, provided you aren't blinded or deafened.",
+              "You sense that something is attempting to trick you, but you gain no insight into what is hidden or into its true nature.",
+            ],
             level: 13,
-            tracked: true, // Wis mod/LR
+            tracked: true,
+            uses: "wis_mod",
+            recharge: "lr",
           },
           {
             id: "eye_for_weakness",
             name: "Eye for Weakness",
-            desc: "At 17th level, you can deal an extra 3d6 damage to your Sneak Attack when using Insightful Fighting against a target.",
+            desc: "At 17th level, while your Insightful Fighting applies to a creature, your Sneak Attack damage against that creature increases by 3d6.",
             level: 17,
             tracked: false,
           },
