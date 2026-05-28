@@ -5559,41 +5559,58 @@
       },
       
       swashbuckler: {
+        // Source (feature text): https://dnd5e.wikidot.com/rogue:swashbuckler (CC BY-SA 3.0)
+        name: "Swashbuckler",
         features: [
           {
             id: "fancy_footwork",
             name: "Fancy Footwork",
-            desc: "At 3rd level, during your turn, if you make a melee attack against a creature, that creature can't make opportunity attacks against you for the rest of your turn.",
+            desc: [
+              "When you choose this archetype at 3rd level, you learn how to land a strike and then slip away without reprisal. During your turn, if you make a melee attack against a creature, that creature can't make opportunity attacks against you for the rest of your turn.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "rakish_audacity",
             name: "Rakish Audacity",
-            desc: "At 3rd level, you add your Charisma modifier to your initiative rolls. Additionally, you can use Sneak Attack without advantage if no other creatures are within 5 feet of your target.",
+            desc: [
+              "Starting at 3rd level, your confidence propels you into battle. You can give yourself a bonus to your initiative rolls equal to your Charisma modifier.",
+              "You also gain an additional way to use your Sneak Attack; you don't need advantage on the attack roll to use your Sneak Attack against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll. All the other rules for Sneak Attack still apply to you.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "panache",
             name: "Panache",
-            desc: "At 9th level, you can make a Charisma (Persuasion) check contested by a creature's Insight. If you succeed, the creature is charmed by you or has disadvantage on attack rolls against targets other than you for 1 minute.",
+            desc: [
+              "At 9th level, your charm becomes extraordinarily beguiling. As an action, you can make a Charisma (Persuasion) check contested by a creature's Wisdom (Insight) check. The creature must be able to hear you, and the two of you must share a language.",
+              "If you succeed on the check and the creature is hostile to you, it has disadvantage on attack rolls against targets other than you and can't make opportunity attacks against targets other than you. This effect lasts for 1 minute, until one of your companions attacks the target or affects it with a spell, or until you and the target are more than 60 feet apart.",
+              "If you succeed on the check and the creature isn't hostile to you, it is charmed by you for 1 minute. While charmed, it regards you as a friendly acquaintance. This effect ends immediately if you or your companions do anything harmful to it.",
+            ],
             level: 9,
             tracked: false,
           },
           {
             id: "elegant_maneuver",
             name: "Elegant Maneuver",
-            desc: "Starting at 13th level, you can use a bonus action to gain advantage on your next Acrobatics or Athletics check during the same turn.",
+            desc: [
+              "Starting at 13th level, you can use a bonus action on your turn to gain advantage on the next Dexterity (Acrobatics) or Strength (Athletics) check you make during the same turn.",
+            ],
             level: 13,
             tracked: false,
           },
           {
             id: "master_duelist",
             name: "Master Duelist",
-            desc: "At 17th level, if you miss with an attack, you can roll the attack again with advantage. You can use this feature once per short or long rest.",
+            desc: [
+              "Beginning at 17th level, your mastery of the blade lets you turn failure into success in combat. If you miss with an attack roll, you can roll it again with advantage. Once you do so, you can't use this feature again until you finish a short or long rest.",
+            ],
             level: 17,
-            tracked: true, // 1/SR
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
           },
         ],
         subclassSpells: [],
