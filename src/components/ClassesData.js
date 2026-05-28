@@ -5359,41 +5359,63 @@
       },
 
       phantom: {
+        // Source (feature text): https://dnd5e.wikidot.com/rogue:phantom (CC BY-SA 3.0)
+        name: "Phantom",
         features: [
-          {
-            id: "whispers_of_the_dead",
-            name: "Whispers of the Dead",
-            desc: "At 3rd level, when you finish a short or long rest, you can choose one skill or tool proficiency that you lack and gain it as a ghostly presence shares its knowledge with you. This proficiency lasts until you choose this feature again.",
-            level: 3,
-            tracked: false,
-          },
+          // "Whispers of the Dead" intentionally omitted per app requirements.
           {
             id: "wails_from_the_grave",
             name: "Wails from the Grave",
-            desc: "At 3rd level, immediately after you deal Sneak Attack damage to a creature on your turn, you can target a second creature within 30 feet of the first. It takes half the number of Sneak Attack dice in necrotic damage. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: [
+              "At 3rd level, as you nudge someone closer to the grave, you can channel the power of death to harm someone else as well.",
+              "Immediately after you deal your Sneak Attack damage to a creature on your turn, you can target a second creature that you can see within 30 feet of the first creature. Roll half the number of Sneak Attack dice for your level (round up), and the second creature takes necrotic damage equal to the roll's total, as wails of the dead sound around them for a moment.",
+              "You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            ],
             level: 3,
-            tracked: true, // Uses = PB/LR
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
           },
           {
             id: "tokens_of_the_departed",
             name: "Tokens of the Departed",
-            desc: "At 9th level, when a creature dies within 30 feet of you, you can create a Soul Trinket. You can use these trinkets to gain advantages like adding a d6 to ability checks or saving throws, or asking the trinket's spirit a question. You can have a number of trinkets equal to your proficiency bonus.",
+            desc: [
+              "At 9th level, when a life ends in your presence, you're able to snatch a token from the departing soul, a sliver of its life essence that takes physical form: as a reaction when a creature you can see dies within 30 feet of you, you can open your free hand and cause a Tiny trinket to appear there, a soul trinket.",
+              "The DM determines the trinket's form or has you roll on the Trinkets table in the Player's Handbook to generate it.",
+              "You can have a maximum number of soul trinkets equal to your proficiency bonus, and you can't create one while at your maximum.",
+              "You can use soul trinkets in the following ways:",
+              "• While a soul trinket is on your person, you have advantage on death saving throws and Constitution saving throws, for your vitality is enhanced by the life essence within the object.",
+              "• When you deal Sneak Attack damage on your turn, you can destroy one of your soul trinkets that's on your person and then immediately use Wails from the Grave, without expending a use of that feature.",
+              "• As an action, you can destroy one of your soul trinkets, no matter where it's located. When you do so, you can ask the spirit associated with the trinket one question. The spirit appears to you and answers in a language it knew in life. It's under no obligation to be truthful, and it answers as concisely as possible, eager to be free. The spirit knows only what it knew in life, as determined by the DM.",
+            ],
             level: 9,
-            tracked: true, // Uses = PB  **Maybe not reset on a LR?**
+            tracked: true,
+            uses: "pb",
           },
           {
             id: "ghost_walk",
             name: "Ghost Walk",
-            desc: "At 13th level, as a bonus action, you can assume a spectral form for 10 minutes. While in this form, you gain a flying speed of 10 feet, can move through objects, and have resistance to all damage except force damage. You can use this feature once per long rest unless you expend a Soul Trinket to use it again.",
+            desc: [
+              "At 13th level, you can phase partially into the realm of the dead, becoming like a ghost. As a bonus action, you assume a spectral form.",
+              "While in this form, you have a flying speed of 10 feet, you can hover, and attack rolls have disadvantage against you. You can also move through creatures and objects as if they were difficult terrain, but you take 1d10 force damage if you end your turn inside a creature or an object.",
+              "You stay in this form for 10 minutes or until you end it as a bonus action. To use this feature again, you must finish a long rest or destroy one of your soul trinkets as part of the bonus action you use to activate Ghost Walk.",
+            ],
             level: 13,
-            tracked: true, // 1/LR or expend trinket
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+            rechargeBySpendingFeatureId: "tokens_of_the_departed",
           },
           {
             id: "death's_friend",
             name: "Death's Friend",
-            desc: "At 17th level, your association with death has become so close that you gain the following benefits: When you use your Wails from the Grave, you can now deal the necrotic damage to both the first and the second creature. At the end of a long rest, a soul trinket appears in your hand if you don't have any soul trinkets, as the spirits of the dead are drawn to you.",
+            desc: [
+              "At 17th level, your association with death has become so close that you gain the following benefits:",
+              "• When you use your Wails from the Grave, you can now deal the necrotic damage to both the first and the second creature.",
+              "• At the end of a long rest, a soul trinket appears in your hand if you don't have any soul trinkets, as the spirits of the dead are drawn to you.",
+            ],
             level: 17,
-            tracked: true, // Expend trinket
+            tracked: false,
           },
         ],
         subclassSpells: [],
@@ -5562,13 +5584,6 @@
         ],
         subclassSpells: [],
       },
-      
-
-      phantom: "",
-      scout: "",
-      soulknife: "",
-      swashbuckler: "",
-      thief: "",
     },
   },
   sorceror: {

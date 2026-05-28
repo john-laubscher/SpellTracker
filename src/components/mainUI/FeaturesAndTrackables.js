@@ -1129,6 +1129,22 @@ const FeatureDisplay = ({
 
             const spentUses = clampInt(tracker?.spentUses ?? 0, 0, typeof usesCount === "number" ? usesCount : 0);
 
+            const rechargeBySpendingFeatureId = String(feature?.rechargeBySpendingFeatureId || "").trim();
+            const rechargeBySpendingTrackerKey = rechargeBySpendingFeatureId
+              ? `${String(characterClass || "unknown")}:${rechargeBySpendingFeatureId}`
+              : null;
+            const rechargeBySpendingTracker = rechargeBySpendingTrackerKey
+              ? featureTrackers?.[rechargeBySpendingTrackerKey] || {}
+              : null;
+            const rechargeBySpendingAvailable = rechargeBySpendingTrackerKey
+              ? clampInt(rechargeBySpendingTracker?.spentUses ?? 0, 0, 50)
+              : 0;
+            const rechargeBySpendingEligible =
+              Boolean(rechargeBySpendingTrackerKey) &&
+              typeof usesCount === "number" &&
+              Number.isFinite(usesCount) &&
+              spentUses >= usesCount;
+
             return (
               <>
                 {Array.from({ length: usesCount }).map((_, idx) => (
@@ -1154,6 +1170,50 @@ const FeatureDisplay = ({
                     }}
                   />
                 ))}
+                {rechargeBySpendingTrackerKey ? (
+                  <Tooltip
+                    arrow
+                    title={
+                      !rechargeBySpendingEligible
+                        ? "Already recharged"
+                        : rechargeBySpendingAvailable > 0
+                        ? "Destroy 1 Soul Trinket to recharge this feature"
+                        : "No Soul Trinkets available"
+                    }
+                  >
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label="Spend a Soul Trinket to recharge this feature"
+                        onClick={() => {
+                          if (!rechargeBySpendingEligible) return;
+                          if (rechargeBySpendingAvailable <= 0) return;
+                          setFeatureTrackers((prev) => {
+                            const prevSafe = prev || {};
+                            const prevRechargeTracker = prevSafe?.[rechargeBySpendingTrackerKey] || {};
+                            const prevRechargeCount = clampInt(prevRechargeTracker?.spentUses ?? 0, 0, 50);
+                            const nextRechargeCount = Math.max(0, prevRechargeCount - 1);
+                            return {
+                              ...prevSafe,
+                              [rechargeBySpendingTrackerKey]: {
+                                ...prevRechargeTracker,
+                                spentUses: nextRechargeCount,
+                              },
+                              [trackerKey]: {
+                                ...(prevSafe?.[trackerKey] || {}),
+                                spentUses: 0,
+                              },
+                            };
+                          });
+                        }}
+                        disabled={!rechargeBySpendingEligible || rechargeBySpendingAvailable <= 0}
+                        sx={{ ml: 0.25, p: 0.25, opacity: 0.9 }}
+                      >
+                        <RemoveIcon fontSize="inherit" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                ) : null}
                 {feature?.allowExtraUses ? (
                   <>
                     <Tooltip arrow title="Decrease bonus uses">
