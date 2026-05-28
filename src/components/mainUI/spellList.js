@@ -36,6 +36,7 @@ import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
+import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -309,6 +310,8 @@ export const SpellList = (props) => {
   const subclassMeta = classMeta?.subclasses?.[characterInfo?.subclass] || null;
   const subclassSpellcasting = subclassMeta?.spellcasting || null;
   const characterLevel = Number(characterInfo?.characterLevel) || 0;
+  const showSoulknifePsionicUses =
+    classKey === "rogue" && characterInfo?.subclass === "soulknife" && characterLevel >= 9;
   const hasSubclassSpellcasting =
     Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
   const spellTableKey = hasSubclassSpellcasting ? String(subclassSpellcasting?.spellTableKey || "") : String(classKey || "");
@@ -4338,7 +4341,7 @@ export const SpellList = (props) => {
             ) : null}
           </Box>
         ) : (
-          <PreparedSpellsStatus label="Spell Tracker" />
+          <PreparedSpellsStatus label={showSoulknifePsionicUses ? "Psionic Energy Die Uses" : "Spell Tracker"} />
         )}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
           {!effectiveIsNonCaster ? (
@@ -4354,17 +4357,23 @@ export const SpellList = (props) => {
           ) : null}
         </Box>
       </Box>
-      {renderBattleMasterManeuvers()}
-      {renderPCSpells("cantrips", 0)}
-      {renderPCSpells("first", 1)}
-      {renderPCSpells("second", 2)}
-      {renderPCSpells("third", 3)}
-      {renderPCSpells("fourth", 4)}
-      {renderPCSpells("fifth", 5)}
-      {renderPCSpells("sixth", 6)}
-      {renderPCSpells("seventh", 7)}
-      {renderPCSpells("eighth", 8)}
-      {renderPCSpells("ninth", 9)}
+      {showSoulknifePsionicUses ? (
+        <SoulknifePsionicEnergyDieUsesPanel />
+      ) : (
+        <>
+          {renderBattleMasterManeuvers()}
+          {renderPCSpells("cantrips", 0)}
+          {renderPCSpells("first", 1)}
+          {renderPCSpells("second", 2)}
+          {renderPCSpells("third", 3)}
+          {renderPCSpells("fourth", 4)}
+          {renderPCSpells("fifth", 5)}
+          {renderPCSpells("sixth", 6)}
+          {renderPCSpells("seventh", 7)}
+          {renderPCSpells("eighth", 8)}
+          {renderPCSpells("ninth", 9)}
+        </>
+      )}
       {renderDailySpellsList(characterInfo, setCharacterInfo)}
 
 	      <DomainSpellSwapModal
