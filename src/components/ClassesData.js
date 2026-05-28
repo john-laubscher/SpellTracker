@@ -5308,39 +5308,49 @@
       },
 
       mastermind: {
+        // Source (feature text): https://dnd5e.wikidot.com/rogue:mastermind (CC BY-SA 3.0)
+        // Note: "Master of Intrigue" intentionally omitted per app requirements.
+        name: "Mastermind",
         features: [
-          {
-            id: "master_of_intrigue",
-            name: "Master of Intrigue",
-            desc: "Starting at 3rd level, you gain proficiency in the Disguise Kit, forgery kit, and two gaming sets. You can mimic speech and accents you have heard for at least 1 minute.",
-            level: 3,
-            tracked: false,
-          },
           {
             id: "master_of_tactics",
             name: "Master of Tactics",
-            desc: "At 3rd level, you can use the Help action as a bonus action. When you use the Help action to aid an ally in attacking a creature, the target of that attack can be within 30 feet of you, rather than 5 feet, if the target can see or hear you.",
+            desc: [
+              "Starting at 3rd level, you can take the Help action as a bonus action.",
+              "When you Help an ally attack a creature, that creature can be up to 30 feet away (instead of 5 feet) as long as it can see or hear you.",
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "insightful_manipulator",
             name: "Insightful Manipulator",
-            desc: "At 9th level, if you spend at least 1 minute observing or conversing with another creature, you can learn certain information about its capabilities, including Intelligence, Wisdom, Charisma scores, or class levels, compared to your own.",
+            desc: [
+              "Starting at 9th level, after you spend at least 1 minute observing or conversing with a creature outside combat, you can gauge some of its capabilities relative to yours.",
+              "Pick two: Intelligence, Wisdom, Charisma, or (if any) its class levels. The DM tells you whether the creature is lower than, equal to, or higher than you for each chosen category.",
+              "At the DM's discretion, you might also recognize something about the creature's history or a personality trait.",
+            ],
             level: 9,
             tracked: false,
           },
           {
             id: "misdirection",
             name: "Misdirection",
-            desc: "Starting at 13th level, you can use your reaction to redirect an attack targeting you to another creature within 5 feet of you, provided the attack roll would hit the other creature.",
+            desc: [
+              "Beginning at 13th level, you can deflect danger onto someone else in the right moment.",
+              "When an attack targets you while a creature within 5 feet of you is providing cover against that attack, you can use your reaction to make the attack target that creature instead.",
+            ],
             level: 13,
             tracked: false,
           },
           {
             id: "soul_of_deceit",
             name: "Soul of Deceit",
-            desc: "At 17th level, your thoughts can't be read unless you allow it, and you can present false thoughts. You are immune to being charmed, and magic that would determine if you're telling the truth indicates you are being truthful.",
+            desc: [
+              "Starting at 17th level, your mind is closed to mind-reading unless you permit it.",
+              "If a creature tries to read your thoughts, you can attempt to plant false ones with a Charisma (Deception) check opposed by its Wisdom (Insight) check.",
+              "When magic tries to judge whether you're lying (or compels honesty), you can choose to register as truthful and you can't be forced to speak only the truth by magic.",
+            ],
             level: 17,
             tracked: false,
           },
