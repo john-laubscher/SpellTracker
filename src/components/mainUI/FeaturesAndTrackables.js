@@ -26,7 +26,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 
-import { AuthContext, CharacterInfoContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
+import { AuthContext, CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
 import { HalfElfVersatilityArr, RaceFeaturesData } from "../../components/RacesData";
 import AddFeatureModal from "./AddFeatureModal";
@@ -68,8 +68,6 @@ import {
   setFeatureChoice,
 } from "../../utils/untrackedFeatureChoices";
 
-const FEATURE_TRACKERS_STORAGE_KEY = "spelltracker_featureTrackers_v1";
-
 const getRogueSneakAttackDice = (rogueLevel) => {
   const level = Number(rogueLevel || 0);
   if (level >= 19) return "10d6";
@@ -84,25 +82,6 @@ const getRogueSneakAttackDice = (rogueLevel) => {
   return "1d6";
 };
 
-const loadFeatureTrackers = () => {
-  try {
-    const raw = localStorage.getItem(FEATURE_TRACKERS_STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed;
-  } catch {
-    return {};
-  }
-};
-
-const saveFeatureTrackers = (trackers) => {
-  try {
-    localStorage.setItem(FEATURE_TRACKERS_STORAGE_KEY, JSON.stringify(trackers || {}));
-  } catch {
-    // ignore write errors
-  }
-};
 
 const FeatureAccordionRow = ({
   feature,
@@ -444,6 +423,7 @@ const FeatureDisplay = ({
   characterClass,
   characterLevel,
 }) => {
+  const { featureTrackers, setFeatureTrackers } = useContext(FeatureTrackersContext);
   const trackedFeatures = features.filter(
     (feature) => feature?.tracked || Boolean(feature?.sharedUsePoolKey)
   );
@@ -453,7 +433,6 @@ const FeatureDisplay = ({
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
-  const [featureTrackers, setFeatureTrackers] = React.useState(() => loadFeatureTrackers());
   const [untrackedExpanded, setUntrackedExpanded] = React.useState(false);
   const [activeDicePoolEditorKey, setActiveDicePoolEditorKey] = React.useState(null);
 
@@ -462,10 +441,6 @@ const FeatureDisplay = ({
       if (touchHideTimerRef.current) window.clearTimeout(touchHideTimerRef.current);
     };
   }, []);
-
-  React.useEffect(() => {
-    saveFeatureTrackers(featureTrackers);
-  }, [featureTrackers]);
 
   const getUsesCount = (feature) => {
     if (feature?.recharge === "rage") return 1;
@@ -655,6 +630,8 @@ const FeatureDisplay = ({
 
                 if (feature?.poolSize === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
                 if (feature?.poolSize === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                if (feature?.poolSize === "pb") return Math.max(0, Math.trunc(Number(proficiencyBonusValue) || 0));
+                if (feature?.poolSize === "pbx2") return Math.max(0, Math.trunc(Number(proficiencyBonusValue) || 0)) * 2;
                 return Math.max(0, Math.trunc(levelValue));
               })();
 

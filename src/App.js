@@ -4,8 +4,9 @@ import { Routes, Route } from "react-router-dom";
 import MainUI from "./components/mainUI/index.js";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { AuthContext, CharacterInfoContext, ClassSpellsDetailsContext } from "./Contexts/Context";
+import { AuthContext, CharacterInfoContext, ClassSpellsDetailsContext, FeatureTrackersContext } from "./Contexts/Context";
 import ThemeConfig, { BackgroundWrapper, CharCreationBGPic } from "./components/ThemeConfig";
+import { loadFeatureTrackersFromStorage, saveFeatureTrackersToStorage } from "./utils/featureTrackersStorage";
 
 const loadPreparedSpellsFromStorage = () => {
   try {
@@ -243,6 +244,8 @@ function App() {
     return { token: token || null, user };
   });
 
+  const [featureTrackers, setFeatureTrackers] = useState(() => loadFeatureTrackersFromStorage());
+
   const [characterInfo, setCharacterInfo] = useState(() => {
     const persistedPrepared = loadPreparedSpellsFromStorage();
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
@@ -347,6 +350,10 @@ function App() {
     8: {},
     9: {},
   })
+
+  useEffect(() => {
+    saveFeatureTrackersToStorage(featureTrackers);
+  }, [featureTrackers]);
 
   useEffect(() => {
     if (!auth.token || auth.user) return;
@@ -659,17 +666,19 @@ function App() {
        <ThemeConfig>
         <AuthContext.Provider value={{ auth, setAuth }}>
           <CharacterInfoContext.Provider value={{ characterInfo, setCharacterInfo }}>
-            <ClassSpellsDetailsContext.Provider value={{ classSpellsDetails, setClassSpellsDetails }}>
-              <Routes>
-                <Route path="/" element={
-                  <BackgroundWrapper bgImage={CharCreationBGPic}>
-                      <CharacterCreationForm />
-                  </BackgroundWrapper>
-                }></Route>
+            <FeatureTrackersContext.Provider value={{ featureTrackers, setFeatureTrackers }}>
+              <ClassSpellsDetailsContext.Provider value={{ classSpellsDetails, setClassSpellsDetails }}>
+                <Routes>
+                  <Route path="/" element={
+                    <BackgroundWrapper bgImage={CharCreationBGPic}>
+                        <CharacterCreationForm />
+                    </BackgroundWrapper>
+                  }></Route>
 
-                <Route path="/mainUI" element={<MainUI />}></Route>
-              </Routes>
-            </ClassSpellsDetailsContext.Provider>
+                  <Route path="/mainUI" element={<MainUI />}></Route>
+                </Routes>
+              </ClassSpellsDetailsContext.Provider>
+            </FeatureTrackersContext.Provider>
           </CharacterInfoContext.Provider>
         </AuthContext.Provider>
        </ThemeConfig>
