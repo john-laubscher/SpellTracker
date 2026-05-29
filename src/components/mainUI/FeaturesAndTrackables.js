@@ -50,6 +50,7 @@ import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
+import MetamagicOptionsModal from "./MetamagicOptionsModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -420,6 +421,7 @@ const FeatureDisplay = ({
   druidLevel,
   fighterLevel,
   paladinLevel,
+  sorcererLevel,
   characterClass,
   characterLevel,
 }) => {
@@ -923,6 +925,7 @@ const FeatureDisplay = ({
                 if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
                 if (feature?.poolMax === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
                 if (feature?.poolMax === "paladin_level") return Math.max(0, Math.trunc(Number(paladinLevel) || 0));
+                if (feature?.poolMax === "sorcerer_level") return Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
                 if (feature?.poolMax === "paladin_level_x5") return Math.max(0, Math.trunc(Number(paladinLevel) || 0)) * 5;
                 if (feature?.poolMax === "character_level") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
                 if (typeof feature?.poolMax === "number" && Number.isFinite(feature.poolMax)) {
@@ -974,6 +977,7 @@ const FeatureDisplay = ({
                 if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
                 if (feature?.poolMax === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
                 if (feature?.poolMax === "paladin_level") return Math.max(0, Math.trunc(Number(paladinLevel) || 0));
+                if (feature?.poolMax === "sorcerer_level") return Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
                 if (feature?.poolMax === "paladin_level_x5") return Math.max(0, Math.trunc(Number(paladinLevel) || 0)) * 5;
                 if (feature?.poolMax === "character_level") return Math.max(0, Math.trunc(Number(characterLevel) || 0));
                 if (typeof feature?.poolMax === "number" && Number.isFinite(feature.poolMax)) {
@@ -1323,6 +1327,16 @@ const FeaturesAndTrackables = () => {
     return 0;
   }, [characterInfo?.classLevels?.paladin, characterClass, characterLevel]);
 
+  const sorcererLevel = React.useMemo(() => {
+    const raw = characterInfo?.classLevels?.sorcerer;
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+    if (characterClass === "sorcerer" || characterClass === "sorceror") {
+      return Math.max(0, Math.trunc(Number(characterLevel) || 0));
+    }
+    return 0;
+  }, [characterInfo?.classLevels?.sorcerer, characterClass, characterLevel]);
+
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
   const [manageModal, setManageModal] = React.useState({ open: false, kind: "class" });
@@ -1342,6 +1356,7 @@ const FeaturesAndTrackables = () => {
   const [additionalFightingStyleModalOpen, setAdditionalFightingStyleModalOpen] = React.useState(false);
   const [blessedWarriorCantripsModalOpen, setBlessedWarriorCantripsModalOpen] = React.useState(false);
   const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
+  const [metamagicOptionsModalOpen, setMetamagicOptionsModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -2011,6 +2026,46 @@ const FeaturesAndTrackables = () => {
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel="Untracked Class Features"
               renderUntrackedTrailingControls={(feature) => {
+                if ((characterClass === "sorcerer" || characterClass === "sorceror") && feature?.id === "metamagic") {
+                  const selectedCount = Array.isArray(characterInfo?.metamagicOptions)
+                    ? characterInfo.metamagicOptions.length
+                    : 0;
+                  const level = Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
+                  const allowed = level < 3 ? 0 : level >= 17 ? 4 : level >= 10 ? 3 : 2;
+                  const isOver = selectedCount > allowed;
+                  const isUnder = selectedCount < allowed;
+
+                  return (
+                    <Tooltip arrow title={`Choose Metamagic options (${selectedCount}/${allowed})`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Metamagic options"
+                        onClick={() => setMetamagicOptionsModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: isOver
+                            ? "rgba(194, 65, 12, 0.10)"
+                            : isUnder
+                              ? "rgba(244, 233, 221, 0.65)"
+                              : "rgba(20, 184, 166, 0.10)",
+                          "&:hover": {
+                            backgroundColor: isOver
+                              ? "rgba(194, 65, 12, 0.14)"
+                              : isUnder
+                                ? "rgba(244, 233, 221, 0.85)"
+                                : "rgba(20, 184, 166, 0.14)",
+                          },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (characterClass !== "ranger") return null;
                 if (feature?.id !== "favored_enemy" && feature?.id !== "natural_explorer") return null;
 
@@ -2052,9 +2107,112 @@ const FeaturesAndTrackables = () => {
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
               paladinLevel={paladinLevel}
+              sorcererLevel={sorcererLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
-              renderDetailsHeaderForFeature={() => null}
+              renderDetailsHeaderForFeature={(feature) => {
+                if (!(characterClass === "sorcerer" || characterClass === "sorceror")) return null;
+                if (feature?.id !== "metamagic") return null;
+
+                const selectedIds = Array.isArray(characterInfo?.metamagicOptions)
+                  ? characterInfo.metamagicOptions
+                  : [];
+                const allOptions =
+                  classesData?.sorcerer?.metamagicOptions || classesData?.sorceror?.metamagicOptions || [];
+
+                const selected = selectedIds
+                  .map((id) => allOptions.find((opt) => String(opt?.id || "") === String(id)))
+                  .filter(Boolean);
+
+                if (selected.length === 0) {
+                  return (
+                    <p style={{ margin: "2px 0", opacity: 0.8 }}>
+                      <em>No Metamagic options selected yet.</em>
+                    </p>
+                  );
+                }
+
+                return (
+                  <div style={{ margin: "2px 0 8px 0" }}>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Chosen Metamagic options:</strong>
+                    </p>
+                    {selected.map((opt) => {
+                      const descLines = Array.isArray(opt?.desc)
+                        ? opt.desc
+                        : opt?.desc
+                          ? [String(opt.desc)]
+                          : [];
+                      const cost = opt?.cost;
+                      const costLabel =
+                        cost === "spell_level"
+                          ? "Cost: spell level (1 for cantrip)"
+                          : Number.isFinite(Number(cost))
+                            ? `Cost: ${Number(cost)} sorcery point${Number(cost) === 1 ? "" : "s"}`
+                            : "";
+
+                      return (
+                        <Accordion
+                          key={`metamagic:${opt.id}`}
+                          disableGutters
+                          elevation={0}
+                          sx={{
+                            backgroundColor: "transparent",
+                            "&:before": { display: "none" },
+                            "&.Mui-expanded": { margin: 0 },
+                          }}
+                        >
+                          <AccordionSummary
+                            expandIcon={<ExpandMoreIcon sx={{ fontSize: "18px" }} />}
+                            sx={{
+                              minHeight: 32,
+                              px: 0.5,
+                              py: 0,
+                              "& .MuiAccordionSummary-content": {
+                                margin: "4px 0 !important",
+                                alignItems: "center",
+                                gap: 0.5,
+                                width: "100%",
+                                display: "flex",
+                              },
+                              "&.Mui-expanded": { minHeight: 32 },
+                            }}
+                          >
+                            <Typography sx={{ fontSize: "13px", fontWeight: 700, flexGrow: 1, minWidth: 0 }}>
+                              {opt?.name}
+                            </Typography>
+                            {costLabel ? (
+                              <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "rgba(62, 39, 35, 0.75)" }}>
+                                {costLabel.replace(/^Cost:\s*/i, "")}
+                              </Typography>
+                            ) : null}
+                          </AccordionSummary>
+                          <AccordionDetails
+                            sx={{
+                              px: 1.5,
+                              py: 1,
+                              backgroundColor: "rgba(255,255,255,0.5)",
+                              borderRadius: "4px",
+                              mx: 0.5,
+                              mb: 0.5,
+                            }}
+                          >
+                            <Typography component="div" sx={{ fontSize: "13px", "& p": { margin: "2px 0" } }}>
+                              {descLines.length === 0 ? (
+                                <p style={{ opacity: 0.7 }}>
+                                  <em>No description available.</em>
+                                </p>
+                              ) : (
+                                descLines.map((line, idx) => <p key={`metamagic:${opt.id}:desc:${idx}`}>{line}</p>)
+                              )}
+                            </Typography>
+                          </AccordionDetails>
+                        </Accordion>
+                      );
+                    })}
+                  </div>
+                );
+              }}
             />
           </Grid>
 
@@ -2075,6 +2233,7 @@ const FeaturesAndTrackables = () => {
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
               paladinLevel={paladinLevel}
+              sorcererLevel={sorcererLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
               renderDetailsHeaderForFeature={(feature) => {
@@ -2875,6 +3034,11 @@ const FeaturesAndTrackables = () => {
       <RuneKnightRunesModal
         open={runeKnightRunesModalOpen}
         onClose={() => setRuneKnightRunesModalOpen(false)}
+      />
+
+      <MetamagicOptionsModal
+        open={metamagicOptionsModalOpen}
+        onClose={() => setMetamagicOptionsModalOpen(false)}
       />
 
       <FeatureChoiceModal

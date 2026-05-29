@@ -5671,31 +5671,140 @@
       },
     },
   },
-  sorceror: {
+  sorcerer: {
     hitDice: "D6",
     isSpellCaster: "refer to spellTables",
     spellcastingAbility: "cha",
     classFeatures: [
       {
+        id: "sorcery_points",
+        name: "Sorcery Points",
+        desc: [
+          "You have sorcery points equal to your sorcerer level.",
+          "You regain all spent sorcery points when you finish a long rest.",
+        ],
+        level: 1,
+        tracked: true,
+        trackedMode: "poolDropdown",
+        poolMax: "sorcerer_level",
+        recharge: "lr",
+      },
+      {
         id: "font_of_magic",
         name: "Font of Magic",
-        desc: "You have a pool of sorcery points that you can use to create spell slots or fuel Metamagic.",
+        desc: [
+          "At 2nd level, you tap into a deep wellspring of magic within yourself. This wellspring is represented by sorcery points, which allow you to create a variety of magical effects.",
+          "Flexible Casting: You can use your sorcery points to gain additional spell slots, or sacrifice spell slots to gain additional sorcery points.",
+          "Creating Spell Slots (bonus action): 1st (2 points), 2nd (3), 3rd (5), 4th (6), 5th (7). You can create spell slots no higher than 5th. Any spell slot you create with this feature vanishes when you finish a long rest.",
+          "Converting a Spell Slot to Sorcery Points (bonus action): expend one spell slot and gain a number of sorcery points equal to the slot's level.",
+        ],
         level: 2,
-        tracked: false, // Comment: Refer to chart for sorcery points
+        tracked: false,
       },
       {
         id: "metamagic",
         name: "Metamagic",
-        desc: "You gain the ability to twist spells to suit your needs.",
+        desc: [
+          "At 3rd level, you gain the ability to twist your spells to suit your needs.",
+          "You gain two Metamagic options of your choice. You gain another one at 10th and 17th level.",
+          "You can use only one Metamagic option on a spell when you cast it, unless otherwise noted.",
+        ],
         level: 3,
-        tracked: false, // Maybe part of Char Creation user an choose metamagic if higher than lvl 3 (gain 1 more at 10 and 17 too)
+        tracked: false,
       },
       {
         id: "sorcerous_restoration",
         name: "Sorcerous Restoration",
-        desc: "You regain 4 expended sorcery points whenever you finish a short rest.",
+        desc: "At 20th level, you regain 4 expended sorcery points whenever you finish a short rest.",
         level: 20,
         tracked: false,
+      },
+    ],
+    metamagicOptions: [
+      {
+        id: "careful_spell",
+        name: "Careful Spell",
+        cost: 1,
+        desc: [
+          "When you cast a spell that forces other creatures to make a saving throw, you can protect some of those creatures from the spell's full force.",
+          "Spend 1 sorcery point and choose a number of those creatures up to your Charisma modifier (minimum of one creature). A chosen creature automatically succeeds on its saving throw against the spell.",
+        ],
+      },
+      {
+        id: "distant_spell",
+        name: "Distant Spell",
+        cost: 1,
+        desc: [
+          "When you cast a spell that has a range of 5 feet or greater, you can spend 1 sorcery point to double the range of the spell.",
+          "When you cast a spell that has a range of touch, you can spend 1 sorcery point to make the range of the spell 30 feet.",
+        ],
+      },
+      {
+        id: "empowered_spell",
+        name: "Empowered Spell",
+        cost: 1,
+        desc: [
+          "When you roll damage for a spell, you can spend 1 sorcery point to reroll a number of the damage dice up to your Charisma modifier (minimum of one). You must use the new rolls.",
+          "You can use Empowered Spell even if you have already used a different Metamagic option during the casting of the spell.",
+        ],
+      },
+      {
+        id: "extended_spell",
+        name: "Extended Spell",
+        cost: 1,
+        desc: [
+          "When you cast a spell that has a duration of 1 minute or longer, you can spend 1 sorcery point to double its duration, to a maximum duration of 24 hours.",
+        ],
+      },
+      {
+        id: "heightened_spell",
+        name: "Heightened Spell",
+        cost: 3,
+        desc: [
+          "When you cast a spell that forces a creature to make a saving throw to resist its effects, you can spend 3 sorcery points to give one target of the spell disadvantage on its first saving throw made against the spell.",
+        ],
+      },
+      {
+        id: "quickened_spell",
+        name: "Quickened Spell",
+        cost: 2,
+        desc: [
+          "When you cast a spell that has a casting time of 1 action, you can spend 2 sorcery points to change the casting time to 1 bonus action for this casting.",
+        ],
+      },
+      {
+        id: "seeking_spell",
+        name: "Seeking Spell",
+        cost: 2,
+        desc: [
+          "If you make an attack roll for a spell and miss, you can spend 2 sorcery points to reroll the d20, and you must use the new roll.",
+          "You can use Seeking Spell even if you have already used a different Metamagic option during the casting of the spell.",
+        ],
+      },
+      {
+        id: "subtle_spell",
+        name: "Subtle Spell",
+        cost: 1,
+        desc: [
+          "When you cast a spell, you can spend 1 sorcery point to cast it without any somatic or verbal components.",
+        ],
+      },
+      {
+        id: "transmuted_spell",
+        name: "Transmuted Spell",
+        cost: 1,
+        desc: [
+          "When you cast a spell that deals a type of damage from the following list, you can spend 1 sorcery point to change that damage type to one of the other listed types: acid, cold, fire, lightning, poison, thunder.",
+        ],
+      },
+      {
+        id: "twinned_spell",
+        name: "Twinned Spell",
+        cost: "spell_level",
+        desc: [
+          "When you cast a spell that targets only one creature and doesn't have a range of self, you can spend a number of sorcery points equal to the spell's level to target a second creature in range with the same spell (1 sorcery point if the spell is a cantrip).",
+          "To be eligible, a spell must be incapable of targeting more than one creature at the spell's current level.",
+        ],
       },
     ],
     subclasses: {
@@ -5793,6 +5902,9 @@
     },
   },
 };
+
+// Backward-compatible alias: older saves / code used "sorceror".
+ClassesData.sorceror = ClassesData.sorcerer;
 
 export default ClassesData;
 

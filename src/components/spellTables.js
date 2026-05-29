@@ -176,7 +176,7 @@ export const spellTables = {
     20: { cantrips: 4, spellsKnown: 13, first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
   },
 
-  sorceror: {
+  sorcerer: {
     1: { cantrips: 4, spellsKnown: 2, first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     2: { cantrips: 4, spellsKnown: 3, first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
     3: { cantrips: 4, spellsKnown: 4, first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
@@ -249,5 +249,8 @@ export const spellTables = {
 
   //Will need to add artificer cantrips, and maybe infusions tracker as well)
 };
+
+// Backward-compatible alias: older saves / code used "sorceror".
+spellTables.sorceror = spellTables.sorcerer;
 
 export default spellTables;

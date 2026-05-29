@@ -156,6 +156,18 @@ const loadArcaneShotBonusOptionsFromStorage = () => {
   }
 };
 
+const loadMetamagicOptionsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_metamagicOptions");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((x) => typeof x === "string" && x.trim().length > 0);
+  } catch {
+    return null;
+  }
+};
+
 const loadBattleMasterManeuversFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_battleMasterManeuvers");
@@ -260,6 +272,7 @@ function App() {
     const persistedArcaneShotOptions = loadArcaneShotOptionsFromStorage();
     const persistedArcaneShotBonusOptions = loadArcaneShotBonusOptionsFromStorage();
     const persistedBattleMasterManeuvers = loadBattleMasterManeuversFromStorage();
+    const persistedMetamagicOptions = loadMetamagicOptionsFromStorage();
     const persistedAdditionalFightingStyle = loadAdditionalFightingStyleFromStorage();
     const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
@@ -331,6 +344,7 @@ function App() {
       arcaneShotOptions: Array.isArray(persistedArcaneShotOptions) ? persistedArcaneShotOptions : [],
       arcaneShotBonusOptions: Number.isFinite(persistedArcaneShotBonusOptions) ? persistedArcaneShotBonusOptions : 0,
       battleMasterManeuvers: Array.isArray(persistedBattleMasterManeuvers) ? persistedBattleMasterManeuvers : [],
+      metamagicOptions: Array.isArray(persistedMetamagicOptions) ? persistedMetamagicOptions : [],
       showManeuversInSpellTracker: typeof persistedShowManeuversInSpellTracker === "boolean" ? persistedShowManeuversInSpellTracker : false,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
       fourElementsDisciplines: Array.isArray(persistedFourElementsDisciplines) ? persistedFourElementsDisciplines : [],
@@ -515,6 +529,17 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.battleMasterManeuvers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_metamagicOptions",
+        JSON.stringify(characterInfo.metamagicOptions || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.metamagicOptions]);
 
   useEffect(() => {
     try {
