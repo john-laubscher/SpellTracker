@@ -27,7 +27,7 @@ export const CharacterCreationForm = (props) => {
   const NO_CLASS = "noClass";
   const NO_SUBCLASS = "noSubclass";
 
-  const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorceror", "warlock", "wizard"];
+  const characterClasses = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"];
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 

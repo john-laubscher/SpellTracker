@@ -304,8 +304,9 @@ const THOUSAND_FORMS_TOOLTIP =
 
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
-  const classKey = characterInfo?.characterClass;
-  const classMeta = ClassesData?.[classKey] || null;
+  const rawClassKey = characterInfo?.characterClass;
+  const classKey = rawClassKey === "sorceror" ? "sorcerer" : rawClassKey;
+  const classMeta = ClassesData?.[classKey] || ClassesData?.[rawClassKey] || null;
   const isNonCaster = classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster";
   const subclassMeta = classMeta?.subclasses?.[characterInfo?.subclass] || null;
   const subclassSpellcasting = subclassMeta?.spellcasting || null;
