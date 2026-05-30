@@ -27,6 +27,7 @@ import PrepareDruidicWarriorCantripButton from "./PrepareDruidicWarriorCantripBu
 import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
 import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
+import PsionicSpellSwapModal from "./PsionicSpellSwapModal";
 import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
@@ -495,6 +496,13 @@ export const SpellList = (props) => {
     open: false,
     spellLevel: 0,
     domainKey: "",
+    originalSpell: null,
+  });
+
+  const [psionicSwapModal, setPsionicSwapModal] = React.useState({
+    open: false,
+    spellLevel: 0,
+    psionicKey: "",
     originalSpell: null,
   });
 
@@ -1076,6 +1084,124 @@ export const SpellList = (props) => {
     characterInfo?.characterLevel,
     characterInfo?.classLevels?.ranger,
     characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
+
+    const isAberrantMind =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "aberrantMind";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const psionicKey = "sorcerer:aberrantMind";
+    const swapsForPsionics = characterInfo?.psionicSpellSwaps?.[psionicKey] || {};
+
+    const psionicTable = [
+      { sorcererLevel: 1, spellLevel: 0, originalIndex: "mind-sliver" },
+      { sorcererLevel: 1, spellLevel: 1, originalIndex: "arms-of-hadar" },
+      { sorcererLevel: 1, spellLevel: 1, originalIndex: "dissonant-whispers" },
+      { sorcererLevel: 3, spellLevel: 2, originalIndex: "calm-emotions" },
+      { sorcererLevel: 3, spellLevel: 2, originalIndex: "detect-thoughts" },
+      { sorcererLevel: 5, spellLevel: 3, originalIndex: "hunger-of-hadar" },
+      { sorcererLevel: 5, spellLevel: 3, originalIndex: "sending" },
+      { sorcererLevel: 7, spellLevel: 4, originalIndex: "evards-black-tentacles" },
+      { sorcererLevel: 7, spellLevel: 4, originalIndex: "summon-aberration" },
+      { sorcererLevel: 9, spellLevel: 5, originalIndex: "rarys-telepathic-bond" },
+      { sorcererLevel: 9, spellLevel: 5, originalIndex: "telekinesis" },
+    ];
+
+    const active = isAberrantMind ? psionicTable.filter((row) => sorcererLevel >= row.sorcererLevel) : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      const allowedByOrigin = new Map(active.map((r) => [String(r.originalIndex), r]));
+
+      // Remove any Aberrant Mind psionic bonus spells when subclass/level no longer qualifies.
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag !== PSIONIC_SPELL_BONUS_TAG) return true;
+          const origin = String(s?.spelltrackerOrigin || "");
+          return Boolean(origin && allowedByOrigin.has(origin));
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isAberrantMind) {
+        const ensureSpell = (row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const swapped = row.originalIndex ? swapsForPsionics?.[row.originalIndex] : null;
+          const desiredIndex = String(swapped?.index || row.originalIndex || "").trim();
+          if (!desiredIndex) return;
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === desiredIndex);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== PSIONIC_SPELL_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true ||
+              String(existing?.spelltrackerOrigin || "") !== String(row.originalIndex || "");
+
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: PSIONIC_SPELL_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: desiredIndex,
+              name: swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: PSIONIC_SPELL_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        };
+
+        active.forEach((row) => ensureSpell(row));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    characterInfo?.psionicSpellSwaps,
     setCharacterInfo,
   ]);
 
@@ -3181,6 +3307,7 @@ export const SpellList = (props) => {
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
+    const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
@@ -3262,6 +3389,26 @@ export const SpellList = (props) => {
                      }}
                    />
                  </Tooltip>
+                ) : spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Psionic Spell (always known; does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="PS"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(74, 20, 140, 0.86)",
+                        border: "1px solid rgba(74, 20, 140, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
                 ) : spell?.spelltrackerBonus === FEY_WANDERER_MAGIC_BONUS_TAG ? (
                   <Tooltip
                     arrow
@@ -3385,11 +3532,40 @@ export const SpellList = (props) => {
                 ) : null
               }
               actionButton={
-                <PrepareSpellButton
-                  numericalSpellLevel={numericalSpellLevel}
-                  spell={spell}
-                  index={index}
-                />
+                spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this psionic spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap psionic spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || spell?.index || "").trim();
+                        setPsionicSwapModal({
+                          open: true,
+                          spellLevel: Number(numericalSpellLevel),
+                          psionicKey: "sorcerer:aberrantMind",
+                          originalSpell: origin
+                            ? { index: origin, name: humanizeSpellIndex(origin) }
+                            : spell,
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(74, 20, 140, 0.92)",
+                        border: "1px solid rgba(74, 20, 140, 0.22)",
+                        backgroundColor: "rgba(74, 20, 140, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(74, 20, 140, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : (
+                  <PrepareSpellButton
+                    numericalSpellLevel={numericalSpellLevel}
+                    spell={spell}
+                    index={index}
+                  />
+                )
               }
             />
           </div>
@@ -4387,6 +4563,14 @@ export const SpellList = (props) => {
 	          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
 	        }
 	      />
+
+        <PsionicSpellSwapModal
+          open={psionicSwapModal.open}
+          numericalSpellLevel={psionicSwapModal.spellLevel}
+          psionicKey={psionicSwapModal.psionicKey || "sorcerer:aberrantMind"}
+          originalSpell={psionicSwapModal.originalSpell}
+          onClose={() => setPsionicSwapModal((s) => ({ ...s, open: false, originalSpell: null }))}
+        />
 
         <BlessedWarriorCantripSwapModal
           open={bwSwapModal.open}
