@@ -409,20 +409,41 @@ app.delete("/custom-features/:id", requireAuth, (req, res) => {
   return res.status(204).send();
 });
 
-app.get('/singlespell/:spell_index', (req, res) => {
-        // const spell_index= 'acid-splash'
+app.get('/singlespell/:spell_index', async (req, res) => {
+    const spell_index = String(req.params.spell_index || "").trim();
+    if (!spell_index) return res.status(400).json({ error: "invalid_spell_index" });
 
-    const spell_index= req.params.spell_index
-    console.log('SPELLURL', spell_index)
-    axios.get(`https://www.dnd5eapi.co/api/2014/spells/${spell_index}`)
-        .then(response => {
-            res.json(response.data)
-        })
-        .catch(error => {
-            console.error(error);
-            res.status(500).send('Internal Server Error');
-          });
-})
+    // The `/api/2014` dataset is SRD-only and does not contain many common (non-SRD) spells.
+    // To avoid surfacing those as 500 errors, we try a small fallback chain and return 404 when missing.
+    const urlsToTry = [
+        `https://www.dnd5eapi.co/api/2014/spells/${spell_index}`,
+        `https://www.dnd5eapi.co/api/spells/${spell_index}`,
+    ];
+
+    let lastErr = null;
+
+    for (const url of urlsToTry) {
+        try {
+            const response = await axios.get(url);
+            return res.json(response.data);
+        } catch (error) {
+            lastErr = error;
+            const status = error?.response?.status;
+            // Missing in this dataset -> try next.
+            if (status === 404) continue;
+            // Bad request (e.g. invalid slug) -> no point retrying.
+            if (status === 400) return res.status(400).json({ error: "invalid_spell_index" });
+            // Other errors: network/server issues.
+            console.error("Failed to fetch spell details:", { spell_index, url, status });
+            return res.status(502).json({ error: "upstream_error" });
+        }
+    }
+
+    const status = lastErr?.response?.status;
+    if (status === 404) return res.status(404).json({ error: "not_found", index: spell_index });
+    console.error("Failed to fetch spell details:", { spell_index, status });
+    return res.status(502).json({ error: "upstream_error" });
+});
 
 app.get('/allspells/:numerical_spell_level/:character_class', (req, res) => {
     const numerical_spell_level = parseInt(req.params.numerical_spell_level);
