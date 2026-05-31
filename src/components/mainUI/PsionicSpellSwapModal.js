@@ -24,7 +24,14 @@ const normalizeCompareName = (s) =>
     .trim()
     .replace(/\s+/g, " ");
 
-const PsionicSpellSwapModal = ({ open, onClose, numericalSpellLevel, psionicKey, originalSpell }) => {
+const PsionicSpellSwapModal = ({
+  open,
+  onClose,
+  numericalSpellLevel,
+  psionicKey,
+  originalSpell,
+  swapLabel = "Psionic Spell",
+}) => {
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
@@ -146,7 +153,7 @@ const PsionicSpellSwapModal = ({ open, onClose, numericalSpellLevel, psionicKey,
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 5 }}>
         <MagicalSecretsStatus
-          label="Swap Psionic Spell"
+          label={`Swap ${swapLabel}`}
           totalAllowed={1}
           actualSelected={currentSwap?.index ? 1 : 0}
           typographySx={{
@@ -175,7 +182,7 @@ const PsionicSpellSwapModal = ({ open, onClose, numericalSpellLevel, psionicKey,
 
       <DialogContent dividers>
         <Typography sx={{ fontSize: "13px", color: "#3e2723", mb: 1 }}>
-          Swapping <strong>{originalSpell?.name || "Psionic spell"}</strong> (level {numericalSpellLevel}) for another{" "}
+          Swapping <strong>{originalSpell?.name || "Spell"}</strong> (level {numericalSpellLevel}) for another{" "}
           <strong>sorcerer</strong>, <strong>warlock</strong>, or <strong>wizard</strong> spell (or a{" "}
           <strong>custom</strong> spell).
         </Typography>
@@ -264,4 +271,3 @@ const PsionicSpellSwapModal = ({ open, onClose, numericalSpellLevel, psionicKey,
 };
 
 export default PsionicSpellSwapModal;
-

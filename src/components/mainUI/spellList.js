@@ -504,6 +504,7 @@ export const SpellList = (props) => {
     spellLevel: 0,
     psionicKey: "",
     originalSpell: null,
+    swapLabel: "Psionic Spell",
   });
 
   const [bwSwapModal, setBwSwapModal] = React.useState({
@@ -1183,6 +1184,123 @@ export const SpellList = (props) => {
               index: desiredIndex,
               name: swapped?.name || humanizeSpellIndex(desiredIndex),
               spelltrackerBonus: PSIONIC_SPELL_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        };
+
+        active.forEach((row) => ensureSpell(row));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    characterInfo?.psionicSpellSwaps,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const CLOCKWORK_MAGIC_BONUS_TAG = "clockwork_soul_clockwork_magic_spell";
+
+    const isClockworkSoul =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "clockworkSoul";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const clockworkKey = "sorcerer:clockworkSoul";
+    const swapsForClockwork = characterInfo?.psionicSpellSwaps?.[clockworkKey] || {};
+
+    const clockworkTable = [
+      { sorcererLevel: 1, spellLevel: 1, originalIndex: "alarm" },
+      { sorcererLevel: 1, spellLevel: 1, originalIndex: "protection-from-evil-and-good" },
+      { sorcererLevel: 3, spellLevel: 2, originalIndex: "aid" },
+      { sorcererLevel: 3, spellLevel: 2, originalIndex: "lesser-restoration" },
+      { sorcererLevel: 5, spellLevel: 3, originalIndex: "dispel-magic" },
+      { sorcererLevel: 5, spellLevel: 3, originalIndex: "protection-from-energy" },
+      { sorcererLevel: 7, spellLevel: 4, originalIndex: "freedom-of-movement" },
+      { sorcererLevel: 7, spellLevel: 4, originalIndex: "summon-construct" },
+      { sorcererLevel: 9, spellLevel: 5, originalIndex: "greater-restoration" },
+      { sorcererLevel: 9, spellLevel: 5, originalIndex: "wall-of-force" },
+    ];
+
+    const active = isClockworkSoul ? clockworkTable.filter((row) => sorcererLevel >= row.sorcererLevel) : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      const allowedByOrigin = new Map(active.map((r) => [String(r.originalIndex), r]));
+
+      // Remove any Clockwork Magic bonus spells when subclass/level no longer qualifies.
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag !== CLOCKWORK_MAGIC_BONUS_TAG) return true;
+          const origin = String(s?.spelltrackerOrigin || "");
+          return Boolean(origin && allowedByOrigin.has(origin));
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isClockworkSoul) {
+        const ensureSpell = (row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const swapped = row.originalIndex ? swapsForClockwork?.[row.originalIndex] : null;
+          const desiredIndex = String(swapped?.index || row.originalIndex || "").trim();
+          if (!desiredIndex) return;
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === desiredIndex);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== CLOCKWORK_MAGIC_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true ||
+              String(existing?.spelltrackerOrigin || "") !== String(row.originalIndex || "");
+
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: CLOCKWORK_MAGIC_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: desiredIndex,
+              name: swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: CLOCKWORK_MAGIC_BONUS_TAG,
               spelltrackerOrigin: String(row.originalIndex || ""),
               spelltrackerDoesNotCount: true,
             },
@@ -3308,6 +3426,7 @@ export const SpellList = (props) => {
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
+    const CLOCKWORK_MAGIC_BONUS_TAG = "clockwork_soul_clockwork_magic_spell";
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
@@ -3405,6 +3524,26 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(74, 20, 140, 0.86)",
                         border: "1px solid rgba(74, 20, 140, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === CLOCKWORK_MAGIC_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Clockwork Magic spell (always known; does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="CM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(27, 94, 32, 0.86)",
+                        border: "1px solid rgba(27, 94, 32, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
@@ -3543,6 +3682,7 @@ export const SpellList = (props) => {
                           open: true,
                           spellLevel: Number(numericalSpellLevel),
                           psionicKey: "sorcerer:aberrantMind",
+                          swapLabel: "Psionic Spell",
                           originalSpell: origin
                             ? { index: origin, name: humanizeSpellIndex(origin) }
                             : spell,
@@ -3554,6 +3694,32 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(74, 20, 140, 0.22)",
                         backgroundColor: "rgba(74, 20, 140, 0.06)",
                         "&:hover": { backgroundColor: "rgba(74, 20, 140, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === CLOCKWORK_MAGIC_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Clockwork Magic spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Clockwork Magic spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || spell?.index || "").trim();
+                        setPsionicSwapModal({
+                          open: true,
+                          spellLevel: Number(numericalSpellLevel),
+                          psionicKey: "sorcerer:clockworkSoul",
+                          swapLabel: "Clockwork Magic",
+                          originalSpell: origin ? { index: origin, name: humanizeSpellIndex(origin) } : spell,
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(27, 94, 32, 0.92)",
+                        border: "1px solid rgba(27, 94, 32, 0.22)",
+                        backgroundColor: "rgba(27, 94, 32, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(27, 94, 32, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
@@ -4568,8 +4734,9 @@ export const SpellList = (props) => {
           open={psionicSwapModal.open}
           numericalSpellLevel={psionicSwapModal.spellLevel}
           psionicKey={psionicSwapModal.psionicKey || "sorcerer:aberrantMind"}
+          swapLabel={psionicSwapModal.swapLabel || "Psionic Spell"}
           originalSpell={psionicSwapModal.originalSpell}
-          onClose={() => setPsionicSwapModal((s) => ({ ...s, open: false, originalSpell: null }))}
+          onClose={() => setPsionicSwapModal((s) => ({ ...s, open: false, originalSpell: null, swapLabel: "Psionic Spell" }))}
         />
 
         <BlessedWarriorCantripSwapModal
