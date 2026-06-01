@@ -84,6 +84,18 @@ const getRogueSneakAttackDice = (rogueLevel) => {
   return "1d6";
 };
 
+const DIVINE_SOUL_AFFINITY_OPTIONS = [
+  { id: "good", name: "Good", desc: "Affinity spell: Cure Wounds (DM spell; does not count against spells known)." },
+  { id: "evil", name: "Evil", desc: "Affinity spell: Inflict Wounds (DM spell; does not count against spells known)." },
+  { id: "law", name: "Law", desc: "Affinity spell: Bless (DM spell; does not count against spells known)." },
+  { id: "chaos", name: "Chaos", desc: "Affinity spell: Bane (DM spell; does not count against spells known)." },
+  {
+    id: "neutrality",
+    name: "Neutrality",
+    desc: "Affinity spell: Protection from Evil and Good (DM spell; does not count against spells known).",
+  },
+];
+
 
 const FeatureAccordionRow = ({
   feature,
@@ -1382,6 +1394,7 @@ const FeaturesAndTrackables = () => {
   const [blessedWarriorCantripsModalOpen, setBlessedWarriorCantripsModalOpen] = React.useState(false);
   const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
   const [metamagicOptionsModalOpen, setMetamagicOptionsModalOpen] = React.useState(false);
+  const [divineSoulAffinityModalOpen, setDivineSoulAffinityModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -2940,6 +2953,36 @@ const FeaturesAndTrackables = () => {
                   }
                 }
 
+                if (characterClass === "sorcerer" && subclass === "divineSoul" && feature?.id === "divine_magic") {
+                  const selectedId = String(characterInfo?.divineSoulAffinity || "");
+                  const selected =
+                    DIVINE_SOUL_AFFINITY_OPTIONS.find((opt) => String(opt?.id || "") === selectedId) || null;
+                  const label = selected?.name ? `Change Divine Affinity (${selected.name})` : "Choose Divine Affinity";
+
+                  return (
+                    <Tooltip arrow title={label}>
+                      <IconButton
+                        size="small"
+                        aria-label={label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDivineSoulAffinityModalOpen(true);
+                        }}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: "rgba(93, 64, 55, 0.92)",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 return null;
               }}
             />
@@ -3144,6 +3187,18 @@ const FeaturesAndTrackables = () => {
             setFeatureChoice(prev, subclassChoiceKey, featureId, optionId)
           );
           setFeatureChoiceModal({ open: false, featureId: "" });
+        }}
+      />
+
+      <FeatureChoiceModal
+        open={divineSoulAffinityModalOpen}
+        onClose={() => setDivineSoulAffinityModalOpen(false)}
+        title="Divine Magic: Affinity"
+        helperText="Choose an affinity for the source of your divine power. This adds a free DM spell in the spell tracker (does not count against spells known)."
+        options={DIVINE_SOUL_AFFINITY_OPTIONS}
+        selectedId={String(characterInfo?.divineSoulAffinity || "")}
+        onSelect={(optionId) => {
+          setCharacterInfo((prev) => ({ ...prev, divineSoulAffinity: String(optionId || "") }));
         }}
       />
 

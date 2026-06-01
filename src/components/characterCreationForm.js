@@ -271,6 +271,7 @@ export const CharacterCreationForm = (props) => {
 	        // Subclass-specific options reset when swapping subclasses.
 	        next.druidLandType = "";
           next.additionalFightingStyle = "";
+          next.divineSoulAffinity = "";
 	      }
 
         if (name === "fightingStyle" && value && value === prev.additionalFightingStyle) {

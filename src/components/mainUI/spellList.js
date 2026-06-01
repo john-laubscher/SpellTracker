@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -28,6 +29,7 @@ import PrepareReaperCantripButton from "./PrepareReaperCantripButton";
 import PrepareAcolyteOfNatureCantripButton from "./PrepareAcolyteOfNatureCantripButton";
 import DomainSpellSwapModal from "./DomainSpellSwapModal";
 import PsionicSpellSwapModal from "./PsionicSpellSwapModal";
+import DivineSoulAffinitySpellSwapModal from "./DivineSoulAffinitySpellSwapModal";
 import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
@@ -321,6 +323,8 @@ export const SpellList = (props) => {
     ? String(subclassSpellcasting?.spellListClassKey || "")
     : String(classKey || "");
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
+  const includeDivineSoulClericSpellList =
+    classKey === "sorcerer" && String(characterInfo?.subclass || "") === "divineSoul";
   const isFighter = String(characterInfo?.characterClass || "") === "fighter";
   const hasGuidingWhispers =
     characterInfo?.characterClass === "bard" &&
@@ -505,6 +509,12 @@ export const SpellList = (props) => {
     psionicKey: "",
     originalSpell: null,
     swapLabel: "Psionic Spell",
+  });
+
+  const [divineSoulSwapModal, setDivineSoulSwapModal] = React.useState({
+    open: false,
+    maxSpellLevel: 1,
+    originalSpell: null,
   });
 
   const [bwSwapModal, setBwSwapModal] = React.useState({
@@ -1318,6 +1328,140 @@ export const SpellList = (props) => {
     characterInfo?.subclass,
     characterInfo?.characterLevel,
     characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    characterInfo?.psionicSpellSwaps,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const DIVINE_MAGIC_AFFINITY_BONUS_TAG = "divine_soul_affinity_spell";
+    const divineKey = "sorcerer:divineSoul:affinity";
+
+    const isDivineSoul =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "divineSoul";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const maxSpellLevel = (() => {
+      const row = spellTables?.sorcerer?.[sorcererLevel] || null;
+      if (!row) return 1;
+      const keys = [
+        ["first", 1],
+        ["second", 2],
+        ["third", 3],
+        ["fourth", 4],
+        ["fifth", 5],
+        ["sixth", 6],
+        ["seventh", 7],
+        ["eighth", 8],
+        ["ninth", 9],
+      ];
+      return keys.reduce((acc, [key, lvl]) => (Number(row?.[key] || 0) > 0 ? lvl : acc), 1);
+    })();
+
+    const affinity = String(characterInfo?.divineSoulAffinity || "").trim().toLowerCase();
+    const affinityToOrigin = {
+      good: { index: "cure-wounds", name: "Cure Wounds", level: 1 },
+      evil: { index: "inflict-wounds", name: "Inflict Wounds", level: 1 },
+      law: { index: "bless", name: "Bless", level: 1 },
+      chaos: { index: "bane", name: "Bane", level: 1 },
+      neutrality: { index: "protection-from-evil-and-good", name: "Protection from Evil and Good", level: 1 },
+    };
+
+    const origin = isDivineSoul && affinity ? affinityToOrigin?.[affinity] || null : null;
+    const originIndex = String(origin?.index || "").trim();
+
+    const swapsForDivine = characterInfo?.psionicSpellSwaps?.[divineKey] || {};
+    const swapped = originIndex ? swapsForDivine?.[originIndex] || null : null;
+
+    const desiredIndex = String(swapped?.index || originIndex || "").trim();
+    const desiredName = swapped?.name || origin?.name || humanizeSpellIndex(desiredIndex);
+    const desiredLevelRaw = swapped?.level ?? origin?.level ?? 1;
+    const desiredLevel = Math.max(1, Math.min(9, Math.trunc(Number(desiredLevelRaw) || 1)));
+
+    const shouldInclude =
+      isDivineSoul &&
+      Boolean(originIndex) &&
+      Boolean(desiredIndex) &&
+      desiredLevel <= Math.max(1, Math.trunc(Number(maxSpellLevel) || 1));
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      // Remove any Divine Soul affinity bonus spells when not eligible or affinity changed.
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag !== DIVINE_MAGIC_AFFINITY_BONUS_TAG) return true;
+          const originTag = String(s?.spelltrackerOrigin || "");
+          return shouldInclude && originTag && originTag === originIndex && String(s?.index || "") === desiredIndex;
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (shouldInclude) {
+        const levelKey = String(desiredLevel);
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+        const existingIdx = list.findIndex((s) => String(s?.index || "") === desiredIndex);
+        if (existingIdx !== -1) {
+          const existing = list[existingIdx] || null;
+          const needsTag =
+            String(existing?.spelltrackerBonus || "") !== DIVINE_MAGIC_AFFINITY_BONUS_TAG ||
+            existing?.spelltrackerDoesNotCount !== true ||
+            String(existing?.spelltrackerOrigin || "") !== originIndex;
+
+          if (needsTag) {
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || desiredName,
+              spelltrackerBonus: DIVINE_MAGIC_AFFINITY_BONUS_TAG,
+              spelltrackerOrigin: originIndex,
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+          }
+        } else {
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: desiredIndex,
+              name: desiredName,
+              level: desiredLevel,
+              spelltrackerBonus: DIVINE_MAGIC_AFFINITY_BONUS_TAG,
+              spelltrackerOrigin: originIndex,
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        }
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.divineSoulAffinity,
     characterInfo?.spellsPrepared,
     characterInfo?.psionicSpellSwaps,
     setCharacterInfo,
@@ -3052,7 +3196,7 @@ export const SpellList = (props) => {
       8: { loading: false, error: '' },
       9: { loading: false, error: '' },
     });
-  }, [spellListClassKey]);
+  }, [spellListClassKey, includeDivineSoulClericSpellList]);
 
   const loadClassSpellsForLevel = (numericalSpellLevel) => {
     if (spellListLoadStatus[numericalSpellLevel]?.loading) return;
@@ -3062,15 +3206,43 @@ export const SpellList = (props) => {
       [numericalSpellLevel]: { loading: true, error: '' },
     }));
 
-    axios
-      .get(`/allspells/${numericalSpellLevel}/${spellListClassKey}`)
-      .then((res) => {
-        const fetchedSpellsArr = res.data?.results || [];
+    const baseReq = axios.get(`/allspells/${numericalSpellLevel}/${spellListClassKey}`);
+    const clericReq = includeDivineSoulClericSpellList ? axios.get(`/allspells/${numericalSpellLevel}/cleric`) : null;
+
+    Promise.resolve()
+      .then(() => (clericReq ? Promise.all([baseReq, clericReq]) : Promise.all([baseReq])))
+      .then((responses) => {
+        const baseResults = responses?.[0]?.data?.results || [];
+        const clericResults = clericReq ? responses?.[1]?.data?.results || [] : [];
+
+        const baseByIndex = new Map(baseResults.map((s) => [String(s?.index || ""), s]));
+        const combined = [];
+        const seen = new Set();
+
+        const pushUnique = (spell) => {
+          const key = String(spell?.index || "");
+          if (!key || seen.has(key)) return;
+          seen.add(key);
+          combined.push(spell);
+        };
+
+        baseResults.forEach((s) => pushUnique(s));
+
+        clericResults.forEach((s) => {
+          const key = String(s?.index || "");
+          if (!key) return;
+          const isClericOnly = !baseByIndex.has(key);
+          const tagged = isClericOnly
+            ? { ...s, spelltrackerBonus: "divine_soul_divine_magic_spell", spelltrackerDivineMagic: true }
+            : s;
+          pushUnique(tagged);
+        });
+
         setSpells((prevSpells) => ({
           ...prevSpells,
           [numericalSpellLevel]: {
             ...prevSpells[numericalSpellLevel],
-            classSpells: fetchedSpellsArr,
+            classSpells: combined,
           },
         }));
         setSpellListLoadStatus((prev) => ({
@@ -3427,6 +3599,8 @@ export const SpellList = (props) => {
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
     const CLOCKWORK_MAGIC_BONUS_TAG = "clockwork_soul_clockwork_magic_spell";
+    const DIVINE_SOUL_AFFINITY_BONUS_TAG = "divine_soul_affinity_spell";
+    const DIVINE_SOUL_DIVINE_MAGIC_TAG = "divine_soul_divine_magic_spell";
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
@@ -3668,10 +3842,87 @@ export const SpellList = (props) => {
                       }}
                     />
                   </Tooltip>
+                ) : spell?.spelltrackerBonus === DIVINE_SOUL_AFFINITY_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Divine Magic affinity spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="DM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(106, 27, 154, 0.92)",
+                        border: "1px solid rgba(106, 27, 154, 0.24)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === DIVINE_SOUL_DIVINE_MAGIC_TAG ? (
+                  <Tooltip arrow title="Divine Magic cleric spell (counts against spells known).">
+                    <Box sx={{ display: "flex", alignItems: "center", opacity: 0.8 }}>
+                      <MenuBookIcon sx={{ fontSize: 18, color: "rgba(93, 64, 55, 0.92)" }} />
+                    </Box>
+                  </Tooltip>
                 ) : null
               }
               actionButton={
-                spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
+                spell?.spelltrackerBonus === DIVINE_SOUL_AFFINITY_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this DM spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap DM spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || "").trim();
+                        if (!origin) return;
+
+                        const raw = characterInfo?.classLevels?.sorcerer;
+                        const numeric = Number(raw);
+                        const sorcLevel =
+                          Number.isFinite(numeric) && numeric >= 0
+                            ? Math.trunc(numeric)
+                            : characterInfo?.characterClass === "sorcerer"
+                              ? Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0))
+                              : 0;
+
+                        const row = spellTables?.sorcerer?.[sorcLevel] || null;
+                        const keys = [
+                          ["first", 1],
+                          ["second", 2],
+                          ["third", 3],
+                          ["fourth", 4],
+                          ["fifth", 5],
+                          ["sixth", 6],
+                          ["seventh", 7],
+                          ["eighth", 8],
+                          ["ninth", 9],
+                        ];
+                        const maxSpellLevel = row
+                          ? keys.reduce((acc, [key, lvl]) => (Number(row?.[key] || 0) > 0 ? lvl : acc), 1)
+                          : 1;
+
+                        setDivineSoulSwapModal({
+                          open: true,
+                          maxSpellLevel,
+                          originalSpell: { index: origin, name: humanizeSpellIndex(origin) },
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(106, 27, 154, 0.92)",
+                        border: "1px solid rgba(106, 27, 154, 0.22)",
+                        backgroundColor: "rgba(106, 27, 154, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(106, 27, 154, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
                   <Tooltip arrow title="Swap this psionic spell (does not change spells known).">
                     <IconButton
                       size="small"
@@ -4737,6 +4988,14 @@ export const SpellList = (props) => {
           swapLabel={psionicSwapModal.swapLabel || "Psionic Spell"}
           originalSpell={psionicSwapModal.originalSpell}
           onClose={() => setPsionicSwapModal((s) => ({ ...s, open: false, originalSpell: null, swapLabel: "Psionic Spell" }))}
+        />
+
+        <DivineSoulAffinitySpellSwapModal
+          open={divineSoulSwapModal.open}
+          swapKey="sorcerer:divineSoul:affinity"
+          originalSpell={divineSoulSwapModal.originalSpell}
+          maxSpellLevel={divineSoulSwapModal.maxSpellLevel}
+          onClose={() => setDivineSoulSwapModal((s) => ({ ...s, open: false, originalSpell: null }))}
         />
 
         <BlessedWarriorCantripSwapModal
