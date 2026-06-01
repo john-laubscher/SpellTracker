@@ -1697,6 +1697,91 @@ export const SpellList = (props) => {
   ]);
 
   useEffect(() => {
+    const EYES_OF_THE_DARK_BONUS_TAG = "shadow_magic_eyes_of_the_dark";
+
+    const isShadowMagic =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "shadowMagic";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const shouldHaveDarkness = isShadowMagic && sorcererLevel >= 3;
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      if (!shouldHaveDarkness) {
+        // Remove Eyes of the Dark bonus spell when subclass/level no longer qualifies.
+        Object.keys(next).forEach((levelKey) => {
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+          const filtered = list.filter(
+            (s) => String(s?.spelltrackerBonus || "") !== EYES_OF_THE_DARK_BONUS_TAG
+          );
+          if (filtered.length !== list.length) {
+            changed = true;
+            next[levelKey] = filtered;
+          }
+        });
+
+        if (!changed) return prev;
+        return { ...prev, spellsPrepared: next };
+      }
+
+      const levelKey = "2";
+      const desiredIndex = "darkness";
+      const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+      const existingIdx = list.findIndex((s) => String(s?.index || "") === desiredIndex);
+      if (existingIdx !== -1) {
+        const existing = list[existingIdx] || null;
+        const needsTag =
+          String(existing?.spelltrackerBonus || "") !== EYES_OF_THE_DARK_BONUS_TAG ||
+          existing?.spelltrackerDoesNotCount !== true;
+        if (needsTag) {
+          changed = true;
+          const updated = {
+            ...existing,
+            name: existing?.name || humanizeSpellIndex(desiredIndex),
+            spelltrackerBonus: EYES_OF_THE_DARK_BONUS_TAG,
+            spelltrackerDoesNotCount: true,
+          };
+          next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+        }
+      } else {
+        changed = true;
+        next[levelKey] = [
+          ...list,
+          {
+            index: desiredIndex,
+            name: humanizeSpellIndex(desiredIndex),
+            spelltrackerBonus: EYES_OF_THE_DARK_BONUS_TAG,
+            spelltrackerDoesNotCount: true,
+          },
+        ];
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
 
     const isHorizonWalker =
@@ -3832,6 +3917,7 @@ export const SpellList = (props) => {
     const LUNAR_EMBODIMENT_BONUS_TAG = "lunar_sorcery_lunar_embodiment_spell";
     const DIVINE_SOUL_AFFINITY_BONUS_TAG = "divine_soul_affinity_spell";
     const DIVINE_SOUL_DIVINE_MAGIC_TAG = "divine_soul_divine_magic_spell";
+    const EYES_OF_THE_DARK_BONUS_TAG = "shadow_magic_eyes_of_the_dark";
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
@@ -3997,6 +4083,26 @@ export const SpellList = (props) => {
                         color: "rgba(27, 94, 32, 0.86)",
                         border: "1px solid rgba(27, 94, 32, 0.22)",
                         "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.index === "darkness" && spell?.spelltrackerBonus === EYES_OF_THE_DARK_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Eyes of the Dark bonus spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="ED"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(48, 63, 159, 0.92)",
+                        border: "1px solid rgba(48, 63, 159, 0.22)",
+                        "&:hover": { opacity: 0.9 },
                       }}
                     />
                   </Tooltip>
