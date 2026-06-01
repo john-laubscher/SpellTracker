@@ -6091,6 +6091,76 @@
           },
         ],
       },
+      lunarSorcery: {
+        name: "Lunar Sorcery",
+        features: [
+          {
+            id: "lunar_embodiment",
+            name: "Lunar Embodiment",
+            desc: [
+              "You learn additional spells as you gain sorcerer levels (see Lunar Spells table in the app).",
+              "These spells count as sorcerer spells for you and don’t count against spells known.",
+              "Choose a lunar phase after each long rest: Full Moon, New Moon, or Crescent Moon.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "moon_fire",
+            name: "Moon Fire",
+            desc: [
+              "You learn the Sacred Flame cantrip. It doesn’t count against cantrips known.",
+              "When you cast it, you can target one creature as normal, or two creatures within range that are within 5 feet of each other.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "lunar_boons",
+            name: "Lunar Boons",
+            desc: [
+              "Your Lunar Embodiment phase affects Metamagic (Full: Abjuration/Divination; New: Enchantment/Necromancy; Crescent: Illusion/Transmutation).",
+              "When you use Metamagic on a spell of an associated school, reduce the sorcery points spent by 1 (min 0).",
+              "You can do this a number of times equal to your proficiency bonus per long rest.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "waxing_and_waning",
+            name: "Waxing and Waning",
+            desc: [
+              "As a bonus action, you can spend 1 sorcery point to change your current Lunar Embodiment phase.",
+              "You can cast one 1st-level spell from each lunar phase once per long rest without expending a spell slot, provided your current phase matches that spell’s phase.",
+            ],
+            level: 6,
+            tracked: true,
+            trackedMode: "phaseCheckboxes",
+            recharge: "lr",
+          },
+          {
+            id: "lunar_empowerment",
+            name: "Lunar Empowerment",
+            desc: [
+              "While you are in a Lunar Embodiment phase, you gain an additional benefit based on that phase.",
+            ],
+            level: 14,
+            tracked: false,
+          },
+          {
+            id: "lunar_phenomenon",
+            name: "Lunar Phenomenon",
+            desc: [
+              "As a bonus action, you can use a powerful effect based on your current lunar phase.",
+              "Once you use a phase’s benefit, you can’t use that phase’s benefit again until a long rest (unless you spend 5 sorcery points).",
+            ],
+            level: 18,
+            tracked: true,
+            trackedMode: "phaseCheckboxes",
+            recharge: "lr",
+          },
+        ],
+      },
       shadowMagic: "",
       stormSorcery: "",
       wildMagic: "",

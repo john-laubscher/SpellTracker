@@ -272,6 +272,7 @@ export const CharacterCreationForm = (props) => {
 	        next.druidLandType = "";
           next.additionalFightingStyle = "";
           next.divineSoulAffinity = "";
+          next.lunarEmbodimentPhase = "";
 	      }
 
         if (name === "fightingStyle" && value && value === prev.additionalFightingStyle) {
