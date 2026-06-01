@@ -51,10 +51,12 @@ import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
 import DragonHeadIcon from "./DragonHeadIcon";
+import MagicSparklesIcon from "./MagicSparklesIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import MetamagicOptionsModal from "./MetamagicOptionsModal";
 import LunarEmbodimentPhaseModal from "./LunarEmbodimentPhaseModal";
+import WildMagicSurgeTableModal from "./WildMagicSurgeTableModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -1465,6 +1467,7 @@ const FeaturesAndTrackables = () => {
   const [metamagicOptionsModalOpen, setMetamagicOptionsModalOpen] = React.useState(false);
   const [divineSoulAffinityModalOpen, setDivineSoulAffinityModalOpen] = React.useState(false);
   const [lunarEmbodimentModalOpen, setLunarEmbodimentModalOpen] = React.useState(false);
+  const [wildMagicSurgeModalOpen, setWildMagicSurgeModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -2993,6 +2996,37 @@ const FeaturesAndTrackables = () => {
                   }
                 }
 
+                if (
+                  (characterClass === "sorcerer" || characterClass === "sorceror") &&
+                  subclass === "wildMagic" &&
+                  feature?.id === "wild_magic_surge"
+                ) {
+                  const label = "Open Wild Magic Surge table";
+
+                  return (
+                    <Tooltip arrow title={label}>
+                      <IconButton
+                        size="small"
+                        aria-label={label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setWildMagicSurgeModalOpen(true);
+                        }}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: "rgba(93, 64, 55, 0.92)",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MagicSparklesIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (characterClass === "sorcerer" && subclass === "draconicBloodline" && feature?.id === "dragon_ancestor") {
                   const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
                     ? feature.untrackedChoiceOptions
@@ -3311,6 +3345,11 @@ const FeaturesAndTrackables = () => {
         onSelectPhase={(phaseId) => {
           setCharacterInfo((prev) => ({ ...prev, lunarEmbodimentPhase: String(phaseId || "full") }));
         }}
+      />
+
+      <WildMagicSurgeTableModal
+        open={wildMagicSurgeModalOpen}
+        onClose={() => setWildMagicSurgeModalOpen(false)}
       />
 
       <ArcaneMasteryModal

@@ -6281,7 +6281,64 @@
           },
         ],
       },
-      wildMagic: "",
+      wildMagic: {
+        name: "Wild Magic",
+        source: "Player's Handbook",
+        features: [
+          {
+            id: "wild_magic_surge",
+            name: "Wild Magic Surge",
+            desc: [
+              "Starting at 1st level, your spellcasting can unleash surges of untamed magic.",
+              "Once per turn, the DM can have you roll a d20 immediately after you cast a sorcerer spell of 1st level or higher. If you roll a 1, roll on the Wild Magic Surge table to create an effect.",
+              "If the surge effect is a spell, it is too wild to be affected by Metamagic, and it doesn’t require concentration (if it normally would); the spell lasts its full duration.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "tides_of_chaos",
+            name: "Tides of Chaos",
+            desc: [
+              "Starting at 1st level, you can gain advantage on one attack roll, ability check, or saving throw.",
+              "After you use this feature, you must finish a long rest before you can use it again (unless your DM has you roll on the Wild Magic Surge table after you cast a sorcerer spell of 1st level or higher; you then regain the use of this feature).",
+            ],
+            level: 1,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+          {
+            id: "bend_luck",
+            name: "Bend Luck",
+            desc: [
+              "Starting at 6th level, when another creature you can see makes an attack roll, ability check, or saving throw, you can use your reaction and spend 2 sorcery points to roll 1d4.",
+              "Apply the roll as a bonus or penalty (your choice) to that creature’s roll. You can do so after the creature rolls but before any effects occur.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "controlled_chaos",
+            name: "Controlled Chaos",
+            desc: [
+              "At 14th level, whenever you roll on the Wild Magic Surge table, you can roll twice and use either number.",
+            ],
+            level: 14,
+            tracked: false,
+          },
+          {
+            id: "spell_bombardment",
+            name: "Spell Bombardment",
+            desc: [
+              "Beginning at 18th level, when you roll damage for a spell and roll the highest number possible on any of the dice, choose one of those dice, roll it again, and add that roll to the damage.",
+              "You can use this feature only once per turn.",
+            ],
+            level: 18,
+            tracked: false,
+          },
+        ],
+      },
       Pyromancy: "",
     },
   },
