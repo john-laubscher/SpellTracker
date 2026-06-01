@@ -48,6 +48,7 @@ import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
+import DragonHeadIcon from "./DragonHeadIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import MetamagicOptionsModal from "./MetamagicOptionsModal";
@@ -432,10 +433,24 @@ const FeatureDisplay = ({
   const untrackedFeatures = features.filter(
     (feature) => !(feature?.tracked || Boolean(feature?.sharedUsePoolKey))
   );
+
+  const featureSetKey = React.useMemo(() => {
+    const ids = (Array.isArray(features) ? features : [])
+      .map((f) => String(f?.id || "").trim())
+      .filter(Boolean)
+      .sort()
+      .join("|");
+    return `${String(title || "")}:${ids}`;
+  }, [features, title]);
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
-  const [untrackedExpanded, setUntrackedExpanded] = React.useState(false);
+  // Track whether the user manually toggled the untracked section.
+  const [, setUntrackedTouched] = React.useState(false);
+  const [untrackedExpanded, setUntrackedExpanded] = React.useState(
+    trackedFeatures.length === 0 && untrackedFeatures.length > 0
+  );
+  const [lastFeatureSetKey, setLastFeatureSetKey] = React.useState(featureSetKey);
   const [activeDicePoolEditorKey, setActiveDicePoolEditorKey] = React.useState(null);
 
   React.useEffect(() => {
@@ -443,6 +458,13 @@ const FeatureDisplay = ({
       if (touchHideTimerRef.current) window.clearTimeout(touchHideTimerRef.current);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (featureSetKey === lastFeatureSetKey) return;
+    setLastFeatureSetKey(featureSetKey);
+    setUntrackedTouched(false);
+    setUntrackedExpanded(trackedFeatures.length === 0 && untrackedFeatures.length > 0);
+  }, [featureSetKey, lastFeatureSetKey, trackedFeatures.length, untrackedFeatures.length]);
 
   const getUsesCount = (feature) => {
     if (feature?.recharge === "rage") return 1;
@@ -1245,7 +1267,10 @@ const FeatureDisplay = ({
           disableGutters
           elevation={0}
           expanded={untrackedExpanded}
-          onChange={(_, nextExpanded) => setUntrackedExpanded(nextExpanded)}
+          onChange={(_, nextExpanded) => {
+            setUntrackedTouched(true);
+            setUntrackedExpanded(nextExpanded);
+          }}
           sx={{
             backgroundColor: 'transparent',
             '&:before': { display: 'none' },
@@ -1907,6 +1932,35 @@ const FeaturesAndTrackables = () => {
         const prefixLines = selected
           ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
           : ["Chosen: (none selected). Click the bow icon to choose one."];
+
+        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+
+        return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+      });
+    }
+
+    if (characterClass === "sorcerer" && subclass === "draconicBloodline") {
+      next = next.map((feature) => {
+        if (feature?.id !== "dragon_ancestor") return feature;
+
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+          ? feature.untrackedChoiceOptions
+          : [];
+        if (choiceOptions.length === 0) return feature;
+
+        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+
+        const baseDescLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        const damageType = selected?.damageType ? String(selected.damageType) : "";
+        const prefixLines = selected
+          ? [`Chosen: ${selected.name}${damageType ? ` (${damageType})` : ""}.`]
+          : ["Chosen: (none selected). Click the dragon icon to choose one."];
 
         const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
 
@@ -2849,6 +2903,37 @@ const FeaturesAndTrackables = () => {
                           }}
                         >
                           <BowIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    );
+                  }
+                }
+
+                if (characterClass === "sorcerer" && subclass === "draconicBloodline" && feature?.id === "dragon_ancestor") {
+                  const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+                    ? feature.untrackedChoiceOptions
+                    : [];
+                  if (choiceOptions.length > 0) {
+                    const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+                    const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+                    const label = selected?.name ? `Change Dragon Ancestor (${selected.name})` : "Choose Dragon Ancestor";
+
+                    return (
+                      <Tooltip arrow title={label}>
+                        <IconButton
+                          size="small"
+                          aria-label={label}
+                          onClick={() => setFeatureChoiceModal({ open: true, featureId: feature.id })}
+                          sx={{
+                            ml: 0.25,
+                            p: 0.25,
+                            color: "rgba(93, 64, 55, 0.92)",
+                            border: "1px solid rgba(93, 64, 55, 0.25)",
+                            backgroundColor: "rgba(244, 233, 221, 0.65)",
+                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                          }}
+                        >
+                          <DragonHeadIcon fontSize="inherit" />
                         </IconButton>
                       </Tooltip>
                     );
