@@ -5,6 +5,7 @@
 import React, { useContext } from "react";
 import axios from "axios";
 import {
+  Box,
   Typography,
   Grid,
   Accordion,
@@ -25,6 +26,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import RemoveIcon from "@mui/icons-material/Remove";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import Brightness2Icon from "@mui/icons-material/Brightness2";
 
 import { AuthContext, CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
@@ -52,6 +54,7 @@ import DragonHeadIcon from "./DragonHeadIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import MetamagicOptionsModal from "./MetamagicOptionsModal";
+import LunarEmbodimentPhaseModal from "./LunarEmbodimentPhaseModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -796,6 +799,57 @@ const FeatureDisplay = ({
               );
             }
 
+            if (feature?.trackedMode === "phaseCheckboxes") {
+              const phases = [
+                { id: "full", label: "Full" },
+                { id: "new", label: "New" },
+                { id: "crescent", label: "Crescent" },
+              ];
+
+              const phaseUsedRaw = tracker?.phaseUsed;
+              const phaseUsed =
+                phaseUsedRaw && typeof phaseUsedRaw === "object" ? phaseUsedRaw : {};
+
+              const setPhase = (phaseId, checked) => {
+                setTracker({
+                  phaseUsed: {
+                    ...phaseUsed,
+                    [phaseId]: Boolean(checked),
+                  },
+                });
+              };
+
+              return (
+                <>
+                  {phases.map((phase) => {
+                    const checked = Boolean(phaseUsed?.[phase.id]);
+                    return (
+                      <Box
+                        key={`${trackerKey}:phase:${phase.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{ display: "flex", alignItems: "center", ml: 0.5 }}
+                      >
+                        <Typography sx={{ fontSize: "11px", fontWeight: 800, opacity: 0.75, mr: 0.25 }}>
+                          {phase.label}
+                        </Typography>
+                        <Checkbox
+                          size="small"
+                          checked={checked}
+                          onChange={(e) => setPhase(phase.id, e.target.checked)}
+                          sx={{
+                            p: 0.25,
+                            "& .MuiSvgIcon-root": { fontSize: 18 },
+                          }}
+                        />
+                      </Box>
+                    );
+                  })}
+
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (feature?.trackedMode === "stackingChecks") {
               const checkedCount = Math.max(
                 0,
@@ -1395,6 +1449,7 @@ const FeaturesAndTrackables = () => {
   const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
   const [metamagicOptionsModalOpen, setMetamagicOptionsModalOpen] = React.useState(false);
   const [divineSoulAffinityModalOpen, setDivineSoulAffinityModalOpen] = React.useState(false);
+  const [lunarEmbodimentModalOpen, setLunarEmbodimentModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -2983,6 +3038,36 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
+                if (characterClass === "sorcerer" && subclass === "lunarSorcery" && feature?.id === "lunar_embodiment") {
+                  const phaseId = String(characterInfo?.lunarEmbodimentPhase || "full");
+                  const phaseLabel =
+                    phaseId === "new" ? "New Moon" : phaseId === "crescent" ? "Crescent Moon" : "Full Moon";
+                  const label = `Lunar Embodiment Phase (${phaseLabel})`;
+
+                  return (
+                    <Tooltip arrow title={label}>
+                      <IconButton
+                        size="small"
+                        aria-label={label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLunarEmbodimentModalOpen(true);
+                        }}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: "rgba(93, 64, 55, 0.92)",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <Brightness2Icon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 return null;
               }}
             />
@@ -3199,6 +3284,16 @@ const FeaturesAndTrackables = () => {
         selectedId={String(characterInfo?.divineSoulAffinity || "")}
         onSelect={(optionId) => {
           setCharacterInfo((prev) => ({ ...prev, divineSoulAffinity: String(optionId || "") }));
+        }}
+      />
+
+      <LunarEmbodimentPhaseModal
+        open={lunarEmbodimentModalOpen}
+        onClose={() => setLunarEmbodimentModalOpen(false)}
+        sorcererLevel={sorcererLevel}
+        selectedPhaseId={String(characterInfo?.lunarEmbodimentPhase || "full")}
+        onSelectPhase={(phaseId) => {
+          setCharacterInfo((prev) => ({ ...prev, lunarEmbodimentPhase: String(phaseId || "full") }));
         }}
       />
 

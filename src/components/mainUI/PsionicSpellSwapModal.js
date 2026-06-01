@@ -31,6 +31,7 @@ const PsionicSpellSwapModal = ({
   psionicKey,
   originalSpell,
   swapLabel = "Psionic Spell",
+  classKeys,
 }) => {
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
@@ -60,9 +61,12 @@ const PsionicSpellSwapModal = ({
     if (classSpells.length > 0) return;
 
     setLoadStatus({ loading: true, error: "" });
-    const classKeys = ["sorcerer", "warlock", "wizard"];
+    const allowedClassKeys =
+      Array.isArray(classKeys) && classKeys.filter(Boolean).length > 0
+        ? classKeys.filter(Boolean)
+        : ["sorcerer", "warlock", "wizard"];
 
-    Promise.all(classKeys.map((k) => axios.get(`/allspells/${numericalSpellLevel}/${k}`)))
+    Promise.all(allowedClassKeys.map((k) => axios.get(`/allspells/${numericalSpellLevel}/${k}`)))
       .then((responses) => {
         const combined = [];
         const seen = new Set();
@@ -87,7 +91,15 @@ const PsionicSpellSwapModal = ({
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, numericalSpellLevel, psionicKey]);
+  }, [open, numericalSpellLevel, psionicKey, classKeys]);
+
+  const allowedClassNames = useMemo(() => {
+    const keys =
+      Array.isArray(classKeys) && classKeys.filter(Boolean).length > 0
+        ? classKeys.filter(Boolean)
+        : ["sorcerer", "warlock", "wizard"];
+    return keys.map((k) => (k ? k[0].toUpperCase() + k.slice(1) : k)).join(", ");
+  }, [classKeys]);
 
   useEffect(() => {
     if (!open) return;
@@ -183,8 +195,7 @@ const PsionicSpellSwapModal = ({
       <DialogContent dividers>
         <Typography sx={{ fontSize: "13px", color: "#3e2723", mb: 1 }}>
           Swapping <strong>{originalSpell?.name || "Spell"}</strong> (level {numericalSpellLevel}) for another{" "}
-          <strong>sorcerer</strong>, <strong>warlock</strong>, or <strong>wizard</strong> spell (or a{" "}
-          <strong>custom</strong> spell).
+          <strong>{allowedClassNames}</strong> spell (or a <strong>custom</strong> spell).
         </Typography>
 
         {currentSwap?.index ? (

@@ -754,6 +754,107 @@ export const SpellList = (props) => {
   ]);
 
   useEffect(() => {
+    const BONUS_TAG = "lunar_sorcery_moon_fire";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+
+    const isLunarSorcery =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "lunarSorcery";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    if (!isLunarSorcery || sorcererLevel < 1) {
+      const hasBonus = currentCantrips.some(
+        (s) => s?.index === "sacred-flame" && s?.spelltrackerBonus === BONUS_TAG
+      );
+      if (!hasBonus) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter(
+          (s) => !(s?.index === "sacred-flame" && s?.spelltrackerBonus === BONUS_TAG)
+        );
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const existingIdx = currentCantrips.findIndex((s) => s?.index === "sacred-flame");
+    if (existingIdx !== -1) {
+      const existing = currentCantrips[existingIdx] || null;
+      const needsTag = String(existing?.spelltrackerBonus || "") !== BONUS_TAG;
+      if (!needsTag) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const idx = current.findIndex((s) => s?.index === "sacred-flame");
+        if (idx === -1) return prev;
+        const cur = current[idx] || {};
+        const updated = {
+          ...cur,
+          spelltrackerBonus: BONUS_TAG,
+        };
+        const next = current.map((s, i) => (i === idx ? updated : s));
+        return { ...prev, spellsPrepared: { ...prev.spellsPrepared, 0: next } };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/sacred-flame")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const moonFire = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "sacred-flame")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, moonFire],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
     const BONUS_TAG = "draconic_gift_thaumaturgy";
     const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
 
@@ -1328,6 +1429,134 @@ export const SpellList = (props) => {
     characterInfo?.subclass,
     characterInfo?.characterLevel,
     characterInfo?.classLevels?.sorcerer,
+    characterInfo?.spellsPrepared,
+    characterInfo?.psionicSpellSwaps,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const LUNAR_EMBODIMENT_BONUS_TAG = "lunar_sorcery_lunar_embodiment_spell";
+
+    const isLunarSorcery =
+      characterInfo?.characterClass === "sorcerer" && String(characterInfo?.subclass || "") === "lunarSorcery";
+
+    const sorcererLevel = (() => {
+      const raw = characterInfo?.classLevels?.sorcerer;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "sorcerer")
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      return 0;
+    })();
+
+    const lunarKey = "sorcerer:lunarSorcery:lunarEmbodiment";
+    const swapsForLunar = characterInfo?.psionicSpellSwaps?.[lunarKey] || {};
+    const selectedPhase = String(characterInfo?.lunarEmbodimentPhase || "full").trim() || "full";
+
+    const lunarTable = [
+      { sorcererLevel: 1, spellLevel: 1, phase: "full", originalIndex: "shield" },
+      { sorcererLevel: 1, spellLevel: 1, phase: "new", originalIndex: "ray-of-sickness" },
+      { sorcererLevel: 1, spellLevel: 1, phase: "crescent", originalIndex: "color-spray" },
+      { sorcererLevel: 3, spellLevel: 2, phase: "full", originalIndex: "lesser-restoration" },
+      { sorcererLevel: 3, spellLevel: 2, phase: "new", originalIndex: "blindness-deafness" },
+      { sorcererLevel: 3, spellLevel: 2, phase: "crescent", originalIndex: "alter-self" },
+      { sorcererLevel: 5, spellLevel: 3, phase: "full", originalIndex: "dispel-magic" },
+      { sorcererLevel: 5, spellLevel: 3, phase: "new", originalIndex: "vampiric-touch" },
+      { sorcererLevel: 5, spellLevel: 3, phase: "crescent", originalIndex: "phantom-steed" },
+      { sorcererLevel: 7, spellLevel: 4, phase: "full", originalIndex: "death-ward" },
+      { sorcererLevel: 7, spellLevel: 4, phase: "new", originalIndex: "confusion" },
+      { sorcererLevel: 7, spellLevel: 4, phase: "crescent", originalIndex: "hallucinatory-terrain" },
+      { sorcererLevel: 9, spellLevel: 5, phase: "full", originalIndex: "rarys-telepathic-bond" },
+      { sorcererLevel: 9, spellLevel: 5, phase: "new", originalIndex: "hold-monster" },
+      { sorcererLevel: 9, spellLevel: 5, phase: "crescent", originalIndex: "mislead" },
+    ];
+
+    const active = isLunarSorcery
+      ? lunarTable.filter((row) => sorcererLevel >= row.sorcererLevel && String(row.phase || "") === selectedPhase)
+      : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+
+      let changed = false;
+
+      const allowedByOrigin = new Map(active.map((r) => [String(r.originalIndex), r]));
+
+      // Remove any Lunar Embodiment bonus spells when subclass/level no longer qualifies.
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((s) => {
+          const tag = String(s?.spelltrackerBonus || "");
+          if (tag !== LUNAR_EMBODIMENT_BONUS_TAG) return true;
+          const origin = String(s?.spelltrackerOrigin || "");
+          return Boolean(origin && allowedByOrigin.has(origin));
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (isLunarSorcery) {
+        const ensureSpell = (row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+
+          const swapped = row.originalIndex ? swapsForLunar?.[row.originalIndex] : null;
+          const desiredIndex = String(swapped?.index || row.originalIndex || "").trim();
+          if (!desiredIndex) return;
+
+          const existingIdx = list.findIndex((s) => String(s?.index || "") === desiredIndex);
+          if (existingIdx !== -1) {
+            const existing = list[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== LUNAR_EMBODIMENT_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true ||
+              String(existing?.spelltrackerOrigin || "") !== String(row.originalIndex || "");
+
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: LUNAR_EMBODIMENT_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+              spelltrackerLunarPhase: String(row.phase || ""),
+            };
+            next[levelKey] = list.map((s, idx) => (idx === existingIdx ? updated : s));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...list,
+            {
+              index: desiredIndex,
+              name: swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: LUNAR_EMBODIMENT_BONUS_TAG,
+              spelltrackerOrigin: String(row.originalIndex || ""),
+              spelltrackerDoesNotCount: true,
+              spelltrackerLunarPhase: String(row.phase || ""),
+            },
+          ];
+        };
+
+        active.forEach((row) => ensureSpell(row));
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.sorcerer,
+    characterInfo?.lunarEmbodimentPhase,
     characterInfo?.spellsPrepared,
     characterInfo?.psionicSpellSwaps,
     setCharacterInfo,
@@ -3597,8 +3826,10 @@ export const SpellList = (props) => {
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
+    const MOON_FIRE_BONUS_TAG = "lunar_sorcery_moon_fire";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
     const CLOCKWORK_MAGIC_BONUS_TAG = "clockwork_soul_clockwork_magic_spell";
+    const LUNAR_EMBODIMENT_BONUS_TAG = "lunar_sorcery_lunar_embodiment_spell";
     const DIVINE_SOUL_AFFINITY_BONUS_TAG = "divine_soul_affinity_spell";
     const DIVINE_SOUL_DIVINE_MAGIC_TAG = "divine_soul_divine_magic_spell";
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -3682,6 +3913,33 @@ export const SpellList = (props) => {
                      }}
                    />
                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.index === "sacred-flame" &&
+                  spell?.spelltrackerBonus === MOON_FIRE_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title={
+                      <span>
+                        Moon Fire cantrip (does not count toward cantrips known).{" "}
+                        <strong>Also: Sacred Flame can target two creatures within 5 feet of each other.</strong>
+                      </span>
+                    }
+                  >
+                    <Chip
+                      size="small"
+                      label="MF"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(245, 124, 0, 0.92)",
+                        border: "1px solid rgba(245, 124, 0, 0.22)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
                 ) : spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
                   <Tooltip
                     arrow
@@ -3698,6 +3956,26 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(74, 20, 140, 0.86)",
                         border: "1px solid rgba(74, 20, 140, 0.22)",
+                        "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === LUNAR_EMBODIMENT_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Lunar Embodiment spell (always known; does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="LE"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.7,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(33, 150, 243, 0.92)",
+                        border: "1px solid rgba(33, 150, 243, 0.22)",
                         "&:hover": { opacity: 0.85 },
                       }}
                     />
@@ -3945,6 +4223,33 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(74, 20, 140, 0.22)",
                         backgroundColor: "rgba(74, 20, 140, 0.06)",
                         "&:hover": { backgroundColor: "rgba(74, 20, 140, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === LUNAR_EMBODIMENT_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Lunar Embodiment spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Lunar Embodiment spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || spell?.index || "").trim();
+                        setPsionicSwapModal({
+                          open: true,
+                          spellLevel: Number(numericalSpellLevel),
+                          psionicKey: "sorcerer:lunarSorcery:lunarEmbodiment",
+                          swapLabel: "Lunar Embodiment",
+                          originalSpell: origin ? { index: origin, name: humanizeSpellIndex(origin) } : spell,
+                          classKeys: ["sorcerer"],
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(33, 150, 243, 0.92)",
+                        border: "1px solid rgba(33, 150, 243, 0.22)",
+                        backgroundColor: "rgba(33, 150, 243, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(33, 150, 243, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
@@ -4987,7 +5292,17 @@ export const SpellList = (props) => {
           psionicKey={psionicSwapModal.psionicKey || "sorcerer:aberrantMind"}
           swapLabel={psionicSwapModal.swapLabel || "Psionic Spell"}
           originalSpell={psionicSwapModal.originalSpell}
-          onClose={() => setPsionicSwapModal((s) => ({ ...s, open: false, originalSpell: null, swapLabel: "Psionic Spell" }))}
+          classKeys={psionicSwapModal.classKeys}
+          onClose={() =>
+            setPsionicSwapModal((s) => ({
+              ...s,
+              open: false,
+              originalSpell: null,
+              swapLabel: "Psionic Spell",
+              classKeys: undefined,
+              psionicKey: "",
+            }))
+          }
         />
 
         <DivineSoulAffinitySpellSwapModal
