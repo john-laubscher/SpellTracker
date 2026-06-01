@@ -6161,7 +6161,65 @@
           },
         ],
       },
-      shadowMagic: "",
+      shadowMagic: {
+        name: "Shadow Magic",
+        source: "Xanathar's Guide to Everything",
+        features: [
+          {
+            id: "eyes_of_the_dark",
+            name: "Eyes of the Dark",
+            desc: [
+              "You gain darkvision out to 120 feet.",
+              "At sorcerer level 3, you learn Darkness as a bonus spell; it doesn't count against spells known.",
+              "You can cast it using a spell slot, or by spending 2 sorcery points. When cast with sorcery points, you can see through your Darkness.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "strength_of_the_grave",
+            name: "Strength of the Grave",
+            desc: [
+              "When damage would drop you to 0 hit points, you can attempt a Charisma save (DC 5 + damage taken) to drop to 1 hit point instead.",
+              "This can't be used if the damage is radiant, or if it was a critical hit.",
+              "Once it succeeds, it can't be used again until you finish a long rest.",
+            ],
+            level: 1,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+          {
+            id: "hound_of_ill_omen",
+            name: "Hound of Ill Omen",
+            desc: [
+              "As a bonus action, spend 3 sorcery points to summon a shadowy hound that relentlessly attacks a creature you can see within 120 feet.",
+              "While the hound is within 5 feet of its target, the target has disadvantage on saving throws against your spells.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "shadow_walk",
+            name: "Shadow Walk",
+            desc: [
+              "While in dim light or darkness, you can teleport up to 120 feet as a bonus action to an unoccupied space you can see that is also in dim light or darkness.",
+            ],
+            level: 14,
+            tracked: false,
+          },
+          {
+            id: "umbral_form",
+            name: "Umbral Form",
+            desc: [
+              "As a bonus action, spend 6 sorcery points to become shadowy for 1 minute.",
+              "You gain resistance to all damage except force and radiant, and you can move through creatures and objects (taking 5 force damage if you end your turn inside an object).",
+            ],
+            level: 18,
+            tracked: false,
+          },
+        ],
+      },
       stormSorcery: "",
       wildMagic: "",
       Pyromancy: "",
