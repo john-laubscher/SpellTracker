@@ -421,6 +421,7 @@ const FeatureAccordionRow = ({
 const FeatureDisplay = ({
   title,
   features,
+  defaultUntrackedExpanded,
   untrackedLabel,
   renderTrackedTrailingControls,
   renderUntrackedTrailingControls,
@@ -460,10 +461,12 @@ const FeatureDisplay = ({
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
   const [stackingChecksById, setStackingChecksById] = React.useState({});
-  // Track whether the user manually toggled the untracked section.
-  const [, setUntrackedTouched] = React.useState(false);
+  // Track whether the user manually toggled the untracked section (so we don't auto-collapse it later).
+  const [untrackedTouched, setUntrackedTouched] = React.useState(false);
   const [untrackedExpanded, setUntrackedExpanded] = React.useState(
-    trackedFeatures.length === 0 && untrackedFeatures.length > 0
+    typeof defaultUntrackedExpanded === "boolean"
+      ? defaultUntrackedExpanded
+      : trackedFeatures.length === 0 && untrackedFeatures.length > 0
   );
   const [lastFeatureSetKey, setLastFeatureSetKey] = React.useState(featureSetKey);
   const [activeDicePoolEditorKey, setActiveDicePoolEditorKey] = React.useState(null);
@@ -477,9 +480,21 @@ const FeatureDisplay = ({
   React.useEffect(() => {
     if (featureSetKey === lastFeatureSetKey) return;
     setLastFeatureSetKey(featureSetKey);
-    setUntrackedTouched(false);
-    setUntrackedExpanded(trackedFeatures.length === 0 && untrackedFeatures.length > 0);
-  }, [featureSetKey, lastFeatureSetKey, trackedFeatures.length, untrackedFeatures.length]);
+    if (!untrackedTouched) {
+      setUntrackedExpanded(
+        typeof defaultUntrackedExpanded === "boolean"
+          ? defaultUntrackedExpanded
+          : trackedFeatures.length === 0 && untrackedFeatures.length > 0
+      );
+    }
+  }, [
+    featureSetKey,
+    lastFeatureSetKey,
+    trackedFeatures.length,
+    untrackedFeatures.length,
+    untrackedTouched,
+    defaultUntrackedExpanded,
+  ]);
 
   const getUsesCount = (feature) => {
     if (feature?.recharge === "rage") return 1;
@@ -2346,6 +2361,7 @@ const FeaturesAndTrackables = () => {
               manageTooltip="Manage which subclass features are tracked"
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
+              defaultUntrackedExpanded={true}
               untrackedLabel="Untracked Subclass Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
