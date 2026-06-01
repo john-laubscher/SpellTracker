@@ -6220,7 +6220,67 @@
           },
         ],
       },
-      stormSorcery: "",
+      stormSorcery: {
+        name: "Storm Sorcery",
+        source: "Sword Coast Adventurer's Guide, Xanathar's Guide to Everything",
+        features: [
+          {
+            id: "tempestuous_magic",
+            name: "Tempestuous Magic",
+            desc: [
+              "Starting at 1st level, you can use a bonus action immediately before or after you cast a spell of 1st level or higher to ride a brief gust of wind.",
+              "You fly up to 10 feet without provoking opportunity attacks.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "heart_of_the_storm",
+            name: "Heart of the Storm",
+            desc: [
+              "At 6th level, you gain resistance to lightning and thunder damage.",
+              "Whenever you start casting a spell of 1st level or higher that deals lightning or thunder damage, creatures of your choice that you can see within 10 feet take lightning or thunder damage (your choice each time) equal to half your sorcerer level.",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "storm_guide",
+            name: "Storm Guide",
+            desc: [
+              "At 6th level, you can subtly control the weather around you.",
+              "If it's raining, you can use an action to stop rain in a 20-foot-radius sphere centered on you; end the effect as a bonus action.",
+              "If it's windy, you can use a bonus action each round to choose the wind's direction in a 100-foot-radius sphere centered on you until the end of your next turn (this doesn't change wind speed).",
+            ],
+            level: 6,
+            tracked: false,
+          },
+          {
+            id: "storms_fury",
+            name: "Storm's Fury",
+            desc: [
+              "Starting at 14th level, when you are hit by a melee attack, you can use your reaction to deal lightning damage to the attacker equal to your sorcerer level.",
+              "The attacker must make a Strength saving throw against your spell save DC; on a failure, it is pushed up to 20 feet straight away from you.",
+            ],
+            level: 14,
+            tracked: false,
+          },
+          {
+            id: "wind_soul",
+            name: "Wind Soul",
+            desc: [
+              "At 18th level, you gain immunity to lightning and thunder damage.",
+              "You also gain a magical flying speed of 60 feet.",
+              "As an action, you can reduce your flying speed to 30 feet for 1 hour and choose a number of creatures within 30 feet equal to 3 + your Charisma modifier; those creatures gain a magical flying speed of 30 feet for 1 hour.",
+              "Once you reduce your flying speed this way, you can't do so again until you finish a short or long rest.",
+            ],
+            level: 18,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+        ],
+      },
       wildMagic: "",
       Pyromancy: "",
     },
