@@ -56,6 +56,30 @@ const spellLevelColors = {
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const ORDINAL_LABELS = {
+  first: "1st",
+  second: "2nd",
+  third: "3rd",
+  fourth: "4th",
+  fifth: "5th",
+  sixth: "6th",
+  seventh: "7th",
+  eighth: "8th",
+  ninth: "9th",
+};
+
+const SPELL_LEVEL_KEY_BY_NUMBER = {
+  1: "first",
+  2: "second",
+  3: "third",
+  4: "fourth",
+  5: "fifth",
+  6: "sixth",
+  7: "seventh",
+  8: "eighth",
+  9: "ninth",
+};
+
 const emptyByLevel = () => ({
   0: [],
   1: [],
@@ -322,7 +346,13 @@ export const SpellList = (props) => {
   const spellListClassKey = hasSubclassSpellcasting
     ? String(subclassSpellcasting?.spellListClassKey || "")
     : String(classKey || "");
+  const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
+  const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
+  const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
+  const warlockSlotLevelNumber = isWarlock
+    ? Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).reduce((match, [lvl, key]) => (key === warlockSlotLevelKey ? Number(lvl) : match), 0)
+    : 0;
   const includeDivineSoulClericSpellList =
     classKey === "sorcerer" && String(characterInfo?.subclass || "") === "divineSoul";
   const isFighter = String(characterInfo?.characterClass || "") === "fighter";
@@ -3578,6 +3608,34 @@ export const SpellList = (props) => {
 
   const showClassSpellsButton = (numericalSpellLevel) => {
     const isCantrips = Number(numericalSpellLevel) === 0;
+    const isWarlockKnownSpellSection = isWarlock && !isCantrips && Number(numericalSpellLevel) !== Number(warlockSlotLevelNumber);
+    const buttonOpenLabel = isCantrips
+      ? "Close Cantrip List"
+      : isWarlockKnownSpellSection
+        ? "Close Known Spell List"
+        : "Close Spell List";
+    const buttonClosedLabel = isCantrips
+      ? "Learn more cantrips"
+      : isWarlockKnownSpellSection
+        ? "Choose known spells"
+        : isWarlock
+          ? "Choose warlock spells"
+          : "Prepare more spells";
+    const dialogTitle = !isCantrips && isWarlock
+      ? (
+        <Typography
+          sx={{
+            fontFamily: "inherit",
+            fontWeight: 700,
+            fontSize: "1.1rem",
+            letterSpacing: 0,
+            textTransform: "none",
+          }}
+        >
+          Choose warlock spells to know
+        </Typography>
+      )
+      : null;
 
     return (
       <div>
@@ -3600,9 +3658,7 @@ export const SpellList = (props) => {
             '&:hover': { borderColor: '#8B4513', backgroundColor: 'rgba(139,69,19,0.06)' },
           }}
         >
-          {spells[numericalSpellLevel].showModal
-            ? (isCantrips ? 'Close Cantrip List' : 'Close Spell List')
-            : (isCantrips ? 'Learn more cantrips' : 'Prepare more spells')}
+          {spells[numericalSpellLevel].showModal ? buttonOpenLabel : buttonClosedLabel}
         </Button>
         {spells[numericalSpellLevel].showModal ? <AddSpellModal
           isModalOpen={spells[numericalSpellLevel].showModal}
@@ -3611,6 +3667,7 @@ export const SpellList = (props) => {
           spells={spells[numericalSpellLevel].classSpells}
           spellsLoading={spellListLoadStatus[numericalSpellLevel]?.loading}
           spellsError={spellListLoadStatus[numericalSpellLevel]?.error}
+          dialogTitle={dialogTitle}
         /> : null}
       </div>
     )
@@ -3738,6 +3795,12 @@ export const SpellList = (props) => {
 
     const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
     const isCantrips = textualSpellLevel === "cantrips";
+    const isWarlockSpellLevelSection =
+      isWarlock &&
+      !isCantrips &&
+      Number(numericalSpellLevel) >= 1 &&
+      Number(numericalSpellLevel) <= Math.max(1, warlockSlotLevelNumber);
+    const shouldShowWarlockSection = isCantrips || isWarlockSpellLevelSection;
     const preparedAtLevel = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? characterInfo.spellsPrepared[numericalSpellLevel]
       : [];
@@ -3754,7 +3817,11 @@ export const SpellList = (props) => {
         hasCircleOfMortality ||
         hasLightBonusCantrip ||
         hasGuidingWhispers);
-    if (slotCount === 0 && !shouldRenderFeatureCantripSection) return null;
+    if (isWarlock) {
+      if (!shouldShowWarlockSection && !shouldRenderFeatureCantripSection) return null;
+    } else if (slotCount === 0 && !shouldRenderFeatureCantripSection) {
+      return null;
+    }
 
     const levelColor = spellLevelColors[numericalSpellLevel] || '#607d8b';
 
@@ -3799,7 +3866,17 @@ export const SpellList = (props) => {
       return "Cantrips";
     })();
 
-    const heading = isCantrips ? cantripHeading : `${capitalize(textualSpellLevel)} Level Spell Slots`;
+    const heading = (() => {
+      if (isCantrips) return cantripHeading;
+      if (isWarlock) {
+        if (Number(numericalSpellLevel) === Number(warlockSlotLevelNumber)) {
+          return `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Spell Slots`;
+        }
+        return `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Spells Known`;
+      }
+      return `${capitalize(textualSpellLevel)} Level Spell Slots`;
+    })();
+    const shouldRenderSpellCheckboxes = !isCantrips && (!isWarlock || Number(numericalSpellLevel) === Number(warlockSlotLevelNumber));
 
       return (
         <Box
@@ -3865,7 +3942,7 @@ export const SpellList = (props) => {
                 </Tooltip>
               ) : null}
              </Box>
-             {!isCantrips && (
+             {shouldRenderSpellCheckboxes && (
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
              )}
           </Box>

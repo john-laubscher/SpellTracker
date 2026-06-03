@@ -1,4 +1,9 @@
-﻿export const ClassesData = {
+import {
+  WARLOCK_ELDRITCH_INVOCATIONS,
+  WARLOCK_PACT_BOONS,
+} from "./warlockOptionsData";
+
+export const ClassesData = {
   // Nesting goes as follows: Class, Subclass, level, ability gained from subclass (name: descritption).
   // Includes subclasses***
   noClass: {
@@ -6391,34 +6396,52 @@
     hitDice: "D8",
     isSpellCaster: "refer to spellTables",
     spellcastingAbility: "cha",
+    eldritchInvocations: WARLOCK_ELDRITCH_INVOCATIONS,
+    pactBoons: WARLOCK_PACT_BOONS,
     classFeatures: [
       {
         id: "eldritch_invocations",
         name: "Eldritch Invocations",
-        desc: "At 2nd level, you gain two Eldritch Invocations of your choice. When you gain certain warlock levels, you gain additional invocations of your choice.",
+        desc: [
+          "At 2nd level, your occult studies grant you eldritch invocations of your choice.",
+          "You learn additional invocations at certain warlock levels, and any level prerequisite uses your warlock level.",
+          "Whenever you gain a warlock level, you can replace one invocation you know with another invocation you qualify for.",
+        ],
         level: 2,
-        tracked: false, //Should be part of Char Creation after lvl 2, and levelups. Refer to chart for number of invocations
+        tracked: false,
       },
       {
         id: "pact_boon",
         name: "Pact Boon",
-        desc: "At 3rd level, you gain a pact boon feature of your choice.",
+        desc: [
+          "At 3rd level, your patron grants you a pact boon.",
+          "Choose the boon that best reflects the gift and bond your patron has given you.",
+        ],
         level: 3,
         tracked: false,
       },
       {
         id: "mystic_arcanum",
         name: "Mystic Arcanum",
-        desc: "At 11th level, your patron bestows upon you a magical secret called an arcanum. Choose one 6th-level spell from the warlock spell list as this arcanum. You can cast it once without expending a spell slot.",
+        desc: [
+          "At 11th level, choose one 6th-level warlock spell as a mystic arcanum that you can cast once without spending a spell slot.",
+          "You also gain one 7th-level arcanum at 13th level, one 8th-level arcanum at 15th level, and one 9th-level arcanum at 17th level.",
+          "Each arcanum refreshes on a long rest.",
+        ],
         level: 11,
-        tracked: false, // **NEEDS Spelllist to account for this--might already be in spellTable page?**
+        tracked: false,
       },
       {
         id: "eldritch_master",
         name: "Eldritch Master",
-        desc: "At 20th level, you can draw on your inner reserve of mystical power while entreating your patron for aid. Once per long rest, you can regain all your expended spell slots as an action.",
+        desc: [
+          "At 20th level, you can spend 1 minute entreating your patron to regain all expended Pact Magic spell slots.",
+          "After you use this feature, you must finish a long rest before you can do so again.",
+        ],
         level: 20,
-        tracked: 1, //1/LR
+        tracked: true,
+        uses: 1,
+        recharge: "lr",
       },
     ],
     subclasses: {
