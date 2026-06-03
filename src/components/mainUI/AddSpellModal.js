@@ -29,7 +29,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import { AuthContext, CharacterInfoContext } from '../../Contexts/Context';
 import PreparedSpellsStatus from './PreparedSpellsStatus';
 
-const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spellsLoading, spellsError }) => {
+const AddSpellsModal = ({
+  isModalOpen,
+  onClose,
+  numericalSpellLevel,
+  spells,
+  spellsLoading,
+  spellsError,
+  dialogTitle,
+}) => {
   const { auth, setAuth } = React.useContext(AuthContext);
   const token = auth?.token;
   const { setCharacterInfo } = React.useContext(CharacterInfoContext);
@@ -513,16 +521,18 @@ const AddSpellsModal = ({ isModalOpen, onClose, numericalSpellLevel, spells, spe
           {isCantrips ? (
             'Choose cantrips to learn'
           ) : (
-            <PreparedSpellsStatus
-              label="Choose spells to prepare"
-              typographySx={{
-                fontFamily: 'inherit',
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                letterSpacing: 0,
-                textTransform: 'none',
-              }}
-            />
+            dialogTitle || (
+              <PreparedSpellsStatus
+                label="Choose spells to prepare"
+                typographySx={{
+                  fontFamily: 'inherit',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  letterSpacing: 0,
+                  textTransform: 'none',
+                }}
+              />
+            )
           )}
           <IconButton
             aria-label="Close"

@@ -218,6 +218,43 @@ const loadDomainSpellSwapsFromStorage = () => {
   }
 };
 
+const loadWarlockInvocationsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_warlockInvocations");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((x) => typeof x === "string" && x.trim().length > 0);
+  } catch {
+    return null;
+  }
+};
+
+const loadWarlockPactBoonFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_warlockPactBoon");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "string") return null;
+    const trimmed = parsed.trim();
+    return trimmed || null;
+  } catch {
+    return null;
+  }
+};
+
+const loadWarlockMysticArcanumFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_warlockMysticArcanum");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((entry) => entry && typeof entry === "object" && entry.index && entry.name);
+  } catch {
+    return null;
+  }
+};
+
 const loadFourElementsDisciplinesFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_fourElementsDisciplines");
@@ -272,6 +309,9 @@ function App() {
     const persistedArcaneShotOptions = loadArcaneShotOptionsFromStorage();
     const persistedArcaneShotBonusOptions = loadArcaneShotBonusOptionsFromStorage();
     const persistedBattleMasterManeuvers = loadBattleMasterManeuversFromStorage();
+    const persistedWarlockInvocations = loadWarlockInvocationsFromStorage();
+    const persistedWarlockPactBoon = loadWarlockPactBoonFromStorage();
+    const persistedWarlockMysticArcanum = loadWarlockMysticArcanumFromStorage();
     const persistedMetamagicOptions = loadMetamagicOptionsFromStorage();
     const persistedAdditionalFightingStyle = loadAdditionalFightingStyleFromStorage();
     const persistedShowManeuversInSpellTracker = loadShowManeuversInSpellTrackerFromStorage();
@@ -344,6 +384,9 @@ function App() {
       arcaneShotOptions: Array.isArray(persistedArcaneShotOptions) ? persistedArcaneShotOptions : [],
       arcaneShotBonusOptions: Number.isFinite(persistedArcaneShotBonusOptions) ? persistedArcaneShotBonusOptions : 0,
       battleMasterManeuvers: Array.isArray(persistedBattleMasterManeuvers) ? persistedBattleMasterManeuvers : [],
+      warlockInvocations: Array.isArray(persistedWarlockInvocations) ? persistedWarlockInvocations : [],
+      warlockPactBoon: typeof persistedWarlockPactBoon === "string" ? persistedWarlockPactBoon : "",
+      warlockMysticArcanum: Array.isArray(persistedWarlockMysticArcanum) ? persistedWarlockMysticArcanum : [],
       metamagicOptions: Array.isArray(persistedMetamagicOptions) ? persistedMetamagicOptions : [],
       showManeuversInSpellTracker: typeof persistedShowManeuversInSpellTracker === "boolean" ? persistedShowManeuversInSpellTracker : false,
       domainSpellSwaps: persistedDomainSpellSwaps || {},
@@ -529,6 +572,39 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.battleMasterManeuvers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_warlockInvocations",
+        JSON.stringify(characterInfo.warlockInvocations || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.warlockInvocations]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_warlockPactBoon",
+        JSON.stringify(String(characterInfo.warlockPactBoon || ""))
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.warlockPactBoon]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_warlockMysticArcanum",
+        JSON.stringify(characterInfo.warlockMysticArcanum || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.warlockMysticArcanum]);
 
   useEffect(() => {
     try {
