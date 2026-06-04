@@ -6792,7 +6792,65 @@ export const ClassesData = {
         ],
         expandedSpellOptions: getGenieExpandedSpellOptions(""),
       },
-      greatOldOne: "",
+      greatOldOne: {
+        // Source (feature text): https://dnd5e.wikidot.com/warlock:great-old-one (CC BY-SA 3.0)
+        name: "The Great Old One",
+        source: "Player's Handbook",
+        features: [
+          {
+            id: "awakened_mind",
+            name: "Awakened Mind",
+            desc: [
+              "Starting at 1st level, your alien knowledge gives you the ability to touch the minds of other creatures.",
+              "You can telepathically speak to any creature you can see within 30 feet of you.",
+              "You don't need to share a language with the creature for it to understand your telepathic utterances, but the creature must be able to understand at least one language.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "entropic_ward",
+            name: "Entropic Ward",
+            desc: [
+              "At 6th level, you learn to magically ward yourself against attack and to turn an enemy's failed strike into good luck for yourself.",
+              "When a creature makes an attack roll against you, you can use your reaction to impose disadvantage on that roll.",
+              "If the attack misses you, your next attack roll against the creature has advantage if you make it before the end of your next turn.",
+            ],
+            level: 6,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+          {
+            id: "thought_shield",
+            name: "Thought Shield",
+            desc: [
+              "Starting at 10th level, your thoughts can't be read by telepathy or other means unless you allow it.",
+              "You also have resistance to psychic damage, and whenever a creature deals psychic damage to you, that creature takes the same amount of damage that you do.",
+            ],
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "create_thrall",
+            name: "Create Thrall",
+            desc: [
+              "At 14th level, you gain the ability to infect a humanoid's mind with the alien magic of your patron.",
+              "You can use your action to touch an incapacitated humanoid. That creature is then charmed by you until a Remove Curse spell is cast on it, the charmed condition is removed from it, or you use this feature again.",
+              "You can communicate telepathically with the charmed creature as long as the two of you are on the same plane of existence.",
+            ],
+            level: 14,
+            tracked: false,
+          },
+        ],
+        expandedSpellOptions: [
+          { spellLevel: 1, spells: ["dissonant-whispers", "tashas-hideous-laughter"] },
+          { spellLevel: 2, spells: ["detect-thoughts", "phantasmal-force"] },
+          { spellLevel: 3, spells: ["clairvoyance", "sending"] },
+          { spellLevel: 4, spells: ["dominate-beast", "evards-black-tentacles"] },
+          { spellLevel: 5, spells: ["dominate-person", "telekinesis"] },
+        ],
+      },
       hexblade: "",
       undead: "",
       undying: "",
