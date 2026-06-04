@@ -1055,6 +1055,7 @@ const FeatureDisplay = ({
               const cooldownDaysRemaining = clampInt(tracker?.cooldownDaysRemaining ?? 0, 0, 999);
               const lastRoll = clampInt(tracker?.lastRoll ?? 0, 0, 4);
               const ready = cooldownDaysRemaining <= 0;
+              const featureLabel = String(feature?.name || "feature").trim() || "feature";
 
               return (
                 <>
@@ -1086,7 +1087,7 @@ const FeatureDisplay = ({
                   >
                     <IconButton
                       size="small"
-                      aria-label="Roll Limited Wish recharge"
+                      aria-label={`Roll ${featureLabel} recharge`}
                       onClick={() => {
                         const roll = Math.floor(Math.random() * 4) + 1;
                         setTracker({ cooldownDaysRemaining: roll, lastRoll: roll });
@@ -1100,7 +1101,7 @@ const FeatureDisplay = ({
                   <Tooltip arrow title="Subtract one long rest from the remaining recharge">
                     <IconButton
                       size="small"
-                      aria-label="Subtract one long rest from Limited Wish recharge"
+                      aria-label={`Subtract one long rest from ${featureLabel} recharge`}
                       onClick={() =>
                         setTracker({
                           cooldownDaysRemaining: Math.max(0, cooldownDaysRemaining - 1),
@@ -1115,7 +1116,7 @@ const FeatureDisplay = ({
                   <Tooltip arrow title="Add one long rest to the remaining recharge">
                     <IconButton
                       size="small"
-                      aria-label="Add one long rest to Limited Wish recharge"
+                      aria-label={`Add one long rest to ${featureLabel} recharge`}
                       onClick={() =>
                         setTracker({
                           cooldownDaysRemaining: Math.min(999, cooldownDaysRemaining + 1),
