@@ -450,6 +450,7 @@ const FeatureDisplay = ({
   fighterLevel,
   paladinLevel,
   sorcererLevel,
+  warlockLevel,
   characterClass,
   characterLevel,
 }) => {
@@ -612,7 +613,9 @@ const FeatureDisplay = ({
             </p>
           ) : null;
 
-        const customHeader = renderDetailsHeaderForFeature ? renderDetailsHeaderForFeature(feature) : null;
+        const customHeader = renderDetailsHeaderForFeature
+          ? renderDetailsHeaderForFeature(feature, { featureTrackers, setFeatureTrackers })
+          : null;
         const renderHeader =
           stackingHeader || customHeader
             ? () => (
@@ -679,6 +682,7 @@ const FeatureDisplay = ({
               const levelValue = (() => {
                 if (feature?.trackedLevelSource === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
                 if (feature?.trackedLevelSource === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
+                if (feature?.trackedLevelSource === "warlock_level") return Math.max(0, Math.trunc(Number(warlockLevel) || 0));
                 return Math.max(0, Math.trunc(Number(characterLevel) || 0));
               })();
 
@@ -695,6 +699,10 @@ const FeatureDisplay = ({
 
                 if (feature?.poolSize === "druid_level") return Math.max(0, Math.trunc(Number(druidLevel) || 0));
                 if (feature?.poolSize === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+                if (feature?.poolSize === "warlock_level") return Math.max(0, Math.trunc(Number(warlockLevel) || 0));
+                if (feature?.poolSize === "warlock_level_plus_one") {
+                  return Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
+                }
                 if (feature?.poolSize === "pb") return Math.max(0, Math.trunc(Number(proficiencyBonusValue) || 0));
                 if (feature?.poolSize === "pbx2") return Math.max(0, Math.trunc(Number(proficiencyBonusValue) || 0)) * 2;
                 return Math.max(0, Math.trunc(levelValue));
@@ -702,7 +710,13 @@ const FeatureDisplay = ({
 
               const poolBonusRaw = feature?.allowExtraDicePool ? tracker?.poolBonus : 0;
               const poolBonus = feature?.allowExtraDicePool ? clampInt(poolBonusRaw ?? 0, -20, 20) : 0;
-              const poolMax = Math.max(0, Math.trunc(basePoolMax + poolBonus));
+              const poolOverride = feature?.allowPoolSizeOverride
+                ? clampInt(tracker?.poolMaxOverride ?? basePoolMax, 0, 99)
+                : null;
+              const poolMax = Math.max(
+                0,
+                Math.trunc(feature?.allowPoolSizeOverride ? poolOverride : basePoolMax + poolBonus)
+              );
 
               const dieLabel = (() => {
                 if (Array.isArray(feature?.dieByLevel) && Number.isFinite(levelValue)) {
@@ -784,7 +798,7 @@ const FeatureDisplay = ({
                     </FormControl>
                   )}
 
-                  {feature?.allowExtraDicePool ? (
+                  {feature?.allowExtraDicePool && !feature?.allowPoolSizeOverride ? (
                     <>
                       <Tooltip arrow title="Decrease max dice">
                         <span>
@@ -2485,9 +2499,12 @@ const FeaturesAndTrackables = () => {
               fighterLevel={fighterLevel}
               paladinLevel={paladinLevel}
               sorcererLevel={sorcererLevel}
+              warlockLevel={warlockLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
-              renderDetailsHeaderForFeature={(feature) => {
+              renderDetailsHeaderForFeature={(feature, trackerHelpers) => {
+                const featureTrackers = trackerHelpers?.featureTrackers || {};
+                const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
                 if (characterClass === "warlock") {
                   if (feature?.id === "eldritch_invocations") {
                     const invocationList = classesData?.warlock?.eldritchInvocations || [];
@@ -2537,6 +2554,70 @@ const FeaturesAndTrackables = () => {
                             ? <em>None</em>
                             : warlockMysticArcanum.map((spell) => `${spell?.name} (${spell?.level})`).join(", ")} ({warlockMysticArcanumCount}/{warlockMysticArcanumExpected})
                         </p>
+                      </div>
+                    );
+                  }
+
+                  if (feature?.id === "healing_light") {
+                    const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
+                    const tracker = featureTrackers?.[trackerKey] || {};
+                    const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
+                    const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
+                    const currentMax = overrideActive
+                      ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
+                      : autoMax;
+
+                    return (
+                      <div style={{ margin: "2px 0 8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Max dice:</strong> {currentMax} d6
+                          {overrideActive ? ` (auto ${autoMax})` : ""}
+                        </p>
+                        <Tooltip arrow title="Override max Healing Light dice">
+                          <IconButton
+                            size="small"
+                            aria-label="Override Healing Light max dice"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const nextValue = window.prompt(
+                                "Set Healing Light max dice. Leave blank to reset to automatic.",
+                                String(currentMax)
+                              );
+                              if (nextValue === null || typeof setFeatureTrackers !== "function") return;
+                              const trimmed = String(nextValue).trim();
+                              if (!trimmed) {
+                                setFeatureTrackers((prev) => ({
+                                  ...(prev || {}),
+                                  [trackerKey]: {
+                                    ...(prev?.[trackerKey] || {}),
+                                    poolMaxOverride: null,
+                                    spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, autoMax)),
+                                  },
+                                }));
+                                return;
+                              }
+                              const parsed = Number(trimmed);
+                              if (!Number.isFinite(parsed)) return;
+                              const nextMax = Math.max(0, Math.min(99, Math.trunc(parsed)));
+                              setFeatureTrackers((prev) => ({
+                                ...(prev || {}),
+                                [trackerKey]: {
+                                  ...(prev?.[trackerKey] || {}),
+                                  poolMaxOverride: nextMax,
+                                  spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, nextMax)),
+                                },
+                              }));
+                            }}
+                            sx={{
+                              p: 0.25,
+                              border: "1px solid rgba(93, 64, 55, 0.25)",
+                              backgroundColor: "rgba(244, 233, 221, 0.65)",
+                              "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                            }}
+                          >
+                            <SettingsIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
                       </div>
                     );
                   }
@@ -2666,9 +2747,12 @@ const FeaturesAndTrackables = () => {
               fighterLevel={fighterLevel}
               paladinLevel={paladinLevel}
               sorcererLevel={sorcererLevel}
+              warlockLevel={warlockLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
-              renderDetailsHeaderForFeature={(feature) => {
+              renderDetailsHeaderForFeature={(feature, trackerHelpers) => {
+                const featureTrackers = trackerHelpers?.featureTrackers || {};
+                const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
                 if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
                   const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
                   const dexMod = characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0;
@@ -2699,6 +2783,75 @@ const FeaturesAndTrackables = () => {
                         <strong>Selected maneuvers:</strong>{" "}
                         {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
                       </p>
+                    </div>
+                  );
+                }
+
+                if (
+                  characterClass === "warlock" &&
+                  String(subclass || "") === "celestial" &&
+                  feature?.id === "healing_light"
+                ) {
+                  const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
+                  const tracker = featureTrackers?.[trackerKey] || {};
+                  const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
+                  const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
+                  const currentMax = overrideActive
+                    ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
+                    : autoMax;
+
+                  return (
+                    <div style={{ margin: "2px 0 8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Max dice:</strong> {currentMax} d6
+                        {overrideActive ? ` (auto ${autoMax})` : ""}
+                      </p>
+                      <Tooltip arrow title="Override max Healing Light dice">
+                        <IconButton
+                          size="small"
+                          aria-label="Override Healing Light max dice"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (typeof setFeatureTrackers !== "function") return;
+                            const nextValue = window.prompt(
+                              "Set Healing Light max dice. Leave blank to reset to automatic.",
+                              String(currentMax)
+                            );
+                            if (nextValue === null) return;
+                            const trimmed = String(nextValue).trim();
+                            if (!trimmed) {
+                              setFeatureTrackers((prev) => ({
+                                ...(prev || {}),
+                                [trackerKey]: {
+                                  ...(prev?.[trackerKey] || {}),
+                                  poolMaxOverride: null,
+                                  spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, autoMax)),
+                                },
+                              }));
+                              return;
+                            }
+                            const parsed = Number(trimmed);
+                            if (!Number.isFinite(parsed)) return;
+                            const nextMax = Math.max(0, Math.min(99, Math.trunc(parsed)));
+                            setFeatureTrackers((prev) => ({
+                              ...(prev || {}),
+                              [trackerKey]: {
+                                ...(prev?.[trackerKey] || {}),
+                                poolMaxOverride: nextMax,
+                                spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, nextMax)),
+                              },
+                            }));
+                          }}
+                          sx={{
+                            p: 0.25,
+                            border: "1px solid rgba(93, 64, 55, 0.25)",
+                            backgroundColor: "rgba(244, 233, 221, 0.65)",
+                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                          }}
+                        >
+                          <SettingsIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
                     </div>
                   );
                 }
