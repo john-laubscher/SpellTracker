@@ -2,6 +2,7 @@ import {
   WARLOCK_ELDRITCH_INVOCATIONS,
   WARLOCK_PACT_BOONS,
 } from "./warlockOptionsData";
+import { getGenieExpandedSpellOptions } from "../utils/genieData";
 
 export const ClassesData = {
   // Nesting goes as follows: Class, Subclass, level, ability gained from subclass (name: descritption).
@@ -6714,7 +6715,83 @@ export const ClassesData = {
           { spellLevel: 5, spells: ["flame-strike", "hallow"] },
         ],
       },
-      genie: "",
+      genie: {
+        name: "The Genie",
+        source: "Tasha's Cauldron of Everything",
+        features: [
+          {
+            id: "genies_vessel",
+            name: "Genie's Vessel",
+            desc: [
+              "At 1st level, your patron gifts you a magical vessel that grants you a measure of the genie's power.",
+              "The vessel is a Tiny object that you can use as a spellcasting focus for your warlock spells.",
+              "Typical vessels include an oil lamp, urn, ring with a compartment, stoppered bottle, hollow statuette, or ornate lantern.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "bottled_respite",
+            name: "Bottled Respite",
+            desc: [
+              "While touching your vessel, you can use an action to magically vanish and enter it.",
+              "You can remain inside for up to twice your proficiency bonus in hours, and can leave early as a bonus action.",
+              "Once you enter the vessel, you can't enter again until you finish a long rest.",
+            ],
+            level: 1,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+          {
+            id: "genies_wrath",
+            name: "Genie's Wrath",
+            desc: [
+              "Once during each of your turns when you hit with an attack roll, you can deal extra damage equal to your proficiency bonus.",
+              "The damage type is determined by your patron's kind.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "elemental_gift",
+            name: "Elemental Gift",
+            desc: [
+              "At 6th level, you gain permanent resistance to a damage type determined by your patron's kind.",
+              "You can also use a bonus action to give yourself a flying speed of 30 feet for 10 minutes, during which you can hover.",
+              "You can activate that flying speed a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            ],
+            level: 6,
+            tracked: true,
+            uses: "pb",
+            recharge: "lr",
+          },
+          {
+            id: "sanctuary_vessel",
+            name: "Sanctuary Vessel",
+            desc: [
+              "At 10th level, when you enter your Genie's Vessel via Bottled Respite, you can bring up to five willing creatures within 30 feet into the vessel with you.",
+              "As a bonus action, you can eject any number of creatures from the vessel.",
+              "Anyone who stays in the vessel for at least 10 minutes gains the benefit of finishing a short rest there, and creatures spending Hit Dice add your proficiency bonus to the hit points regained.",
+            ],
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "limited_wish",
+            name: "Limited Wish",
+            desc: [
+              "At 14th level, as an action, you can request the effect of one spell of 6th level or lower with a casting time of 1 action.",
+              "The spell can come from any class spell list, requires no spell slot, and ignores material and other casting requirements.",
+              "After you use this feature, click the die icon to roll the 1d4-long-rest recharge, then adjust the remaining days manually as needed.",
+            ],
+            level: 14,
+            tracked: true,
+            trackedMode: "rolledLongRestCooldown",
+          },
+        ],
+        expandedSpellOptions: getGenieExpandedSpellOptions(""),
+      },
       greatOldOne: "",
       hexblade: "",
       undead: "",

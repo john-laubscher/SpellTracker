@@ -24,6 +24,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import RemoveIcon from "@mui/icons-material/Remove";
+import CasinoIcon from "@mui/icons-material/Casino";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Brightness2Icon from "@mui/icons-material/Brightness2";
@@ -54,6 +55,7 @@ import SpellAccordian from "./SpellAccordian";
 import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
 import DragonHeadIcon from "./DragonHeadIcon";
+import GenieLampIcon from "./GenieLampIcon";
 import MagicSparklesIcon from "./MagicSparklesIcon";
 import PactScrollIcon from "./PactScrollIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
@@ -83,6 +85,7 @@ import {
   getWarlockMysticArcanumExpectedTotal,
   getWarlockUnlockedArcanumLevels,
 } from "../warlockOptionsData";
+import { GENIE_KIND_OPTIONS, getGenieBenefitsSummaryLines, getGenieKindData } from "../../utils/genieData";
 
 const getRogueSneakAttackDice = (rogueLevel) => {
   const level = Number(rogueLevel || 0);
@@ -1048,6 +1051,87 @@ const FeatureDisplay = ({
               );
             }
 
+            if (feature?.trackedMode === "rolledLongRestCooldown") {
+              const cooldownDaysRemaining = clampInt(tracker?.cooldownDaysRemaining ?? 0, 0, 999);
+              const lastRoll = clampInt(tracker?.lastRoll ?? 0, 0, 4);
+              const ready = cooldownDaysRemaining <= 0;
+
+              return (
+                <>
+                  <Typography
+                    sx={{
+                      ml: 0.5,
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: ready ? "#0f766e" : "#7c2d12",
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: "10px",
+                      border: `1px solid ${ready ? "rgba(15, 118, 110, 0.35)" : "rgba(124, 45, 18, 0.35)"}`,
+                      background: ready ? "rgba(167, 243, 208, 0.20)" : "rgba(252, 165, 165, 0.20)",
+                    }}
+                  >
+                    {ready
+                      ? "Ready"
+                      : `${cooldownDaysRemaining} LR left${lastRoll > 0 ? ` (rolled ${lastRoll})` : ""}`}
+                  </Typography>
+
+                  <Tooltip
+                    arrow
+                    title={
+                      ready
+                        ? "Roll the 1d4-long-rest recharge after you use this feature"
+                        : "Roll a new 1d4 recharge"
+                    }
+                  >
+                    <IconButton
+                      size="small"
+                      aria-label="Roll Limited Wish recharge"
+                      onClick={() => {
+                        const roll = Math.floor(Math.random() * 4) + 1;
+                        setTracker({ cooldownDaysRemaining: roll, lastRoll: roll });
+                      }}
+                      sx={{ ml: 0.25, p: 0.25 }}
+                    >
+                      <CasinoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip arrow title="Subtract one long rest from the remaining recharge">
+                    <IconButton
+                      size="small"
+                      aria-label="Subtract one long rest from Limited Wish recharge"
+                      onClick={() =>
+                        setTracker({
+                          cooldownDaysRemaining: Math.max(0, cooldownDaysRemaining - 1),
+                        })
+                      }
+                      sx={{ p: 0.25 }}
+                    >
+                      <RemoveIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip arrow title="Add one long rest to the remaining recharge">
+                    <IconButton
+                      size="small"
+                      aria-label="Add one long rest to Limited Wish recharge"
+                      onClick={() =>
+                        setTracker({
+                          cooldownDaysRemaining: Math.min(999, cooldownDaysRemaining + 1),
+                        })
+                      }
+                      sx={{ p: 0.25 }}
+                    >
+                      <AddIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (feature?.trackedMode === "poolDropdown") {
               const maxPool = (() => {
                 if (feature?.poolMax === "fighter_level") return Math.max(0, Math.trunc(Number(fighterLevel) || 0));
@@ -1492,6 +1576,7 @@ const FeaturesAndTrackables = () => {
   const [warlockMysticArcanumModalOpen, setWarlockMysticArcanumModalOpen] = React.useState(false);
   const [metamagicOptionsModalOpen, setMetamagicOptionsModalOpen] = React.useState(false);
   const [divineSoulAffinityModalOpen, setDivineSoulAffinityModalOpen] = React.useState(false);
+  const [genieKindModalOpen, setGenieKindModalOpen] = React.useState(false);
   const [lunarEmbodimentModalOpen, setLunarEmbodimentModalOpen] = React.useState(false);
   const [wildMagicSurgeModalOpen, setWildMagicSurgeModalOpen] = React.useState(false);
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
@@ -1509,6 +1594,15 @@ const FeaturesAndTrackables = () => {
 
     setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
   }, [characterClass, subclass, characterInfo?.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+
+  React.useEffect(() => {
+    const isGenieWarlock = characterClass === "warlock" && subclass === "genie";
+    if (!isGenieWarlock) return;
+    if (characterInfo?.genieKind) return;
+    if (GENIE_KIND_OPTIONS.length === 0) return;
+
+    setCharacterInfo((prev) => ({ ...prev, genieKind: GENIE_KIND_OPTIONS[0].id }));
+  }, [characterClass, subclass, characterInfo?.genieKind, setCharacterInfo]);
 
   const currentLandType = characterInfo?.druidLandType || landDruidTypeOptions[0] || "arctic";
   const isLandTypeMenuOpen = Boolean(landTypeMenuAnchorEl);
@@ -2190,6 +2284,44 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "warlock" && subclass === "genie") {
+      const genieKindData = getGenieKindData(characterInfo?.genieKind);
+      const genieSummaryLines = getGenieBenefitsSummaryLines(characterInfo?.genieKind);
+
+      next = next.map((feature) => {
+        if (!["genies_vessel", "genies_wrath", "elemental_gift"].includes(String(feature?.id || ""))) {
+          return feature;
+        }
+
+        const baseDescLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        if (feature?.id === "genies_vessel") {
+          const nextName = genieKindData ? `${feature.name} (${genieKindData.name})` : `${feature.name} (Choose Kind)`;
+          return { ...feature, name: nextName, desc: [...genieSummaryLines, ...baseDescLines] };
+        }
+
+        if (feature?.id === "genies_wrath") {
+          const prefix = genieKindData
+            ? `Current damage type: ${genieKindData.damageType}.`
+            : "Choose a genie kind to set the damage type.";
+          return { ...feature, desc: [prefix, ...baseDescLines] };
+        }
+
+        if (feature?.id === "elemental_gift") {
+          const prefix = genieKindData
+            ? `Current permanent resistance: ${genieKindData.damageType}.`
+            : "Choose a genie kind to set the permanent resistance type.";
+          return { ...feature, desc: [prefix, ...baseDescLines] };
+        }
+
+        return feature;
+      });
+    }
+
     return next;
   }, [
     subclassFeatures,
@@ -2206,6 +2338,7 @@ const FeaturesAndTrackables = () => {
     fighterLevel,
     characterClass,
     subclass,
+    characterInfo?.genieKind,
     untrackedFeatureChoices,
     subclassChoiceKey,
   ]);
@@ -3440,6 +3573,34 @@ const FeaturesAndTrackables = () => {
                   }
                 }
 
+                if (characterClass === "warlock" && subclass === "genie" && feature?.id === "genies_vessel") {
+                  const selected = getGenieKindData(characterInfo?.genieKind);
+                  const label = selected?.name ? `Change Genie Kind (${selected.name})` : "Choose Genie Kind";
+
+                  return (
+                    <Tooltip arrow title={label}>
+                      <IconButton
+                        size="small"
+                        aria-label={label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setGenieKindModalOpen(true);
+                        }}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: "rgba(93, 64, 55, 0.92)",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <GenieLampIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (
                   (characterClass === "sorcerer" || characterClass === "sorceror") &&
                   subclass === "wildMagic" &&
@@ -3794,6 +3955,20 @@ const FeaturesAndTrackables = () => {
         onSelect={(optionId) => {
           setCharacterInfo((prev) => ({ ...prev, divineSoulAffinity: String(optionId || "") }));
         }}
+      />
+
+      <FeatureChoiceModal
+        open={genieKindModalOpen}
+        onClose={() => setGenieKindModalOpen(false)}
+        title="Genie Kind"
+        helperText="Choose your patron's kind. This updates Genie's Wrath, Elemental Gift, and the extra Genie expanded spells available to you."
+        options={GENIE_KIND_OPTIONS}
+        selectedId={String(characterInfo?.genieKind || "")}
+        onSelect={(optionId) => {
+          setCharacterInfo((prev) => ({ ...prev, genieKind: String(optionId || "") }));
+          setGenieKindModalOpen(false);
+        }}
+        allowClear={false}
       />
 
       <LunarEmbodimentPhaseModal

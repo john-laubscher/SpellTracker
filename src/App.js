@@ -7,6 +7,7 @@ import axios from "axios";
 import { AuthContext, CharacterInfoContext, ClassSpellsDetailsContext, FeatureTrackersContext } from "./Contexts/Context";
 import ThemeConfig, { BackgroundWrapper, CharCreationBGPic } from "./components/ThemeConfig";
 import { loadFeatureTrackersFromStorage, saveFeatureTrackersToStorage } from "./utils/featureTrackersStorage";
+import { Box } from "@mui/material";
 
 const loadPreparedSpellsFromStorage = () => {
   try {
@@ -323,6 +324,7 @@ function App() {
       race: "Dwarf",
       subrace: "Hill",
       draconicAncestry: "",
+      genieKind: "",
       druidLandType: "",
       fightingStyle: "Defense",
       additionalFightingStyle:
@@ -778,15 +780,43 @@ function App() {
           <CharacterInfoContext.Provider value={{ characterInfo, setCharacterInfo }}>
             <FeatureTrackersContext.Provider value={{ featureTrackers, setFeatureTrackers }}>
               <ClassSpellsDetailsContext.Provider value={{ classSpellsDetails, setClassSpellsDetails }}>
-                <Routes>
-                  <Route path="/" element={
-                    <BackgroundWrapper bgImage={CharCreationBGPic}>
-                        <CharacterCreationForm />
-                    </BackgroundWrapper>
-                  }></Route>
+                <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ flex: "1 0 auto" }}>
+                    <Routes>
+                      <Route path="/" element={
+                        <BackgroundWrapper bgImage={CharCreationBGPic}>
+                            <CharacterCreationForm />
+                        </BackgroundWrapper>
+                      }></Route>
 
-                  <Route path="/mainUI" element={<MainUI />}></Route>
-                </Routes>
+                      <Route path="/mainUI" element={<MainUI />}></Route>
+                    </Routes>
+                  </Box>
+
+                  <Box
+                    component="footer"
+                    sx={{
+                      flexShrink: 0,
+                      px: 2,
+                      py: 1,
+                      textAlign: "center",
+                      fontFamily: "'Cinzel', serif",
+                      fontSize: "11px",
+                      color: "#f5e6cf",
+                      backgroundColor: "rgba(35, 20, 8, 0.88)",
+                    }}
+                  >
+                    Genie Lamp icon by{" "}
+                    <a
+                      href="https://icons8.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#f0c36b", fontWeight: 700 }}
+                    >
+                      Icons8
+                    </a>
+                  </Box>
+                </Box>
               </ClassSpellsDetailsContext.Provider>
             </FeatureTrackersContext.Provider>
           </CharacterInfoContext.Provider>
