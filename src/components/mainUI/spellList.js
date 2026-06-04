@@ -2009,6 +2009,112 @@ export const SpellList = (props) => {
   ]);
 
   useEffect(() => {
+    const GRASPING_TENTACLES_BONUS_TAG = "fathomless_grasping_tentacles_spell";
+
+    const isFathomless =
+      characterInfo?.characterClass === "warlock" && String(characterInfo?.subclass || "") === "fathomless";
+
+    const warlockLevelValue = (() => {
+      const raw = characterInfo?.classLevels?.warlock;
+      const numeric = Number(raw);
+      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
+      if (characterInfo?.characterClass === "warlock") {
+        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
+      }
+      return 0;
+    })();
+
+    const graspingTentaclesKey = "warlock:fathomless:graspingTentacles";
+    const swapsForGraspingTentacles = characterInfo?.psionicSpellSwaps?.[graspingTentaclesKey] || {};
+    const shouldHaveGraspingTentacles = isFathomless && warlockLevelValue >= 10;
+    const originalIndex = "evards-black-tentacles";
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+      let changed = false;
+
+      if (!shouldHaveGraspingTentacles) {
+        Object.keys(next).forEach((levelKey) => {
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+          const filtered = list.filter(
+            (s) => String(s?.spelltrackerBonus || "") !== GRASPING_TENTACLES_BONUS_TAG
+          );
+          if (filtered.length !== list.length) {
+            changed = true;
+            next[levelKey] = filtered;
+          }
+        });
+
+        if (!changed) return prev;
+        return { ...prev, spellsPrepared: next };
+      }
+
+      const levelKey = "4";
+      const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+      const swapped = swapsForGraspingTentacles?.[originalIndex] || null;
+      const desiredIndex = String(swapped?.index || originalIndex).trim();
+      if (!desiredIndex) return prev;
+
+      const withoutOldTaggedEntries = list.filter((s) => {
+        const isGraspingTentaclesSpell = String(s?.spelltrackerBonus || "") === GRASPING_TENTACLES_BONUS_TAG;
+        if (!isGraspingTentaclesSpell) return true;
+        return String(s?.index || "") === desiredIndex;
+      });
+
+      if (withoutOldTaggedEntries.length !== list.length) {
+        changed = true;
+      }
+
+      const workingList = withoutOldTaggedEntries;
+
+      const existingIdx = workingList.findIndex((s) => String(s?.index || "") === desiredIndex);
+      if (existingIdx !== -1) {
+        const existing = workingList[existingIdx] || null;
+        const needsTag =
+          String(existing?.spelltrackerBonus || "") !== GRASPING_TENTACLES_BONUS_TAG ||
+          existing?.spelltrackerDoesNotCount !== true ||
+          String(existing?.spelltrackerOrigin || "") !== originalIndex;
+
+        if (!needsTag) return prev;
+
+        changed = true;
+        const updated = {
+          ...existing,
+          name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
+          spelltrackerBonus: GRASPING_TENTACLES_BONUS_TAG,
+          spelltrackerOrigin: originalIndex,
+          spelltrackerDoesNotCount: true,
+        };
+        next[levelKey] = workingList.map((s, idx) => (idx === existingIdx ? updated : s));
+      } else {
+        changed = true;
+        next[levelKey] = [
+          ...workingList,
+          {
+            index: desiredIndex,
+            name: swapped?.name || humanizeSpellIndex(desiredIndex),
+            spelltrackerBonus: GRASPING_TENTACLES_BONUS_TAG,
+            spelltrackerOrigin: originalIndex,
+            spelltrackerDoesNotCount: true,
+          },
+        ];
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.classLevels?.warlock,
+    characterInfo?.spellsPrepared,
+    characterInfo?.psionicSpellSwaps,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
 
     const isHorizonWalker =
@@ -4234,6 +4340,7 @@ export const SpellList = (props) => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
     const FEY_REINFORCEMENTS_BONUS_TAG = "fey_reinforcements_bonus_spell";
     const GLOOM_STALKER_MAGIC_BONUS_TAG = "gloom_stalker_magic_bonus_spell";
+    const GRASPING_TENTACLES_BONUS_TAG = "fathomless_grasping_tentacles_spell";
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
     const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
     const SWARMKEEPER_MAGIC_BONUS_TAG = "swarmkeeper_magic_bonus_spell";
@@ -4521,6 +4628,26 @@ export const SpellList = (props) => {
                       }}
                     />
                   </Tooltip>
+                ) : spell?.spelltrackerBonus === GRASPING_TENTACLES_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Grasping Tentacles spell (does not count against spells known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="GT"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(2, 119, 189, 0.92)",
+                        border: "1px solid rgba(2, 119, 189, 0.22)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
                 ) : spell?.spelltrackerBonus === HORIZON_WALKER_MAGIC_BONUS_TAG ? (
                   <Tooltip
                     arrow
@@ -4737,6 +4864,33 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(27, 94, 32, 0.22)",
                         backgroundColor: "rgba(27, 94, 32, 0.06)",
                         "&:hover": { backgroundColor: "rgba(27, 94, 32, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === GRASPING_TENTACLES_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Grasping Tentacles spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Grasping Tentacles spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || spell?.index || "").trim();
+                        setPsionicSwapModal({
+                          open: true,
+                          spellLevel: Number(numericalSpellLevel),
+                          psionicKey: "warlock:fathomless:graspingTentacles",
+                          swapLabel: "Grasping Tentacles",
+                          originalSpell: origin ? { index: origin, name: humanizeSpellIndex(origin) } : spell,
+                          classKeys: ["warlock"],
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(2, 119, 189, 0.92)",
+                        border: "1px solid rgba(2, 119, 189, 0.22)",
+                        backgroundColor: "rgba(2, 119, 189, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(2, 119, 189, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
