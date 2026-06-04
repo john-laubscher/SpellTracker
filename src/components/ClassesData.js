@@ -6445,7 +6445,67 @@ export const ClassesData = {
       },
     ],
     subclasses: {
-      archfey: "",
+      archfey: {
+        name: "The Archfey",
+        source: "Player's Handbook",
+        features: [
+          {
+            id: "fey_presence",
+            name: "Fey Presence",
+            desc: [
+              "Starting at 1st level, your patron bestows upon you the ability to project the beguiling and fearsome presence of the fey.",
+              "As an action, each creature in a 10-foot cube originating from you must make a Wisdom saving throw against your warlock spell save DC.",
+              "On a failed save, creatures are charmed or frightened by you (your choice) until the end of your next turn.",
+            ],
+            level: 1,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+          {
+            id: "misty_escape",
+            name: "Misty Escape",
+            desc: [
+              "Starting at 6th level, when you take damage, you can use your reaction to turn invisible and teleport up to 60 feet to an unoccupied space you can see.",
+              "You remain invisible until the start of your next turn or until you attack or cast a spell.",
+            ],
+            level: 6,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+          {
+            id: "beguiling_defenses",
+            name: "Beguiling Defenses",
+            desc: [
+              "Beginning at 10th level, you are immune to being charmed.",
+              "When another creature attempts to charm you, you can use your reaction to attempt to turn the charm back on that creature.",
+            ],
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "dark_delirium",
+            name: "Dark Delirium",
+            desc: [
+              "Starting at 14th level, as an action, choose a creature you can see within 60 feet.",
+              "On a failed Wisdom save against your warlock spell save DC, it is charmed or frightened by you (your choice) for 1 minute or until your concentration ends, and it perceives an illusory misty realm of your choosing.",
+              "The effect ends early if the creature takes any damage.",
+            ],
+            level: 14,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+        ],
+        expandedSpellOptions: [
+          { spellLevel: 1, spells: ["faerie-fire", "sleep"] },
+          { spellLevel: 2, spells: ["calm-emotions", "phantasmal-force"] },
+          { spellLevel: 3, spells: ["blink", "plant-growth"] },
+          { spellLevel: 4, spells: ["dominate-beast", "greater-invisibility"] },
+          { spellLevel: 5, spells: ["dominate-person", "seeming"] },
+        ],
+      },
       celestial: "",
       fathomless: "",
       fiend: "",
