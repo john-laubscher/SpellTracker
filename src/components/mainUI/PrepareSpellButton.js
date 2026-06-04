@@ -57,8 +57,17 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
       String(characterInfo?.characterClass || "") === "rogue" &&
       String(characterInfo?.subclass || "") === "arcaneTrickster";
 
-    const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some(
+    const matchingPreparedSpell = characterInfo.spellsPrepared[numericalSpellLevel]?.find(
         (preparedSpell) => preparedSpell.index === spell.index
+      );
+    const isSpellAlreadyPrepared = Boolean(matchingPreparedSpell);
+    const isPreparedByCelestialBonus =
+      Number(numericalSpellLevel) === 0 &&
+      String(characterInfo?.characterClass || "") === "warlock" &&
+      String(characterInfo?.subclass || "") === "celestial" &&
+      (
+        String(matchingPreparedSpell?.spelltrackerBonus || "") === "celestial_bonus_cantrip_light" ||
+        String(matchingPreparedSpell?.spelltrackerBonus || "") === "celestial_bonus_cantrip_sacred_flame"
       );
 
     const togglePreparedSpell = (spell, numericalSpellLevel) => {
@@ -95,7 +104,7 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const buttonClass = isSpellAlreadyPrepared ? classes.preparedButton : classes.prepareButton;
     const isCantrip = Number(numericalSpellLevel) === 0;
-    const preparedLabel = isCantrip ? 'Forget' : 'Unprepare';
+    const preparedLabel = isPreparedByCelestialBonus ? 'Bonus Cantrip' : isCantrip ? 'Forget' : 'Unprepare';
     const unpreparedLabel = isCantrip ? 'Learn Cantrip' : 'Prepare Spell';
 
     return (
@@ -103,7 +112,9 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
         <Button
           className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
           variant="contained"
+          disabled={isPreparedByCelestialBonus}
           onClick={() => {
+            if (isPreparedByCelestialBonus) return;
             if (isSpellAlreadyPrepared) {
               if (isArcaneTricksterMageHand) {
                 setConfirmRemoveOpen(true);

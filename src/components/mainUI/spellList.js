@@ -34,6 +34,7 @@ import BlessedWarriorCantripSwapModal from "./BlessedWarriorCantripSwapModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
 import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
+import CelestialBonusCantripSwapModal from "./CelestialBonusCantripSwapModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
@@ -486,6 +487,11 @@ export const SpellList = (props) => {
     String(characterInfo?.subclass || "") === "arcaneTrickster" &&
     Number(characterInfo?.characterLevel || 0) >= 3;
 
+  const hasCelestialBonusCantrips =
+    characterInfo?.characterClass === "warlock" &&
+    String(characterInfo?.subclass || "") === "celestial" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const hasSwarmkeeperMagic =
     characterInfo?.characterClass === "ranger" &&
     (String(characterInfo?.subclass || "") === "swarmKeeper" || String(characterInfo?.subclass || "") === "swarmkeeper") &&
@@ -569,6 +575,11 @@ export const SpellList = (props) => {
   const [bwPickerModalOpen, setBwPickerModalOpen] = React.useState(false);
 
   const [dwSwapModal, setDwSwapModal] = React.useState({
+    open: false,
+    originalSpell: null,
+  });
+
+  const [celestialSwapModal, setCelestialSwapModal] = React.useState({
     open: false,
     originalSpell: null,
   });
@@ -1038,6 +1049,178 @@ export const SpellList = (props) => {
       cancelled = true;
     };
   }, [hasArcaneTrickster, characterInfo?.arcaneTricksterMageHandOptOut, characterInfo?.classLevels?.rogue, characterInfo?.characterClass, characterInfo?.characterLevel, characterInfo?.spellsPrepared, setCharacterInfo]);
+
+  useEffect(() => {
+    const BONUS_TAG = "celestial_bonus_cantrip_light";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const hasTaggedLightSlot = currentCantrips.some((s) => String(s?.spelltrackerBonus || "") === BONUS_TAG);
+
+    if (!hasCelestialBonusCantrips) {
+      if (!hasTaggedLightSlot) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => String(s?.spelltrackerBonus || "") !== BONUS_TAG);
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    if (hasTaggedLightSlot) return;
+
+    const existingIdx = currentCantrips.findIndex((s) => s?.index === "light");
+    if (existingIdx !== -1) {
+      const existing = currentCantrips[existingIdx] || null;
+      const needsTag =
+        String(existing?.spelltrackerBonus || "") !== BONUS_TAG || existing?.spelltrackerDoesNotCount !== true;
+      if (!needsTag) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const idx = current.findIndex((s) => s?.index === "light");
+        if (idx === -1) return prev;
+        const cur = current[idx] || {};
+        const updated = {
+          ...cur,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+        };
+        const next = current.map((s, i) => (i === idx ? updated : s));
+        return { ...prev, spellsPrepared: { ...prev.spellsPrepared, 0: next } };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/light")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusLight = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "light",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "light")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusLight],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCelestialBonusCantrips, characterInfo?.spellsPrepared, setCharacterInfo]);
+
+  useEffect(() => {
+    const BONUS_TAG = "celestial_bonus_cantrip_sacred_flame";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const hasTaggedCantripSlot = currentCantrips.some((s) => String(s?.spelltrackerBonus || "") === BONUS_TAG);
+
+    if (!hasCelestialBonusCantrips) {
+      if (!hasTaggedCantripSlot) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => String(s?.spelltrackerBonus || "") !== BONUS_TAG);
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    if (hasTaggedCantripSlot) return;
+
+    const existingIdx = currentCantrips.findIndex((s) => s?.index === "sacred-flame");
+    if (existingIdx !== -1) {
+      const existing = currentCantrips[existingIdx] || null;
+      const needsTag =
+        String(existing?.spelltrackerBonus || "") !== BONUS_TAG || existing?.spelltrackerDoesNotCount !== true;
+      if (!needsTag) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const idx = current.findIndex((s) => s?.index === "sacred-flame");
+        if (idx === -1) return prev;
+        const cur = current[idx] || {};
+        const updated = {
+          ...cur,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+        };
+        const next = current.map((s, i) => (i === idx ? updated : s));
+        return { ...prev, spellsPrepared: { ...prev.spellsPrepared, 0: next } };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/sacred-flame")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusSacredFlame = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "sacred-flame",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "sacred-flame")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusSacredFlame],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasCelestialBonusCantrips,
+    characterInfo?.spellsPrepared,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -3876,6 +4059,7 @@ export const SpellList = (props) => {
     if (hasGuidingWhispers) cantripFeatureSources.push("Guiding Whispers");
     if (hasCircleOfMortality) cantripFeatureSources.push("Circle of Mortality");
     if (hasLightBonusCantrip) cantripFeatureSources.push("Bonus Cantrip");
+    if (hasCelestialBonusCantrips) cantripFeatureSources.push("Celestial Bonus Cantrips");
     if (hasReaper) cantripFeatureSources.push("Reaper");
     if (hasAcolyteOfNature) cantripFeatureSources.push("Acolyte of Nature");
 
@@ -4004,6 +4188,14 @@ export const SpellList = (props) => {
                    Choose Blessed Warrior cantrips
                  </Button>
                </Tooltip>
+              {isCantrips && hasCelestialBonusCantrips ? (
+                <Tooltip
+                  arrow
+                  title="Light and Sacred Flame are granted by The Celestial and don’t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
              </Box>
            ) : null}
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
@@ -4029,6 +4221,8 @@ export const SpellList = (props) => {
       : [];
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
+    const CELESTIAL_LIGHT_BONUS_TAG = "celestial_bonus_cantrip_light";
+    const CELESTIAL_SACRED_FLAME_BONUS_TAG = "celestial_bonus_cantrip_sacred_flame";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
     const MOON_FIRE_BONUS_TAG = "lunar_sorcery_moon_fire";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
@@ -4093,6 +4287,48 @@ export const SpellList = (props) => {
                         color: "rgba(239, 108, 0, 0.90)",
                         border: "1px solid rgba(239, 108, 0, 0.22)",
                         "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === CELESTIAL_LIGHT_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Celestial bonus cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="BC"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(251, 146, 60, 0.95)",
+                        border: "1px solid rgba(251, 146, 60, 0.22)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === CELESTIAL_SACRED_FLAME_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Celestial bonus cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="BC"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(251, 146, 60, 0.95)",
+                        border: "1px solid rgba(251, 146, 60, 0.22)",
+                        "&:hover": { opacity: 0.9 },
                       }}
                     />
                   </Tooltip>
@@ -4501,6 +4737,29 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(27, 94, 32, 0.22)",
                         backgroundColor: "rgba(27, 94, 32, 0.06)",
                         "&:hover": { backgroundColor: "rgba(27, 94, 32, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === CELESTIAL_LIGHT_BONUS_TAG ||
+                  spell?.spelltrackerBonus === CELESTIAL_SACRED_FLAME_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this bonus cantrip (does not change cantrips known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Celestial bonus cantrip"
+                      onClick={() => {
+                        setCelestialSwapModal({
+                          open: true,
+                          originalSpell: spell,
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(194, 65, 12, 0.92)",
+                        border: "1px solid rgba(194, 65, 12, 0.22)",
+                        backgroundColor: "rgba(194, 65, 12, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(194, 65, 12, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
@@ -5553,6 +5812,12 @@ export const SpellList = (props) => {
           open={dwSwapModal.open}
           originalSpell={dwSwapModal.originalSpell}
           onClose={() => setDwSwapModal({ open: false, originalSpell: null })}
+        />
+
+        <CelestialBonusCantripSwapModal
+          open={celestialSwapModal.open}
+          originalSpell={celestialSwapModal.originalSpell}
+          onClose={() => setCelestialSwapModal({ open: false, originalSpell: null })}
         />
 
         <DruidicWarriorCantripsModal

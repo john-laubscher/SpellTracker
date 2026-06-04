@@ -672,6 +672,15 @@ function App() {
     }
   }, [characterInfo.arcaneTricksterMageHandOptOut]);
 
+  useEffect(() => {
+    try {
+      localStorage.removeItem("spelltracker_celestialLightOptOut");
+      localStorage.removeItem("spelltracker_celestialSacredFlameOptOut");
+    } catch {
+      // ignore write errors
+    }
+  }, []);
+
   const monkMartialArtsDieSizeForLevel = (level) => {
     const l = Math.max(0, Math.min(20, Math.trunc(Number(level) || 0)));
     if (l >= 17) return 10;
