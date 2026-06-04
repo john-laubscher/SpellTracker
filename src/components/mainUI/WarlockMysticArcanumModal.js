@@ -20,6 +20,7 @@ import { CharacterInfoContext } from "../../Contexts/Context";
 import MagicalSecretsStatus from "./MagicalSecretsStatus";
 import PrepareMysticArcanumButton from "./PrepareMysticArcanumButton";
 import SpellAccordian from "./SpellAccordian";
+import { getGenieExpandedSpellOptions } from "../../utils/genieData";
 import {
   getWarlockMysticArcanumExpectedTotal,
   getWarlockUnlockedArcanumLevels,
@@ -98,9 +99,30 @@ const WarlockMysticArcanumModal = ({ open, onClose }) => {
     axios
       .get(`/allspells/${numericalSpellLevel}/warlock`)
       .then((res) => {
+        const baseResults = Array.isArray(res.data?.results) ? res.data.results : [];
+        const isGenieWarlock =
+          characterInfo?.characterClass === "warlock" && String(characterInfo?.subclass || "") === "genie";
+        const expandedRows = isGenieWarlock ? getGenieExpandedSpellOptions(characterInfo?.genieKind) : [];
+        const expandedIndexes = expandedRows
+          .filter((row) => Number(row?.spellLevel) === Number(numericalSpellLevel))
+          .flatMap((row) => (Array.isArray(row?.spells) ? row.spells : []));
+        const seen = new Set();
+        const mergedResults = [];
+
+        [...baseResults, ...expandedIndexes.map((index) => ({ index, name: String(index || "")
+          .split("-")
+          .filter(Boolean)
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ") }))].forEach((spell) => {
+          const key = String(spell?.index || "").trim();
+          if (!key || seen.has(key)) return;
+          seen.add(key);
+          mergedResults.push(spell);
+        });
+
         setSpellsByLevel((prev) => ({
           ...prev,
-          [numericalSpellLevel]: res.data?.results || [],
+          [numericalSpellLevel]: mergedResults,
         }));
         setLoadStatusByLevel((prev) => ({
           ...prev,

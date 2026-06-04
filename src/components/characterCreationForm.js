@@ -20,6 +20,7 @@ import Divider from "@mui/material/Divider";
 import AuthControls from "./AuthControls";
 import BlessedWarriorCantripsModal from "./mainUI/BlessedWarriorCantripsModal";
 import DruidicWarriorCantripsModal from "./mainUI/DruidicWarriorCantripsModal";
+import { GENIE_KIND_OPTIONS } from "../utils/genieData";
 
 export const CharacterCreationForm = (props) => {
   const NO_RACE = "noRace";
@@ -87,6 +88,8 @@ export const CharacterCreationForm = (props) => {
     []
   );
 
+  const genieKindOptions = React.useMemo(() => GENIE_KIND_OPTIONS, []);
+
   const fighterFightingStyleOptions = React.useMemo(() => {
     const raw = ClassesData?.fighter?.fightingStyleOptions || [];
     return Array.isArray(raw) ? raw : [];
@@ -141,6 +144,28 @@ export const CharacterCreationForm = (props) => {
       setCharacterInfo((prev) => ({ ...prev, druidLandType: "" }));
     }
   }, [characterInfo.characterClass, characterInfo.subclass, characterInfo.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+
+  useEffect(() => {
+    const isGenieWarlock =
+      characterInfo.characterClass === "warlock" && String(characterInfo.subclass || "") === "genie";
+
+    if (isGenieWarlock) {
+      if (!characterInfo.genieKind && genieKindOptions.length > 0) {
+        setCharacterInfo((prev) => ({ ...prev, genieKind: genieKindOptions[0].id }));
+      }
+      return;
+    }
+
+    if (characterInfo.genieKind) {
+      setCharacterInfo((prev) => ({ ...prev, genieKind: "" }));
+    }
+  }, [
+    characterInfo.characterClass,
+    characterInfo.subclass,
+    characterInfo.genieKind,
+    genieKindOptions,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     if (characterInfo.characterClass === "fighter") {
@@ -265,6 +290,7 @@ export const CharacterCreationForm = (props) => {
 	        next.subclass = NO_SUBCLASS;
           next.fightingStyle = "";
           next.additionalFightingStyle = "";
+          next.genieKind = "";
 	      }
 
 	      if (name === "subclass") {
@@ -273,6 +299,7 @@ export const CharacterCreationForm = (props) => {
           next.additionalFightingStyle = "";
           next.divineSoulAffinity = "";
           next.lunarEmbodimentPhase = "";
+          next.genieKind = "";
 	      }
 
         if (name === "fightingStyle" && value && value === prev.additionalFightingStyle) {
@@ -547,6 +574,28 @@ export const CharacterCreationForm = (props) => {
 	            </FormControl>
 	          </Box>
 	        ) : null}
+
+          {characterInfo.characterClass === "warlock" && characterInfo.subclass === "genie" && genieKindOptions.length > 0 ? (
+            <Box sx={{ mt: 1 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="genie-kind-select-label">Genie Kind</InputLabel>
+                <Select
+                  labelId="genie-kind-select-label"
+                  id="genie-kind-select"
+                  value={characterInfo.genieKind || ""}
+                  label="Genie Kind"
+                  name="genieKind"
+                  onChange={handleChange}
+                >
+                  {genieKindOptions.map((kind) => (
+                    <MenuItem key={kind.id} value={kind.id}>
+                      {kind.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          ) : null}
 
           {(characterInfo.characterClass === "fighter" && fighterFightingStyleOptions.length > 0) ||
           (characterInfo.characterClass === "paladin" && paladinFightingStyleOptions.length > 0) ||

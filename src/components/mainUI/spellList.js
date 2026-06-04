@@ -41,6 +41,7 @@ import SwordIcon from "./SwordIcon";
 import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
+import { getGenieExpandedSpellOptions } from "../../utils/genieData";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -347,10 +348,28 @@ export const SpellList = (props) => {
   const spellListClassKey = hasSubclassSpellcasting
     ? String(subclassSpellcasting?.spellListClassKey || "")
     : String(classKey || "");
-  const expandedSpellOptionsRows = React.useMemo(
-    () => (Array.isArray(subclassMeta?.expandedSpellOptions) ? subclassMeta.expandedSpellOptions : []),
-    [subclassMeta]
-  );
+  const expandedSpellOptionsRows = React.useMemo(() => {
+    const baseRows = Array.isArray(subclassMeta?.expandedSpellOptions) ? subclassMeta.expandedSpellOptions : [];
+    if (!(classKey === "warlock" && String(characterInfo?.subclass || "") === "genie")) {
+      return baseRows;
+    }
+
+    const byLevel = new Map();
+    [...baseRows, ...getGenieExpandedSpellOptions(characterInfo?.genieKind)].forEach((row) => {
+      const spellLevel = Number(row?.spellLevel) || 0;
+      if (!spellLevel) return;
+      const current = byLevel.get(spellLevel) || [];
+      const next = Array.isArray(row?.spells) ? row.spells : [];
+      byLevel.set(
+        spellLevel,
+        [...current, ...next].filter((spell, idx, arr) => spell && arr.indexOf(spell) === idx)
+      );
+    });
+
+    return Array.from(byLevel.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([spellLevel, spells]) => ({ spellLevel, spells }));
+  }, [subclassMeta, classKey, characterInfo?.subclass, characterInfo?.genieKind]);
   const expandedSpellOptionsKey = React.useMemo(
     () =>
       JSON.stringify(
