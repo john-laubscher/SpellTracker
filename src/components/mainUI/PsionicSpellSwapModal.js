@@ -51,23 +51,22 @@ const PsionicSpellSwapModal = ({
     setSearch("");
     setClassSpells([]);
     setCustomSpells([]);
-    setLoadStatus({ loading: false, error: "" });
+    setLoadStatus({ loading: true, error: "" });
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     if (!Number.isFinite(Number(numericalSpellLevel))) return;
-    if (loadStatus.loading) return;
-    if (classSpells.length > 0) return;
 
-    setLoadStatus({ loading: true, error: "" });
     const allowedClassKeys =
       Array.isArray(classKeys) && classKeys.filter(Boolean).length > 0
         ? classKeys.filter(Boolean)
         : ["sorcerer", "warlock", "wizard"];
+    let cancelled = false;
 
     Promise.all(allowedClassKeys.map((k) => axios.get(`/allspells/${numericalSpellLevel}/${k}`)))
       .then((responses) => {
+        if (cancelled) return;
         const combined = [];
         const seen = new Set();
 
@@ -81,17 +80,30 @@ const PsionicSpellSwapModal = ({
           });
         });
 
+        const originalKey = String(originalSpell?.index || originalSpell?.url || "").trim();
+        if (originalKey && !seen.has(originalKey)) {
+          combined.unshift({
+            index: originalKey,
+            name: String(originalSpell?.name || "").trim() || originalKey,
+          });
+          seen.add(originalKey);
+        }
+
         setClassSpells(combined);
         setLoadStatus({ loading: false, error: "" });
       })
       .catch(() => {
+        if (cancelled) return;
         setLoadStatus({
           loading: false,
           error: "Failed to load spells. Is the backend running on port 3001?",
         });
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, numericalSpellLevel, psionicKey, classKeys]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, numericalSpellLevel, psionicKey, classKeys, originalSpell]);
 
   const allowedClassNames = useMemo(() => {
     const keys =
@@ -108,13 +120,24 @@ const PsionicSpellSwapModal = ({
       return;
     }
     if (!Number.isFinite(Number(numericalSpellLevel))) return;
+    let cancelled = false;
 
     axios
       .get(`/custom-spells?level=${numericalSpellLevel}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setCustomSpells(res.data?.results || []))
-      .catch(() => setCustomSpells([]));
+      .then((res) => {
+        if (cancelled) return;
+        setCustomSpells(res.data?.results || []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCustomSpells([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, numericalSpellLevel, token]);
 
   const filtered = useMemo(() => {
