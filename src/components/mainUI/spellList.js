@@ -346,6 +346,20 @@ export const SpellList = (props) => {
   const spellListClassKey = hasSubclassSpellcasting
     ? String(subclassSpellcasting?.spellListClassKey || "")
     : String(classKey || "");
+  const expandedSpellOptionsRows = React.useMemo(
+    () => (Array.isArray(subclassMeta?.expandedSpellOptions) ? subclassMeta.expandedSpellOptions : []),
+    [subclassMeta]
+  );
+  const expandedSpellOptionsKey = React.useMemo(
+    () =>
+      JSON.stringify(
+        expandedSpellOptionsRows.map((row) => ({
+          spellLevel: Number(row?.spellLevel) || 0,
+          spells: Array.isArray(row?.spells) ? row.spells.map((spell) => String(spell || "").trim()) : [],
+        }))
+      ),
+    [expandedSpellOptionsRows]
+  );
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
   const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
@@ -3540,7 +3554,7 @@ export const SpellList = (props) => {
       8: { loading: false, error: '' },
       9: { loading: false, error: '' },
     });
-  }, [spellListClassKey, includeDivineSoulClericSpellList]);
+  }, [spellListClassKey, includeDivineSoulClericSpellList, expandedSpellOptionsKey]);
 
   const loadClassSpellsForLevel = (numericalSpellLevel) => {
     if (spellListLoadStatus[numericalSpellLevel]?.loading) return;
@@ -3552,14 +3566,25 @@ export const SpellList = (props) => {
 
     const baseReq = axios.get(`/allspells/${numericalSpellLevel}/${spellListClassKey}`);
     const clericReq = includeDivineSoulClericSpellList ? axios.get(`/allspells/${numericalSpellLevel}/cleric`) : null;
+    const expandedRowsForLevel = expandedSpellOptionsRows.filter(
+      (row) => Number(row?.spellLevel) === Number(numericalSpellLevel)
+    );
+    const expandedReq =
+      expandedRowsForLevel.length > 0 ? axios.get(`/spellsbylevel/${numericalSpellLevel}`) : null;
 
     Promise.resolve()
-      .then(() => (clericReq ? Promise.all([baseReq, clericReq]) : Promise.all([baseReq])))
+      .then(() =>
+        Promise.all([baseReq, clericReq, expandedReq].filter(Boolean))
+      )
       .then((responses) => {
         const baseResults = responses?.[0]?.data?.results || [];
         const clericResults = clericReq ? responses?.[1]?.data?.results || [] : [];
+        const expandedResults = expandedReq
+          ? responses?.[clericReq ? 2 : 1]?.data?.results || []
+          : [];
 
         const baseByIndex = new Map(baseResults.map((s) => [String(s?.index || ""), s]));
+        const expandedByIndex = new Map(expandedResults.map((s) => [String(s?.index || ""), s]));
         const combined = [];
         const seen = new Set();
 
@@ -3580,6 +3605,23 @@ export const SpellList = (props) => {
             ? { ...s, spelltrackerBonus: "divine_soul_divine_magic_spell", spelltrackerDivineMagic: true }
             : s;
           pushUnique(tagged);
+        });
+
+        expandedRowsForLevel.forEach((row) => {
+          const spellIndexes = Array.isArray(row?.spells) ? row.spells : [];
+          spellIndexes.forEach((spellIndex) => {
+            const key = String(spellIndex || "").trim();
+            if (!key) return;
+
+            const found =
+              expandedByIndex.get(key) ||
+              baseByIndex.get(key) || {
+                index: key,
+                name: humanizeSpellIndex(key),
+              };
+
+            pushUnique(found);
+          });
         });
 
         setSpells((prevSpells) => ({
