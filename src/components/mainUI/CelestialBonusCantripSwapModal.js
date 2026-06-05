@@ -15,7 +15,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import { CharacterInfoContext } from "../../Contexts/Context";
 import SpellAccordian from "./SpellAccordian";
 
-const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
+const CelestialBonusCantripSwapModal = ({
+  open,
+  originalSpell,
+  onClose,
+  title = "Swap Celestial Bonus Cantrip",
+  bonusTagPrefix = "celestial_bonus_cantrip_",
+  duplicateChoiceLabel = "Already chosen as the other Celestial bonus cantrip.",
+}) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const [spells, setSpells] = React.useState([]);
@@ -31,12 +38,21 @@ const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
     if (loadStatus.loading) return;
     if (loadStatus.loaded) return;
 
+    const isUndyingBonusCantrip = String(bonusTagPrefix || "") === "undying_bonus_cantrip";
     setLoadStatus((s) => ({ ...s, loading: true, error: "" }));
-    axios
-      .get("/allspells/0/warlock")
-      .then((res) => {
-        const fetched = res.data?.results || [];
-        setSpells(fetched);
+    Promise.all([
+      axios.get("/allspells/0/warlock"),
+      isUndyingBonusCantrip ? axios.get("/singlespell/spare-the-dying") : Promise.resolve(null),
+    ])
+      .then(([cantripRes, spareRes]) => {
+        const fetched = Array.isArray(cantripRes?.data?.results) ? cantripRes.data.results : [];
+        const merged = [...fetched];
+        const spareTheDying = spareRes?.data;
+        const hasSpareTheDying = merged.some((spell) => String(spell?.index || "") === "spare-the-dying");
+        if (isUndyingBonusCantrip && spareTheDying?.index === "spare-the-dying" && !hasSpareTheDying) {
+          merged.push(spareTheDying);
+        }
+        setSpells(merged);
         setLoadStatus({ loading: false, error: "", loaded: true });
       })
       .catch(() => {
@@ -48,7 +64,7 @@ const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
         }));
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loadStatus.loading, loadStatus.loaded]);
+  }, [open, loadStatus.loading, loadStatus.loaded, bonusTagPrefix]);
 
   const bonusTag = String(originalSpell?.spelltrackerBonus || "");
   const originalIndex = String(originalSpell?.index || "");
@@ -57,11 +73,11 @@ const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
     const chosen = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
     return new Set(
       chosen
-        .filter((s) => String(s?.spelltrackerBonus || "").startsWith("celestial_bonus_cantrip_"))
+        .filter((s) => String(s?.spelltrackerBonus || "").startsWith(String(bonusTagPrefix || "")))
         .map((s) => String(s?.index || ""))
         .filter(Boolean)
     );
-  }, [characterInfo?.spellsPrepared]);
+  }, [bonusTagPrefix, characterInfo?.spellsPrepared]);
 
   const handleSwap = (nextSpell) => {
     const nextIndex = String(nextSpell?.index || "");
@@ -103,7 +119,7 @@ const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
             textTransform: "none",
           }}
         >
-          Swap Celestial Bonus Cantrip
+          {title}
         </Typography>
         <IconButton
           aria-label="Close"
@@ -151,7 +167,7 @@ const CelestialBonusCantripSwapModal = ({ open, originalSpell, onClose }) => {
           const isAlreadyChosenElsewhere = idxKey && chosenIndexes.has(idxKey) && !isCurrent;
           const disabled = !spell?.index || isAlreadyChosenElsewhere;
           const tooltip = isAlreadyChosenElsewhere
-            ? "Already chosen as the other Celestial bonus cantrip."
+            ? duplicateChoiceLabel
             : isCurrent
               ? "Already selected."
               : "Swap to this cantrip.";

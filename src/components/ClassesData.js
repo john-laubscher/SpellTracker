@@ -6983,7 +6983,66 @@ export const ClassesData = {
           { spellLevel: 5, spells: ["antilife-shell", "cloudkill"] },
         ],
       },
-      undying: "",
+      undying: {
+        // Source (feature text): https://dnd5e.wikidot.com/warlock:undying (CC BY-SA 3.0)
+        name: "The Undying",
+        source: "Sword Coast Adventurer's Guide",
+        features: [
+          {
+            id: "among_the_dead",
+            name: "Among the Dead",
+            desc: [
+              "Starting at 1st level, you learn Spare the Dying, which counts as a warlock cantrip for you. You also have advantage on saving throws against any disease.",
+              "Additionally, undead have difficulty harming you. If an undead targets you directly with an attack or a harmful spell, that creature must make a Wisdom saving throw against your spell save DC.",
+              "On a failed save, the creature must choose a new target or forfeit targeting someone instead of you. On a successful save, or if you target it with an attack or a harmful spell, that undead is immune to this effect for 24 hours.",
+            ],
+            level: 1,
+            tracked: false,
+          },
+          {
+            id: "defy_death",
+            name: "Defy Death",
+            desc: [
+              "Starting at 6th level, you can regain hit points equal to 1d8 + your Constitution modifier (minimum of 1 hit point) when you succeed on a death saving throw or when you stabilize a creature with Spare the Dying.",
+              "Once you use this feature, you can't use it again until you finish a long rest.",
+            ],
+            level: 6,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          },
+          {
+            id: "undying_nature",
+            name: "Undying Nature",
+            desc: [
+              "Beginning at 10th level, you can hold your breath indefinitely, and you don't require food, water, or sleep, although you still require rest to reduce exhaustion and still benefit from finishing short and long rests.",
+              "In addition, you age at a slower rate. For every 10 years that pass, your body ages only 1 year, and you are immune to being magically aged.",
+            ],
+            level: 10,
+            tracked: false,
+          },
+          {
+            id: "indestructible_life",
+            name: "Indestructible Life",
+            desc: [
+              "At 14th level, on your turn you can use a bonus action to regain hit points equal to 1d8 + your warlock level.",
+              "Additionally, if you put a severed body part of yours back in place when you use this feature, the part reattaches.",
+              "Once you use this feature, you can't use it again until you finish a short or long rest.",
+            ],
+            level: 14,
+            tracked: true,
+            uses: 1,
+            recharge: "sr_or_lr",
+          },
+        ],
+        expandedSpellOptions: [
+          { spellLevel: 1, spells: ["false-life", "ray-of-sickness"] },
+          { spellLevel: 2, spells: ["blindness-deafness", "silence"] },
+          { spellLevel: 3, spells: ["feign-death", "speak-with-dead"] },
+          { spellLevel: 4, spells: ["aura-of-life", "death-ward"] },
+          { spellLevel: 5, spells: ["contagion", "legend-lore"] },
+        ],
+      },
     },
   },
 

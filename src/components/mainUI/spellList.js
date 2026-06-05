@@ -511,6 +511,11 @@ export const SpellList = (props) => {
     String(characterInfo?.subclass || "") === "celestial" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
+  const hasUndyingAmongTheDeadCantrip =
+    characterInfo?.characterClass === "warlock" &&
+    String(characterInfo?.subclass || "") === "undying" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
   const hasSwarmkeeperMagic =
     characterInfo?.characterClass === "ranger" &&
     (String(characterInfo?.subclass || "") === "swarmKeeper" || String(characterInfo?.subclass || "") === "swarmkeeper") &&
@@ -1240,6 +1245,91 @@ export const SpellList = (props) => {
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    const BONUS_TAG = "undying_bonus_cantrip";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const hasTaggedCantripSlot = currentCantrips.some((s) => String(s?.spelltrackerBonus || "") === BONUS_TAG);
+
+    if (!hasUndyingAmongTheDeadCantrip) {
+      if (!hasTaggedCantripSlot) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => String(s?.spelltrackerBonus || "") !== BONUS_TAG);
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    if (hasTaggedCantripSlot) return;
+
+    const existingIdx = currentCantrips.findIndex((s) => s?.index === "spare-the-dying");
+    if (existingIdx !== -1) {
+      const existing = currentCantrips[existingIdx] || null;
+      const needsTag =
+        String(existing?.spelltrackerBonus || "") !== BONUS_TAG || existing?.spelltrackerDoesNotCount !== true;
+      if (!needsTag) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const idx = current.findIndex((s) => s?.index === "spare-the-dying");
+        if (idx === -1) return prev;
+        const cur = current[idx] || {};
+        const updated = {
+          ...cur,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "spare-the-dying",
+        };
+        const next = current.map((s, i) => (i === idx ? updated : s));
+        return { ...prev, spellsPrepared: { ...prev.spellsPrepared, 0: next } };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/spare-the-dying")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusCantrip = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "spare-the-dying",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "spare-the-dying")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusCantrip],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasUndyingAmongTheDeadCantrip, characterInfo?.spellsPrepared, setCharacterInfo]);
 
   useEffect(() => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -4166,7 +4256,9 @@ export const SpellList = (props) => {
         hasReaper ||
         hasCircleOfMortality ||
         hasLightBonusCantrip ||
-        hasGuidingWhispers);
+        hasGuidingWhispers ||
+        hasCelestialBonusCantrips ||
+        hasUndyingAmongTheDeadCantrip);
     if (isWarlock) {
       if (!shouldShowWarlockSection && !shouldRenderFeatureCantripSection) return null;
     } else if (slotCount === 0 && !shouldRenderFeatureCantripSection) {
@@ -4185,6 +4277,7 @@ export const SpellList = (props) => {
     if (hasCircleOfMortality) cantripFeatureSources.push("Circle of Mortality");
     if (hasLightBonusCantrip) cantripFeatureSources.push("Bonus Cantrip");
     if (hasCelestialBonusCantrips) cantripFeatureSources.push("Celestial Bonus Cantrips");
+    if (hasUndyingAmongTheDeadCantrip) cantripFeatureSources.push("Among the Dead");
     if (hasReaper) cantripFeatureSources.push("Reaper");
     if (hasAcolyteOfNature) cantripFeatureSources.push("Acolyte of Nature");
 
@@ -4292,6 +4385,14 @@ export const SpellList = (props) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
+              {isCantrips && hasUndyingAmongTheDeadCantrip ? (
+                <Tooltip
+                  arrow
+                  title="Spare the Dying is granted by Among the Dead and doesn’t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
              </Box>
              {shouldRenderSpellCheckboxes && (
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
@@ -4348,6 +4449,7 @@ export const SpellList = (props) => {
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const CELESTIAL_LIGHT_BONUS_TAG = "celestial_bonus_cantrip_light";
     const CELESTIAL_SACRED_FLAME_BONUS_TAG = "celestial_bonus_cantrip_sacred_flame";
+    const UNDYING_BONUS_TAG = "undying_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
     const MOON_FIRE_BONUS_TAG = "lunar_sorcery_moon_fire";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
@@ -4413,6 +4515,27 @@ export const SpellList = (props) => {
                         color: "rgba(239, 108, 0, 0.90)",
                         border: "1px solid rgba(239, 108, 0, 0.22)",
                         "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === UNDYING_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Among the Dead cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="AtD"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(66, 66, 66, 0.92)",
+                        border: "1px solid rgba(66, 66, 66, 0.24)",
+                        "&:hover": { opacity: 0.9 },
                       }}
                     />
                   </Tooltip>
@@ -4933,6 +5056,28 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(194, 65, 12, 0.22)",
                         backgroundColor: "rgba(194, 65, 12, 0.06)",
                         "&:hover": { backgroundColor: "rgba(194, 65, 12, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === UNDYING_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Among the Dead cantrip (does not change cantrips known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Among the Dead cantrip"
+                      onClick={() => {
+                        setCelestialSwapModal({
+                          open: true,
+                          originalSpell: spell,
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(66, 66, 66, 0.92)",
+                        border: "1px solid rgba(66, 66, 66, 0.24)",
+                        backgroundColor: "rgba(66, 66, 66, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(66, 66, 66, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
@@ -5990,6 +6135,21 @@ export const SpellList = (props) => {
         <CelestialBonusCantripSwapModal
           open={celestialSwapModal.open}
           originalSpell={celestialSwapModal.originalSpell}
+          title={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "Swap Among the Dead Cantrip"
+              : "Swap Celestial Bonus Cantrip"
+          }
+          bonusTagPrefix={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "undying_bonus_cantrip"
+              : "celestial_bonus_cantrip_"
+          }
+          duplicateChoiceLabel={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "Already chosen as your Among the Dead cantrip."
+              : "Already chosen as the other Celestial bonus cantrip."
+          }
           onClose={() => setCelestialSwapModal({ open: false, originalSpell: null })}
         />
 
