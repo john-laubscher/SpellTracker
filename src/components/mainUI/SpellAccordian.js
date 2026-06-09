@@ -11,7 +11,7 @@ import Box from '@mui/material/Box';
 
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
-const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButton}) => {
+const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButton, dimmed = false}) => {
 
     const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
     const detailsFromApi = classSpellsDetails[numericalSpellLevel]?.[spell.index];
@@ -71,6 +71,8 @@ const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButto
           onChange={(_, nextExpanded) => setExpanded(nextExpanded)}
           sx={{
             backgroundColor: 'transparent',
+            opacity: dimmed ? 0.34 : 1,
+            filter: dimmed ? 'grayscale(0.72) saturate(0.68)' : 'none',
             '&:before': { display: 'none' },
             '&.Mui-expanded': { margin: 0 },
           }}

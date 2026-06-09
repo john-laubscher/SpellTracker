@@ -37,6 +37,7 @@ const AddSpellsModal = ({
   spellsLoading,
   spellsError,
   dialogTitle,
+  wizardMode = false,
 }) => {
   const { auth, setAuth } = React.useContext(AuthContext);
   const token = auth?.token;
@@ -75,6 +76,7 @@ const AddSpellsModal = ({
 
   const [checkedSpellIndexes, setCheckedSpellIndexes] = React.useState(() => new Set());
   const isCantrips = Number(numericalSpellLevel) === 0;
+  const targetCollectionKey = wizardMode ? "wizardSpellbook" : "spellsPrepared";
 
   useEffect(() => {
   }, [spells]);
@@ -360,11 +362,26 @@ const AddSpellsModal = ({
       }
 
       setCharacterInfo((prev) => {
-        const nextPrepared = { ...prev.spellsPrepared };
-        Object.keys(nextPrepared).forEach((k) => {
-          nextPrepared[k] = nextPrepared[k].map((sp) => (sp.index === created.index ? created : sp));
+        const nextCollection = { ...(prev?.[targetCollectionKey] || {}) };
+        Object.keys(nextCollection).forEach((k) => {
+          nextCollection[k] = nextCollection[k].map((sp) => (sp.index === created.index ? created : sp));
         });
-        return { ...prev, spellsPrepared: nextPrepared };
+        const next = { ...prev, [targetCollectionKey]: nextCollection };
+        if (wizardMode) {
+          next.spellsPrepared = { ...(prev?.spellsPrepared || {}) };
+          Object.keys(next.spellsPrepared).forEach((k) => {
+            next.spellsPrepared[k] = next.spellsPrepared[k].map((sp) => (sp.index === created.index ? created : sp));
+          });
+          const nextMastery = { ...(prev?.wizardSpellMastery || {}) };
+          [1, 2].forEach((lvl) => {
+            if (nextMastery?.[lvl]?.index === created.index) nextMastery[lvl] = created;
+          });
+          next.wizardSpellMastery = nextMastery;
+          next.wizardSignatureSpells = Array.isArray(prev?.wizardSignatureSpells)
+            ? prev.wizardSignatureSpells.map((sp) => (sp?.index === created.index ? created : sp))
+            : [];
+        }
+        return next;
       });
 
       setIsCustomSpellOpen(false);
@@ -423,11 +440,26 @@ const AddSpellsModal = ({
 
       setCustomSpells((prev) => prev.filter((s) => s.index !== spell.index));
       setCharacterInfo((prev) => {
-        const nextPrepared = { ...prev.spellsPrepared };
-        Object.keys(nextPrepared).forEach((k) => {
-          nextPrepared[k] = nextPrepared[k].filter((sp) => sp.index !== spell.index);
+        const nextCollection = { ...(prev?.[targetCollectionKey] || {}) };
+        Object.keys(nextCollection).forEach((k) => {
+          nextCollection[k] = nextCollection[k].filter((sp) => sp.index !== spell.index);
         });
-        return { ...prev, spellsPrepared: nextPrepared };
+        const next = { ...prev, [targetCollectionKey]: nextCollection };
+        if (wizardMode) {
+          const nextPrepared = { ...(prev?.spellsPrepared || {}) };
+          Object.keys(nextPrepared).forEach((k) => {
+            nextPrepared[k] = nextPrepared[k].filter((sp) => sp.index !== spell.index);
+          });
+          next.spellsPrepared = nextPrepared;
+          next.wizardSpellMastery = {
+            1: prev?.wizardSpellMastery?.[1]?.index === spell.index ? null : prev?.wizardSpellMastery?.[1] || null,
+            2: prev?.wizardSpellMastery?.[2]?.index === spell.index ? null : prev?.wizardSpellMastery?.[2] || null,
+          };
+          next.wizardSignatureSpells = Array.isArray(prev?.wizardSignatureSpells)
+            ? prev.wizardSignatureSpells.filter((sp) => sp?.index !== spell.index)
+            : [];
+        }
+        return next;
       });
     } finally {
       setDeleteConfirm({ open: false, spell: null });
@@ -498,14 +530,14 @@ const AddSpellsModal = ({
 
     setCharacterInfo((prev) => {
       const levelKey = numericalSpellLevel;
-      const current = Array.isArray(prev.spellsPrepared?.[levelKey]) ? prev.spellsPrepared[levelKey] : [];
+      const current = Array.isArray(prev?.[targetCollectionKey]?.[levelKey]) ? prev[targetCollectionKey][levelKey] : [];
       const existing = new Set(current.map((s) => String(s?.index)));
       const toAdd = selectedSpells.filter((s) => !existing.has(String(s.index)));
       if (toAdd.length === 0) return prev;
       return {
         ...prev,
-        spellsPrepared: {
-          ...prev.spellsPrepared,
+        [targetCollectionKey]: {
+          ...prev[targetCollectionKey],
           [levelKey]: [...current, ...toAdd],
         },
       };
@@ -519,11 +551,11 @@ const AddSpellsModal = ({
       <Dialog onClose={onClose} open={isModalOpen} fullWidth maxWidth="xs">
         <DialogTitle sx={{ pr: 5 }}>
           {isCantrips ? (
-            'Choose cantrips to learn'
+            wizardMode ? 'Add cantrips to spellbook' : 'Choose cantrips to learn'
           ) : (
             dialogTitle || (
               <PreparedSpellsStatus
-                label="Choose spells to prepare"
+                label={wizardMode ? "Add spells to spellbook" : "Choose spells to prepare"}
                 typographySx={{
                   fontFamily: 'inherit',
                   fontWeight: 700,
@@ -641,7 +673,13 @@ const AddSpellsModal = ({
               },
             }}
           >
-            {isCantrips ? 'Exit Cantrip List' : 'Exit Spell List'}
+            {wizardMode
+              ? isCantrips
+                ? 'Exit Spellbook Cantrips'
+                : 'Exit Spellbook'
+              : isCantrips
+                ? 'Exit Cantrip List'
+                : 'Exit Spell List'}
           </Button>
           <Button
             variant="contained"
@@ -649,7 +687,13 @@ const AddSpellsModal = ({
             disabled={checkedSpellIndexes.size === 0}
             sx={{ textTransform: 'none', fontFamily: "'Cinzel', serif" }}
           >
-            {isCantrips ? 'Learn Checked Cantrips' : 'Prepare Checked Spells'}
+            {wizardMode
+              ? isCantrips
+                ? 'Add Checked Cantrips'
+                : 'Add Checked Spells'
+              : isCantrips
+                ? 'Learn Checked Cantrips'
+                : 'Prepare Checked Spells'}
           </Button>
         </DialogActions>
       </Dialog>

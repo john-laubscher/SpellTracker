@@ -69,6 +69,9 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
         String(matchingPreparedSpell?.spelltrackerBonus || "") === "celestial_bonus_cantrip_light" ||
         String(matchingPreparedSpell?.spelltrackerBonus || "") === "celestial_bonus_cantrip_sacred_flame"
       );
+    const isWizardSignatureSpell =
+      String(characterInfo?.characterClass || "") === "wizard" &&
+      String(matchingPreparedSpell?.spelltrackerBonus || "") === "wizard_signature_spell";
 
     const togglePreparedSpell = (spell, numericalSpellLevel) => {
         const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some((preparedSpellList) => preparedSpellList.index === spell.index)
@@ -104,7 +107,13 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const buttonClass = isSpellAlreadyPrepared ? classes.preparedButton : classes.prepareButton;
     const isCantrip = Number(numericalSpellLevel) === 0;
-    const preparedLabel = isPreparedByCelestialBonus ? 'Bonus Cantrip' : isCantrip ? 'Forget' : 'Unprepare';
+    const preparedLabel = isWizardSignatureSpell
+      ? 'Signature'
+      : isPreparedByCelestialBonus
+        ? 'Bonus Cantrip'
+        : isCantrip
+          ? 'Forget'
+          : 'Unprepare';
     const unpreparedLabel = isCantrip ? 'Learn Cantrip' : 'Prepare Spell';
 
     return (
@@ -112,9 +121,9 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
         <Button
           className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
           variant="contained"
-          disabled={isPreparedByCelestialBonus}
+          disabled={isPreparedByCelestialBonus || isWizardSignatureSpell}
           onClick={() => {
-            if (isPreparedByCelestialBonus) return;
+            if (isPreparedByCelestialBonus || isWizardSignatureSpell) return;
             if (isSpellAlreadyPrepared) {
               if (isArcaneTricksterMageHand) {
                 setConfirmRemoveOpen(true);

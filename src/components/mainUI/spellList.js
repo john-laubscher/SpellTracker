@@ -10,6 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -381,6 +382,7 @@ export const SpellList = (props) => {
     [expandedSpellOptionsRows]
   );
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
+  const isWizard = classKey === "wizard" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
   const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
   const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
@@ -411,6 +413,10 @@ export const SpellList = (props) => {
 
   const spiritSessionSpells = Array.isArray(characterInfo?.spiritSessionPrepared)
     ? characterInfo.spiritSessionPrepared
+    : [];
+  const wizardSpellMastery = characterInfo?.wizardSpellMastery || {};
+  const wizardSignatureSpells = Array.isArray(characterInfo?.wizardSignatureSpells)
+    ? characterInfo.wizardSignatureSpells
     : [];
 
   const druidLevel = React.useMemo(() => {
@@ -628,6 +634,53 @@ export const SpellList = (props) => {
   }, [characterInfo]);
 
   // Spirit Session selection is soft-limited (UI warns when over limit).
+
+  useEffect(() => {
+    if (!isWizard) return;
+    const signatureSelections = Array.isArray(characterInfo?.wizardSignatureSpells) ? characterInfo.wizardSignatureSpells : [];
+
+    setCharacterInfo((prev) => {
+      const currentPrepared = Array.isArray(prev?.spellsPrepared?.[3]) ? prev.spellsPrepared[3] : [];
+      const selectedByIndex = new Map(
+        signatureSelections
+          .filter((spell) => spell?.index)
+          .map((spell) => [
+            String(spell.index),
+            { ...spell, spelltrackerBonus: "wizard_signature_spell", spelltrackerDoesNotCount: true },
+          ])
+      );
+
+      const filteredPrepared = currentPrepared.filter((entry) => {
+        if (String(entry?.spelltrackerBonus || "") !== "wizard_signature_spell") return true;
+        return selectedByIndex.has(String(entry?.index || ""));
+      });
+
+      const nextPrepared = [...filteredPrepared];
+      selectedByIndex.forEach((spell, index) => {
+        const existingIndex = nextPrepared.findIndex((entry) => String(entry?.index || "") === index);
+        if (existingIndex >= 0) nextPrepared[existingIndex] = spell;
+        else nextPrepared.push(spell);
+      });
+
+      const changed =
+        nextPrepared.length !== currentPrepared.length ||
+        nextPrepared.some((entry, idx) => String(entry?.index || "") !== String(currentPrepared[idx]?.index || "")) ||
+        nextPrepared.some(
+          (entry, idx) =>
+            String(entry?.spelltrackerBonus || "") !== String(currentPrepared[idx]?.spelltrackerBonus || "") ||
+            entry?.spelltrackerDoesNotCount !== currentPrepared[idx]?.spelltrackerDoesNotCount
+        );
+
+      if (!changed) return prev;
+      return {
+        ...prev,
+        spellsPrepared: {
+          ...prev.spellsPrepared,
+          3: nextPrepared,
+        },
+      };
+    });
+  }, [isWizard, characterInfo?.wizardSignatureSpells, setCharacterInfo]);
 
   useEffect(() => {
     const hasGuidingWhispers =
@@ -4058,6 +4111,8 @@ export const SpellList = (props) => {
       ? "Learn more cantrips"
       : isWarlockKnownSpellSection
         ? "Choose known spells"
+        : isWizard
+          ? "Add to Spellbook"
         : isWarlock
           ? "Choose warlock spells"
           : "Prepare more spells";
@@ -4075,6 +4130,20 @@ export const SpellList = (props) => {
           Choose warlock spells to know
         </Typography>
       )
+      : !isCantrips && isWizard
+        ? (
+          <Typography
+            sx={{
+              fontFamily: "inherit",
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              letterSpacing: 0,
+              textTransform: "none",
+            }}
+          >
+            Add wizard spells to spellbook
+          </Typography>
+        )
       : null;
 
     return (
@@ -4108,6 +4177,7 @@ export const SpellList = (props) => {
           spellsLoading={spellListLoadStatus[numericalSpellLevel]?.loading}
           spellsError={spellListLoadStatus[numericalSpellLevel]?.error}
           dialogTitle={dialogTitle}
+          wizardMode={isWizard}
         /> : null}
       </div>
     )
@@ -4442,8 +4512,15 @@ export const SpellList = (props) => {
 
 
   const renderPreparedSpells = (numericalSpellLevel) => {
-    const prepared = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
-      ? characterInfo.spellsPrepared[numericalSpellLevel]
+    const prepared = isWizard
+      ? Array.isArray(characterInfo?.wizardSpellbook?.[numericalSpellLevel])
+        ? characterInfo.wizardSpellbook[numericalSpellLevel]
+        : []
+      : Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+        ? characterInfo.spellsPrepared[numericalSpellLevel]
+        : [];
+    const preparedSpellIndexes = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+      ? new Set(characterInfo.spellsPrepared[numericalSpellLevel].map((spell) => String(spell?.index || "")))
       : [];
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
@@ -4465,6 +4542,38 @@ export const SpellList = (props) => {
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
     const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
     const SWARMKEEPER_MAGIC_BONUS_TAG = "swarmkeeper_magic_bonus_spell";
+    const removeWizardSpellbookSpell = (spellToRemove) => {
+      if (!spellToRemove?.index) return;
+      setCharacterInfo((prev) => {
+        const levelKey = Number(numericalSpellLevel);
+        const currentSpellbook = { ...(prev?.wizardSpellbook || {}) };
+        const atLevel = Array.isArray(currentSpellbook?.[levelKey]) ? currentSpellbook[levelKey] : [];
+        const nextAtLevel = atLevel.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index));
+
+        const nextPrepared = { ...(prev?.spellsPrepared || {}) };
+        Object.keys(nextPrepared).forEach((key) => {
+          nextPrepared[key] = Array.isArray(nextPrepared[key])
+            ? nextPrepared[key].filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+            : [];
+        });
+
+        return {
+          ...prev,
+          wizardSpellbook: {
+            ...currentSpellbook,
+            [levelKey]: nextAtLevel,
+          },
+          spellsPrepared: nextPrepared,
+          wizardSpellMastery: {
+            1: prev?.wizardSpellMastery?.[1]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[1] || null,
+            2: prev?.wizardSpellMastery?.[2]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[2] || null,
+          },
+          wizardSignatureSpells: Array.isArray(prev?.wizardSignatureSpells)
+            ? prev.wizardSignatureSpells.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+            : [],
+        };
+      });
+    };
 
     return (
       <div>
@@ -4474,7 +4583,64 @@ export const SpellList = (props) => {
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
               leadingControl={
-                numericalSpellLevel === 0 &&
+                isWizard &&
+                Number(numericalSpellLevel) === 1 &&
+                wizardSpellMastery?.[1]?.index === spell?.index ? (
+                  <Tooltip arrow title="Spell Mastery choice (1st-level spell).">
+                    <Chip
+                      size="small"
+                      label="SM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(49, 46, 129, 0.92)",
+                        border: "1px solid rgba(49, 46, 129, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : isWizard &&
+                  Number(numericalSpellLevel) === 2 &&
+                  wizardSpellMastery?.[2]?.index === spell?.index ? (
+                  <Tooltip arrow title="Spell Mastery choice (2nd-level spell).">
+                    <Chip
+                      size="small"
+                      label="SM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(49, 46, 129, 0.92)",
+                        border: "1px solid rgba(49, 46, 129, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : isWizard &&
+                  Number(numericalSpellLevel) === 3 &&
+                  wizardSignatureSpells.some((selected) => selected?.index === spell?.index) ? (
+                  <Tooltip arrow title="Signature Spell (does not count toward prepared spells).">
+                    <Chip
+                      size="small"
+                      label="SS"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(180, 83, 9, 0.95)",
+                        border: "1px solid rgba(180, 83, 9, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
                 spell?.index === "spare-the-dying" &&
                 spell?.spelltrackerBonus === "circle_of_mortality" ? (
                   <Tooltip
@@ -4878,6 +5044,11 @@ export const SpellList = (props) => {
                   </Tooltip>
                 ) : null
               }
+              dimmed={
+                isWizard &&
+                Number(numericalSpellLevel) > 0 &&
+                !preparedSpellIndexes.has(String(spell?.index || ""))
+              }
               actionButton={
                 spell?.spelltrackerBonus === DIVINE_SOUL_AFFINITY_BONUS_TAG ? (
                   <Tooltip arrow title="Swap this DM spell (does not change spells known).">
@@ -5084,11 +5255,53 @@ export const SpellList = (props) => {
                     </IconButton>
                   </Tooltip>
                 ) : (
-                  <PrepareSpellButton
-                    numericalSpellLevel={numericalSpellLevel}
-                    spell={spell}
-                    index={index}
-                  />
+                  isWizard ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        "& .wizard-remove-btn": {
+                          opacity: 0,
+                          pointerEvents: "none",
+                          transition: "opacity 140ms ease-in-out",
+                        },
+                        "&:hover .wizard-remove-btn": {
+                          opacity: 1,
+                          pointerEvents: "auto",
+                        },
+                      }}
+                    >
+                      <Tooltip arrow title="Remove from spellbook">
+                        <IconButton
+                          className="wizard-remove-btn"
+                          size="small"
+                          aria-label="Remove from spellbook"
+                          onClick={() => removeWizardSpellbookSpell(spell)}
+                          sx={{
+                            p: 0.25,
+                            color: "rgba(183, 28, 28, 0.92)",
+                            border: "1px solid rgba(183, 28, 28, 0.20)",
+                            backgroundColor: "rgba(183, 28, 28, 0.06)",
+                            "&:hover": { backgroundColor: "rgba(183, 28, 28, 0.12)" },
+                          }}
+                        >
+                          <DeleteOutlineIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <PrepareSpellButton
+                        numericalSpellLevel={numericalSpellLevel}
+                        spell={spell}
+                        index={index}
+                      />
+                    </Box>
+                  ) : (
+                    <PrepareSpellButton
+                      numericalSpellLevel={numericalSpellLevel}
+                      spell={spell}
+                      index={index}
+                    />
+                  )
                 )
               }
             />
