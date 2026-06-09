@@ -7075,13 +7075,6 @@ export const ClassesData = {
         recharge: "lr",
       },
       {
-        id: "arcane_tradition",
-        name: "Arcane Tradition",
-        desc: "At 2nd level, you choose an arcane tradition that grants features at 2nd, 6th, 10th, and 14th level.",
-        level: 2,
-        tracked: false,
-      },
-      {
         id: "cantrip_formulas",
         name: "Cantrip Formulas",
         desc: [
