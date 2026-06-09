@@ -57,6 +57,42 @@ const loadArcanaInitiateFromStorage = () => {
   }
 };
 
+const loadWizardSpellbookFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardSpellbook");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadWizardSpellMasteryFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardSpellMastery");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadWizardSignatureSpellsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardSignatureSpells");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const loadBlessedWarriorCantripsFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_blessedWarriorCantrips");
@@ -298,6 +334,9 @@ function App() {
 
   const [characterInfo, setCharacterInfo] = useState(() => {
     const persistedPrepared = loadPreparedSpellsFromStorage();
+    const persistedWizardSpellbook = loadWizardSpellbookFromStorage();
+    const persistedWizardSpellMastery = loadWizardSpellMasteryFromStorage();
+    const persistedWizardSignatureSpells = loadWizardSignatureSpellsFromStorage();
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
     const persistedSpiritSession = loadSpiritSessionFromStorage();
     const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
@@ -319,6 +358,19 @@ function App() {
     const persistedDomainSpellSwaps = loadDomainSpellSwapsFromStorage();
     const persistedFourElementsDisciplines = loadFourElementsDisciplinesFromStorage();
     const persistedArcaneTricksterMageHandOptOut = loadArcaneTricksterMageHandOptOutFromStorage();
+    const emptySpellLevels = {
+      0: [],
+      1: [],
+      2: [],
+      3: [],
+      4: [],
+      5: [],
+      6: [],
+      7: [],
+      8: [],
+      9: [],
+    };
+    const wizardSpellbookFallback = persistedWizardSpellbook || persistedPrepared || {};
     return {
       characterName: "Garetjax",
       race: "Dwarf",
@@ -361,19 +413,13 @@ function App() {
         wis: { value: 15, mod: 2 },
         cha: { value: 17, mod: 3 },
       },
-      spellsPrepared: {
-        0: [],
-        1: [],
-        2: [],
-        3: [],
-        4: [],
-        5: [],
-        6: [],
-        7: [],
-        8: [],
-        9: [],
-        ...(persistedPrepared || {}),
+      spellsPrepared: { ...emptySpellLevels, ...(persistedPrepared || {}) },
+      wizardSpellbook: { ...emptySpellLevels, ...wizardSpellbookFallback },
+      wizardSpellMastery: {
+        1: persistedWizardSpellMastery?.[1] || persistedWizardSpellMastery?.first || null,
+        2: persistedWizardSpellMastery?.[2] || persistedWizardSpellMastery?.second || null,
       },
+      wizardSignatureSpells: Array.isArray(persistedWizardSignatureSpells) ? persistedWizardSignatureSpells : [],
       magicalSecretsPrepared: Array.isArray(persistedMagicalSecrets) ? persistedMagicalSecrets : [],
       spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
       arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
@@ -442,6 +488,39 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.spellsPrepared]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardSpellbook",
+        JSON.stringify(characterInfo.wizardSpellbook || {})
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardSpellbook]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardSpellMastery",
+        JSON.stringify(characterInfo.wizardSpellMastery || {})
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardSpellMastery]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardSignatureSpells",
+        JSON.stringify(characterInfo.wizardSignatureSpells || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardSignatureSpells]);
 
   useEffect(() => {
     try {

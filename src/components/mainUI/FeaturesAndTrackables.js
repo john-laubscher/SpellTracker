@@ -63,6 +63,9 @@ import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import MetamagicOptionsModal from "./MetamagicOptionsModal";
 import LunarEmbodimentPhaseModal from "./LunarEmbodimentPhaseModal";
 import WildMagicSurgeTableModal from "./WildMagicSurgeTableModal";
+import WizardSpellbookModal from "./WizardSpellbookModal";
+import WizardSpellMasteryModal from "./WizardSpellMasteryModal";
+import WizardSignatureSpellsModal from "./WizardSignatureSpellsModal";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -1564,6 +1567,9 @@ const FeaturesAndTrackables = () => {
   const [spiritSessionModalOpen, setSpiritSessionModalOpen] = React.useState(false);
   const [arcanaInitiateModalOpen, setArcanaInitiateModalOpen] = React.useState(false);
   const [arcaneMasteryModalOpen, setArcaneMasteryModalOpen] = React.useState(false);
+  const [wizardSpellbookModalOpen, setWizardSpellbookModalOpen] = React.useState(false);
+  const [wizardSpellMasteryModalOpen, setWizardSpellMasteryModalOpen] = React.useState(false);
+  const [wizardSignatureSpellsModalOpen, setWizardSignatureSpellsModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
   const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
@@ -1650,6 +1656,16 @@ const FeaturesAndTrackables = () => {
 
   const arcaneMasteryCount = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells.length
+    : 0;
+  const wizardSpellbookCount = Object.values(characterInfo?.wizardSpellbook || {}).reduce(
+    (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
+    0
+  );
+  const wizardSpellMasteryCount =
+    [characterInfo?.wizardSpellMastery?.[1], characterInfo?.wizardSpellMastery?.[2]].filter((entry) => entry?.index)
+      .length;
+  const wizardSignatureSpellCount = Array.isArray(characterInfo?.wizardSignatureSpells)
+    ? characterInfo.wizardSignatureSpells.length
     : 0;
 
   const hasReaper =
@@ -1930,8 +1946,25 @@ const FeaturesAndTrackables = () => {
     const base = (allClassFeatures || []).map((f) =>
       applyTrackedOverride({ overrideKey: classOverrideKey, feature: f })
     );
+    if (characterClass === "wizard") {
+      const signatureEntries = Array.isArray(characterInfo?.wizardSignatureSpells)
+        ? characterInfo.wizardSignatureSpells
+        : [];
+      const generatedSignatureFeatures = signatureEntries.map((spell) => ({
+        id: `wizard_signature_spell:${spell?.index}`,
+        name: `Signature Spell: ${spell?.name || spell?.index || "Unknown Spell"}`,
+        desc: [
+          "You can cast this signature spell once at 3rd level without expending a spell slot.",
+          "You regain this use when you finish a short or long rest.",
+        ],
+        tracked: true,
+        uses: 1,
+        recharge: "sr_or_lr",
+      }));
+      return [...base, ...generatedSignatureFeatures, ...classCustomForUi];
+    }
     return [...base, ...classCustomForUi];
-  }, [allClassFeatures, applyTrackedOverride, classOverrideKey, classCustomForUi]);
+  }, [allClassFeatures, applyTrackedOverride, classOverrideKey, classCustomForUi, characterClass, characterInfo?.wizardSignatureSpells]);
 
   const managedSubclassFeatures = React.useMemo(() => {
     const base = (allSubclassFeatures || []).map((f) => {
@@ -1990,6 +2023,77 @@ const FeaturesAndTrackables = () => {
         }
         return { ...feature, desc: [...prefixes, ...descLines] };
       });
+    }
+
+    if (characterClass === "wizard") {
+      const spellbookCount = Object.values(characterInfo?.wizardSpellbook || {}).reduce(
+        (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
+        0
+      );
+      const masteryFirst = String(characterInfo?.wizardSpellMastery?.[1]?.name || "").trim();
+      const masterySecond = String(characterInfo?.wizardSpellMastery?.[2]?.name || "").trim();
+      const signatureEntries = Array.isArray(characterInfo?.wizardSignatureSpells)
+        ? characterInfo.wizardSignatureSpells
+        : [];
+      const signatureNames = signatureEntries
+        .map((spell) => String(spell?.name || "").trim())
+        .filter(Boolean);
+
+      const mapped = base.map((feature) => {
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        if (feature?.id === "spellbook") {
+          return {
+            ...feature,
+            desc: [`Spells currently in spellbook: ${spellbookCount}.`, ...descLines],
+          };
+        }
+
+        if (feature?.id === "spell_mastery") {
+          return {
+            ...feature,
+            desc: [
+              masteryFirst
+                ? `Chosen 1st-level Spell Mastery spell: ${masteryFirst}.`
+                : "Chosen 1st-level Spell Mastery spell: none selected.",
+              masterySecond
+                ? `Chosen 2nd-level Spell Mastery spell: ${masterySecond}.`
+                : "Chosen 2nd-level Spell Mastery spell: none selected.",
+              ...descLines,
+            ],
+          };
+        }
+
+        if (feature?.id === "signature_spells") {
+          return {
+            ...feature,
+            desc: [
+              signatureNames.length > 0
+                ? `Chosen Signature Spells: ${signatureNames.join(", ")}.`
+                : "Chosen Signature Spells: none selected.",
+              ...descLines,
+            ],
+          };
+        }
+
+        return feature;
+      });
+      const generatedSignatureFeatures = signatureEntries.map((spell) => ({
+        id: `wizard_signature_spell:${spell?.index}`,
+        name: `Signature Spell: ${spell?.name || spell?.index || "Unknown Spell"}`,
+        desc: [
+          "You can cast this signature spell once at 3rd level without expending a spell slot.",
+          "You regain this use when you finish a short or long rest.",
+        ],
+        tracked: true,
+        uses: 1,
+        recharge: "sr_or_lr",
+      }));
+      return [...mapped, ...generatedSignatureFeatures];
     }
 
     if (characterClass === "ranger") {
@@ -2152,6 +2256,9 @@ const FeaturesAndTrackables = () => {
     characterLevel,
     characterInfo?.warlockInvocations,
     characterInfo?.warlockPactBoon,
+    characterInfo?.wizardSignatureSpells,
+    characterInfo?.wizardSpellMastery,
+    characterInfo?.wizardSpellbook,
     warlockLevel,
     warlockMysticArcanum,
     warlockMysticArcanumExpected,
@@ -2436,6 +2543,76 @@ const FeaturesAndTrackables = () => {
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel="Untracked Class Features"
               renderUntrackedTrailingControls={(feature) => {
+                if (characterClass === "wizard" && feature?.id === "spellbook") {
+                  return (
+                    <Tooltip arrow title={`Open Spellbook (${wizardSpellbookCount} spells)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Open Spellbook"
+                        onClick={() => setWizardSpellbookModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: wizardSpellbookCount > 0 ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (characterClass === "wizard" && feature?.id === "spell_mastery") {
+                  const isOver = wizardSpellMasteryCount > 2;
+                  const isUnder = wizardSpellMasteryCount < 2;
+                  return (
+                    <Tooltip arrow title={`Choose Spell Mastery spells (${wizardSpellMasteryCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Spell Mastery spells"
+                        onClick={() => setWizardSpellMasteryModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (characterClass === "wizard" && feature?.id === "signature_spells") {
+                  const isOver = wizardSignatureSpellCount > 2;
+                  const isUnder = wizardSignatureSpellCount < 2;
+                  return (
+                    <Tooltip arrow title={`Choose Signature Spells (${wizardSignatureSpellCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Signature Spells"
+                        onClick={() => setWizardSignatureSpellsModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
                 if (hasWarlockInvocations && feature?.id === "eldritch_invocations") {
                   const selectedCount = warlockInvocationCount;
                   const allowed = warlockInvocationAllowed;
@@ -3508,6 +3685,76 @@ const FeaturesAndTrackables = () => {
                   );
 		                }
 
+                if (characterClass === "wizard" && feature?.id === "spellbook") {
+                  return (
+                    <Tooltip arrow title={`Open Spellbook (${wizardSpellbookCount} spells)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Open Spellbook"
+                        onClick={() => setWizardSpellbookModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: wizardSpellbookCount > 0 ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (characterClass === "wizard" && feature?.id === "spell_mastery") {
+                  const isOver = wizardSpellMasteryCount > 2;
+                  const isUnder = wizardSpellMasteryCount < 2;
+                  return (
+                    <Tooltip arrow title={`Choose Spell Mastery spells (${wizardSpellMasteryCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Spell Mastery spells"
+                        onClick={() => setWizardSpellMasteryModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (characterClass === "wizard" && feature?.id === "signature_spells") {
+                  const isOver = wizardSignatureSpellCount > 2;
+                  const isUnder = wizardSignatureSpellCount < 2;
+                  return (
+                    <Tooltip arrow title={`Choose Signature Spells (${wizardSignatureSpellCount}/2)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Signature Spells"
+                        onClick={() => setWizardSignatureSpellsModalOpen(true)}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
 		                if (
 		                  characterClass === "druid" &&
 		                  subclass === "land" &&
@@ -3990,6 +4237,21 @@ const FeaturesAndTrackables = () => {
       <ArcaneMasteryModal
         open={arcaneMasteryModalOpen}
         onClose={() => setArcaneMasteryModalOpen(false)}
+      />
+
+      <WizardSpellbookModal
+        open={wizardSpellbookModalOpen}
+        onClose={() => setWizardSpellbookModalOpen(false)}
+      />
+
+      <WizardSpellMasteryModal
+        open={wizardSpellMasteryModalOpen}
+        onClose={() => setWizardSpellMasteryModalOpen(false)}
+      />
+
+      <WizardSignatureSpellsModal
+        open={wizardSignatureSpellsModalOpen}
+        onClose={() => setWizardSignatureSpellsModalOpen(false)}
       />
 
       <ManageFeaturesModal

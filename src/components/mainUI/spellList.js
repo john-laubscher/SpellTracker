@@ -10,6 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
@@ -381,6 +382,7 @@ export const SpellList = (props) => {
     [expandedSpellOptionsRows]
   );
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
+  const isWizard = classKey === "wizard" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
   const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
   const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
@@ -411,6 +413,10 @@ export const SpellList = (props) => {
 
   const spiritSessionSpells = Array.isArray(characterInfo?.spiritSessionPrepared)
     ? characterInfo.spiritSessionPrepared
+    : [];
+  const wizardSpellMastery = characterInfo?.wizardSpellMastery || {};
+  const wizardSignatureSpells = Array.isArray(characterInfo?.wizardSignatureSpells)
+    ? characterInfo.wizardSignatureSpells
     : [];
 
   const druidLevel = React.useMemo(() => {
@@ -509,6 +515,11 @@ export const SpellList = (props) => {
   const hasCelestialBonusCantrips =
     characterInfo?.characterClass === "warlock" &&
     String(characterInfo?.subclass || "") === "celestial" &&
+    Number(characterInfo?.characterLevel || 0) >= 1;
+
+  const hasUndyingAmongTheDeadCantrip =
+    characterInfo?.characterClass === "warlock" &&
+    String(characterInfo?.subclass || "") === "undying" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
   const hasSwarmkeeperMagic =
@@ -623,6 +634,53 @@ export const SpellList = (props) => {
   }, [characterInfo]);
 
   // Spirit Session selection is soft-limited (UI warns when over limit).
+
+  useEffect(() => {
+    if (!isWizard) return;
+    const signatureSelections = Array.isArray(characterInfo?.wizardSignatureSpells) ? characterInfo.wizardSignatureSpells : [];
+
+    setCharacterInfo((prev) => {
+      const currentPrepared = Array.isArray(prev?.spellsPrepared?.[3]) ? prev.spellsPrepared[3] : [];
+      const selectedByIndex = new Map(
+        signatureSelections
+          .filter((spell) => spell?.index)
+          .map((spell) => [
+            String(spell.index),
+            { ...spell, spelltrackerBonus: "wizard_signature_spell", spelltrackerDoesNotCount: true },
+          ])
+      );
+
+      const filteredPrepared = currentPrepared.filter((entry) => {
+        if (String(entry?.spelltrackerBonus || "") !== "wizard_signature_spell") return true;
+        return selectedByIndex.has(String(entry?.index || ""));
+      });
+
+      const nextPrepared = [...filteredPrepared];
+      selectedByIndex.forEach((spell, index) => {
+        const existingIndex = nextPrepared.findIndex((entry) => String(entry?.index || "") === index);
+        if (existingIndex >= 0) nextPrepared[existingIndex] = spell;
+        else nextPrepared.push(spell);
+      });
+
+      const changed =
+        nextPrepared.length !== currentPrepared.length ||
+        nextPrepared.some((entry, idx) => String(entry?.index || "") !== String(currentPrepared[idx]?.index || "")) ||
+        nextPrepared.some(
+          (entry, idx) =>
+            String(entry?.spelltrackerBonus || "") !== String(currentPrepared[idx]?.spelltrackerBonus || "") ||
+            entry?.spelltrackerDoesNotCount !== currentPrepared[idx]?.spelltrackerDoesNotCount
+        );
+
+      if (!changed) return prev;
+      return {
+        ...prev,
+        spellsPrepared: {
+          ...prev.spellsPrepared,
+          3: nextPrepared,
+        },
+      };
+    });
+  }, [isWizard, characterInfo?.wizardSignatureSpells, setCharacterInfo]);
 
   useEffect(() => {
     const hasGuidingWhispers =
@@ -1240,6 +1298,91 @@ export const SpellList = (props) => {
     characterInfo?.spellsPrepared,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    const BONUS_TAG = "undying_bonus_cantrip";
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const hasTaggedCantripSlot = currentCantrips.some((s) => String(s?.spelltrackerBonus || "") === BONUS_TAG);
+
+    if (!hasUndyingAmongTheDeadCantrip) {
+      if (!hasTaggedCantripSlot) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const next = current.filter((s) => String(s?.spelltrackerBonus || "") !== BONUS_TAG);
+        if (next.length === current.length) return prev;
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: next,
+          },
+        };
+      });
+      return;
+    }
+
+    if (hasTaggedCantripSlot) return;
+
+    const existingIdx = currentCantrips.findIndex((s) => s?.index === "spare-the-dying");
+    if (existingIdx !== -1) {
+      const existing = currentCantrips[existingIdx] || null;
+      const needsTag =
+        String(existing?.spelltrackerBonus || "") !== BONUS_TAG || existing?.spelltrackerDoesNotCount !== true;
+      if (!needsTag) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const idx = current.findIndex((s) => s?.index === "spare-the-dying");
+        if (idx === -1) return prev;
+        const cur = current[idx] || {};
+        const updated = {
+          ...cur,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "spare-the-dying",
+        };
+        const next = current.map((s, i) => (i === idx ? updated : s));
+        return { ...prev, spellsPrepared: { ...prev.spellsPrepared, 0: next } };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/spare-the-dying")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusCantrip = {
+          ...spell,
+          spelltrackerBonus: BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "spare-the-dying",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          if (current.some((s) => s?.index === "spare-the-dying")) return prev;
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: [...current, bonusCantrip],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasUndyingAmongTheDeadCantrip, characterInfo?.spellsPrepared, setCharacterInfo]);
 
   useEffect(() => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -3968,6 +4111,8 @@ export const SpellList = (props) => {
       ? "Learn more cantrips"
       : isWarlockKnownSpellSection
         ? "Choose known spells"
+        : isWizard
+          ? "Add to Spellbook"
         : isWarlock
           ? "Choose warlock spells"
           : "Prepare more spells";
@@ -3985,6 +4130,20 @@ export const SpellList = (props) => {
           Choose warlock spells to know
         </Typography>
       )
+      : !isCantrips && isWizard
+        ? (
+          <Typography
+            sx={{
+              fontFamily: "inherit",
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              letterSpacing: 0,
+              textTransform: "none",
+            }}
+          >
+            Add wizard spells to spellbook
+          </Typography>
+        )
       : null;
 
     return (
@@ -4018,6 +4177,7 @@ export const SpellList = (props) => {
           spellsLoading={spellListLoadStatus[numericalSpellLevel]?.loading}
           spellsError={spellListLoadStatus[numericalSpellLevel]?.error}
           dialogTitle={dialogTitle}
+          wizardMode={isWizard}
         /> : null}
       </div>
     )
@@ -4166,7 +4326,9 @@ export const SpellList = (props) => {
         hasReaper ||
         hasCircleOfMortality ||
         hasLightBonusCantrip ||
-        hasGuidingWhispers);
+        hasGuidingWhispers ||
+        hasCelestialBonusCantrips ||
+        hasUndyingAmongTheDeadCantrip);
     if (isWarlock) {
       if (!shouldShowWarlockSection && !shouldRenderFeatureCantripSection) return null;
     } else if (slotCount === 0 && !shouldRenderFeatureCantripSection) {
@@ -4185,6 +4347,7 @@ export const SpellList = (props) => {
     if (hasCircleOfMortality) cantripFeatureSources.push("Circle of Mortality");
     if (hasLightBonusCantrip) cantripFeatureSources.push("Bonus Cantrip");
     if (hasCelestialBonusCantrips) cantripFeatureSources.push("Celestial Bonus Cantrips");
+    if (hasUndyingAmongTheDeadCantrip) cantripFeatureSources.push("Among the Dead");
     if (hasReaper) cantripFeatureSources.push("Reaper");
     if (hasAcolyteOfNature) cantripFeatureSources.push("Acolyte of Nature");
 
@@ -4292,6 +4455,14 @@ export const SpellList = (props) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
+              {isCantrips && hasUndyingAmongTheDeadCantrip ? (
+                <Tooltip
+                  arrow
+                  title="Spare the Dying is granted by Among the Dead and doesn’t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
              </Box>
              {shouldRenderSpellCheckboxes && (
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
@@ -4341,13 +4512,21 @@ export const SpellList = (props) => {
 
 
   const renderPreparedSpells = (numericalSpellLevel) => {
-    const prepared = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
-      ? characterInfo.spellsPrepared[numericalSpellLevel]
+    const prepared = isWizard
+      ? Array.isArray(characterInfo?.wizardSpellbook?.[numericalSpellLevel])
+        ? characterInfo.wizardSpellbook[numericalSpellLevel]
+        : []
+      : Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+        ? characterInfo.spellsPrepared[numericalSpellLevel]
+        : [];
+    const preparedSpellIndexes = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
+      ? new Set(characterInfo.spellsPrepared[numericalSpellLevel].map((spell) => String(spell?.index || "")))
       : [];
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const CELESTIAL_LIGHT_BONUS_TAG = "celestial_bonus_cantrip_light";
     const CELESTIAL_SACRED_FLAME_BONUS_TAG = "celestial_bonus_cantrip_sacred_flame";
+    const UNDYING_BONUS_TAG = "undying_bonus_cantrip";
     const DRACONIC_GIFT_BONUS_TAG = "draconic_gift_thaumaturgy";
     const MOON_FIRE_BONUS_TAG = "lunar_sorcery_moon_fire";
     const ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG = "aberrant_mind_psionic_spell";
@@ -4363,6 +4542,38 @@ export const SpellList = (props) => {
     const HORIZON_WALKER_MAGIC_BONUS_TAG = "horizon_walker_magic_bonus_spell";
     const MONSTER_SLAYER_MAGIC_BONUS_TAG = "monster_slayer_magic_bonus_spell";
     const SWARMKEEPER_MAGIC_BONUS_TAG = "swarmkeeper_magic_bonus_spell";
+    const removeWizardSpellbookSpell = (spellToRemove) => {
+      if (!spellToRemove?.index) return;
+      setCharacterInfo((prev) => {
+        const levelKey = Number(numericalSpellLevel);
+        const currentSpellbook = { ...(prev?.wizardSpellbook || {}) };
+        const atLevel = Array.isArray(currentSpellbook?.[levelKey]) ? currentSpellbook[levelKey] : [];
+        const nextAtLevel = atLevel.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index));
+
+        const nextPrepared = { ...(prev?.spellsPrepared || {}) };
+        Object.keys(nextPrepared).forEach((key) => {
+          nextPrepared[key] = Array.isArray(nextPrepared[key])
+            ? nextPrepared[key].filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+            : [];
+        });
+
+        return {
+          ...prev,
+          wizardSpellbook: {
+            ...currentSpellbook,
+            [levelKey]: nextAtLevel,
+          },
+          spellsPrepared: nextPrepared,
+          wizardSpellMastery: {
+            1: prev?.wizardSpellMastery?.[1]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[1] || null,
+            2: prev?.wizardSpellMastery?.[2]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[2] || null,
+          },
+          wizardSignatureSpells: Array.isArray(prev?.wizardSignatureSpells)
+            ? prev.wizardSignatureSpells.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+            : [],
+        };
+      });
+    };
 
     return (
       <div>
@@ -4372,7 +4583,64 @@ export const SpellList = (props) => {
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
               leadingControl={
-                numericalSpellLevel === 0 &&
+                isWizard &&
+                Number(numericalSpellLevel) === 1 &&
+                wizardSpellMastery?.[1]?.index === spell?.index ? (
+                  <Tooltip arrow title="Spell Mastery choice (1st-level spell).">
+                    <Chip
+                      size="small"
+                      label="SM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(49, 46, 129, 0.92)",
+                        border: "1px solid rgba(49, 46, 129, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : isWizard &&
+                  Number(numericalSpellLevel) === 2 &&
+                  wizardSpellMastery?.[2]?.index === spell?.index ? (
+                  <Tooltip arrow title="Spell Mastery choice (2nd-level spell).">
+                    <Chip
+                      size="small"
+                      label="SM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(49, 46, 129, 0.92)",
+                        border: "1px solid rgba(49, 46, 129, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : isWizard &&
+                  Number(numericalSpellLevel) === 3 &&
+                  wizardSignatureSpells.some((selected) => selected?.index === spell?.index) ? (
+                  <Tooltip arrow title="Signature Spell (does not count toward prepared spells).">
+                    <Chip
+                      size="small"
+                      label="SS"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.82,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(180, 83, 9, 0.95)",
+                        border: "1px solid rgba(180, 83, 9, 0.24)",
+                        "&:hover": { opacity: 0.92 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
                 spell?.index === "spare-the-dying" &&
                 spell?.spelltrackerBonus === "circle_of_mortality" ? (
                   <Tooltip
@@ -4413,6 +4681,27 @@ export const SpellList = (props) => {
                         color: "rgba(239, 108, 0, 0.90)",
                         border: "1px solid rgba(239, 108, 0, 0.22)",
                         "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === UNDYING_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Among the Dead cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="AtD"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(66, 66, 66, 0.92)",
+                        border: "1px solid rgba(66, 66, 66, 0.24)",
+                        "&:hover": { opacity: 0.9 },
                       }}
                     />
                   </Tooltip>
@@ -4755,6 +5044,11 @@ export const SpellList = (props) => {
                   </Tooltip>
                 ) : null
               }
+              dimmed={
+                isWizard &&
+                Number(numericalSpellLevel) > 0 &&
+                !preparedSpellIndexes.has(String(spell?.index || ""))
+              }
               actionButton={
                 spell?.spelltrackerBonus === DIVINE_SOUL_AFFINITY_BONUS_TAG ? (
                   <Tooltip arrow title="Swap this DM spell (does not change spells known).">
@@ -4938,12 +5232,76 @@ export const SpellList = (props) => {
                       <SwapHorizIcon fontSize="inherit" />
                     </IconButton>
                   </Tooltip>
+                ) : spell?.spelltrackerBonus === UNDYING_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Among the Dead cantrip (does not change cantrips known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Among the Dead cantrip"
+                      onClick={() => {
+                        setCelestialSwapModal({
+                          open: true,
+                          originalSpell: spell,
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(66, 66, 66, 0.92)",
+                        border: "1px solid rgba(66, 66, 66, 0.24)",
+                        backgroundColor: "rgba(66, 66, 66, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(66, 66, 66, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
                 ) : (
-                  <PrepareSpellButton
-                    numericalSpellLevel={numericalSpellLevel}
-                    spell={spell}
-                    index={index}
-                  />
+                  isWizard ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        "& .wizard-remove-btn": {
+                          opacity: 0,
+                          pointerEvents: "none",
+                          transition: "opacity 140ms ease-in-out",
+                        },
+                        "&:hover .wizard-remove-btn": {
+                          opacity: 1,
+                          pointerEvents: "auto",
+                        },
+                      }}
+                    >
+                      <Tooltip arrow title="Remove from spellbook">
+                        <IconButton
+                          className="wizard-remove-btn"
+                          size="small"
+                          aria-label="Remove from spellbook"
+                          onClick={() => removeWizardSpellbookSpell(spell)}
+                          sx={{
+                            p: 0.25,
+                            color: "rgba(183, 28, 28, 0.92)",
+                            border: "1px solid rgba(183, 28, 28, 0.20)",
+                            backgroundColor: "rgba(183, 28, 28, 0.06)",
+                            "&:hover": { backgroundColor: "rgba(183, 28, 28, 0.12)" },
+                          }}
+                        >
+                          <DeleteOutlineIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <PrepareSpellButton
+                        numericalSpellLevel={numericalSpellLevel}
+                        spell={spell}
+                        index={index}
+                      />
+                    </Box>
+                  ) : (
+                    <PrepareSpellButton
+                      numericalSpellLevel={numericalSpellLevel}
+                      spell={spell}
+                      index={index}
+                    />
+                  )
                 )
               }
             />
@@ -5990,6 +6348,21 @@ export const SpellList = (props) => {
         <CelestialBonusCantripSwapModal
           open={celestialSwapModal.open}
           originalSpell={celestialSwapModal.originalSpell}
+          title={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "Swap Among the Dead Cantrip"
+              : "Swap Celestial Bonus Cantrip"
+          }
+          bonusTagPrefix={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "undying_bonus_cantrip"
+              : "celestial_bonus_cantrip_"
+          }
+          duplicateChoiceLabel={
+            String(celestialSwapModal?.originalSpell?.spelltrackerBonus || "") === "undying_bonus_cantrip"
+              ? "Already chosen as your Among the Dead cantrip."
+              : "Already chosen as the other Celestial bonus cantrip."
+          }
           onClose={() => setCelestialSwapModal({ open: false, originalSpell: null })}
         />
 
