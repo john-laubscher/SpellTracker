@@ -479,7 +479,6 @@ const FeatureDisplay = ({
   }, [features, title]);
   const [showHeaderActions, setShowHeaderActions] = React.useState(false);
   const touchHideTimerRef = React.useRef(null);
-  const [stackingChecksById, setStackingChecksById] = React.useState({});
   // Track whether the user manually toggled the untracked section (so we don't auto-collapse it later).
   const [untrackedTouched, setUntrackedTouched] = React.useState(false);
   const [untrackedExpanded, setUntrackedExpanded] = React.useState(
@@ -557,6 +556,35 @@ const FeatureDisplay = ({
     return 1;
   };
 
+  const getStackingChecksSummary = React.useCallback((feature, checkedCount) => {
+    const safeCount = Math.max(0, Math.trunc(Number(checkedCount) || 0));
+    if (String(feature?.stackingVariant || "") === "overchannelDamage") {
+      return {
+        compactLabel: safeCount <= 0 ? "No self-dmg" : `${safeCount + 1}d12/level`,
+        detailHeader: (
+          <>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Current self-damage:</strong>{" "}
+              {safeCount <= 0 ? "No damage yet." : `${safeCount + 1}d12 necrotic per spell level.`}
+            </p>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Tracking:</strong> First use is free. Check one box for each additional use before a long rest.
+            </p>
+          </>
+        ),
+      };
+    }
+
+    return {
+      compactLabel: `DC ${10 + safeCount * 5}`,
+      detailHeader: (
+        <p style={{ margin: "2px 0" }}>
+          <strong>Current DC:</strong> {10 + safeCount * 5}
+        </p>
+      ),
+    };
+  }, []);
+
   return (
     <div style={{ marginBottom: "8px" }}>
       <div
@@ -617,12 +645,17 @@ const FeatureDisplay = ({
       </div>
 
       {trackedFeatures.map((feature) => {
-        const stackingHeader =
-          feature?.trackedMode === "stackingChecks" ? (
-            <p style={{ margin: "2px 0" }}>
-              <strong>Current DC:</strong> {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
-            </p>
-          ) : null;
+        const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
+        const tracker = featureTrackers?.[trackerKey] || {};
+        const stackingCheckedCount =
+          feature?.trackedMode === "stackingChecks"
+            ? Math.max(0, Math.min(Number(tracker?.stackingCount) || 0, Number(feature?.maxChecks) || 10))
+            : 0;
+        const stackingSummary =
+          feature?.trackedMode === "stackingChecks"
+            ? getStackingChecksSummary(feature, stackingCheckedCount)
+            : null;
+        const stackingHeader = stackingSummary?.detailHeader || null;
 
         const customHeader = renderDetailsHeaderForFeature
           ? renderDetailsHeaderForFeature(feature, { featureTrackers, setFeatureTrackers })
@@ -648,8 +681,6 @@ const FeatureDisplay = ({
                 ? renderTrackedTrailingControls(feature)
                 : null;
               let usesCount = getUsesCount(feature);
-              const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
-              const tracker = featureTrackers?.[trackerKey] || {};
               const sharedPoolKey = feature?.sharedUsePoolKey
                 ? `${String(characterClass || "unknown")}:${String(feature.sharedUsePoolKey)}`
                 : null;
@@ -902,17 +933,20 @@ const FeatureDisplay = ({
             }
 
             if (feature?.trackedMode === "stackingChecks") {
-              const checkedCount = Math.max(
-                0,
-                Math.min(Number(stackingChecksById?.[feature.id]) || 0, feature?.maxChecks || 10)
-              );
+              const checkedCount = stackingCheckedCount;
               const maxChecks = Math.max(1, Math.min(Number(feature?.maxChecks) || 10, 10));
               const totalBoxes = Math.min(checkedCount + 1, maxChecks);
+              const resetTooltip =
+                feature?.recharge === "sr_or_lr"
+                  ? "Reset after a short or long rest"
+                  : feature?.recharge === "lr"
+                    ? "Reset after a long rest"
+                    : "Reset tracker";
 
               return (
                 <>
                   <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#5d4037", mr: 0.5 }}>
-                    DC {10 + (Number(stackingChecksById?.[feature.id]) || 0) * 5}
+                    {stackingSummary?.compactLabel || `DC ${10 + checkedCount * 5}`}
                   </Typography>
                   {Array.from({ length: totalBoxes }).map((_, idx) => (
                     <Checkbox
@@ -920,19 +954,14 @@ const FeatureDisplay = ({
                       checked={idx < checkedCount}
                       onChange={(e) => {
                         const nextChecked = e.target.checked;
-                        setStackingChecksById((prev) => {
-                          const prevCount = Math.max(
-                            0,
-                            Math.min(Number(prev?.[feature.id]) || 0, maxChecks)
-                          );
-                          if (nextChecked) {
-                            if (idx !== prevCount) return prev;
-                            if (prevCount >= maxChecks) return prev;
-                            return { ...prev, [feature.id]: prevCount + 1 };
-                          }
-                          if (idx >= prevCount) return prev;
-                          return { ...prev, [feature.id]: Math.max(0, prevCount - 1) };
-                        });
+                        if (nextChecked) {
+                          if (idx !== checkedCount) return;
+                          if (checkedCount >= maxChecks) return;
+                          setTracker({ stackingCount: checkedCount + 1 });
+                          return;
+                        }
+                        if (idx >= checkedCount) return;
+                        setTracker({ stackingCount: Math.max(0, checkedCount - 1) });
                       }}
                       size="small"
                       sx={{
@@ -943,6 +972,18 @@ const FeatureDisplay = ({
                       }}
                     />
                   ))}
+                  {checkedCount > 0 ? (
+                    <Tooltip arrow title={resetTooltip}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Reset ${String(feature?.name || "feature")} tracker`}
+                        onClick={() => setTracker({ stackingCount: 0 })}
+                        sx={{ ml: 0.25, p: 0.25 }}
+                      >
+                        <CheckIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  ) : null}
                   {extraTrailing}
                 </>
               );
