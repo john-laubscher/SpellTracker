@@ -1377,6 +1377,63 @@ const FeatureDisplay = ({
               );
             }
 
+            if (feature?.trackedMode === "chargeCheckboxes") {
+              const maxCharges = Math.max(1, Math.trunc(Number(usesCount) || 1));
+              const currentCharges = clampInt(
+                tracker?.currentCharges ?? feature?.startingCharges ?? 0,
+                0,
+                maxCharges
+              );
+              const longRestCharges = clampInt(
+                feature?.longRestCharges ?? feature?.startingCharges ?? 0,
+                0,
+                maxCharges
+              );
+              const chargeLabel = String(feature?.chargeLabel || "charges");
+
+              return (
+                <>
+                  <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#5d4037", mr: 0.5 }}>
+                    {currentCharges}/{maxCharges} {chargeLabel}
+                  </Typography>
+                  {Array.from({ length: maxCharges }).map((_, idx) => (
+                    <Checkbox
+                      key={`${feature.id}:charge:${idx}`}
+                      checked={idx < currentCharges}
+                      onChange={(e) => {
+                        const nextChecked = Boolean(e.target.checked);
+                        if (nextChecked) {
+                          if (idx !== currentCharges) return;
+                          setTracker({ currentCharges: clampInt(currentCharges + 1, 0, maxCharges) });
+                          return;
+                        }
+                        if (idx !== currentCharges - 1) return;
+                        setTracker({ currentCharges: clampInt(currentCharges - 1, 0, maxCharges) });
+                      }}
+                      size="small"
+                      sx={{
+                        ml: idx === 0 ? 0.25 : 0,
+                        p: 0.25,
+                        color: "#8B4513",
+                        "&.Mui-checked": { color: "#8B4513" },
+                      }}
+                    />
+                  ))}
+                  <Tooltip arrow title={`Set ${String(feature?.name || "feature")} to ${longRestCharges} ${chargeLabel} after a long rest`}>
+                    <IconButton
+                      size="small"
+                      aria-label={`Reset ${String(feature?.name || "feature")} to ${longRestCharges} ${chargeLabel}`}
+                      onClick={() => setTracker({ currentCharges: longRestCharges })}
+                      sx={{ ml: 0.25, p: 0.25 }}
+                    >
+                      <CheckIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (usesCount === "unlimited") {
               return (
                 <>
