@@ -105,6 +105,7 @@ const normalizeCompareName = (s) =>
     .replace(/\s+/g, " ");
 
 const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusion";
+const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -1551,6 +1552,124 @@ export const SpellList = (props) => {
     characterInfo?.subclass,
     characterInfo?.characterLevel,
     characterInfo?.spellsPrepared,
+    characterInfo?.wizardSpellbook,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const hasUndeadThralls =
+      characterInfo?.characterClass === "wizard" &&
+      String(characterInfo?.subclass || "") === "necromancy" &&
+      Number(characterInfo?.characterLevel || 0) >= 6;
+
+    const currentLevelThreeSpellbook = Array.isArray(characterInfo?.wizardSpellbook?.[3])
+      ? characterInfo.wizardSpellbook[3]
+      : [];
+
+    const bonusAnimateDead = currentLevelThreeSpellbook.find(
+      (spell) => String(spell?.spelltrackerBonus || "") === UNDEAD_THRALLS_BONUS_TAG
+    );
+
+    if (!hasUndeadThralls) {
+      if (!bonusAnimateDead) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.wizardSpellbook?.[3]) ? prev.wizardSpellbook[3] : [];
+        const next = current.filter((spell) => String(spell?.spelltrackerBonus || "") !== UNDEAD_THRALLS_BONUS_TAG);
+        if (next.length === current.length) return prev;
+
+        return {
+          ...prev,
+          wizardSpellbook: {
+            ...prev.wizardSpellbook,
+            3: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const animateDeadInSpellbook = currentLevelThreeSpellbook.find(
+      (spell) => String(spell?.index || "") === "animate-dead"
+    );
+
+    if (
+      animateDeadInSpellbook &&
+      String(animateDeadInSpellbook?.spelltrackerBonus || "") === UNDEAD_THRALLS_BONUS_TAG &&
+      animateDeadInSpellbook?.spelltrackerOrigin === "animate-dead"
+    ) {
+      return;
+    }
+
+    if (animateDeadInSpellbook) {
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.wizardSpellbook?.[3]) ? prev.wizardSpellbook[3] : [];
+        const next = current.map((spell) =>
+          String(spell?.index || "") === "animate-dead"
+            ? {
+                ...spell,
+                spelltrackerBonus: UNDEAD_THRALLS_BONUS_TAG,
+                spelltrackerOrigin: "animate-dead",
+              }
+            : spell
+        );
+
+        const changed = next.some(
+          (spell, idx) =>
+            String(spell?.spelltrackerBonus || "") !== String(current[idx]?.spelltrackerBonus || "") ||
+            String(spell?.spelltrackerOrigin || "") !== String(current[idx]?.spelltrackerOrigin || "")
+        );
+        if (!changed) return prev;
+
+        return {
+          ...prev,
+          wizardSpellbook: {
+            ...prev.wizardSpellbook,
+            3: next,
+          },
+        };
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/animate-dead")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const undeadThrallsSpell = {
+          ...spell,
+          spelltrackerBonus: UNDEAD_THRALLS_BONUS_TAG,
+          spelltrackerOrigin: "animate-dead",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.wizardSpellbook?.[3]) ? prev.wizardSpellbook[3] : [];
+          if (current.some((entry) => String(entry?.index || "") === "animate-dead")) return prev;
+
+          return {
+            ...prev,
+            wizardSpellbook: {
+              ...prev.wizardSpellbook,
+              3: [...current, undeadThrallsSpell],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
     characterInfo?.wizardSpellbook,
     setCharacterInfo,
   ]);
@@ -5064,6 +5183,26 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(48, 63, 159, 0.92)",
                         border: "1px solid rgba(48, 63, 159, 0.22)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : spell?.index === "animate-dead" && spell?.spelltrackerBonus === UNDEAD_THRALLS_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Undead Thralls bonus spell from School of Necromancy."
+                  >
+                    <Chip
+                      size="small"
+                      label="UT"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(69, 39, 160, 0.92)",
+                        border: "1px solid rgba(69, 39, 160, 0.22)",
                         "&:hover": { opacity: 0.9 },
                       }}
                     />
