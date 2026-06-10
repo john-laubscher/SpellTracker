@@ -449,6 +449,7 @@ const FeatureDisplay = ({
   onManage,
   proficiencyBonusValue,
   charismaModValue,
+  intelligenceModValue,
   wisdomModValue,
   strengthModValue,
   constitutionModValue,
@@ -538,6 +539,10 @@ const FeatureDisplay = ({
       return Math.max(1, 1 + chaMod);
     }
     if (feature?.uses === "cha_mod") return Math.max(1, Number(charismaModValue) || 1);
+    if (feature?.uses === "int_mod") {
+      const minUses = Math.max(0, Math.trunc(Number(feature?.minUses) || 0));
+      return Math.max(minUses, Math.trunc(Number(intelligenceModValue) || 0));
+    }
     if (feature?.uses === "wis_mod") return Math.max(1, Number(wisdomModValue) || 1);
     if (feature?.uses === "str_mod") {
       const minUses = Math.max(0, Math.trunc(Number(feature?.minUses) || 0));
@@ -1519,6 +1524,7 @@ const FeaturesAndTrackables = () => {
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
+  const intelligenceModValue = characterInfo?.stats?.int?.mod ?? characterInfo?.stats?.intelligence?.mod ?? 0;
   const wisdomModValue = characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0;
   const strengthModValue = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
   const constitutionModValue = characterInfo?.stats?.con?.mod ?? characterInfo?.stats?.constitution?.mod ?? 0;
@@ -2803,6 +2809,7 @@ const FeaturesAndTrackables = () => {
               }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              intelligenceModValue={intelligenceModValue}
               wisdomModValue={wisdomModValue}
               strengthModValue={strengthModValue}
               constitutionModValue={constitutionModValue}
@@ -3051,6 +3058,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Subclass Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              intelligenceModValue={intelligenceModValue}
               wisdomModValue={wisdomModValue}
               strengthModValue={strengthModValue}
               constitutionModValue={constitutionModValue}
@@ -4019,6 +4027,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Race Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              intelligenceModValue={intelligenceModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
               fighterLevel={fighterLevel}
@@ -4036,6 +4045,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Subrace Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              intelligenceModValue={intelligenceModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
               characterClass={characterClass}
@@ -4052,6 +4062,7 @@ const FeaturesAndTrackables = () => {
               untrackedLabel="Untracked Miscellaneous Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
+              intelligenceModValue={intelligenceModValue}
               wisdomModValue={wisdomModValue}
               druidLevel={druidLevel}
               characterClass={characterClass}
