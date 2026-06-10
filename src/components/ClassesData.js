@@ -7162,20 +7162,12 @@ export const ClassesData = {
         source: "Tasha's Cauldron of Everything",
         features: [
           {
-            id: "training_in_war_and_song",
-            name: "Training in War and Song",
-            desc: [
-              "You gain proficiency with light armor, one one-handed melee weapon of your choice, and the Performance skill if you do not already have it.",
-            ],
-            level: 2,
-            tracked: false,
-          },
-          {
             id: "bladesong",
             name: "Bladesong",
             desc: [
-              "As a bonus action, you can start a Bladesong for 1 minute while you are not using medium or heavy armor, a shield, or a two-handed weapon.",
-              "While active, you gain bonus AC equal to your Intelligence modifier, +10 speed, advantage on Acrobatics checks, and a bonus to concentration saves equal to your Intelligence modifier.",
+              "As a bonus action, you can start the Bladesong for 1 minute while you aren't wearing medium or heavy armor or using a shield.",
+              "It ends early if you are incapacitated, if you don medium or heavy armor or a shield, or if you use two hands to make an attack with a weapon. You can also dismiss it at any time with no action required.",
+              "While active, you gain a bonus to AC equal to your Intelligence modifier, your walking speed increases by 10 feet, you have advantage on Dexterity (Acrobatics) checks, and you gain a bonus to concentration saves equal to your Intelligence modifier.",
             ],
             level: 2,
             tracked: true,
@@ -7185,21 +7177,21 @@ export const ClassesData = {
           {
             id: "bladesinger_extra_attack",
             name: "Extra Attack",
-            desc: "When you take the Attack action, you can attack twice, and one of those attacks can be replaced with a wizard cantrip.",
+            desc: "When you take the Attack action on your turn, you can attack twice instead of once. You can cast one of your cantrips in place of one of those attacks.",
             level: 6,
             tracked: false,
           },
           {
             id: "song_of_defense",
             name: "Song of Defense",
-            desc: "While your Bladesong is active, you can use your reaction and expend a spell slot to reduce incoming damage by five times the slot's level.",
+            desc: "While your Bladesong is active, when you take damage you can use your reaction and expend a spell slot to reduce that damage by five times the spell slot's level.",
             level: 10,
             tracked: false,
           },
           {
             id: "song_of_victory",
             name: "Song of Victory",
-            desc: "While your Bladesong is active, add your Intelligence modifier to the damage of your melee weapon attacks.",
+            desc: "While your Bladesong is active, you add your Intelligence modifier to the damage of your melee weapon attacks.",
             level: 14,
             tracked: false,
           },
