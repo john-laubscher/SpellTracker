@@ -1254,6 +1254,78 @@ const FeatureDisplay = ({
               );
             }
 
+            if (feature?.trackedMode === "portentRolls") {
+              const portentCount = Math.max(1, Number(feature?.portentCount) || 2);
+              const rawRolls = Array.isArray(tracker?.rolls) ? tracker.rolls : [];
+              const rolls = rawRolls
+                .slice(0, portentCount)
+                .map((entry) => ({
+                  value: clampInt(entry?.value ?? 0, 1, 20),
+                  used: Boolean(entry?.used),
+                }))
+                .filter((entry) => Number.isFinite(entry.value) && entry.value >= 1 && entry.value <= 20);
+
+              const rollLabel = `${portentCount}d20`;
+
+              return (
+                <>
+                  <Tooltip arrow title={`Roll ${rollLabel} for ${feature?.name || "Portent"}`}>
+                    <IconButton
+                      size="small"
+                      aria-label={`Roll ${rollLabel} for ${feature?.name || "Portent"}`}
+                      onClick={() => {
+                        const nextRolls = Array.from({ length: portentCount }, () => ({
+                          value: Math.floor(Math.random() * 20) + 1,
+                          used: false,
+                        }));
+                        setTracker({ rolls: nextRolls });
+                      }}
+                      sx={{ ml: 0.25, p: 0.25 }}
+                    >
+                      <CasinoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {rolls.length > 0 ? (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: 0.25, flexWrap: "wrap" }}>
+                      {rolls.map((entry, idx) => (
+                        <Typography
+                          key={`${trackerKey}:portent:${idx}:${entry.value}`}
+                          onClick={() => {
+                            const nextRolls = rolls.map((roll, rollIdx) =>
+                              rollIdx === idx ? { ...roll, used: !roll.used } : roll
+                            );
+                            setTracker({ rolls: nextRolls });
+                          }}
+                          sx={{
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            px: 0.85,
+                            py: 0.2,
+                            borderRadius: "999px",
+                            border: `1px solid ${entry.used ? "rgba(120, 113, 108, 0.45)" : "rgba(15, 118, 110, 0.35)"}`,
+                            color: entry.used ? "rgba(120, 113, 108, 0.9)" : "#0f766e",
+                            backgroundColor: entry.used ? "rgba(231, 229, 228, 0.75)" : "rgba(167, 243, 208, 0.2)",
+                            textDecoration: entry.used ? "line-through" : "none",
+                            userSelect: "none",
+                          }}
+                        >
+                          {entry.value}
+                        </Typography>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ ml: 0.5, fontSize: "12px", fontWeight: 700, color: "#075985" }}>
+                      Roll {rollLabel}
+                    </Typography>
+                  )}
+
+                  {extraTrailing}
+                </>
+              );
+            }
+
             if (usesCount === "unlimited") {
               return (
                 <>
@@ -2436,6 +2508,30 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "wizard" && subclass === "divination") {
+      const hasGreaterPortent = Number(characterLevel || 0) >= 14;
+
+      next = next.map((feature) => {
+        if (feature?.id !== "portent") return feature;
+
+        const baseDescLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        const prefixLines = hasGreaterPortent
+          ? ["Greater Portent active: roll 3 d20s for Portent instead of 2."]
+          : [];
+
+        return {
+          ...feature,
+          portentCount: hasGreaterPortent ? 3 : 2,
+          desc: [...prefixLines, ...baseDescLines],
+        };
+      });
+    }
+
     return next;
   }, [
     subclassFeatures,
@@ -2452,6 +2548,7 @@ const FeaturesAndTrackables = () => {
     fighterLevel,
     characterClass,
     subclass,
+    characterLevel,
     characterInfo?.genieKind,
     untrackedFeatureChoices,
     subclassChoiceKey,
