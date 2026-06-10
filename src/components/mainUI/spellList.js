@@ -104,6 +104,8 @@ const normalizeCompareName = (s) =>
     .trim()
     .replace(/\s+/g, " ");
 
+const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusion";
+
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
     .replace(/^\/+/, "")
@@ -1383,6 +1385,175 @@ export const SpellList = (props) => {
       cancelled = true;
     };
   }, [hasUndyingAmongTheDeadCantrip, characterInfo?.spellsPrepared, setCharacterInfo]);
+
+  useEffect(() => {
+    const hasImprovedMinorIllusion =
+      characterInfo?.characterClass === "wizard" &&
+      String(characterInfo?.subclass || "") === "illusion" &&
+      Number(characterInfo?.characterLevel || 0) >= 2;
+
+    const currentCantrips = Array.isArray(characterInfo?.spellsPrepared?.[0]) ? characterInfo.spellsPrepared[0] : [];
+    const currentSpellbookCantrips = Array.isArray(characterInfo?.wizardSpellbook?.[0])
+      ? characterInfo.wizardSpellbook[0]
+      : [];
+
+    const hasTaggedPrepared = currentCantrips.some(
+      (spell) => String(spell?.spelltrackerBonus || "") === IMPROVED_MINOR_ILLUSION_BONUS_TAG
+    );
+    const hasTaggedSpellbook = currentSpellbookCantrips.some(
+      (spell) => String(spell?.spelltrackerBonus || "") === IMPROVED_MINOR_ILLUSION_BONUS_TAG
+    );
+
+    if (!hasImprovedMinorIllusion) {
+      if (!hasTaggedPrepared && !hasTaggedSpellbook) return;
+
+      setCharacterInfo((prev) => {
+        const preparedCantrips = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+        const spellbookCantrips = Array.isArray(prev?.wizardSpellbook?.[0]) ? prev.wizardSpellbook[0] : [];
+        const nextPrepared = preparedCantrips.filter(
+          (spell) => String(spell?.spelltrackerBonus || "") !== IMPROVED_MINOR_ILLUSION_BONUS_TAG
+        );
+        const nextSpellbook = spellbookCantrips.filter(
+          (spell) => String(spell?.spelltrackerBonus || "") !== IMPROVED_MINOR_ILLUSION_BONUS_TAG
+        );
+
+        if (nextPrepared.length === preparedCantrips.length && nextSpellbook.length === spellbookCantrips.length) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          spellsPrepared: {
+            ...prev.spellsPrepared,
+            0: nextPrepared,
+          },
+          wizardSpellbook: {
+            ...prev.wizardSpellbook,
+            0: nextSpellbook,
+          },
+        };
+      });
+      return;
+    }
+
+    if (hasTaggedPrepared && hasTaggedSpellbook) return;
+
+    const existingPreparedIdx = currentCantrips.findIndex((spell) => spell?.index === "minor-illusion");
+    const existingSpellbookIdx = currentSpellbookCantrips.findIndex((spell) => spell?.index === "minor-illusion");
+
+    const existingPrepared = existingPreparedIdx >= 0 ? currentCantrips[existingPreparedIdx] : null;
+    const existingSpellbook = existingSpellbookIdx >= 0 ? currentSpellbookCantrips[existingSpellbookIdx] : null;
+
+    const preparedNeedsTag =
+      !hasTaggedPrepared &&
+      existingPrepared &&
+      (String(existingPrepared?.spelltrackerBonus || "") !== IMPROVED_MINOR_ILLUSION_BONUS_TAG ||
+        existingPrepared?.spelltrackerDoesNotCount !== true);
+    const spellbookNeedsTag =
+      !hasTaggedSpellbook &&
+      existingSpellbook &&
+      (String(existingSpellbook?.spelltrackerBonus || "") !== IMPROVED_MINOR_ILLUSION_BONUS_TAG ||
+        existingSpellbook?.spelltrackerDoesNotCount !== true);
+
+    if (preparedNeedsTag || spellbookNeedsTag) {
+      setCharacterInfo((prev) => {
+        const next = { ...prev };
+
+        if (preparedNeedsTag) {
+          const prepared = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          next.spellsPrepared = {
+            ...prev.spellsPrepared,
+            0: prepared.map((spell, idx) =>
+              idx === existingPreparedIdx
+                ? {
+                    ...spell,
+                    spelltrackerBonus: IMPROVED_MINOR_ILLUSION_BONUS_TAG,
+                    spelltrackerDoesNotCount: true,
+                    spelltrackerOrigin: "minor-illusion",
+                  }
+                : spell
+            ),
+          };
+        }
+
+        if (spellbookNeedsTag) {
+          const spellbook = Array.isArray(prev?.wizardSpellbook?.[0]) ? prev.wizardSpellbook[0] : [];
+          next.wizardSpellbook = {
+            ...prev.wizardSpellbook,
+            0: spellbook.map((spell, idx) =>
+              idx === existingSpellbookIdx
+                ? {
+                    ...spell,
+                    spelltrackerBonus: IMPROVED_MINOR_ILLUSION_BONUS_TAG,
+                    spelltrackerDoesNotCount: true,
+                    spelltrackerOrigin: "minor-illusion",
+                  }
+                : spell
+            ),
+          };
+        }
+
+        return next;
+      });
+      return;
+    }
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/minor-illusion")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const bonusMinorIllusion = {
+          ...spell,
+          spelltrackerBonus: IMPROVED_MINOR_ILLUSION_BONUS_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: "minor-illusion",
+        };
+
+        setCharacterInfo((prev) => {
+          const prepared = Array.isArray(prev?.spellsPrepared?.[0]) ? prev.spellsPrepared[0] : [];
+          const spellbook = Array.isArray(prev?.wizardSpellbook?.[0]) ? prev.wizardSpellbook[0] : [];
+
+          const nextPrepared = prepared.some((entry) => entry?.index === "minor-illusion")
+            ? prepared
+            : [...prepared, bonusMinorIllusion];
+          const nextSpellbook = spellbook.some((entry) => entry?.index === "minor-illusion")
+            ? spellbook
+            : [...spellbook, bonusMinorIllusion];
+
+          if (nextPrepared === prepared && nextSpellbook === spellbook) return prev;
+
+          return {
+            ...prev,
+            spellsPrepared: {
+              ...prev.spellsPrepared,
+              0: nextPrepared,
+            },
+            wizardSpellbook: {
+              ...prev.wizardSpellbook,
+              0: nextSpellbook,
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.spellsPrepared,
+    characterInfo?.wizardSpellbook,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     const FEY_WANDERER_MAGIC_BONUS_TAG = "fey_wanderer_magic_bonus_spell";
@@ -4701,6 +4872,27 @@ export const SpellList = (props) => {
                         backgroundColor: "rgba(0,0,0,0.06)",
                         color: "rgba(66, 66, 66, 0.92)",
                         border: "1px solid rgba(66, 66, 66, 0.24)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === IMPROVED_MINOR_ILLUSION_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Improved Minor Illusion cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="IMI"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(109, 40, 217, 0.92)",
+                        border: "1px solid rgba(109, 40, 217, 0.22)",
                         "&:hover": { opacity: 0.9 },
                       }}
                     />
