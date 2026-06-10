@@ -11,7 +11,14 @@ import Box from '@mui/material/Box';
 
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
-const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButton, dimmed = false}) => {
+const SpellAccordian = ({
+  numericalSpellLevel,
+  spell,
+  leadingControl,
+  actionButton,
+  dimmed = false,
+  struckOut = false,
+}) => {
 
     const { classSpellsDetails, setClassSpellsDetails } = useContext(ClassSpellsDetailsContext)
     const detailsFromApi = classSpellsDetails[numericalSpellLevel]?.[spell.index];
@@ -109,7 +116,14 @@ const SpellAccordian = ({numericalSpellLevel, spell, leadingControl, actionButto
                   </Box>
                 ) : null}
                 <Typography sx={{ fontSize: '14px', fontWeight: 600, flexGrow: 1, minWidth: 0 }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      textDecoration: struckOut ? 'line-through' : 'none',
+                    }}
+                  >
                   {spell.name}
+                  </Box>
                 </Typography>
                 {actionButton && (
                   <Box

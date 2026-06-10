@@ -4812,6 +4812,11 @@ export const SpellList = (props) => {
     const preparedSpellIndexes = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? new Set(characterInfo.spellsPrepared[numericalSpellLevel].map((spell) => String(spell?.index || "")))
       : [];
+    const disappearedSpellIndexes = new Set(
+      (Array.isArray(characterInfo?.wizardScribesLostSpells) ? characterInfo.wizardScribesLostSpells : []).map((spell) =>
+        String(spell?.index || "")
+      )
+    );
 
     const LIGHT_BONUS_TAG = "light_domain_bonus_cantrip";
     const CELESTIAL_LIGHT_BONUS_TAG = "celestial_bonus_cantrip_light";
@@ -4869,9 +4874,17 @@ export const SpellList = (props) => {
       <div>
         {prepared.map((spell, index) => (
           <div key={spell.index}>
+            {(() => {
+              const isDisappearedSpell =
+                isWizard &&
+                Number(numericalSpellLevel) > 0 &&
+                disappearedSpellIndexes.has(String(spell?.index || ""));
+
+              return (
             <SpellAccordian
               numericalSpellLevel={numericalSpellLevel}
               spell={spell}
+              struckOut={isDisappearedSpell}
               leadingControl={
                 isWizard &&
                 Number(numericalSpellLevel) === 1 &&
@@ -5376,9 +5389,10 @@ export const SpellList = (props) => {
                 ) : null
               }
               dimmed={
-                isWizard &&
-                Number(numericalSpellLevel) > 0 &&
-                !preparedSpellIndexes.has(String(spell?.index || ""))
+                (isWizard &&
+                  Number(numericalSpellLevel) > 0 &&
+                  !preparedSpellIndexes.has(String(spell?.index || ""))) ||
+                isDisappearedSpell
               }
               actionButton={
                 spell?.spelltrackerBonus === DIVINE_SOUL_AFFINITY_BONUS_TAG ? (
@@ -5624,6 +5638,11 @@ export const SpellList = (props) => {
                         numericalSpellLevel={numericalSpellLevel}
                         spell={spell}
                         index={index}
+                        blockedReason={
+                          isDisappearedSpell
+                            ? "This spell has disappeared from your spellbook. To prepare this spell, modify the One with the Word feature"
+                            : ""
+                        }
                       />
                     </Box>
                   ) : (
@@ -5631,11 +5650,18 @@ export const SpellList = (props) => {
                       numericalSpellLevel={numericalSpellLevel}
                       spell={spell}
                       index={index}
+                      blockedReason={
+                        isDisappearedSpell
+                          ? "This spell has disappeared from your spellbook. To prepare this spell, modify the One with the Word feature"
+                          : ""
+                      }
                     />
                   )
                 )
               }
             />
+              );
+            })()}
           </div>
         ))}
       </div>

@@ -28,6 +28,7 @@ import CasinoIcon from "@mui/icons-material/Casino";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Brightness2Icon from "@mui/icons-material/Brightness2";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { AuthContext, CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
@@ -66,6 +67,9 @@ import WildMagicSurgeTableModal from "./WildMagicSurgeTableModal";
 import WizardSpellbookModal from "./WizardSpellbookModal";
 import WizardSpellMasteryModal from "./WizardSpellMasteryModal";
 import WizardSignatureSpellsModal from "./WizardSignatureSpellsModal";
+import WizardMasterScrivinerModal from "./WizardMasterScrivinerModal";
+import WizardOneWithTheWordModal from "./WizardOneWithTheWordModal";
+import TiedScrollIcon from "./TiedScrollIcon";
 import { proficiencyBonus } from "./header";
 import {
   getFeatureTrackedOverride,
@@ -115,6 +119,12 @@ const DIVINE_SOUL_AFFINITY_OPTIONS = [
     desc: "Affinity spell: Protection from Evil and Good (DM spell; does not count against spells known).",
   },
 ];
+
+const formatSpellCountLabel = (entry) => {
+  const name = String(entry?.name || entry?.index || "Unknown Spell").trim() || "Unknown Spell";
+  const count = Math.max(1, Number(entry?.count || 1));
+  return count > 1 ? `${name} x${count}` : name;
+};
 
 
 const FeatureAccordionRow = ({
@@ -1689,6 +1699,8 @@ const FeaturesAndTrackables = () => {
   const [wizardSpellbookModalOpen, setWizardSpellbookModalOpen] = React.useState(false);
   const [wizardSpellMasteryModalOpen, setWizardSpellMasteryModalOpen] = React.useState(false);
   const [wizardSignatureSpellsModalOpen, setWizardSignatureSpellsModalOpen] = React.useState(false);
+  const [wizardMasterScrivinerModalOpen, setWizardMasterScrivinerModalOpen] = React.useState(false);
+  const [wizardOneWithTheWordModalOpen, setWizardOneWithTheWordModalOpen] = React.useState(false);
   const [reaperCantripModalOpen, setReaperCantripModalOpen] = React.useState(false);
   const [acolyteOfNatureModalOpen, setAcolyteOfNatureModalOpen] = React.useState(false);
   const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
@@ -1786,6 +1798,21 @@ const FeaturesAndTrackables = () => {
   const wizardSignatureSpellCount = Array.isArray(characterInfo?.wizardSignatureSpells)
     ? characterInfo.wizardSignatureSpells.length
     : 0;
+  const wizardMasterScrivinerEntries = Array.isArray(characterInfo?.wizardScribesMasterScriviner)
+    ? characterInfo.wizardScribesMasterScriviner
+    : [];
+  const wizardMasterScrivinerCount = wizardMasterScrivinerEntries.reduce(
+    (sum, entry) => sum + Math.max(1, Number(entry?.count || 1)),
+    0
+  );
+  const wizardLostSpellEntries = Array.isArray(characterInfo?.wizardScribesLostSpells)
+    ? characterInfo.wizardScribesLostSpells
+    : [];
+  const wizardLostSpellLevelTotal = wizardLostSpellEntries.reduce(
+    (sum, entry) => sum + Math.max(0, Number(entry?.level) || 0),
+    0
+  );
+  const wizardLostSpellRestCount = Math.max(0, Math.min(6, Number(characterInfo?.wizardScribesLostSpellRestCount) || 0));
 
   const hasReaper =
     characterClass === "cleric" &&
@@ -2645,6 +2672,84 @@ const FeaturesAndTrackables = () => {
     );
   }, [subclassCustomForUi, isHidden, subclassOverrideKey]);
 
+  React.useEffect(() => {
+    setCharacterInfo((prev) => {
+      const spellbook = prev?.wizardSpellbook || {};
+      const availableMaster = new Map();
+      const availableLost = new Map();
+
+      [1, 2].forEach((level) => {
+        const entries = Array.isArray(spellbook?.[level]) ? spellbook[level] : [];
+        entries.forEach((spell) => {
+          if (!spell?.index) return;
+          availableMaster.set(String(spell.index), {
+            index: spell.index,
+            name: spell.name,
+            level,
+          });
+        });
+      });
+
+      for (let level = 1; level <= 9; level += 1) {
+        const entries = Array.isArray(spellbook?.[level]) ? spellbook[level] : [];
+        entries.forEach((spell) => {
+          if (!spell?.index) return;
+          availableLost.set(String(spell.index), {
+            index: spell.index,
+            name: spell.name,
+            level,
+          });
+        });
+      }
+
+      const currentMaster = Array.isArray(prev?.wizardScribesMasterScriviner) ? prev.wizardScribesMasterScriviner : [];
+      const nextMaster = currentMaster
+        .map((entry) => {
+          const available = availableMaster.get(String(entry?.index || ""));
+          if (!available) return null;
+          return {
+            ...available,
+            count: Math.max(1, Number(entry?.count || 1)),
+          };
+        })
+        .filter(Boolean);
+
+      const currentLost = Array.isArray(prev?.wizardScribesLostSpells) ? prev.wizardScribesLostSpells : [];
+      const nextLost = currentLost
+        .map((entry) => {
+          const available = availableLost.get(String(entry?.index || ""));
+          if (!available) return null;
+          return available;
+        })
+        .filter(Boolean);
+
+      const lostIndexes = new Set(nextLost.map((entry) => String(entry?.index || "")));
+      const currentPrepared = prev?.spellsPrepared || {};
+      const nextPrepared = Object.keys(currentPrepared).reduce((acc, key) => {
+        acc[key] = Array.isArray(currentPrepared[key])
+          ? currentPrepared[key].filter((entry) => !lostIndexes.has(String(entry?.index || "")))
+          : [];
+        return acc;
+      }, {});
+
+      const masterChanged =
+        JSON.stringify(currentMaster) !== JSON.stringify(nextMaster);
+      const lostChanged =
+        JSON.stringify(currentLost) !== JSON.stringify(nextLost);
+      const preparedChanged =
+        JSON.stringify(currentPrepared) !== JSON.stringify(nextPrepared);
+
+      if (!masterChanged && !lostChanged && !preparedChanged) return prev;
+
+      return {
+        ...prev,
+        wizardScribesMasterScriviner: nextMaster,
+        wizardScribesLostSpells: nextLost,
+        spellsPrepared: nextPrepared,
+      };
+    });
+  }, [characterInfo?.wizardSpellbook, setCharacterInfo]);
+
   const setOverrideAndPersist = React.useCallback((next) => {
     setFeatureOverrides(next);
     saveFeatureOverrides(next);
@@ -3244,6 +3349,131 @@ const FeaturesAndTrackables = () => {
                   );
                 }
 
+                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "master_scriviner") {
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Stored Scrolls</strong>
+                      </p>
+                      {wizardMasterScrivinerEntries.length === 0 ? (
+                        <p style={{ margin: "2px 0", opacity: 0.8 }}>
+                          <em>No scrolls chosen yet.</em>
+                        </p>
+                      ) : (
+                        wizardMasterScrivinerEntries.map((entry) => (
+                          <div
+                            key={`master-scriviner-entry:${entry?.index}`}
+                            style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}
+                          >
+                            <span style={{ flexGrow: 1 }}>{formatSpellCountLabel(entry)}</span>
+                            <IconButton
+                              size="small"
+                              aria-label={`Remove one ${entry?.name || entry?.index || "scroll"}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCharacterInfo((prev) => {
+                                  const current = Array.isArray(prev?.wizardScribesMasterScriviner)
+                                    ? prev.wizardScribesMasterScriviner
+                                    : [];
+                                  const next = current
+                                    .map((row) =>
+                                      String(row?.index || "") === String(entry?.index || "")
+                                        ? { ...row, count: Math.max(0, Number(row?.count || 1) - 1) }
+                                        : row
+                                    )
+                                    .filter((row) => Math.max(0, Number(row?.count || 0)) > 0);
+                                  return { ...prev, wizardScribesMasterScriviner: next };
+                                });
+                              }}
+                              sx={{ p: 0.2 }}
+                            >
+                              <RemoveIcon fontSize="inherit" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              aria-label={`Add one ${entry?.name || entry?.index || "scroll"}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCharacterInfo((prev) => {
+                                  const current = Array.isArray(prev?.wizardScribesMasterScriviner)
+                                    ? prev.wizardScribesMasterScriviner
+                                    : [];
+                                  const next = current.map((row) =>
+                                    String(row?.index || "") === String(entry?.index || "")
+                                      ? { ...row, count: Math.max(1, Number(row?.count || 1)) + 1 }
+                                      : row
+                                  );
+                                  return { ...prev, wizardScribesMasterScriviner: next };
+                                });
+                              }}
+                              sx={{ p: 0.2 }}
+                            >
+                              <AddIcon fontSize="inherit" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              aria-label={`Delete ${entry?.name || entry?.index || "scroll"}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCharacterInfo((prev) => ({
+                                  ...prev,
+                                  wizardScribesMasterScriviner: (Array.isArray(prev?.wizardScribesMasterScriviner)
+                                    ? prev.wizardScribesMasterScriviner
+                                    : []
+                                  ).filter((row) => String(row?.index || "") !== String(entry?.index || "")),
+                                }));
+                              }}
+                              sx={{ p: 0.2 }}
+                            >
+                              <DeleteOutlineIcon fontSize="inherit" />
+                            </IconButton>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                }
+
+                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "one_with_the_word") {
+                  return (
+                    <div style={{ margin: "2px 0 8px 0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "2px 0" }}>
+                        <strong>Lost Spells</strong>
+                        <Tooltip arrow title="Choose disappeared spells">
+                          <IconButton
+                            size="small"
+                            aria-label="Choose disappeared spells"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setWizardOneWithTheWordModalOpen(true);
+                            }}
+                            sx={{
+                              p: 0.25,
+                              border: "1px solid rgba(93, 64, 55, 0.25)",
+                              backgroundColor: "rgba(244, 233, 221, 0.65)",
+                              "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                            }}
+                          >
+                            <MenuBookIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Selected spell levels:</strong> {wizardLostSpellLevelTotal}
+                      </p>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Long rests remaining:</strong> {wizardLostSpellRestCount}
+                      </p>
+                      <p style={{ margin: "2px 0" }}>
+                        <strong>Spells:</strong>{" "}
+                        {wizardLostSpellEntries.length === 0
+                          ? <em>None</em>
+                          : wizardLostSpellEntries.map((entry) => entry?.name).join(", ")}
+                      </p>
+                    </div>
+                  );
+                }
+
                 if (
                   characterClass === "warlock" &&
                   String(subclass || "") === "celestial" &&
@@ -3391,6 +3621,85 @@ const FeaturesAndTrackables = () => {
                 return null;
               }}
               renderTrackedTrailingControls={(feature) => {
+                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "master_scriviner") {
+                  return (
+                    <Tooltip arrow title={`Manage Master Scriviner scrolls (${wizardMasterScrivinerCount} total)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Manage Master Scriviner scrolls"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setWizardMasterScrivinerModalOpen(true);
+                        }}
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: wizardMasterScrivinerCount > 0 ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <TiedScrollIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "one_with_the_word") {
+                  return (
+                    <>
+                      <Tooltip arrow title="Roll 1d6 long rests for the lost spells to return">
+                        <IconButton
+                          size="small"
+                          aria-label="Roll 1d6 long rests"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCharacterInfo((prev) => ({
+                              ...prev,
+                              wizardScribesLostSpellRestCount: Math.floor(Math.random() * 6) + 1,
+                            }));
+                          }}
+                          sx={{
+                            ml: 0.25,
+                            p: 0.25,
+                            color: "rgba(93, 64, 55, 0.92)",
+                            border: "1px solid rgba(93, 64, 55, 0.25)",
+                            backgroundColor: "rgba(244, 233, 221, 0.65)",
+                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                          }}
+                        >
+                          <CasinoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <FormControl
+                        size="small"
+                        variant="standard"
+                        sx={{ ml: 0.5, minWidth: 46 }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Select
+                          value={wizardLostSpellRestCount}
+                          onChange={(e) => {
+                            const nextValue = Math.max(0, Math.min(6, Number(e.target.value) || 0));
+                            setCharacterInfo((prev) => ({
+                              ...prev,
+                              wizardScribesLostSpellRestCount: nextValue,
+                            }));
+                          }}
+                          sx={{ fontSize: "12px", fontWeight: 700 }}
+                        >
+                          {Array.from({ length: 7 }).map((_, idx) => (
+                            <MenuItem key={`one-with-the-word:rest:${idx}`} value={idx} sx={{ fontSize: "12px" }}>
+                              {idx}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </>
+                  );
+                }
+
                 if (hasRuneKnight && feature?.id === "rune_carver") {
                   const selectedCount = runeKnightRuneCount;
                   const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
@@ -4401,6 +4710,16 @@ const FeaturesAndTrackables = () => {
       <WizardSignatureSpellsModal
         open={wizardSignatureSpellsModalOpen}
         onClose={() => setWizardSignatureSpellsModalOpen(false)}
+      />
+
+      <WizardMasterScrivinerModal
+        open={wizardMasterScrivinerModalOpen}
+        onClose={() => setWizardMasterScrivinerModalOpen(false)}
+      />
+
+      <WizardOneWithTheWordModal
+        open={wizardOneWithTheWordModalOpen}
+        onClose={() => setWizardOneWithTheWordModalOpen(false)}
       />
 
       <ManageFeaturesModal
