@@ -106,6 +106,7 @@ const normalizeCompareName = (s) =>
 
 const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusion";
 const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
+const SHAPECHANGER_BONUS_TAG = "wizard_transmutation_shapechanger";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -1655,6 +1656,84 @@ export const SpellList = (props) => {
             wizardSpellbook: {
               ...prev.wizardSpellbook,
               3: [...current, undeadThrallsSpell],
+            },
+          };
+        });
+      })
+      .catch(() => {
+        // Silently ignore: backend might not be running yet.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    characterInfo?.characterClass,
+    characterInfo?.subclass,
+    characterInfo?.characterLevel,
+    characterInfo?.wizardSpellbook,
+    setCharacterInfo,
+  ]);
+
+  useEffect(() => {
+    const hasShapechanger =
+      characterInfo?.characterClass === "wizard" &&
+      String(characterInfo?.subclass || "") === "transmutation" &&
+      Number(characterInfo?.characterLevel || 0) >= 10;
+
+    const currentLevelFourSpellbook = Array.isArray(characterInfo?.wizardSpellbook?.[4])
+      ? characterInfo.wizardSpellbook[4]
+      : [];
+
+    const shapechangerPolymorph = currentLevelFourSpellbook.find(
+      (spell) => String(spell?.spelltrackerBonus || "") === SHAPECHANGER_BONUS_TAG
+    );
+
+    if (!hasShapechanger) {
+      if (!shapechangerPolymorph) return;
+
+      setCharacterInfo((prev) => {
+        const current = Array.isArray(prev?.wizardSpellbook?.[4]) ? prev.wizardSpellbook[4] : [];
+        const next = current.filter((spell) => String(spell?.spelltrackerBonus || "") !== SHAPECHANGER_BONUS_TAG);
+        if (next.length === current.length) return prev;
+
+        return {
+          ...prev,
+          wizardSpellbook: {
+            ...prev.wizardSpellbook,
+            4: next,
+          },
+        };
+      });
+      return;
+    }
+
+    const polymorphInSpellbook = currentLevelFourSpellbook.some((spell) => String(spell?.index || "") === "polymorph");
+    if (polymorphInSpellbook) return;
+
+    let cancelled = false;
+    axios
+      .get("/singlespell/polymorph")
+      .then((res) => {
+        if (cancelled) return;
+        const spell = res?.data;
+        if (!spell?.index) return;
+
+        const shapechangerSpell = {
+          ...spell,
+          spelltrackerBonus: SHAPECHANGER_BONUS_TAG,
+          spelltrackerOrigin: "polymorph",
+        };
+
+        setCharacterInfo((prev) => {
+          const current = Array.isArray(prev?.wizardSpellbook?.[4]) ? prev.wizardSpellbook[4] : [];
+          if (current.some((entry) => String(entry?.index || "") === "polymorph")) return prev;
+
+          return {
+            ...prev,
+            wizardSpellbook: {
+              ...prev.wizardSpellbook,
+              4: [...current, shapechangerSpell],
             },
           };
         });

@@ -7701,14 +7701,18 @@ export const ClassesData = {
           {
             id: "transmutation_savant",
             name: "Transmutation Savant",
-            desc: "The gold and time you spend to copy transmutation spells into your spellbook are halved.",
+            desc: "Beginning when you select this school at 2nd level, the gold and time you must spend to copy a Transmutation spell into your spellbook are halved.",
             level: 2,
             tracked: false,
           },
           {
             id: "minor_alchemy",
             name: "Minor Alchemy",
-            desc: "You can temporarily transform wood, stone, iron, copper, or silver into another one of those materials, affecting up to 1 cubic foot per 10 minutes of work. The change lasts for 1 hour or until you lose concentration.",
+            desc: [
+              "Starting at 2nd level when you select this school, you can temporarily alter the physical properties of one nonmagical object, changing it from one substance into another.",
+              "You perform a special alchemical procedure on one object composed entirely of wood, stone (but not a gemstone), iron, copper, or silver, transforming it into a different one of those materials. For each 10 minutes you spend performing the procedure, you can transform up to 1 cubic foot of material.",
+              "After 1 hour, or until you lose your concentration (as if you were concentrating on a spell), the material reverts to its original substance.",
+            ],
             level: 2,
             tracked: false,
           },
@@ -7716,8 +7720,10 @@ export const ClassesData = {
             id: "transmuters_stone",
             name: "Transmuter's Stone",
             desc: [
-              "After 8 hours of work, create a stone that grants one benefit to its bearer: darkvision, +10 speed while unencumbered, Constitution save proficiency, or resistance to acid, cold, fire, lightning, or thunder.",
-              "Casting a transmutation spell of 1st level or higher lets you change the stone's effect while it is on your person.",
+              "Starting at 6th level, you can spend 8 hours creating a transmuter's stone that stores transmutation magic. You can benefit from the stone yourself or give it to another creature.",
+              "A creature gains a benefit of your choice while the stone is in its possession: darkvision out to 60 feet, +10 speed while unencumbered, proficiency in Constitution saving throws, or resistance to acid, cold, fire, lightning, or thunder damage.",
+              "Each time you cast a transmutation spell of 1st level or higher, you can change the stone's effect if the stone is on your person.",
+              "If you create a new transmuter's stone, the previous one ceases to function.",
             ],
             level: 6,
             tracked: false,
@@ -7725,7 +7731,11 @@ export const ClassesData = {
           {
             id: "shapechanger",
             name: "Shapechanger",
-            desc: "Polymorph is added to your spellbook if needed, and you can cast it on yourself without a spell slot to become a beast of CR 1 or lower. This refreshes on a short or long rest.",
+            desc: [
+              "At 10th level, you add [[spell:polymorph|Polymorph]] to your spellbook if it is not there already.",
+              "You can cast [[spell:polymorph|Polymorph]] without expending a spell slot. When you cast it this way, you can target only yourself and transform only into a beast whose challenge rating is 1 or lower.",
+              "Once you cast [[spell:polymorph|Polymorph]] this way, you can't do so again until you finish a short or long rest, though you can still cast it normally using an available spell slot.",
+            ],
             level: 10,
             tracked: true,
             uses: 1,
@@ -7734,7 +7744,13 @@ export const ClassesData = {
           {
             id: "master_transmuter",
             name: "Master Transmuter",
-            desc: "Destroy your transmuter's stone to fuel a major effect: transform a nonmagical object, fully heal and cure a touched creature, cast Raise Dead without a slot, or reduce a willing creature's apparent age.",
+            desc: [
+              "Starting at 14th level, you can use your action to consume the reserve of transmutation magic stored within your transmuter's stone in a single burst. When you do so, choose one of the following effects. Your transmuter's stone is destroyed and can't be remade until you finish a long rest.",
+              "Major Transformation. Transmute one nonmagical object no larger than a 5-foot cube into another nonmagical object of similar size and mass and of equal or lesser value. You must spend 10 minutes handling the object to transform it.",
+              "Panacea. Remove all curses, diseases, and poisons affecting a creature you touch with the transmuter's stone. The creature also regains all its hit points.",
+              "Restore Life. Cast [[spell:raise-dead|Raise Dead]] on a creature you touch with the transmuter's stone, without expending a spell slot or needing to have the spell in your spellbook.",
+              "Restore Youth. Touch the transmuter's stone to a willing creature, reducing its apparent age by 3d10 years, to a minimum apparent age of 13.",
+            ],
             level: 14,
             tracked: false,
           },
