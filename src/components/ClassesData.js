@@ -7204,7 +7204,10 @@ export const ClassesData = {
           {
             id: "chronal_shift",
             name: "Chronal Shift",
-            desc: "As a reaction, after you or a creature you can see within 30 feet makes an attack roll, ability check, or saving throw, you can force a reroll and the new result must be used.",
+            desc: [
+              "As a reaction, after you or a creature you can see within 30 feet of you makes an attack roll, an ability check, or a saving throw, you can force the creature to reroll.",
+              "You make this decision after you see whether the roll succeeds or fails. The target must use the result of the second roll.",
+            ],
             level: 2,
             tracked: true,
             uses: 2,
@@ -7213,25 +7216,30 @@ export const ClassesData = {
           {
             id: "temporal_awareness",
             name: "Temporal Awareness",
-            desc: "Add your Intelligence modifier to initiative rolls.",
+            desc: "Add your Intelligence modifier to your initiative rolls.",
             level: 2,
             tracked: false,
           },
           {
             id: "momentary_stasis",
             name: "Momentary Stasis",
-            desc: "As an action, force a Large or smaller creature within 60 feet to make a Constitution save or become incapacitated with speed 0 until the end of your next turn or until it takes damage.",
+            desc: [
+              "As an action, you can magically force a Large or smaller creature you can see within 60 feet of you to make a Constitution saving throw against your spell save DC.",
+              "Unless the saving throw is a success, the creature is encased in a field of magical energy until the end of your next turn or until the creature takes any damage. While encased in this way, the creature is incapacitated and has a speed of 0.",
+            ],
             level: 6,
             tracked: true,
             uses: "int_mod",
+            minUses: 1,
             recharge: "lr",
           },
           {
             id: "arcane_abeyance",
             name: "Arcane Abeyance",
             desc: [
-              "When you cast a spell of 4th level or lower, you can freeze it into a magical bead that lasts for 1 hour.",
-              "A creature holding the bead can use its action to release the spell, using your spell attack bonus and save DC.",
+              "When you cast a spell using a spell slot of 4th level or lower, you can condense the spell's magic into a mote. The spell is frozen in time at the moment of casting and held within a gray bead for 1 hour.",
+              "This bead is a Tiny object with AC 15 and 1 hit point, and it is immune to poison and psychic damage. When the duration ends, or if the bead is destroyed, it vanishes in a flash of light, and the spell is lost.",
+              "A creature holding the bead can use its action to release the spell within, whereupon the bead disappears. The spell uses your spell attack bonus and save DC, and the spell treats the creature who released it as the caster for all other purposes.",
             ],
             level: 10,
             tracked: true,
@@ -7241,7 +7249,10 @@ export const ClassesData = {
           {
             id: "convergent_future",
             name: "Convergent Future",
-            desc: "As a reaction, you can replace a visible creature's attack roll, ability check, or saving throw with the exact number needed to succeed or one less than that number to fail. Using this feature gives you one level of exhaustion.",
+            desc: [
+              "As a reaction, when you or a creature you can see within 60 feet of you makes an attack roll, an ability check, or a saving throw, you can ignore the die roll and decide whether the number rolled is the minimum needed to succeed or one less than that number.",
+              "When you use this feature, you gain one level of exhaustion. Only by finishing a long rest can you remove a level of exhaustion gained in this way.",
+            ],
             level: 14,
             tracked: false,
           },
