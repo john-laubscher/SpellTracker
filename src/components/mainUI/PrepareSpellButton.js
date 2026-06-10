@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import { CharacterInfoContext } from "../../Contexts/Context";
 import {useContext} from 'react'
 import { useState } from 'react';
@@ -43,10 +44,12 @@ export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     },
     }));
 
-export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
+export const PrepareSpellButton = ({numericalSpellLevel, spell, index, blockedReason = ""}) => {
 
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
     const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+    const [blockedTooltipOpen, setBlockedTooltipOpen] = useState(false);
+    const [blockedShake, setBlockedShake] = useState(false);
     
     const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
     const isRemoveClicked = clickedButtons.includes(`remove-${index}`);
@@ -107,6 +110,7 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     const buttonClass = isSpellAlreadyPrepared ? classes.preparedButton : classes.prepareButton;
     const isCantrip = Number(numericalSpellLevel) === 0;
+    const isBlocked = Boolean(String(blockedReason || "").trim());
     const preparedLabel = isWizardSignatureSpell
       ? 'Signature'
       : isPreparedByCelestialBonus
@@ -118,29 +122,72 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index}) => {
 
     return (
       <>
-        <Button
-          className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
-          variant="contained"
-          disabled={isPreparedByCelestialBonus || isWizardSignatureSpell}
-          onClick={() => {
-            if (isPreparedByCelestialBonus || isWizardSignatureSpell) return;
-            if (isSpellAlreadyPrepared) {
-              if (isArcaneTricksterMageHand) {
-                setConfirmRemoveOpen(true);
+        <Tooltip
+          arrow
+          open={blockedTooltipOpen}
+          onOpen={() => {
+            if (isBlocked) setBlockedTooltipOpen(true);
+          }}
+          onClose={() => setBlockedTooltipOpen(false)}
+          title={isBlocked ? blockedReason : ""}
+          disableFocusListener={!isBlocked}
+          disableHoverListener={!isBlocked}
+          disableTouchListener={!isBlocked}
+        >
+          <Button
+            className={`${buttonClass} ${isRemoveClicked ? 'flashRemove' : ''}`}
+            variant="contained"
+            disabled={isPreparedByCelestialBonus || isWizardSignatureSpell}
+            onClick={() => {
+              if (isBlocked) {
+                setBlockedTooltipOpen(true);
+                setBlockedShake(true);
+                window.setTimeout(() => setBlockedShake(false), 350);
+                window.setTimeout(() => setBlockedTooltipOpen(false), 2200);
                 return;
               }
-              setClickedButtons([...clickedButtons, `remove-${index}`]);
-              togglePreparedSpell(spell, numericalSpellLevel);
-              setTimeout(() => {
-                setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`));
-              }, 300);
-            } else {
-              togglePreparedSpell(spell, numericalSpellLevel);
+              if (isPreparedByCelestialBonus || isWizardSignatureSpell) return;
+              if (isSpellAlreadyPrepared) {
+                if (isArcaneTricksterMageHand) {
+                  setConfirmRemoveOpen(true);
+                  return;
+                }
+                setClickedButtons([...clickedButtons, `remove-${index}`]);
+                togglePreparedSpell(spell, numericalSpellLevel);
+                setTimeout(() => {
+                  setClickedButtons(clickedButtons.filter((btnIndex) => btnIndex !== `remove-${index}`));
+                }, 300);
+              } else {
+                togglePreparedSpell(spell, numericalSpellLevel);
+              }
+            }}
+            sx={
+              isBlocked
+                ? {
+                    backgroundColor: '#9e9e9e',
+                    color: '#f5f5f5',
+                    cursor: 'not-allowed',
+                    opacity: 0.92,
+                    textDecoration: 'line-through',
+                    '@keyframes blockedPrepareShake': {
+                      '0%': { transform: 'translateX(0)' },
+                      '20%': { transform: 'translateX(-2px)' },
+                      '40%': { transform: 'translateX(2px)' },
+                      '60%': { transform: 'translateX(-2px)' },
+                      '80%': { transform: 'translateX(2px)' },
+                      '100%': { transform: 'translateX(0)' },
+                    },
+                    animation: blockedShake ? 'blockedPrepareShake 220ms ease-in-out 1' : 'none',
+                    '&:hover': {
+                      backgroundColor: '#8d8d8d',
+                    },
+                  }
+                : undefined
             }
-          }}
-        >
-          {isSpellAlreadyPrepared ? preparedLabel : unpreparedLabel}
-        </Button>
+          >
+            {isSpellAlreadyPrepared ? preparedLabel : unpreparedLabel}
+          </Button>
+        </Tooltip>
 
         <ConfirmDialog
           open={confirmRemoveOpen}

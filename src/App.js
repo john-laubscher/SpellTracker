@@ -93,6 +93,43 @@ const loadWizardSignatureSpellsFromStorage = () => {
   }
 };
 
+const loadWizardScribesMasterScrivinerFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardScribesMasterScriviner");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadWizardScribesLostSpellsFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardScribesLostSpells");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const loadWizardScribesLostSpellRestCountFromStorage = () => {
+  try {
+    const raw = localStorage.getItem("spelltracker_wizardScribesLostSpellRestCount");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const asNum = Number(parsed);
+    if (!Number.isFinite(asNum)) return null;
+    return Math.max(0, Math.min(6, Math.trunc(asNum)));
+  } catch {
+    return null;
+  }
+};
+
 const loadBlessedWarriorCantripsFromStorage = () => {
   try {
     const raw = localStorage.getItem("spelltracker_blessedWarriorCantrips");
@@ -337,6 +374,9 @@ function App() {
     const persistedWizardSpellbook = loadWizardSpellbookFromStorage();
     const persistedWizardSpellMastery = loadWizardSpellMasteryFromStorage();
     const persistedWizardSignatureSpells = loadWizardSignatureSpellsFromStorage();
+    const persistedWizardScribesMasterScriviner = loadWizardScribesMasterScrivinerFromStorage();
+    const persistedWizardScribesLostSpells = loadWizardScribesLostSpellsFromStorage();
+    const persistedWizardScribesLostSpellRestCount = loadWizardScribesLostSpellRestCountFromStorage();
     const persistedMagicalSecrets = loadMagicalSecretsFromStorage();
     const persistedSpiritSession = loadSpiritSessionFromStorage();
     const persistedArcanaInitiate = loadArcanaInitiateFromStorage();
@@ -420,6 +460,13 @@ function App() {
         2: persistedWizardSpellMastery?.[2] || persistedWizardSpellMastery?.second || null,
       },
       wizardSignatureSpells: Array.isArray(persistedWizardSignatureSpells) ? persistedWizardSignatureSpells : [],
+      wizardScribesMasterScriviner: Array.isArray(persistedWizardScribesMasterScriviner)
+        ? persistedWizardScribesMasterScriviner
+        : [],
+      wizardScribesLostSpells: Array.isArray(persistedWizardScribesLostSpells) ? persistedWizardScribesLostSpells : [],
+      wizardScribesLostSpellRestCount: Number.isFinite(persistedWizardScribesLostSpellRestCount)
+        ? persistedWizardScribesLostSpellRestCount
+        : 0,
       magicalSecretsPrepared: Array.isArray(persistedMagicalSecrets) ? persistedMagicalSecrets : [],
       spiritSessionPrepared: Array.isArray(persistedSpiritSession) ? persistedSpiritSession : [],
       arcanaInitiateCantrips: Array.isArray(persistedArcanaInitiate) ? persistedArcanaInitiate : [],
@@ -521,6 +568,39 @@ function App() {
       // ignore write errors
     }
   }, [characterInfo.wizardSignatureSpells]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardScribesMasterScriviner",
+        JSON.stringify(characterInfo.wizardScribesMasterScriviner || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardScribesMasterScriviner]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardScribesLostSpells",
+        JSON.stringify(characterInfo.wizardScribesLostSpells || [])
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardScribesLostSpells]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spelltracker_wizardScribesLostSpellRestCount",
+        JSON.stringify(Number(characterInfo.wizardScribesLostSpellRestCount) || 0)
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [characterInfo.wizardScribesLostSpellRestCount]);
 
   useEffect(() => {
     try {
