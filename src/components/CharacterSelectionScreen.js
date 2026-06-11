@@ -16,25 +16,36 @@ import {
   Typography,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import GavelIcon from "@mui/icons-material/Gavel";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
-import NatureIcon from "@mui/icons-material/Nature";
-import PetsIcon from "@mui/icons-material/Pets";
-import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
-import ShieldIcon from "@mui/icons-material/Shield";
-import SportsKabaddiIcon from "@mui/icons-material/SportsKabaddi";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import CasinoIcon from "@mui/icons-material/Casino";
 
 import { CharacterSessionContext } from "../Contexts/Context";
 import AuthControls from "./AuthControls";
+import ArtificerIcon from "../assets/class-icons/Artficer.png";
+import BarbarianIcon from "../assets/class-icons/Barbarian.png";
+import BardIcon from "../assets/class-icons/Bard.png";
+import ClericIcon from "../assets/class-icons/Cleric.png";
+import DruidIcon from "../assets/class-icons/Druid.png";
+import FighterIcon from "../assets/class-icons/Fighter.png";
+import MonkIcon from "../assets/class-icons/Monk.png";
+import PaladinIcon from "../assets/class-icons/Paladin.png";
+import RangerIcon from "../assets/class-icons/Ranger.png";
+import RogueIcon from "../assets/class-icons/Rogue.png";
+import SorcererIcon from "../assets/class-icons/Sorcerer.png";
+import WarlockIcon from "../assets/class-icons/Warlock.png";
+import WizardIcon from "../assets/class-icons/Wizard.png";
 
 const CLASS_STYLES = {
+  artificer: {
+    image: ArtificerIcon,
+    imageAlt: "Artificer",
+    iconBackground: "linear-gradient(135deg, #2f6c69 0%, #62b4ad 100%)",
+    borderColor: "rgba(98, 180, 173, 0.72)",
+    borderGlow: "rgba(98, 180, 173, 0.24)",
+    ribbon: "linear-gradient(90deg, #62b4ad 0%, #2f6c69 100%)",
+    sigil: "✦",
+  },
   barbarian: {
-    icon: SportsKabaddiIcon,
-    iconColor: "#ffe1d0",
+    image: BarbarianIcon,
+    imageAlt: "Barbarian",
     iconBackground: "linear-gradient(135deg, #8e2f24 0%, #cf6f33 100%)",
     borderColor: "rgba(207, 111, 51, 0.72)",
     borderGlow: "rgba(207, 111, 51, 0.28)",
@@ -42,8 +53,8 @@ const CLASS_STYLES = {
     sigil: "⚔",
   },
   bard: {
-    icon: MusicNoteIcon,
-    iconColor: "#fff0d8",
+    image: BardIcon,
+    imageAlt: "Bard",
     iconBackground: "linear-gradient(135deg, #7f2f67 0%, #db8d3f 100%)",
     borderColor: "rgba(219, 141, 63, 0.72)",
     borderGlow: "rgba(127, 47, 103, 0.22)",
@@ -51,8 +62,8 @@ const CLASS_STYLES = {
     sigil: "♪",
   },
   cleric: {
-    icon: AutoAwesomeIcon,
-    iconColor: "#fff8e3",
+    image: ClericIcon,
+    imageAlt: "Cleric",
     iconBackground: "linear-gradient(135deg, #8e7443 0%, #d9b65d 100%)",
     borderColor: "rgba(217, 182, 93, 0.74)",
     borderGlow: "rgba(217, 182, 93, 0.24)",
@@ -60,8 +71,8 @@ const CLASS_STYLES = {
     sigil: "✦",
   },
   druid: {
-    icon: NatureIcon,
-    iconColor: "#edf8dc",
+    image: DruidIcon,
+    imageAlt: "Druid",
     iconBackground: "linear-gradient(135deg, #366045 0%, #8ea857 100%)",
     borderColor: "rgba(142, 168, 87, 0.74)",
     borderGlow: "rgba(54, 96, 69, 0.24)",
@@ -69,8 +80,8 @@ const CLASS_STYLES = {
     sigil: "❦",
   },
   fighter: {
-    icon: GavelIcon,
-    iconColor: "#f9f3ea",
+    image: FighterIcon,
+    imageAlt: "Fighter",
     iconBackground: "linear-gradient(135deg, #5f4630 0%, #b78656 100%)",
     borderColor: "rgba(183, 134, 86, 0.74)",
     borderGlow: "rgba(95, 70, 48, 0.24)",
@@ -78,8 +89,8 @@ const CLASS_STYLES = {
     sigil: "⚒",
   },
   monk: {
-    icon: SelfImprovementIcon,
-    iconColor: "#fff4e8",
+    image: MonkIcon,
+    imageAlt: "Monk",
     iconBackground: "linear-gradient(135deg, #8b4c28 0%, #d59d59 100%)",
     borderColor: "rgba(213, 157, 89, 0.74)",
     borderGlow: "rgba(139, 76, 40, 0.22)",
@@ -87,8 +98,8 @@ const CLASS_STYLES = {
     sigil: "☯",
   },
   paladin: {
-    icon: ShieldIcon,
-    iconColor: "#fff9e8",
+    image: PaladinIcon,
+    imageAlt: "Paladin",
     iconBackground: "linear-gradient(135deg, #83612a 0%, #d6c06d 100%)",
     borderColor: "rgba(214, 192, 109, 0.76)",
     borderGlow: "rgba(131, 97, 42, 0.22)",
@@ -96,8 +107,8 @@ const CLASS_STYLES = {
     sigil: "✠",
   },
   ranger: {
-    icon: PetsIcon,
-    iconColor: "#eef7e0",
+    image: RangerIcon,
+    imageAlt: "Ranger",
     iconBackground: "linear-gradient(135deg, #3c5731 0%, #7fa35d 100%)",
     borderColor: "rgba(127, 163, 93, 0.76)",
     borderGlow: "rgba(60, 87, 49, 0.24)",
@@ -105,8 +116,8 @@ const CLASS_STYLES = {
     sigil: "➹",
   },
   rogue: {
-    icon: VisibilityIcon,
-    iconColor: "#efeff4",
+    image: RogueIcon,
+    imageAlt: "Rogue",
     iconBackground: "linear-gradient(135deg, #2f3449 0%, #6b6f87 100%)",
     borderColor: "rgba(107, 111, 135, 0.76)",
     borderGlow: "rgba(47, 52, 73, 0.26)",
@@ -114,8 +125,8 @@ const CLASS_STYLES = {
     sigil: "✧",
   },
   sorcerer: {
-    icon: LocalFireDepartmentIcon,
-    iconColor: "#fff0eb",
+    image: SorcererIcon,
+    imageAlt: "Sorcerer",
     iconBackground: "linear-gradient(135deg, #7c2445 0%, #d35d4e 100%)",
     borderColor: "rgba(211, 93, 78, 0.76)",
     borderGlow: "rgba(124, 36, 69, 0.26)",
@@ -123,8 +134,8 @@ const CLASS_STYLES = {
     sigil: "✹",
   },
   warlock: {
-    icon: CasinoIcon,
-    iconColor: "#f1e9ff",
+    image: WarlockIcon,
+    imageAlt: "Warlock",
     iconBackground: "linear-gradient(135deg, #43295f 0%, #8360b3 100%)",
     borderColor: "rgba(131, 96, 179, 0.78)",
     borderGlow: "rgba(67, 41, 95, 0.28)",
@@ -132,8 +143,8 @@ const CLASS_STYLES = {
     sigil: "☾",
   },
   wizard: {
-    icon: MenuBookIcon,
-    iconColor: "#eef5ff",
+    image: WizardIcon,
+    imageAlt: "Wizard",
     iconBackground: "linear-gradient(135deg, #214a75 0%, #5da5d8 100%)",
     borderColor: "rgba(93, 165, 216, 0.78)",
     borderGlow: "rgba(33, 74, 117, 0.28)",
@@ -291,13 +302,10 @@ export default function CharacterSelectionScreen() {
                       pointerEvents: "none",
                     },
                     "&::after": {
-                      content: `"${classStyle.sigil}"`,
+                      content: "\"\"",
                       position: "absolute",
                       right: 16,
                       bottom: 8,
-                      fontSize: "3.2rem",
-                      lineHeight: 1,
-                      color: "rgba(245, 230, 202, 0.09)",
                       pointerEvents: "none",
                     },
                   }}
@@ -326,13 +334,27 @@ export default function CharacterSelectionScreen() {
                           width: 52,
                           height: 52,
                           borderRadius: 2.5,
-                          color: classStyle.iconColor,
                           background: classStyle.iconBackground,
                           boxShadow: `0 8px 18px ${classStyle.borderGlow}`,
                           border: "1px solid rgba(255,255,255,0.12)",
                         }}
                       >
-                        <ClassIcon />
+                        {classStyle.image ? (
+                          <Box
+                            component="img"
+                            src={classStyle.image}
+                            alt={classStyle.imageAlt}
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              objectFit: "contain",
+                              filter: "brightness(0) invert(1)",
+                              opacity: 0.96,
+                            }}
+                          />
+                        ) : (
+                          <ClassIcon sx={{ color: classStyle.iconColor }} />
+                        )}
                       </Avatar>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography
