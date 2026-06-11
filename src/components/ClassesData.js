@@ -26,7 +26,7 @@ export const ClassesData = {
       {
         id: "rage",
         name: "Rage",
-        desc: "Enter a rage as a bonus action, granting bonuses to melee damage and resistance to physical damage.",
+        desc: "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action. While raging, if you aren't wearing heavy armor, you have advantage on Strength checks and Strength saving throws, you gain a bonus to the damage roll of melee weapon attacks using Strength as shown in the Rage Damage column, and you have resistance to bludgeoning, piercing, and slashing damage. If you are able to cast spells, you can't cast them or concentrate on them while raging. Your rage lasts for 1 minute. It ends early if you are knocked unconscious, if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then, or if you end it on your turn as a bonus action.",
         level: 1,
         tracked: true,
         usesByLevel: [
@@ -41,14 +41,14 @@ export const ClassesData = {
       {
         id: "danger_sense",
         name: "Danger Sense",
-        desc: "Advantage on Dexterity saving throws against effects you can see.",
+        desc: "You gain an uncanny sense of when things nearby aren't as they should be, giving you an edge when you dodge away from danger. You have advantage on Dexterity saving throws against effects that you can see, such as traps and spells. To gain this benefit, you can't be blinded, deafened, or incapacitated.",
         level: 2,
         tracked: false,
       },
       {
         id: "reckless_attack",
         name: "Reckless Attack",
-        desc: "Gain advantage on melee attack rolls during your turn, but attack rolls against you also have advantage until your next turn.",
+        desc: "You can throw aside all concern for defense to attack with fierce desperation. When you make your first attack on your turn, you can decide to attack recklessly. Doing so gives you advantage on melee weapon attack rolls using Strength during this turn, but attack rolls against you have advantage until your next turn.",
         level: 2,
         tracked: false,
       },
@@ -69,21 +69,21 @@ export const ClassesData = {
       {
         id: "feral_instinct",
         name: "Feral Instinct",
-        desc: "Advantage on initiative rolls. Additionally, if you are surprised, you can act normally if you enter your rage first.",
+        desc: "Your instincts are so honed that you have advantage on initiative rolls. Additionally, if you are surprised at the beginning of combat and aren't incapacitated, you can act normally on your first turn, but only if you enter your rage before doing anything else on that turn.",
         level: 7,
         tracked: false,
       },
       {
         id: "brutal_critical",
         name: "Brutal Critical",
-        desc: "You can roll one additional weapon damage die when determining the extra damage for a critical hit.",
+        desc: "You can roll one additional weapon damage die when determining the extra damage for a critical hit with a melee attack. This increases to two additional dice at 13th level and three additional dice at 17th level.",
         level: 9,
         tracked: false,
       },
       {
         id: "relentless_rage",
         name: "Relentless Rage",
-        desc: "If you drop to 0 HP while raging, you can make a DC 10 Constitution saving throw to drop to 1 HP instead. Each time you use this feature, the DC increases by 5 until you finish a short or long rest.",
+        desc: "Your rage can keep you fighting despite grievous wounds. If you drop to 0 hit points while you're raging and don't die outright, you can make a DC 10 Constitution saving throw. If you succeed, you drop to 1 hit point instead. Each time you use this feature after the first, the DC increases by 5. When you finish a short or long rest, the DC resets to 10.",
         level: 11,
         tracked: true,
         trackedMode: "stackingChecks",
@@ -92,7 +92,7 @@ export const ClassesData = {
       {
         id: "indomitable_might",
         name: "Indomitable Might",
-        desc: "If your total for a Strength check is less than your Strength score, you can use your Strength score in place of the total.",
+        desc: "If your total for a Strength check is less than your Strength score, you can use that score in place of the total.",
         level: 15,
         tracked: false,
       },
