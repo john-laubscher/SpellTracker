@@ -191,6 +191,29 @@ function App() {
     [applyNormalizedProfile, auth?.token]
   );
 
+  const hydrateCharactersWithProfiles = useCallback(
+    async (characterList) => {
+      if (!auth?.token) return sortCharacters(characterList);
+
+      const results = await Promise.all(
+        (characterList || []).map(async (character) => {
+          if (character?.profile?.characterInfo) return character;
+          try {
+            const res = await axios.get(`/characters/${character.id}`, {
+              headers: { Authorization: `Bearer ${auth.token}` },
+            });
+            return res.data?.character || character;
+          } catch {
+            return character;
+          }
+        })
+      );
+
+      return sortCharacters(results);
+    },
+    [auth?.token]
+  );
+
   const createCharacter = useCallback(
     async (name) => {
       if (!auth?.token) throw new Error("Not authenticated");
@@ -257,7 +280,8 @@ function App() {
       })
       .then(async (res) => {
         if (cancelled) return;
-        const nextCharacters = sortCharacters(res.data?.results || []);
+        const nextCharacters = await hydrateCharactersWithProfiles(res.data?.results || []);
+        if (cancelled) return;
         setCharacters(nextCharacters);
 
         const storedId = getActiveCharacterIdFromStorage();
@@ -296,7 +320,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [activeCharacterId, applyNormalizedProfile, auth.token, loadGuestProfile, switchCharacter]);
+  }, [activeCharacterId, applyNormalizedProfile, auth.token, hydrateCharactersWithProfiles, loadGuestProfile, switchCharacter]);
 
   useEffect(() => {
     saveProfileToLocalStorage(activeCharacterId, currentProfile);

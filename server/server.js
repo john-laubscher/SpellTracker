@@ -92,6 +92,13 @@ function getCharacterSummary(character) {
   };
 }
 
+function getCharacterPayload(character) {
+  return {
+    ...getCharacterSummary(character),
+    profile: character.profile || {},
+  };
+}
+
 function getOwnedCharacter(store, userId, characterId) {
   if (!characterId) return null;
   return (store.characters || []).find(
@@ -196,7 +203,7 @@ app.get("/characters", requireAuth, (req, res) => {
   const characters = (store.characters || [])
     .filter((character) => character.userId === req.userId)
     .sort((a, b) => Number(b.lastUsedAt || b.updatedAt || 0) - Number(a.lastUsedAt || a.updatedAt || 0))
-    .map(getCharacterSummary);
+    .map(getCharacterPayload);
 
   res.json({ count: characters.length, results: characters, maxCharacters: MAX_CHARACTERS_PER_USER });
 });
@@ -228,14 +235,14 @@ app.post("/characters", requireAuth, (req, res) => {
     characters: [...(s.characters || []), record],
   }));
 
-  res.status(201).json({ character: { ...getCharacterSummary(record), profile: record.profile } });
+  res.status(201).json({ character: getCharacterPayload(record) });
 });
 
 app.get("/characters/:id", requireAuth, (req, res) => {
   const resolved = requireOwnedCharacter(req, res, "params");
   if (!resolved) return;
   const { character } = resolved;
-  res.json({ character: { ...getCharacterSummary(character), profile: character.profile || {} } });
+  res.json({ character: getCharacterPayload(character) });
 });
 
 app.put("/characters/:id", requireAuth, (req, res) => {
@@ -269,7 +276,7 @@ app.put("/characters/:id", requireAuth, (req, res) => {
   });
 
   if (!updatedCharacter) return res.status(404).json({ error: "character_not_found" });
-  res.json({ character: { ...getCharacterSummary(updatedCharacter), profile: updatedCharacter.profile || {} } });
+  res.json({ character: getCharacterPayload(updatedCharacter) });
 });
 
 app.get("/custom-spells", requireAuth, (req, res) => {
