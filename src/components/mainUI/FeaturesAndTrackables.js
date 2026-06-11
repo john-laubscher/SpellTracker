@@ -59,6 +59,7 @@ import DragonHeadIcon from "./DragonHeadIcon";
 import GenieLampIcon from "./GenieLampIcon";
 import MagicSparklesIcon from "./MagicSparklesIcon";
 import PactScrollIcon from "./PactScrollIcon";
+import TotemAnimalIcon from "./TotemAnimalIcon";
 import FeatureChoiceModal from "./FeatureChoiceModal";
 import UntrackedOptionsModal from "./UntrackedOptionsModal";
 import MetamagicOptionsModal from "./MetamagicOptionsModal";
@@ -2633,6 +2634,49 @@ const FeaturesAndTrackables = () => {
       });
     }
 
+    if (characterClass === "barbarian" && subclass === "totemWarrior") {
+      next = next.map((feature) => {
+        if (!["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) {
+          return feature;
+        }
+
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+          ? feature.untrackedChoiceOptions
+          : [];
+        if (choiceOptions.length === 0) return feature;
+
+        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+        const baseDescLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+        const selectedDescLines = selected
+          ? Array.isArray(selected?.desc)
+            ? selected.desc
+            : typeof selected?.desc === "string"
+              ? [selected.desc]
+              : []
+          : [];
+        const promptByFeatureId = {
+          totem_spirit: "Click the totem icon to choose your spirit animal.",
+          aspect_of_the_beast: "Click the totem icon to choose your beast aspect.",
+          totemic_attunement: "Click the totem icon to choose your attunement animal.",
+        };
+        const prefixLines = selected
+          ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
+          : [`Chosen: (none selected). ${promptByFeatureId[feature.id] || "Click the totem icon to choose one."}`];
+        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+
+        return {
+          ...feature,
+          name: nextName,
+          desc: [...prefixLines, ...baseDescLines],
+        };
+      });
+    }
+
     if (characterClass === "wizard" && subclass === "divination") {
       const hasGreaterPortent = Number(characterLevel || 0) >= 14;
 
@@ -4423,6 +4467,44 @@ const FeaturesAndTrackables = () => {
                   }
                 }
 
+                if (
+                  characterClass === "barbarian" &&
+                  subclass === "totemWarrior" &&
+                  ["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))
+                ) {
+                  const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+                    ? feature.untrackedChoiceOptions
+                    : [];
+                  if (choiceOptions.length > 0) {
+                    const baseName = String(feature?.name || "").replace(/\s*\(.*\)\s*$/, "") || "Feature";
+                    const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
+                    const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+                    const label = selected?.name
+                      ? `Change ${baseName} (${selected.name})`
+                      : `Choose ${baseName}`;
+
+                    return (
+                      <Tooltip arrow title={label}>
+                        <IconButton
+                          size="small"
+                          aria-label={label}
+                          onClick={() => setFeatureChoiceModal({ open: true, featureId: feature.id })}
+                          sx={{
+                            ml: 0.25,
+                            p: 0.25,
+                            color: "rgba(93, 64, 55, 0.92)",
+                            border: "1px solid rgba(93, 64, 55, 0.25)",
+                            backgroundColor: "rgba(244, 233, 221, 0.65)",
+                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                          }}
+                        >
+                          <TotemAnimalIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    );
+                  }
+                }
+
                 if (characterClass === "sorcerer" && subclass === "divineSoul" && feature?.id === "divine_magic") {
                   const selectedId = String(characterInfo?.divineSoulAffinity || "");
                   const selected =
@@ -4691,7 +4773,13 @@ const FeaturesAndTrackables = () => {
         open={Boolean(featureChoiceModal?.open)}
         onClose={() => setFeatureChoiceModal({ open: false, featureId: "" })}
         title={activeChoiceFeature?.name || "Choose Option"}
-        helperText="Choose one option. This feature is untracked (no uses are tracked here)."
+        helperText={
+          characterClass === "barbarian" &&
+          subclass === "totemWarrior" &&
+          ["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(activeChoiceFeature?.id || ""))
+            ? "Choose one animal. The selected animal is shown in the feature description, and the other options stay tucked inside this picker."
+            : "Choose one option. This feature is untracked (no uses are tracked here)."
+        }
         options={activeChoiceFeature?.untrackedChoiceOptions || []}
         selectedId={getFeatureChoice(
           untrackedFeatureChoices,

@@ -311,35 +311,127 @@ export const ClassesData = {
           {
             id: "spirit_seeker",
             name: "Spirit Seeker",
-            desc: "You gain the ability to cast Beast Sense and Speak with Animals as rituals, reflecting your attunement to nature's spirits.",
+            desc: "You can cast Beast Sense and Speak with Animals as rituals. They appear in the Ritual Spell Tracker for this subclass.",
             level: 3,
             tracked: false,
           },
           {
             id: "totem_spirit",
             name: "Totem Spirit",
-            desc: "Choose a totem animal. Options include Bear (resistance to all damage except psychic while raging), Eagle (disadvantage on opportunity attacks against you, and Dash as a bonus action), and Wolf (allies gain advantage on melee attack rolls against creatures within 5 feet of you).",
+            desc: [
+              "Choose a totem spirit by clicking the totem icon.",
+              "Only your current choice is shown here; reopen the picker to view the other animals.",
+            ],
+            untrackedChoiceOptions: [
+              {
+                id: "bear",
+                name: "Bear",
+                desc: ["While raging, you resist all damage except psychic."],
+              },
+              {
+                id: "eagle",
+                name: "Eagle",
+                desc: [
+                  "While raging and not in heavy armor, opportunity attacks against you are at disadvantage, and you can Dash as a bonus action.",
+                ],
+              },
+              {
+                id: "elk",
+                name: "Elk",
+                desc: ["While raging and not in heavy armor, your walking speed increases by 15 feet."],
+              },
+              {
+                id: "tiger",
+                name: "Tiger",
+                desc: ["While raging, your long jumps gain 10 feet and your high jumps gain 3 feet."],
+              },
+              {
+                id: "wolf",
+                name: "Wolf",
+                desc: ["While raging, allies have advantage on melee attacks against creatures within 5 feet of you."],
+              },
+            ],
             level: 3,
             tracked: false,
           },
           {
             id: "aspect_of_the_beast",
             name: "Aspect of the Beast",
-            desc: "Choose a totem animal. Options include Bear (carry capacity doubles and advantage on Strength checks for pushing, pulling, lifting), Eagle (see up to 1 mile away clearly and no disadvantage on long-range perception), or Wolf (track creatures at fast pace and move stealthily while traveling).",
+            desc: [
+              "Choose an aspect by clicking the totem icon.",
+              "Only your current choice is shown here; reopen the picker to view the other animals.",
+            ],
+            untrackedChoiceOptions: [
+              {
+                id: "bear",
+                name: "Bear",
+                desc: ["Your carrying capacity doubles, and you gain advantage on Strength checks to push, pull, lift, or break objects."],
+              },
+              {
+                id: "eagle",
+                name: "Eagle",
+                desc: ["You can make out fine details from up to 1 mile away, and dim light no longer hampers your Perception checks."],
+              },
+              {
+                id: "elk",
+                name: "Elk",
+                desc: ["Your travel pace doubles, and up to ten nearby companions match it while you remain active."],
+              },
+              {
+                id: "tiger",
+                name: "Tiger",
+                desc: ["Gain proficiency in two of these skills: Athletics, Acrobatics, Stealth, and Survival."],
+              },
+              {
+                id: "wolf",
+                name: "Wolf",
+                desc: ["You can track at a fast pace and move stealthily while traveling at a normal pace."],
+              },
+            ],
             level: 6,
             tracked: false,
           },
           {
             id: "spirit_walker",
             name: "Spirit Walker",
-            desc: "You can cast Commune with Nature as a ritual. When you do so, a spirit of your totem animal appears to you to convey the information you seek.",
+            desc: "You can cast Commune with Nature as a ritual. It appears in the Ritual Spell Tracker for this subclass.",
             level: 10,
             tracked: false,
           },
           {
             id: "totemic_attunement",
             name: "Totemic Attunement",
-            desc: "Choose a totem animal. Options include Bear (creatures within 5 feet have disadvantage on attack rolls against others), Eagle (fly at half speed while raging if not wearing heavy armor), and Wolf (knock a creature prone as a bonus action if you hit it).",
+            desc: [
+              "Choose an attunement by clicking the totem icon.",
+              "Only your current choice is shown here; reopen the picker to view the other animals.",
+            ],
+            untrackedChoiceOptions: [
+              {
+                id: "bear",
+                name: "Bear",
+                desc: ["While raging, nearby hostile creatures have disadvantage when attacking targets other than you or another character with this feature."],
+              },
+              {
+                id: "eagle",
+                name: "Eagle",
+                desc: ["While raging, you gain a flying speed equal to your current walking speed, but you fall if nothing keeps you aloft at turn's end."],
+              },
+              {
+                id: "elk",
+                name: "Elk",
+                desc: ["While raging, you can bonus-action charge through a Large or smaller creature's space, knocking it prone and dealing bludgeoning damage on a failed Strength save."],
+              },
+              {
+                id: "tiger",
+                name: "Tiger",
+                desc: ["While raging, a 20-foot straight-line charge before a melee attack lets you make one extra melee attack as a bonus action."],
+              },
+              {
+                id: "wolf",
+                name: "Wolf",
+                desc: ["While raging, a melee hit lets you bonus-action knock a Large or smaller creature prone."],
+              },
+            ],
             level: 14,
             tracked: false,
           },

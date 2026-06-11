@@ -334,6 +334,44 @@ const ACOLYTE_OF_NATURE_CANTRIP_TOOLTIP =
 const THOUSAND_FORMS_TOOLTIP =
   "Thousand Forms: Alter Self can be cast at will (doesn't cost spell slots).";
 
+const BONUS_CHIP_SX = {
+  height: 18,
+  fontSize: "11px",
+  fontWeight: 800,
+  opacity: 0.55,
+  backgroundColor: "rgba(0,0,0,0.06)",
+  color: "rgba(62, 39, 35, 0.72)",
+  border: "1px solid rgba(62, 39, 35, 0.22)",
+  "&:hover": { opacity: 0.85 },
+};
+
+const TOTEM_WARRIOR_RITUAL_SPELLS = [
+  {
+    level: 1,
+    unlockLevel: 3,
+    index: "speak-with-animals",
+    name: "Speak with Animals",
+    featureTag: "SS",
+    featureTooltip: "Spirit Seeker ritual spell.",
+  },
+  {
+    level: 2,
+    unlockLevel: 3,
+    index: "beast-sense",
+    name: "Beast Sense",
+    featureTag: "SS",
+    featureTooltip: "Spirit Seeker ritual spell.",
+  },
+  {
+    level: 5,
+    unlockLevel: 10,
+    index: "commune-with-nature",
+    name: "Commune with Nature",
+    featureTag: "SW",
+    featureTooltip: "Spirit Walker ritual spell.",
+  },
+];
+
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
 export const SpellList = (props) => {
@@ -388,6 +426,10 @@ export const SpellList = (props) => {
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
   const isWizard = classKey === "wizard" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
+  const isTotemWarriorRitualTracker =
+    classKey === "barbarian" &&
+    String(characterInfo?.subclass || "") === "totemWarrior" &&
+    characterLevel >= 3;
   const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
   const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
   const warlockSlotLevelNumber = isWarlock
@@ -4664,8 +4706,67 @@ export const SpellList = (props) => {
     const classMeta = ClassesData?.[classKey];
     if (!classMeta) return null;
 
-    if (effectiveIsNonCaster) {
+    if (effectiveIsNonCaster && !isTotemWarriorRitualTracker) {
       return null;
+    }
+
+    if (isTotemWarriorRitualTracker) {
+      if (textualSpellLevel === "cantrips") return null;
+
+      const ritualSpells = TOTEM_WARRIOR_RITUAL_SPELLS.filter(
+        (spell) =>
+          Number(spell?.level) === Number(numericalSpellLevel) &&
+          characterLevel >= Number(spell?.unlockLevel || 0)
+      );
+
+      if (ritualSpells.length === 0) return null;
+
+      const levelColor = spellLevelColors[numericalSpellLevel] || "#607d8b";
+      const heading = `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Rituals`;
+
+      return (
+        <Box
+          sx={{
+            borderLeft: `4px solid ${levelColor}`,
+            borderRadius: "6px",
+            backgroundColor: "rgba(255,255,255,0.45)",
+            mb: 1.5,
+            px: 1.5,
+            py: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "15px",
+                color: levelColor,
+              }}
+            >
+              {heading}
+            </Typography>
+          </Box>
+          {ritualSpells.map((spell) => (
+            <Box key={`totem-ritual:${spell.index}`} sx={{ py: 0.2 }}>
+              <SpellAccordian
+                numericalSpellLevel={numericalSpellLevel}
+                spell={spell}
+                leadingControl={
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+                    <Tooltip arrow title={spell.featureTooltip}>
+                      <Chip size="small" label={spell.featureTag} sx={BONUS_CHIP_SX} />
+                    </Tooltip>
+                    <Tooltip arrow title="Ritual spell.">
+                      <Chip size="small" label="R" sx={BONUS_CHIP_SX} />
+                    </Tooltip>
+                  </Box>
+                }
+              />
+            </Box>
+          ))}
+        </Box>
+      );
     }
 
     const levelKey = Number(characterInfo?.characterLevel) || 0;
@@ -6691,10 +6792,25 @@ export const SpellList = (props) => {
             ) : null}
           </Box>
         ) : (
-          <PreparedSpellsStatus label={showSoulknifePsionicUses ? "Psionic Energy Die Uses" : "Spell Tracker"} />
+          isTotemWarriorRitualTracker ? (
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "18px",
+                color: "#3e2723",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              Ritual Spell Tracker
+            </Typography>
+          ) : (
+            <PreparedSpellsStatus label={showSoulknifePsionicUses ? "Psionic Energy Die Uses" : "Spell Tracker"} />
+          )
         )}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-          {!effectiveIsNonCaster ? (
+          {!effectiveIsNonCaster && !isTotemWarriorRitualTracker ? (
             <Button
               className={classes.prepareButton}
               variant="contained"
