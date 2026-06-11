@@ -1,12 +1,11 @@
 import React, { useState, useContext } from "react";
-import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel, Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, SvgIcon } from "@mui/material";
+import { Tooltip, Grid, Typography, Card, CardContent, IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Checkbox, FormControlLabel, Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, SvgIcon, Divider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CharacterInfoContext } from "../../Contexts/Context";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const diceSizes = [4, 6, 8, 10, 12, 20];
 const diceCounts = Array.from({ length: 20 }, (_, i) => i + 1);
-
 const formatDamageDice = (weapon) => {
   const diceCount = Number.isFinite(Number(weapon?.diceCount)) ? Number(weapon.diceCount) : 1;
   const diceSize = Number.isFinite(Number(weapon?.diceSize)) ? Number(weapon.diceSize) : 6;
@@ -455,8 +454,8 @@ const WeaponManager = () => {
   return (
     <div>
       {/* Add weapon form */}
-      <Grid container spacing={1} alignItems="center">
-        <Grid item xs={12} sm>
+      <Grid container spacing={1.25}>
+        <Grid item xs={12} sm={6}>
           <TextField
             label="Name"
             variant="outlined"
@@ -466,9 +465,9 @@ const WeaponManager = () => {
             onChange={(e) => setNewWeapon((prev) => ({ ...prev, name: e.target.value }))}
           />
         </Grid>
-        <Grid item xs={12} sm>
+        <Grid item xs={12} sm={6}>
           <TextField
-            label="Dmg Type"
+            label="Damage Type"
             variant="outlined"
             size="small"
             fullWidth
@@ -514,7 +513,7 @@ const WeaponManager = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item sx={{ minWidth: 80 }}>
+        <Grid item xs={6} sm={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="Stat-mod-label">Stat</InputLabel>
             <Select
@@ -628,7 +627,10 @@ const WeaponManager = () => {
               backgroundColor: "#8B4513",
               color: "#fff",
               opacity: canAdd ? 1 : 0.45,
-              "&:hover": { backgroundColor: "#6d3410" },
+              "&:hover": {
+                backgroundColor: "#6d3410",
+                color: "rgba(255,255,255,0.82)",
+              },
               "&.Mui-disabled": {
                 backgroundColor: "#8B4513",
                 color: "#fff",
@@ -642,6 +644,8 @@ const WeaponManager = () => {
           </IconButton>
         </Grid>
       </Grid>
+
+      <Divider sx={{ my: 2, borderColor: "rgba(139,69,19,0.3)" }} />
 
       {/* Weapon cards */}
       <Grid container spacing={1.5} sx={{ mt: 0.5 }}>

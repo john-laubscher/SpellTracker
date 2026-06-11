@@ -41,7 +41,6 @@ const Header = () => {
   const navigate = useNavigate();
 
   const theme = useTheme();
-  const spellsFromWizLevel = (characterInfo.characterLevel - 1) * 2 + 6
   const wizardSpellbookTrackedCount = Object.values(characterInfo?.wizardSpellbook || {}).reduce(
     (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
     0
@@ -148,17 +147,15 @@ useEffect(() => {
 
   if (ClassesData[characterInfo.characterClass]?.isSpellCaster) {
     if (characterInfo.characterClass === "wizard") {
-      const fallbackSpellbookCount = spellsFromWizLevel + parseInt(characterInfo.wizardSpellCountMod);
-      const totalWizardSpellbookCount = wizardSpellbookTrackedCount > 0 ? wizardSpellbookTrackedCount : fallbackSpellbookCount;
       // Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known).
       setSpellData(prevState => ({
         ...prevState,
-        totalWizardSpells: totalWizardSpellbookCount,
+        totalWizardSpells: wizardSpellbookTrackedCount,
         totalPreparedSpells,
       }));
     }
   }
-}, [characterInfo, effectiveIsNonCaster, spellcastingAbility, spellsFromWizLevel, wizardSpellbookTrackedCount]);
+}, [characterInfo, effectiveIsNonCaster, spellcastingAbility, wizardSpellbookTrackedCount]);
 
   const determineNoncasters = () => {
     if (effectiveIsNonCaster) {
@@ -324,7 +321,7 @@ useEffect(() => {
                         Total Wizard Spells: {spellData.totalWizardSpells}
                       </Typography>
                     </Tooltip>
-                    <Tooltip placement="top" title={`Spells from wizard level: ${spellsFromWizLevel}; Transcribed spells: ${characterInfo.wizardSpellCountMod}; Tracked in spellbook: ${wizardSpellbookTrackedCount}`}>
+                    <Tooltip placement="top" title={`Tracked in spellbook: ${wizardSpellbookTrackedCount}`}>
                       <Typography variant="h6" sx={theme.typography.body1}>
                         Total Spells in Wizard Spell Book: {spellData.totalWizardSpells}
                       </Typography>
