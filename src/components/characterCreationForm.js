@@ -239,36 +239,6 @@ export const CharacterCreationForm = (props) => {
     }
   }, [characterInfo.characterClass, characterInfo.subclass, setCharacterInfo]);
 
-  const renderWizardSpellCountMod = () => {
-    if (characterInfo.characterClass === 'wizard') {
-      // ***NEED FEATURE*** WHEN USER TRIES TO GO OVER 25, IT SHOULD SHAKE, OR OUTLINE IN RED, AND HAVE A TOOLTIP SAYING HAVE A NUMBER BETWEEN 0 AND 25
-      const handleWizInputChange = (event) => {
-        const value = event.target.value;
-        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 25)) {
-          handleChange(event)
-        };
-        }
-      return (
-        <Box noValidate component="form">
-          <InputLabel> <strong>Number of transcribed spells</strong></InputLabel>
-          <InputLabel>Enter a number between 0 and 25</InputLabel>
-          <TextField
-            type="number"
-            variant="outlined" 
-            name="wizardSpellCountMod"
-            value={characterInfo.wizardSpellCountMod}
-            onChange={handleWizInputChange}
-            inputProps={{
-              min: 0,
-              max: 25,
-            }}
-          />
-        </Box>
-      )
-    }
-  }
-
-
   //due to issues with the .keys method, "noClass" is the default class (found in ClassesData.js)
 
   //easier to use logic/for loop, or to create this datastructure?
@@ -636,8 +606,6 @@ export const CharacterCreationForm = (props) => {
         open={druidicWarriorModalOpen}
         onClose={() => setDruidicWarriorModalOpen(false)}
       />
-
-      {renderWizardSpellCountMod()}
 
       <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 
