@@ -140,18 +140,18 @@ const GiantsPowerCantripPicker = ({ characterInfo, setCharacterInfo }) => {
           />
         ) : (
           <Typography sx={{ fontSize: "12px", opacity: 0.85 }}>
-            Giant’s Power: prepare either Druidcraft or Thaumaturgy.
+            Giant's Power: prepare either Druidcraft or Thaumaturgy.
           </Typography>
         )}
       </Box>
 
       <Dialog open={open} onClose={closePicker} fullWidth maxWidth="sm">
-        <DialogTitle>Giant’s Power — Choose a cantrip</DialogTitle>
+        <DialogTitle>Giant's Power - Choose a cantrip</DialogTitle>
         <DialogContent dividers>
           {loading ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CircularProgress size={18} />
-              <Typography>Loading…</Typography>
+              <Typography>Loading...</Typography>
             </Box>
           ) : error ? (
             <Typography color="error">{error}</Typography>

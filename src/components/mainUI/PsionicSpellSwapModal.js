@@ -19,7 +19,7 @@ import SpellAccordian from "./SpellAccordian";
 const normalizeCompareName = (s) =>
   String(s || "")
     .toLowerCase()
-    .replace(/['â€™]/g, "")
+    .replace(/['\u2019]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .replace(/\s+/g, " ");
@@ -254,7 +254,7 @@ const PsionicSpellSwapModal = ({
 
         {loadStatus.loading ? (
           <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
-            Loading spellsâ€¦
+            Loading spells...
           </Typography>
         ) : null}
         {loadStatus.error ? (
