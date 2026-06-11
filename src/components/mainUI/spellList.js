@@ -4912,7 +4912,7 @@ export const SpellList = (props) => {
                {isCantrips && hasCircleOfMortality ? (
                  <Tooltip
                    arrow
-                   title="Spare the Dying is granted by Circle of Mortality and doesnâ€™t count against cantrips known."
+                   title="Spare the Dying is granted by Circle of Mortality and doesn't count against cantrips known."
                  >
                    <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                  </Tooltip>
@@ -6147,7 +6147,7 @@ export const SpellList = (props) => {
                   arrow
                   title={
                     isOver
-                      ? "Druidic Warrior cantrip (over limit â€” only 2 allowed)."
+                      ? "Druidic Warrior cantrip (over limit - only 2 allowed)."
                       : "Druidic Warrior cantrip (counts as a ranger spell)."
                   }
                 >
@@ -6335,7 +6335,7 @@ export const SpellList = (props) => {
                   arrow
                   title={
                     isOver
-                      ? "Blessed Warrior cantrip (over limit â€” only 2 allowed)."
+                      ? "Blessed Warrior cantrip (over limit - only 2 allowed)."
                       : "Blessed Warrior cantrip (counts as a paladin spell)."
                   }
                 >

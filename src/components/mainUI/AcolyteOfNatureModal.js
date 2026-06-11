@@ -116,7 +116,7 @@ const AcolyteOfNatureModal = ({ open, onClose }) => {
 
         {loadStatus.loading ? (
           <Typography sx={{ fontSize: "13px", opacity: 0.75, px: 0.5, py: 0.25 }}>
-            Loading druid cantripsâ€¦
+            Loading druid cantrips...
           </Typography>
         ) : null}
         {loadStatus.error ? (

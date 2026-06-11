@@ -587,7 +587,7 @@ const AddSpellsModal = ({
               <ListItem disableGutters>
                 <Box sx={{ width: '100%', px: 1 }}>
                   <Typography variant="body2" sx={{ opacity: 0.7 }}>
-                    Loading spellsâ€¦
+                    Loading spells...
                   </Typography>
                 </Box>
               </ListItem>
@@ -926,7 +926,7 @@ const AddSpellsModal = ({
             type="submit"
           >
             {customSpellSaving
-              ? 'Savingâ€¦'
+              ? 'Saving...'
               : editingCustomSpellIndex === null
                 ? 'Create'
                 : 'Save'}
@@ -942,7 +942,7 @@ const AddSpellsModal = ({
       >
         <DialogTitle>Delete Custom Spell?</DialogTitle>
         <DialogContent dividers>
-          <Typography>Delete â€œ{deleteConfirm.spell?.name}â€? This canâ€™t be undone.</Typography>
+          <Typography>Delete "{deleteConfirm.spell?.name}"? This can't be undone.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirm({ open: false, spell: null })}>Cancel</Button>

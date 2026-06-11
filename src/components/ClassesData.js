@@ -271,15 +271,15 @@ export const ClassesData = {
         features: [
           {
             id: "giants_power",
-            name: "GiantÃ¢â‚¬â„¢s Power",
+            name: "Giant's Power",
             desc: "When you choose this path, you learn to speak, read, and write Giant or one other language of your choice if you already know Giant. Additionally, you learn a cantrip of your choice: either druidcraft or thaumaturgy. Wisdom is your spellcasting ability for this spell.",
             level: 3,
             tracked: false,
           },
           {
             id: "giants_havoc",
-            name: "GiantÃ¢â‚¬â„¢s Havoc",
-            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attackÃ¢â‚¬â„¢s damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isnÃ¢â‚¬â„¢t enough room for you to increase your size, your size doesnÃ¢â‚¬â„¢t change.",
+            name: "Giant's Havoc",
+            desc: "Your rages pull strength from the primal might of giants, transforming you into a hulking force of destruction. While raging, you gain the following benefits:\n\nCrushing Throw. When you make a successful ranged attack with a thrown weapon using Strength, you can add your Rage Damage bonus to the attack's damage roll.\n\nGiant Stature. Your reach increases by 5 feet, and if you are smaller than Large, you become Large, along with anything you are wearing. If there isn't enough room for you to increase your size, your size doesn't change.",
             level: 3,
             tracked: false,
           },
@@ -449,7 +449,7 @@ export const ClassesData = {
           {
             id: "magic_awareness",
             name: "Magic Awareness",
-            desc: "As an action, you can open your awareness to the presence of concentrated magic. Until the end of your next turn, you know the location of any spell or magic item within 60 feet of you that isnÃ¢â‚¬â„¢t behind total cover. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
+            desc: "As an action, you can open your awareness to the presence of concentrated magic. Until the end of your next turn, you know the location of any spell or magic item within 60 feet of you that isn't behind total cover. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             level: 3,
             tracked: true,
             uses: "pb",
@@ -618,7 +618,7 @@ export const ClassesData = {
             id: "animating_performance",
             name: "Animating Performance",
             desc: [
-              "By 6th level, as an action, you can animate one Large or smaller nonmagical item within 30 feet of you that isnâ€™t being worn or carried. The animate item uses the Dancing Item stat block, which uses your proficiency bonus (PB), The item is friendly to you and your companions and obeys your commands. It lives for 1 hour, until it is reduced to 0 hit points, or until you die.",
+              "By 6th level, as an action, you can animate one Large or smaller nonmagical item within 30 feet of you that isn't being worn or carried. The animate item uses the Dancing Item stat block, which uses your proficiency bonus (PB), The item is friendly to you and your companions and obeys your commands. It lives for 1 hour, until it is reduced to 0 hit points, or until you die.",
               "In combat, the item shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the item can take any action of its choice, not just Dodge.",
               "When you use your Bardic Inspiration feature, you can command the item as part of the same bonus action you use for Bardic Inspiration.",
               "Once you animate an item with this feature, you can't do so again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use this feature again. You can have only one item animated by this feature at a time; if you use this action and already have a dancing item from this feature, the first one immediately becomes inanimate.",
@@ -725,7 +725,7 @@ export const ClassesData = {
           {
             id: "additional_magical_secrets",
             name: "Additional Magical Secrets",
-            desc: "At 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but donÃ¢â‚¬â„¢t count against the number of bard spells you know.",
+            desc: "At 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but don't count against the number of bard spells you know.",
             level: 6,
             tracked: false, //Add 2 spells, don't count agains the spells you know as a bard
           },
@@ -743,7 +743,7 @@ export const ClassesData = {
           {
             id: "guiding_whispers",
             name: "Guiding Whispers",
-            desc: "At 3rd level, you gain the ability to reach out to spirits and guide others. You learn the Guidance cantrip, which doesnÃ¢â‚¬â„¢t count against the number of bard cantrips you know. Its range becomes 60 feet when you cast it.",
+            desc: "At 3rd level, you gain the ability to reach out to spirits and guide others. You learn the Guidance cantrip, which doesn't count against the number of bard cantrips you know. Its range becomes 60 feet when you cast it.",
             level: 3,
             tracked: false, //Adds guidance to cantrip--60 ft
           },
@@ -757,7 +757,7 @@ export const ClassesData = {
           {
             id: "tales_from_beyond",
             name: "Tales from Beyond",
-            desc: "At 3rd level, you learn to weave spiritsÃ¢â‚¬â„¢ tales into your magic. As a bonus action, you can expend one use of Bardic Inspiration to roll on the Tales from Beyond table, using your Bardic Inspiration die to determine the result. You retain the tale in mind until you bestow its effects or finish a short or long rest. You can use this feature a number of times equal to your proficiency bonus per long rest.",
+            desc: "At 3rd level, you learn to weave spirits' tales into your magic. As a bonus action, you can expend one use of Bardic Inspiration to roll on the Tales from Beyond table, using your Bardic Inspiration die to determine the result. You retain the tale in mind until you bestow its effects or finish a short or long rest. You can use this feature a number of times equal to your proficiency bonus per long rest.",
             level: 3,
             tracked: false,
           },
@@ -846,21 +846,21 @@ export const ClassesData = {
           {
             id: "words_of_terror",
             name: "Words of Terror",
-            desc: "At 3rd level, you learn to infuse innocent-seeming words with an insidious magic that can inspire terror. If you speak to a humanoid alone for at least 1 minute, you can attempt to seed paranoia in its mind. At the end of the conversation, the target must succeed on a Wisdom saving throw against your spell save DC or be frightened of you or another creature of your choice for 1 hour. If the target succeeds, it has no hint that you tried to frighten it. The target must have an Intelligence of 4 or higher. Once you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a short or long rest.",
+            desc: "At 3rd level, you learn to infuse innocent-seeming words with an insidious magic that can inspire terror. If you speak to a humanoid alone for at least 1 minute, you can attempt to seed paranoia in its mind. At the end of the conversation, the target must succeed on a Wisdom saving throw against your spell save DC or be frightened of you or another creature of your choice for 1 hour. If the target succeeds, it has no hint that you tried to frighten it. The target must have an Intelligence of 4 or higher. Once you use this feature, you can't use it again until you finish a short or long rest.",
             level: 3,
             tracked: true, // 1/ SR
           },
           {
             id: "mantle_of_whispers",
             name: "Mantle of Whispers",
-            desc: "At 6th level, you gain the ability to adopt a humanoidÃ¢â‚¬â„¢s persona. When a humanoid dies within 30 feet of you, you can magically capture its shadow using your reaction. You retain this shadow until you use it or you finish a long rest. You can use the shadow as an action. When you do so, it vanishes, magically transforming into a disguise that appears on you. You now look like the dead person but healthy and alive. This disguise lasts for 1 hour or until you end it as a bonus action. While youÃ¢â‚¬â„¢re in the disguise, you gain access to all information that the humanoid would freely share with a casual acquaintance. Information is enough to pass as the person by drawing on its memories. Another creature can see through this disguise by succeeding on a Wisdom (Insight) check contested by your Charisma (Deception) check. Once you capture a shadow, you canÃ¢â‚¬â„¢t capture another until you finish a short or long rest.",
+            desc: "At 6th level, you gain the ability to adopt a humanoid's persona. When a humanoid dies within 30 feet of you, you can magically capture its shadow using your reaction. You retain this shadow until you use it or you finish a long rest. You can use the shadow as an action. When you do so, it vanishes, magically transforming into a disguise that appears on you. You now look like the dead person but healthy and alive. This disguise lasts for 1 hour or until you end it as a bonus action. While you're in the disguise, you gain access to all information that the humanoid would freely share with a casual acquaintance. Information is enough to pass as the person by drawing on its memories. Another creature can see through this disguise by succeeding on a Wisdom (Insight) check contested by your Charisma (Deception) check. Once you capture a shadow, you can't capture another until you finish a short or long rest.",
             level: 6,
             tracked: true, // 1/ SR
           },
           {
             id: "shadow_lore",
             name: "Shadow Lore",
-            desc: "At 14th level, you gain the ability to weave dark magic into your words and tap into a creatureÃ¢â‚¬â„¢s deepest fears. As an action, you magically whisper a phrase that only one creature of your choice within 30 feet of you can hear. The target must make a Wisdom saving throw against your spell save DC. It automatically succeeds if it doesnÃ¢â‚¬â„¢t share a language with you or if it canÃ¢â‚¬â„¢t hear you. On a failed save, the target is charmed by you for the next 8 hours or until a remove curse spell is cast on it, the charmed condition is removed from it, or you use this feature again. While charmed in this way, the creature obeys your commands for fear that you will reveal its darkest secrets. It wonÃ¢â‚¬â„¢t risk its life for you or fight for you unless it was already inclined to do so. Once you use this feature, you canÃ¢â‚¬â„¢t use it again until you finish a long rest.",
+            desc: "At 14th level, you gain the ability to weave dark magic into your words and tap into a creature's deepest fears. As an action, you magically whisper a phrase that only one creature of your choice within 30 feet of you can hear. The target must make a Wisdom saving throw against your spell save DC. It automatically succeeds if it doesn't share a language with you or if it can't hear you. On a failed save, the target is charmed by you for the next 8 hours or until a remove curse spell is cast on it, the charmed condition is removed from it, or you use this feature again. While charmed in this way, the creature obeys your commands for fear that you will reveal its darkest secrets. It won't risk its life for you or fight for you unless it was already inclined to do so. Once you use this feature, you can't use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/ LR
           },
@@ -1081,7 +1081,7 @@ export const ClassesData = {
           {
             id: "sentinel_at_death's_door",
             name: "Sentinel at Death's Door",
-            desc: "At 6th level, you gain the ability to impede deathâ€™s progress. As a reaction when you or an ally that you can see within 30 feet of you suffers a critical hit, you can turn that attack into a normal hit. Any effects triggered by a critical hit are canceled. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest.",
+            desc: "At 6th level, you gain the ability to impede death's progress. As a reaction when you or an ally that you can see within 30 feet of you suffers a critical hit, you can turn that attack into a normal hit. Any effects triggered by a critical hit are canceled. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest.",
             level: 6,
             tracked: true, // Per long rest
             uses: "wis_mod",
@@ -1097,7 +1097,7 @@ export const ClassesData = {
           {
             id: "keeper_of_souls",
             name: "Keeper of Souls",
-            desc: "At 17th level, you can seize a trace of vitality from a parting soul and use it to heal the living. When an enemy you can see dies within 30 feet of you, you or one ally of your choice that is within 30 feet of you regains hit points equal to the enemyâ€™s number of Hit Dice. You can use this feature only if you aren't incapacitated. Once you use it, you can't do so again until the start of your next turn.",
+            desc: "At 17th level, you can seize a trace of vitality from a parting soul and use it to heal the living. When an enemy you can see dies within 30 feet of you, you or one ally of your choice that is within 30 feet of you regains hit points equal to the enemy's number of Hit Dice. You can use this feature only if you aren't incapacitated. Once you use it, you can't do so again until the start of your next turn.",
             level: 17,
             tracked: false,
           },
@@ -1262,7 +1262,7 @@ export const ClassesData = {
           {
             id: "acolyte_of_nature",
             name: "Acolyte of Nature",
-            desc: "At 1st level, you learn one cantrip of your choice from the druid spell list. This cantrip counts as a cleric cantrip for you, but it doesnâ€™t count against the number of cleric cantrips you know.",
+            desc: "At 1st level, you learn one cantrip of your choice from the druid spell list. This cantrip counts as a cleric cantrip for you, but it doesn't count against the number of cleric cantrips you know.",
             level: 1,
             tracked: false,
           },
@@ -1768,14 +1768,14 @@ export const ClassesData = {
           {
             id: "speech_of_the_woods",
             name: "Speech of the Woods",
-            desc: "At 2nd level, you can converse with beasts and many fey. You learn to speak, read, and write Sylvan. Beasts can understand your speech, and you can interpret their noises and motions (though most beasts canâ€™t convey complex ideas). This doesnâ€™t automatically make beasts friendly toward you.",
+            desc: "At 2nd level, you can converse with beasts and many fey. You learn to speak, read, and write Sylvan. Beasts can understand your speech, and you can interpret their noises and motions (though most beasts can't convey complex ideas). This doesn't automatically make beasts friendly toward you.",
             level: 2,
             tracked: false,
           },
           {
             id: "spirit_totem",
             name: "Spirit Totem",
-            desc: "Starting at 2nd level, you can summon an incorporeal nature spirit (bonus action) to a point you can see within 60 feet. It creates a 30-foot-radius aura and lasts 1 minute. The spirit is neither a creature nor an object, and you can move it up to 60 feet to a point you can see as a bonus action.\n\nChoose one aura when you summon it:\n\n- Bear Spirit: creatures of your choice in the aura when it appears gain temporary hit points equal to 5 + your druid level; you and your allies also have advantage on Strength checks and Strength saving throws while in the aura.\n- Hawk Spirit: when a creature makes an attack roll against a target in the aura, you can use your reaction to grant advantage on that roll; you and your allies also have advantage on Wisdom (Perception) checks while in the aura.\n- Unicorn Spirit: you and your allies have advantage on ability checks to detect creatures in the aura; when you cast a spell using a spell slot that restores hit points, each creature of your choice in the aura also regains hit points equal to your druid level.\n\nOnce you use this feature, you canâ€™t use it again until you finish a short or long rest.",
+            desc: "Starting at 2nd level, you can summon an incorporeal nature spirit (bonus action) to a point you can see within 60 feet. It creates a 30-foot-radius aura and lasts 1 minute. The spirit is neither a creature nor an object, and you can move it up to 60 feet to a point you can see as a bonus action.\n\nChoose one aura when you summon it:\n\n- Bear Spirit: creatures of your choice in the aura when it appears gain temporary hit points equal to 5 + your druid level; you and your allies also have advantage on Strength checks and Strength saving throws while in the aura.\n- Hawk Spirit: when a creature makes an attack roll against a target in the aura, you can use your reaction to grant advantage on that roll; you and your allies also have advantage on Wisdom (Perception) checks while in the aura.\n- Unicorn Spirit: you and your allies have advantage on ability checks to detect creatures in the aura; when you cast a spell using a spell slot that restores hit points, each creature of your choice in the aura also regains hit points equal to your druid level.\n\nOnce you use this feature, you can't use it again until you finish a short or long rest.",
             level: 2,
             tracked: true, // 1/SR
             uses: 1,
@@ -1798,7 +1798,7 @@ export const ClassesData = {
           {
             id: "faithful_summons",
             name: "Faithful Summons",
-            desc: "Starting at 14th level, if youâ€™re reduced to 0 hit points or incapacitated against your will, you immediately gain the benefits of Conjure Animals as if cast with a 9th-level spell slot (four CR 2 or lower beasts of your choice within 20 feet). The summons last 1 hour, require no concentration, and can be dismissed with no action.\n\nOnce you use this feature, you canâ€™t use it again until you finish a long rest.",
+            desc: "Starting at 14th level, if you're reduced to 0 hit points or incapacitated against your will, you immediately gain the benefits of Conjure Animals as if cast with a 9th-level spell slot (four CR 2 or lower beasts of your choice within 20 feet). The summons last 1 hour, require no concentration, and can be dismissed with no action.\n\nOnce you use this feature, you can't use it again until you finish a long rest.",
             level: 14,
             tracked: true, // 1/LR
             uses: 1,
@@ -2767,7 +2767,7 @@ export const ClassesData = {
             id: "bonus_proficiencies",
             name: "Bonus Proficiencies",
             desc: [
-              "When you choose this archetype at 3rd level, you gain proficiency with smithâ€™s tools, and you learn to speak, read, and write Giant.",
+              "When you choose this archetype at 3rd level, you gain proficiency with smith's tools, and you learn to speak, read, and write Giant.",
             ],
             level: 3,
             tracked: false,
