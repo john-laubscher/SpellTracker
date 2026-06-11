@@ -12,10 +12,11 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import { AuthContext } from '../../Contexts/Context';
+import { AuthContext, CharacterSessionContext } from '../../Contexts/Context';
 
 const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
   const { auth, setAuth } = React.useContext(AuthContext);
+  const { activeCharacterId } = React.useContext(CharacterSessionContext);
   const token = auth?.token;
 
   const [authMode, setAuthMode] = React.useState('login'); // 'login' | 'register'
@@ -132,7 +133,7 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
     }
   };
 
-  const canSave = Boolean(token) && Boolean(feature.title.trim());
+  const canSave = Boolean(token) && Boolean(activeCharacterId) && Boolean(feature.title.trim());
 
   const submitFeature = async () => {
     if (!canSave) return;
@@ -143,6 +144,7 @@ const AddFeatureModal = ({ open, onClose, kind, onCreated }) => {
         '/custom-features',
         {
           kind,
+          characterId: activeCharacterId,
           title: feature.title.trim(),
           description: feature.description.trim(),
           tracked: Boolean(feature.tracked),

@@ -18,6 +18,7 @@ import FormControl from "@mui/material/FormControl";
 import Divider from "@mui/material/Divider";
 
 import AuthControls from "./AuthControls";
+import CharacterSwitcherMenu from "./CharacterSwitcherMenu";
 import BlessedWarriorCantripsModal from "./mainUI/BlessedWarriorCantripsModal";
 import DruidicWarriorCantripsModal from "./mainUI/DruidicWarriorCantripsModal";
 import { GENIE_KIND_OPTIONS } from "../utils/genieData";
@@ -350,8 +351,12 @@ export const CharacterCreationForm = (props) => {
           top: 12,
           right: 12,
           zIndex: 2000,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
         }}
       >
+        <CharacterSwitcherMenu />
         <AuthControls />
       </Box>
 

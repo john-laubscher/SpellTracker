@@ -1,3 +1,5 @@
+import { getActiveCharacterIdFromStorage, getScopedStorageKey } from "./scopedStorage";
+
 const STORAGE_KEY = "spelltracker_untrackedFeatureChoices_v1";
 
 const safeJsonParse = (raw) => {
@@ -8,18 +10,23 @@ const safeJsonParse = (raw) => {
   }
 };
 
-export const loadUntrackedFeatureChoices = () => {
+export const loadUntrackedFeatureChoices = (characterId = "") => {
   if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(STORAGE_KEY);
+  const raw = window.localStorage.getItem(
+    getScopedStorageKey(STORAGE_KEY, characterId || getActiveCharacterIdFromStorage())
+  );
   const parsed = raw ? safeJsonParse(raw) : null;
   if (!parsed || typeof parsed !== "object") return {};
   return parsed;
 };
 
-export const saveUntrackedFeatureChoices = (choices) => {
+export const saveUntrackedFeatureChoices = (choices, characterId = "") => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(choices || {}));
+    window.localStorage.setItem(
+      getScopedStorageKey(STORAGE_KEY, characterId || getActiveCharacterIdFromStorage()),
+      JSON.stringify(choices || {})
+    );
   } catch {
     // ignore storage errors
   }
@@ -50,4 +57,3 @@ export const setFeatureChoice = (choices, choiceKey, featureId, optionId) => {
   next[choiceKey] = bucket;
   return next;
 };
-

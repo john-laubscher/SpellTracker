@@ -13,6 +13,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { AuthContext } from "../Contexts/Context";
+import { setActiveCharacterIdInStorage } from "../utils/scopedStorage";
 
 export default function AuthControls({
   variant = "text",
@@ -142,6 +143,7 @@ export default function AuthControls({
     setAuth({ token: null, user: null });
     localStorage.removeItem("spelltracker_token");
     localStorage.removeItem("spelltracker_user");
+    setActiveCharacterIdInStorage("");
 
     if (onLoggedOutNavigateTo) navigate(onLoggedOutNavigateTo);
   };

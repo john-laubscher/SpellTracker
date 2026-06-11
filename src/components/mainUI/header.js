@@ -10,6 +10,7 @@ import ClassesData from "../ClassesData";
 import {WeaponsDisplay} from "./WeaponManager";
 import { calculateTotalPreparedSpells } from "../../utils/preparedSpells";
 import AuthControls from "../AuthControls";
+import CharacterSwitcherMenu from "../CharacterSwitcherMenu";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -201,8 +202,12 @@ useEffect(() => {
           top: 12,
           right: 12,
           zIndex: 2000,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
         }}
       >
+        <CharacterSwitcherMenu />
         <AuthControls onLoggedOutNavigateTo="/" />
       </Box>
 
@@ -360,7 +365,7 @@ useEffect(() => {
             <Button
               variant="outlined"
               sx={theme.components.CharacterHeader.styleOverrides.backButton}
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/character")}
             >
               Back to Character Creation
             </Button>

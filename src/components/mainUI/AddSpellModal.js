@@ -26,7 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { AuthContext, CharacterInfoContext } from '../../Contexts/Context';
+import { AuthContext, CharacterInfoContext, CharacterSessionContext } from '../../Contexts/Context';
 import PreparedSpellsStatus from './PreparedSpellsStatus';
 
 const AddSpellsModal = ({
@@ -42,6 +42,7 @@ const AddSpellsModal = ({
   const { auth, setAuth } = React.useContext(AuthContext);
   const token = auth?.token;
   const { setCharacterInfo } = React.useContext(CharacterInfoContext);
+  const { activeCharacterId } = React.useContext(CharacterSessionContext);
 
   const [isAuthOpen, setIsAuthOpen] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('login'); // 'login' | 'register'
@@ -97,7 +98,7 @@ const AddSpellsModal = ({
 
   useEffect(() => {
     if (!isModalOpen) return;
-    if (!token) {
+    if (!token || !activeCharacterId) {
       setCustomSpells([]);
       return;
     }
@@ -106,11 +107,12 @@ const AddSpellsModal = ({
     axios
       .get(`/custom-spells?level=${numericalSpellLevel}`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { characterId: activeCharacterId },
       })
       .then((res) => setCustomSpells(res.data?.results || []))
       .catch(() => setCustomSpells([]))
       .finally(() => setCustomSpellsLoading(false));
-  }, [isModalOpen, numericalSpellLevel, token]);
+  }, [activeCharacterId, isModalOpen, numericalSpellLevel, token]);
 
   const openCustomSpellModal = (options = {}) => {
     const effectiveToken = options.tokenOverride || token;
@@ -320,7 +322,8 @@ const AddSpellsModal = ({
   const canCreateCustomSpell =
     Boolean(customSpell.title.trim()) &&
     Boolean(customSpell.description.trim()) &&
-    Boolean(token);
+    Boolean(token) &&
+    Boolean(activeCharacterId);
 
   const submitCustomSpell = async () => {
     if (!canCreateCustomSpell) return;
@@ -336,6 +339,7 @@ const AddSpellsModal = ({
       const normalized = normalizeSpellPayload(customSpell, numericalSpellLevel);
       const payload = isEdit
         ? {
+            characterId: activeCharacterId,
             title: normalized.title,
             description: normalized.description,
             range: normalized.range,
@@ -345,7 +349,7 @@ const AddSpellsModal = ({
             concentration: normalized.concentration,
             ritual: normalized.ritual,
           }
-        : normalized;
+        : { ...normalized, characterId: activeCharacterId };
 
       const res = isEdit
         ? await axios.put(endpoint, payload, { headers: { Authorization: `Bearer ${token}` } })
@@ -436,6 +440,7 @@ const AddSpellsModal = ({
     try {
       await axios.delete(`/custom-spells/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { characterId: activeCharacterId },
       });
 
       setCustomSpells((prev) => prev.filter((s) => s.index !== spell.index));
