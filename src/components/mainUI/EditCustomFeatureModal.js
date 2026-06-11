@@ -10,10 +10,11 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import { AuthContext } from "../../Contexts/Context";
+import { AuthContext, CharacterSessionContext } from "../../Contexts/Context";
 
 const EditCustomFeatureModal = ({ open, feature, onClose, onUpdated }) => {
   const { auth } = React.useContext(AuthContext);
+  const { activeCharacterId } = React.useContext(CharacterSessionContext);
   const token = auth?.token;
 
   const [title, setTitle] = React.useState("");
@@ -29,7 +30,7 @@ const EditCustomFeatureModal = ({ open, feature, onClose, onUpdated }) => {
     setDescription(String(feature?.desc || ""));
   }, [open, feature?.id, feature?.name, feature?.desc]);
 
-  const canSave = Boolean(token) && Boolean(title.trim()) && Boolean(feature?.apiId);
+  const canSave = Boolean(token) && Boolean(activeCharacterId) && Boolean(title.trim()) && Boolean(feature?.apiId);
 
   const submit = async () => {
     if (!canSave) return;
@@ -38,7 +39,7 @@ const EditCustomFeatureModal = ({ open, feature, onClose, onUpdated }) => {
     try {
       const res = await axios.put(
         `/custom-features/${feature.apiId}`,
-        { title: title.trim(), description: description.trim() },
+        { title: title.trim(), description: description.trim(), characterId: activeCharacterId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const updated = res.data || null;

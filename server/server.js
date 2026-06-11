@@ -79,6 +79,49 @@ function isProd() {
   return String(process.env.NODE_ENV || "").toLowerCase() === "production";
 }
 
+const MAX_CHARACTERS_PER_USER = 5;
+
+function getCharacterSummary(character) {
+  return {
+    id: character.id,
+    userId: character.userId,
+    name: character.name,
+    createdAt: character.createdAt,
+    updatedAt: character.updatedAt,
+    lastUsedAt: character.lastUsedAt || character.updatedAt || character.createdAt,
+  };
+}
+
+function getOwnedCharacter(store, userId, characterId) {
+  if (!characterId) return null;
+  return (store.characters || []).find(
+    (character) => character.id === characterId && character.userId === userId
+  );
+}
+
+function requireOwnedCharacter(req, res, source = "query") {
+  const rawId =
+    source === "params"
+      ? req.params?.id
+      : source === "body"
+        ? req.body?.characterId
+        : req.query?.characterId;
+  const characterId = String(rawId || "").trim();
+  if (!characterId) {
+    res.status(400).json({ error: "missing_character_id" });
+    return null;
+  }
+
+  const store = readStore();
+  const character = getOwnedCharacter(store, req.userId, characterId);
+  if (!character) {
+    res.status(404).json({ error: "character_not_found" });
+    return null;
+  }
+
+  return { store, character, characterId };
+}
+
 // Dev-only password reset flow:
 // - POST /auth/request-password-reset { email } -> { ok: true, token? }
 // - POST /auth/reset-password { email, token, newPassword } -> { ok: true }
@@ -148,11 +191,94 @@ app.post("/auth/reset-password", (req, res) => {
   return res.json({ ok: true });
 });
 
-app.get("/custom-spells", requireAuth, (req, res) => {
-  const level = req.query.level !== undefined ? Number(req.query.level) : null;
+app.get("/characters", requireAuth, (req, res) => {
   const store = readStore();
-  const spells = store.customSpells
+  const characters = (store.characters || [])
+    .filter((character) => character.userId === req.userId)
+    .sort((a, b) => Number(b.lastUsedAt || b.updatedAt || 0) - Number(a.lastUsedAt || a.updatedAt || 0))
+    .map(getCharacterSummary);
+
+  res.json({ count: characters.length, results: characters, maxCharacters: MAX_CHARACTERS_PER_USER });
+});
+
+app.post("/characters", requireAuth, (req, res) => {
+  const name = String(req.body?.name || "").trim();
+  if (!name) return res.status(400).json({ error: "missing_name" });
+
+  const profile = req.body?.profile && typeof req.body.profile === "object" ? req.body.profile : {};
+  const store = readStore();
+  const existingCharacters = (store.characters || []).filter((character) => character.userId === req.userId);
+  if (existingCharacters.length >= MAX_CHARACTERS_PER_USER) {
+    return res.status(400).json({ error: "character_limit_reached", maxCharacters: MAX_CHARACTERS_PER_USER });
+  }
+
+  const now = Date.now();
+  const record = {
+    id: newId(),
+    userId: req.userId,
+    name,
+    profile,
+    createdAt: now,
+    updatedAt: now,
+    lastUsedAt: now,
+  };
+
+  updateStore((s) => ({
+    ...s,
+    characters: [...(s.characters || []), record],
+  }));
+
+  res.status(201).json({ character: { ...getCharacterSummary(record), profile: record.profile } });
+});
+
+app.get("/characters/:id", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "params");
+  if (!resolved) return;
+  const { character } = resolved;
+  res.json({ character: { ...getCharacterSummary(character), profile: character.profile || {} } });
+});
+
+app.put("/characters/:id", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "params");
+  if (!resolved) return;
+
+  const nextName =
+    req.body?.name !== undefined ? String(req.body.name || "").trim() : undefined;
+  const nextProfile =
+    req.body?.profile !== undefined && req.body?.profile && typeof req.body.profile === "object"
+      ? req.body.profile
+      : req.body?.profile !== undefined
+        ? {}
+        : undefined;
+
+  let updatedCharacter = null;
+  updateStore((s) => {
+    const next = { ...s };
+    next.characters = (s.characters || []).map((character) => {
+      if (character.id !== resolved.character.id || character.userId !== req.userId) return character;
+      updatedCharacter = {
+        ...character,
+        name: nextName !== undefined ? nextName || character.name : character.name,
+        profile: nextProfile !== undefined ? nextProfile : character.profile || {},
+        updatedAt: Date.now(),
+        lastUsedAt: Date.now(),
+      };
+      return updatedCharacter;
+    });
+    return next;
+  });
+
+  if (!updatedCharacter) return res.status(404).json({ error: "character_not_found" });
+  res.json({ character: { ...getCharacterSummary(updatedCharacter), profile: updatedCharacter.profile || {} } });
+});
+
+app.get("/custom-spells", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "query");
+  if (!resolved) return;
+  const level = req.query.level !== undefined ? Number(req.query.level) : null;
+  const spells = resolved.store.customSpells
     .filter((s) => s.userId === req.userId)
+    .filter((s) => s.characterId === resolved.characterId)
     .filter((s) => (level === null ? true : s.level === level))
     .map((s) => ({
       index: `custom:${s.id}`,
@@ -172,6 +298,8 @@ app.get("/custom-spells", requireAuth, (req, res) => {
 });
 
 app.post("/custom-spells", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "body");
+  if (!resolved) return;
   const level = Number(req.body?.level);
   const title = String(req.body?.title || "").trim();
   const description = String(req.body?.description || "").trim();
@@ -189,6 +317,7 @@ app.post("/custom-spells", requireAuth, (req, res) => {
   const record = {
     id,
     userId: req.userId,
+    characterId: resolved.characterId,
     level,
     title,
     description,
@@ -292,6 +421,8 @@ app.delete("/custom-spells/:id", requireAuth, (req, res) => {
 });
 
 app.get("/custom-features", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "query");
+  if (!resolved) return;
   const kindRaw = req.query.kind !== undefined ? String(req.query.kind || "") : "";
   const trackedRaw = req.query.tracked !== undefined ? String(req.query.tracked || "") : "";
 
@@ -305,9 +436,9 @@ app.get("/custom-features", requireAuth, (req, res) => {
           ? false
           : null;
 
-  const store = readStore();
-  const results = store.customFeatures
+  const results = resolved.store.customFeatures
     .filter((f) => f.userId === req.userId)
+    .filter((f) => f.characterId === resolved.characterId)
     .filter((f) => (kind ? f.kind === kind : true))
     .filter((f) => (tracked === null ? true : Boolean(f.tracked) === tracked))
     .map((f) => ({
@@ -323,6 +454,8 @@ app.get("/custom-features", requireAuth, (req, res) => {
 });
 
 app.post("/custom-features", requireAuth, (req, res) => {
+  const resolved = requireOwnedCharacter(req, res, "body");
+  if (!resolved) return;
   const kind = String(req.body?.kind || "").trim().toLowerCase();
   const title = String(req.body?.title || "").trim();
   const description = String(req.body?.description || "").trim();
@@ -335,6 +468,7 @@ app.post("/custom-features", requireAuth, (req, res) => {
   const record = {
     id,
     userId: req.userId,
+    characterId: resolved.characterId,
     kind,
     tracked,
     title,

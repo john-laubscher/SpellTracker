@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 
 import CloseIcon from "@mui/icons-material/Close";
 
-import { AuthContext, CharacterInfoContext } from "../../Contexts/Context";
+import { AuthContext, CharacterInfoContext, CharacterSessionContext } from "../../Contexts/Context";
 import MagicalSecretsStatus from "./MagicalSecretsStatus";
 import SpellAccordian from "./SpellAccordian";
 
@@ -34,6 +34,7 @@ const DomainSpellSwapModal = ({
 }) => {
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
+  const { activeCharacterId } = useContext(CharacterSessionContext);
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
   const [search, setSearch] = React.useState("");
@@ -79,7 +80,7 @@ const DomainSpellSwapModal = ({
 
   useEffect(() => {
     if (!open) return;
-    if (!token) {
+    if (!token || !activeCharacterId) {
       setCustomSpells([]);
       return;
     }
@@ -88,10 +89,11 @@ const DomainSpellSwapModal = ({
     axios
       .get(`/custom-spells?level=${numericalSpellLevel}`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { characterId: activeCharacterId },
       })
       .then((res) => setCustomSpells(res.data?.results || []))
       .catch(() => setCustomSpells([]));
-  }, [open, numericalSpellLevel, token]);
+  }, [activeCharacterId, open, numericalSpellLevel, token]);
 
   const filtered = useMemo(() => {
     const normalizedSearch = String(search || "").trim().toLowerCase();

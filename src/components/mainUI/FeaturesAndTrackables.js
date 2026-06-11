@@ -30,7 +30,14 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Brightness2Icon from "@mui/icons-material/Brightness2";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-import { AuthContext, CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context"; // Adjust the path based on your project structure
+import {
+  AuthContext,
+  CharacterSessionContext,
+  CharacterInfoContext,
+  FeatureOverridesContext,
+  FeatureTrackersContext,
+  UntrackedFeatureChoicesContext,
+} from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
 import { HalfElfVersatilityArr, RaceFeaturesData } from "../../components/RacesData";
 import AddFeatureModal from "./AddFeatureModal";
@@ -76,16 +83,12 @@ import {
   getFeatureTrackedOverride,
   getFeatureHiddenOverride,
   getOverrideKey,
-  loadFeatureOverrides,
-  saveFeatureOverrides,
   setFeatureTrackedOverride,
   setFeatureHiddenOverride,
 } from "../../utils/featureOverrides";
 import {
   getChoiceKey,
   getFeatureChoice,
-  loadUntrackedFeatureChoices,
-  saveUntrackedFeatureChoices,
   setFeatureChoice,
 } from "../../utils/untrackedFeatureChoices";
 import {
@@ -1702,6 +1705,7 @@ const FeaturesAndTrackables = () => {
     additionalFightingStyle,
   } = characterInfo;
   const { auth } = useContext(AuthContext);
+  const { activeCharacterId } = useContext(CharacterSessionContext);
   const token = auth?.token;
   const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
@@ -1746,7 +1750,7 @@ const FeaturesAndTrackables = () => {
   const [customFeatures, setCustomFeatures] = React.useState([]);
   const [addModal, setAddModal] = React.useState({ open: false, kind: "class" });
   const [manageModal, setManageModal] = React.useState({ open: false, kind: "class" });
-  const [featureOverrides, setFeatureOverrides] = React.useState(() => loadFeatureOverrides());
+  const { featureOverrides, setFeatureOverrides } = React.useContext(FeatureOverridesContext);
   const [editingCustom, setEditingCustom] = React.useState(null);
   const [deletingCustom, setDeletingCustom] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
@@ -1961,19 +1965,13 @@ const FeaturesAndTrackables = () => {
   const [rangerNaturalExplorerOptions, setRangerNaturalExplorerOptions] = React.useState([]);
   const [rangerOptionsModal, setRangerOptionsModal] = React.useState({ open: false, kind: "" });
 
-  const [untrackedFeatureChoices, setUntrackedFeatureChoices] = React.useState(() =>
-    loadUntrackedFeatureChoices()
-  );
+  const { untrackedFeatureChoices, setUntrackedFeatureChoices } = React.useContext(UntrackedFeatureChoicesContext);
   const [featureChoiceModal, setFeatureChoiceModal] = React.useState({ open: false, featureId: "" });
 
   const subclassChoiceKey = React.useMemo(
     () => getChoiceKey({ kind: "subclass", characterClass, subclass }),
     [characterClass, subclass]
   );
-
-  React.useEffect(() => {
-    saveUntrackedFeatureChoices(untrackedFeatureChoices);
-  }, [untrackedFeatureChoices]);
 
   React.useEffect(() => {
     if (!hasArcaneArcherLore) return;
@@ -2075,7 +2073,7 @@ const FeaturesAndTrackables = () => {
   }, []);
 
   React.useEffect(() => {
-    if (!token) {
+    if (!token || !activeCharacterId) {
       setCustomFeatures([]);
       return;
     }
@@ -2083,10 +2081,11 @@ const FeaturesAndTrackables = () => {
     axios
       .get("/custom-features", {
         headers: { Authorization: `Bearer ${token}` },
+        params: { characterId: activeCharacterId },
       })
       .then((res) => setCustomFeatures(res.data?.results || []))
       .catch(() => setCustomFeatures([]));
-  }, [token]);
+  }, [activeCharacterId, token]);
 
   const classOverrideKey = React.useMemo(
     () => getOverrideKey({ kind: "class", characterClass, subclass: "none" }),
@@ -2853,8 +2852,7 @@ const FeaturesAndTrackables = () => {
 
   const setOverrideAndPersist = React.useCallback((next) => {
     setFeatureOverrides(next);
-    saveFeatureOverrides(next);
-  }, []);
+  }, [setFeatureOverrides]);
 
   const updateCustomFeatureTracked = React.useCallback(
     async ({ apiId, tracked }) => {
@@ -2865,7 +2863,7 @@ const FeaturesAndTrackables = () => {
       try {
         const res = await axios.put(
           `/custom-features/${apiId}`,
-          { tracked: Boolean(tracked) },
+          { tracked: Boolean(tracked), characterId: activeCharacterId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const updated = res.data || null;
@@ -2877,7 +2875,7 @@ const FeaturesAndTrackables = () => {
         // ignore update failures (UI stays optimistic via state fallback on next fetch)
       }
     },
-    [token]
+    [activeCharacterId, token]
   );
 
   return (
@@ -4920,6 +4918,7 @@ const FeaturesAndTrackables = () => {
           try {
             await axios.delete(`/custom-features/${deletingCustom.apiId}`, {
               headers: { Authorization: `Bearer ${token}` },
+              params: { characterId: activeCharacterId },
             });
             setCustomFeatures((prev) => (prev || []).filter((f) => f.id !== deletingCustom.apiId));
             setDeletingCustom(null);

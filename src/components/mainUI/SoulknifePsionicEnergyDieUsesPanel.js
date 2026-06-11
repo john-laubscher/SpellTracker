@@ -16,10 +16,12 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context";
+import {
+  CharacterInfoContext,
+  FeatureTrackersContext,
+  SoulknifeCustomUsesContext,
+} from "../../Contexts/Context";
 import { proficiencyBonus } from "./header";
-
-const CUSTOM_USES_STORAGE_KEY = "spelltracker_soulknife_psionicDieUses_custom_v1";
 
 const clampInt = (value, min, max) => {
   const asNum = Number(value);
@@ -36,37 +38,13 @@ const dieLabelForRogueLevel = (level) => {
   return "d6";
 };
 
-const loadCustomUses = () => {
-  try {
-    const raw = localStorage.getItem(CUSTOM_USES_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((u) => ({
-        id: String(u?.id || ""),
-        title: String(u?.title || ""),
-        description: String(u?.description || ""),
-      }))
-      .filter((u) => u.id && u.title);
-  } catch {
-    return [];
-  }
-};
-
-const saveCustomUses = (uses) => {
-  try {
-    localStorage.setItem(CUSTOM_USES_STORAGE_KEY, JSON.stringify(Array.isArray(uses) ? uses : []));
-  } catch {
-    // ignore write errors
-  }
-};
-
 const buildTrackerKey = (featureId) => `rogue:${String(featureId || "").trim()}`;
 
 export default function SoulknifePsionicEnergyDieUsesPanel() {
   const { characterInfo } = React.useContext(CharacterInfoContext);
   const { featureTrackers, setFeatureTrackers } = React.useContext(FeatureTrackersContext);
+  const { soulknifeCustomUses: customUses, setSoulknifeCustomUses: setCustomUses } =
+    React.useContext(SoulknifeCustomUsesContext);
 
   const characterLevel = Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
   const pb = proficiencyBonus[characterLevel] || 2;
@@ -91,14 +69,9 @@ export default function SoulknifePsionicEnergyDieUsesPanel() {
   const psychicVeilSpent = clampInt(featureTrackers?.[psychicVeilKey]?.spentUses ?? 0, 0, 1);
   const rendMindSpent = clampInt(featureTrackers?.[rendMindKey]?.spentUses ?? 0, 0, 1);
 
-  const [customUses, setCustomUses] = React.useState(() => loadCustomUses());
   const [addOpen, setAddOpen] = React.useState(false);
   const [draftTitle, setDraftTitle] = React.useState("");
   const [draftDescription, setDraftDescription] = React.useState("");
-
-  React.useEffect(() => {
-    saveCustomUses(customUses);
-  }, [customUses]);
 
   const bumpSpentDice = React.useCallback(
     (delta) => {

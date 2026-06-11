@@ -9,7 +9,7 @@ function ensureStoreFile() {
   if (!fs.existsSync(STORE_PATH)) {
     fs.writeFileSync(
       STORE_PATH,
-      JSON.stringify({ users: [], customSpells: [], customFeatures: [] }, null, 2),
+      JSON.stringify({ users: [], characters: [], customSpells: [], customFeatures: [] }, null, 2),
       "utf8"
     );
   }
@@ -22,11 +22,12 @@ function readStore() {
     const parsed = JSON.parse(raw);
     return {
       users: Array.isArray(parsed.users) ? parsed.users : [],
+      characters: Array.isArray(parsed.characters) ? parsed.characters : [],
       customSpells: Array.isArray(parsed.customSpells) ? parsed.customSpells : [],
       customFeatures: Array.isArray(parsed.customFeatures) ? parsed.customFeatures : [],
     };
   } catch {
-    return { users: [], customSpells: [], customFeatures: [] };
+    return { users: [], characters: [], customSpells: [], customFeatures: [] };
   }
 }
 
