@@ -77,6 +77,7 @@ import WizardSpellMasteryModal from "./WizardSpellMasteryModal";
 import WizardSignatureSpellsModal from "./WizardSignatureSpellsModal";
 import WizardMasterScrivinerModal from "./WizardMasterScrivinerModal";
 import WizardOneWithTheWordModal from "./WizardOneWithTheWordModal";
+import RacialCantripSelectionModal from "./RacialCantripSelectionModal";
 import TiedScrollIcon from "./TiedScrollIcon";
 import { proficiencyBonus } from "./header";
 import {
@@ -97,6 +98,8 @@ import {
   getWarlockUnlockedArcanumLevels,
 } from "../warlockOptionsData";
 import { GENIE_KIND_OPTIONS, getGenieBenefitsSummaryLines, getGenieKindData } from "../../utils/genieData";
+
+const RACIAL_SPELL_SWAP_CLASS_KEYS = ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"];
 
 const getRogueSneakAttackDice = (rogueLevel) => {
   const level = Number(rogueLevel || 0);
@@ -1783,6 +1786,20 @@ const FeaturesAndTrackables = () => {
   const [genieKindModalOpen, setGenieKindModalOpen] = React.useState(false);
   const [lunarEmbodimentModalOpen, setLunarEmbodimentModalOpen] = React.useState(false);
   const [wildMagicSurgeModalOpen, setWildMagicSurgeModalOpen] = React.useState(false);
+  const [racialCantripModal, setRacialCantripModal] = React.useState({
+    open: false,
+    title: "",
+    helperText: "",
+    storageKey: "",
+    spellClassKey: "",
+    spellClassKeys: [],
+    spellIndexes: [],
+    selectionMode: "single",
+    maxSelections: 1,
+    softLimit: false,
+    allowRemove: false,
+    duplicateChoiceLabel: "Already chosen.",
+  });
   const [landTypeMenuAnchorEl, setLandTypeMenuAnchorEl] = React.useState(null);
 
   const landDruidTypeOptions = React.useMemo(
@@ -2919,6 +2936,23 @@ const FeaturesAndTrackables = () => {
   const setOverrideAndPersist = React.useCallback((next) => {
     setFeatureOverrides(next);
   }, [setFeatureOverrides]);
+
+  const openRacialCantripModal = React.useCallback((config) => {
+    setRacialCantripModal({
+      open: true,
+      title: config?.title || "",
+      helperText: config?.helperText || "",
+      storageKey: config?.storageKey || "",
+      spellClassKey: config?.spellClassKey || "",
+      spellClassKeys: Array.isArray(config?.spellClassKeys) ? config.spellClassKeys : [],
+      spellIndexes: Array.isArray(config?.spellIndexes) ? config.spellIndexes : [],
+      selectionMode: config?.selectionMode || "single",
+      maxSelections: Number(config?.maxSelections) || 1,
+      softLimit: Boolean(config?.softLimit),
+      allowRemove: Boolean(config?.allowRemove),
+      duplicateChoiceLabel: config?.duplicateChoiceLabel || "Already chosen.",
+    });
+  }, []);
 
   const updateCustomFeatureTracked = React.useCallback(
     async ({ apiId, tracked }) => {
@@ -4669,12 +4703,119 @@ const FeaturesAndTrackables = () => {
 	
 	        <Grid container spacing={2}>
 	          <Grid item xs={12} md={6}>
-	            <FeatureDisplay
+            <FeatureDisplay
               title="Racial Features"
               manageTooltip="Manage which racial features are tracked"
               onManage={handleManageRaceFeatures}
               features={raceFeatures}
               untrackedLabel="Untracked Racial Features"
+              renderUntrackedTrailingControls={(feature) => {
+                if (race === "Elf" && feature?.id === "high_elf_cantrip") {
+                  const selectedCount = Array.isArray(characterInfo?.highElfCantrips) ? characterInfo.highElfCantrips.length : 0;
+                  return (
+                    <Tooltip arrow title={`Choose High Elf cantrips (${selectedCount}/1 normal)`}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose High Elf cantrips"
+                        onClick={() =>
+                          openRacialCantripModal({
+                            title: "High Elf Cantrip",
+                            helperText:
+                              "Choose a spell list, then choose cantrips. High elves normally know only one, so the picker warns if you go over that limit.",
+                            storageKey: "highElfCantrips",
+                            spellClassKey: "wizard",
+                            spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                            selectionMode: "multiple",
+                            maxSelections: 1,
+                            softLimit: true,
+                            allowRemove: true,
+                            duplicateChoiceLabel: "High elves normally only know one cantrip from this feature.",
+                          })
+                        }
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: selectedCount > 1 ? "#b71c1c" : selectedCount === 1 ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (race === "Elf" && feature?.id === "astral_fire") {
+                  const hasSelection = Boolean(characterInfo?.astralElfCantrip?.index);
+                  return (
+                    <Tooltip arrow title={hasSelection ? `Change Astral Fire (${characterInfo?.astralElfCantrip?.name || "selected"})` : "Choose Astral Fire cantrip"}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Astral Fire cantrip"
+                        onClick={() =>
+                          openRacialCantripModal({
+                            title: "Astral Fire",
+                            helperText: "Choose one cantrip for Astral Fire: Dancing Lights, Light, or Sacred Flame.",
+                            storageKey: "astralElfCantrip",
+                            spellIndexes: ["dancing-lights", "light", "sacred-flame"],
+                            selectionMode: "single",
+                            maxSelections: 1,
+                            duplicateChoiceLabel: "Astral Fire grants one cantrip.",
+                          })
+                        }
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: hasSelection ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (race === "Elf" && feature?.id === "vahadar_cantrip") {
+                  const hasSelection = Boolean(characterInfo?.vahadarCantrip?.index);
+                  return (
+                    <Tooltip arrow title={hasSelection ? `Change Vahadar cantrip (${characterInfo?.vahadarCantrip?.name || "selected"})` : "Choose Vahadar cantrip"}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Vahadar cantrip"
+                        onClick={() =>
+                          openRacialCantripModal({
+                            title: "Vahadar Cantrip",
+                            helperText: "Choose a spell list, then choose one cantrip for this Vahadar trait.",
+                            storageKey: "vahadarCantrip",
+                            spellClassKey: "druid",
+                            spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                            selectionMode: "single",
+                            maxSelections: 1,
+                            duplicateChoiceLabel: "Vahadar grants one druid cantrip.",
+                          })
+                        }
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: hasSelection ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                return null;
+              }}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               intelligenceModValue={intelligenceModValue}
@@ -4882,6 +5023,37 @@ const FeaturesAndTrackables = () => {
       <WildMagicSurgeTableModal
         open={wildMagicSurgeModalOpen}
         onClose={() => setWildMagicSurgeModalOpen(false)}
+      />
+
+      <RacialCantripSelectionModal
+        open={racialCantripModal.open}
+        title={racialCantripModal.title}
+        helperText={racialCantripModal.helperText}
+        storageKey={racialCantripModal.storageKey}
+        spellClassKey={racialCantripModal.spellClassKey}
+        spellClassKeys={racialCantripModal.spellClassKeys}
+        spellIndexes={racialCantripModal.spellIndexes}
+        selectionMode={racialCantripModal.selectionMode}
+        maxSelections={racialCantripModal.maxSelections}
+        softLimit={racialCantripModal.softLimit}
+        allowRemove={racialCantripModal.allowRemove}
+        duplicateChoiceLabel={racialCantripModal.duplicateChoiceLabel}
+        onClose={() =>
+          setRacialCantripModal({
+            open: false,
+            title: "",
+            helperText: "",
+            storageKey: "",
+            spellClassKey: "",
+            spellClassKeys: [],
+            spellIndexes: [],
+            selectionMode: "single",
+            maxSelections: 1,
+            softLimit: false,
+            allowRemove: false,
+            duplicateChoiceLabel: "Already chosen.",
+          })
+        }
       />
 
       <ArcaneMasteryModal

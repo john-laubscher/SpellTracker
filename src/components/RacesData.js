@@ -5,8 +5,7 @@ export const Races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half Elf", "Half O
 export const Subraces = {
     Dragonborn: ['Chromatic', 'Metallic', 'Gem', 'Draconblood', 'Ravenite'],
     Dwarf: ['Hill', 'Mountain', 'Mark of Warding', 'Plane Shift: Kaladesh'],
-    Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Self', 'Bishtahar/Tirahar', 'Vahadar'],
-    // Zendikar elves not included
+    Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Elf', 'Bishtahar/Tirahar', 'Vahadar', 'Zendikar', 'Tajuru', 'Juraga', 'Mul Daya'],
     Gnome: ['Forest', 'Rock', 'Mark of Scribing'],
     'Half Elf': ['Standard Half Elf', 'Mark of Detection', 'Mark of Storm'],
     'Half Orc': ['No Subrace', 'Mark of Finding'],
@@ -295,6 +294,161 @@ export const RaceFeaturesData = {
         tracked: false,
       },
     ],
+    subraceFeatures: {
+      "Dark Elf": [
+        {
+          id: "drow_magic",
+          name: "Drow Magic",
+          desc: [
+            "You know the Dancing Lights cantrip.",
+            "When you reach 3rd level, you can cast Faerie Fire once with this trait and regain the ability to do so when you finish a long rest.",
+            "When you reach 5th level, you can cast Darkness once with this trait and regain the ability to do so when you finish a long rest.",
+            "Charisma is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "drow_magic_faerie_fire",
+          name: "Drow Magic (Faerie Fire)",
+          desc: "At 3rd level, you can cast [[spell:faerie-fire|Faerie Fire]] once with your Drow Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "drow_magic_darkness",
+          name: "Drow Magic (Darkness)",
+          desc: "At 5th level, you can cast [[spell:darkness|Darkness]] once with your Drow Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+      "High Elf": [
+        {
+          id: "high_elf_cantrip",
+          name: "Cantrip",
+          desc: "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
+          tracked: false,
+        },
+      ],
+      "Pallid Elf": [
+        {
+          id: "blessing_of_the_moonweaver",
+          name: "Blessing of the Moonweaver",
+          desc: [
+            "You know the Light cantrip.",
+            "When you reach 3rd level, you can cast Sleep once, and it recharges after a long rest.",
+            "When you reach 5th level, you can cast Invisibility (self only) once, and it recharges after a long rest.",
+            "You do not need the material components required of these spells.",
+            "Wisdom is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "blessing_of_the_moonweaver_sleep",
+          name: "Blessing of the Moonweaver (Sleep)",
+          desc: "At 3rd level, you can cast [[spell:sleep|Sleep]] once with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "blessing_of_the_moonweaver_invisibility",
+          name: "Blessing of the Moonweaver (Invisibility)",
+          desc: "At 5th level, you can cast [[spell:invisibility|Invisibility]] (self only) once with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+      "Mark of Shadow": [
+        {
+          id: "shape_shadows",
+          name: "Shape Shadows",
+          desc: [
+            "You know the Minor Illusion cantrip.",
+            "Starting at 3rd level, you can cast Invisibility with this trait, and you regain the ability to cast it when you finish a long rest.",
+            "Charisma is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "mark_of_shadow_invisibility",
+          name: "Mark of Shadows (Invisibility)",
+          desc: "At 3rd level, you can cast [[spell:invisibility|Invisibility]] once with your Shape Shadows trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mark_of_shadow_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Shadow spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Astral Elf": [
+        {
+          id: "astral_fire",
+          name: "Astral Fire",
+          desc: "You know one of these cantrips of your choice: Dancing Lights, Light, or Sacred Flame.",
+          tracked: false,
+        },
+        {
+          id: "starlight_step",
+          name: "Starlight Step",
+          desc: "As a bonus action, you can magically teleport up to 30 feet to an unoccupied space you can see. Recharge: long rest.",
+          tracked: true,
+          uses: "pb",
+          recharge: "lr",
+        },
+      ],
+      "Vahadar": [
+        {
+          id: "vahadar_cantrip",
+          name: "Cantrip",
+          desc: "You know one cantrip of your choice from the druid spell list. Wisdom is your spellcasting ability for it.",
+          tracked: false,
+        },
+      ],
+      "Mul Daya": [
+        {
+          id: "mul_daya_magic",
+          name: "Mul Daya Magic",
+          desc: [
+            "You know the Chill Touch cantrip.",
+            "When you reach 3rd level, you can cast Hex once with this trait and regain the ability to do so when you finish a long rest.",
+            "When you reach 5th level, you can cast Darkness once with this trait and regain the ability to do so when you finish a long rest.",
+            "Wisdom is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "mul_daya_magic_hex",
+          name: "Mul Daya Magic (Hex)",
+          desc: "At 3rd level, you can cast [[spell:hex|Hex]] once with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mul_daya_magic_darkness",
+          name: "Mul Daya Magic (Darkness)",
+          desc: "At 5th level, you can cast [[spell:darkness|Darkness]] once with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+    },
   },
   Gnome: {
     features: [
@@ -452,11 +606,18 @@ export const subRaceSpells = {
               'first': ['disguise-self', 'silent-image'],
               'second': ['darkness', 'pass-without-trace'],
               'third': ['clairvoyance', 'major-image'],
-              'fourth': ['greater-invisibility', 'hallucinatory terrain'],
+              'fourth': ['greater-invisibility', 'hallucinatory-terrain'],
               'fifth': ['mislead']
                 // ADD TO SPELL LIST
             }
+          },
+        'Mul Daya': {
+          dailySpells: {
+            1: ['chill-touch'],
+            3: ['hex'],
+            5: ['darkness']
           }
+        }
       },
       Gnome: {
         // Forest Gnome adds minor illusion cantrip
