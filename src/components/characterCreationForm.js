@@ -16,12 +16,17 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import Divider from "@mui/material/Divider";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 
 import AuthControls from "./AuthControls";
 import CharacterSwitcherMenu from "./CharacterSwitcherMenu";
 import BlessedWarriorCantripsModal from "./mainUI/BlessedWarriorCantripsModal";
 import DruidicWarriorCantripsModal from "./mainUI/DruidicWarriorCantripsModal";
 import { GENIE_KIND_OPTIONS } from "../utils/genieData";
+import spellTables from "./spellTables";
 
 export const CharacterCreationForm = (props) => {
   const NO_RACE = "noRace";
@@ -43,6 +48,9 @@ export const CharacterCreationForm = (props) => {
   const [animateMissing, setAnimateMissing] = React.useState(false);
   const [blessedWarriorModalOpen, setBlessedWarriorModalOpen] = React.useState(false);
   const [druidicWarriorModalOpen, setDruidicWarriorModalOpen] = React.useState(false);
+  const [markOfWardingWarningOpen, setMarkOfWardingWarningOpen] = React.useState(false);
+  const [pendingNonCasterClass, setPendingNonCasterClass] = React.useState("");
+  const [animateMarkOfWardingClassWarning, setAnimateMarkOfWardingClassWarning] = React.useState(false);
 
   const isMissingRace = !characterInfo.race || characterInfo.race === NO_RACE;
   const isMissingSubrace = !characterInfo.subrace || characterInfo.subrace === NO_SUBRACE;
@@ -67,6 +75,60 @@ export const CharacterCreationForm = (props) => {
       "& .MuiInputLabel-root": { color: "#b71c1c" },
     };
   };
+
+  const spellLevels = React.useMemo(
+    () => ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"],
+    []
+  );
+
+  const markOfWardingClassWarningSx = animateMarkOfWardingClassWarning
+    ? {
+        "@keyframes markOfWardingClassShake": {
+          "0%": { transform: "translateX(0px)" },
+          "20%": { transform: "translateX(-4px)" },
+          "40%": { transform: "translateX(4px)" },
+          "60%": { transform: "translateX(-3px)" },
+          "80%": { transform: "translateX(3px)" },
+          "100%": { transform: "translateX(0px)" },
+        },
+        animation: "markOfWardingClassShake 420ms ease-in-out 0s 1",
+        "& .MuiOutlinedInput-notchedOutline": { borderColor: "#d97706" },
+        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#d97706" },
+        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#d97706" },
+        "& .MuiInputLabel-root": { color: "#d97706" },
+      }
+    : null;
+
+  const hasSpellcastingSlots = React.useCallback(
+    (tableRow) =>
+      spellLevels.some((levelKey) => Number(tableRow?.[levelKey] || 0) > 0) || Number(tableRow?.spellSlots || 0) > 0,
+    [spellLevels]
+  );
+
+  const isActiveSpellcasterSelection = React.useCallback(
+    ({ classKey, subclassKey }) => {
+      const normalizedClassKey = classKey === "sorceror" ? "sorcerer" : classKey;
+      const meta = ClassesData?.[normalizedClassKey] || ClassesData?.[classKey] || null;
+      if (!meta) return false;
+
+      const level = Math.max(1, Math.trunc(Number(characterInfo?.characterLevel) || 1));
+      const subclassMeta = meta?.subclasses?.[subclassKey] || null;
+      const subclassSpellcasting = subclassMeta?.spellcasting || null;
+
+      if (subclassSpellcasting && level >= Number(subclassSpellcasting?.startsAtLevel || 1)) {
+        const subclassTable = spellTables?.[String(subclassSpellcasting?.spellTableKey || "")]?.[level] || null;
+        return hasSpellcastingSlots(subclassTable);
+      }
+
+      if (meta?.isSpellCaster === "nonCaster" || meta?.spellcastingAbility === "nonCaster") {
+        return false;
+      }
+
+      const baseTable = spellTables?.[normalizedClassKey]?.[level] || null;
+      return hasSpellcastingSlots(baseTable);
+    },
+    [characterInfo?.characterLevel, hasSpellcastingSlots]
+  );
 
   useEffect(() => {
     setCharacterInfo((prev) => ({
@@ -244,9 +306,7 @@ export const CharacterCreationForm = (props) => {
   //easier to use logic/for loop, or to create this datastructure?
   const characterLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
-	  const handleChange = (event) => {
-	    const { name, value } = event.target;
-
+  const applyFieldChange = React.useCallback((name, value) => {
     setCharacterInfo((prev) => {
       const next = { ...prev, [name]: value };
 
@@ -280,8 +340,28 @@ export const CharacterCreationForm = (props) => {
           next.additionalFightingStyle = "";
         }
 
-	      return next;
-	    });
+      return next;
+    });
+  }, [setCharacterInfo]);
+
+	  const handleChange = (event) => {
+	    const { name, value } = event.target;
+
+    if (
+      name === "characterClass" &&
+      characterInfo?.race === "Dwarf" &&
+      characterInfo?.subrace === "Mark of Warding" &&
+      value !== NO_CLASS &&
+      !isActiveSpellcasterSelection({ classKey: value, subclassKey: NO_SUBCLASS })
+    ) {
+      setPendingNonCasterClass(String(value || ""));
+      setMarkOfWardingWarningOpen(true);
+      setAnimateMarkOfWardingClassWarning(true);
+      window.setTimeout(() => setAnimateMarkOfWardingClassWarning(false), 500);
+      return;
+    }
+
+    applyFieldChange(name, value);
 
     if (
       name === "fightingStyle" &&
@@ -425,7 +505,12 @@ export const CharacterCreationForm = (props) => {
             </FormControl>
           </Grid>
           <Grid item xs={6}>
-            <FormControl fullWidth size="small" error={continueAttempted && isMissingClass} sx={missingFieldSx(continueAttempted && isMissingClass)}>
+            <FormControl
+              fullWidth
+              size="small"
+              error={continueAttempted && isMissingClass}
+              sx={[missingFieldSx(continueAttempted && isMissingClass), markOfWardingClassWarningSx]}
+            >
               <InputLabel id="class-select-label">Class</InputLabel>
               <Select
                 labelId="class-select-label"
@@ -617,6 +702,39 @@ export const CharacterCreationForm = (props) => {
         open={druidicWarriorModalOpen}
         onClose={() => setDruidicWarriorModalOpen(false)}
       />
+
+      <Dialog open={markOfWardingWarningOpen} onClose={() => setMarkOfWardingWarningOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Mark of Warding</DialogTitle>
+        <DialogContent dividers>
+          <Typography sx={{ fontSize: "14px", color: "#3e2723" }}>
+            Spells of the Mark are not added for classes that are not spell casters. Are you sure you want to choose{" "}
+            <strong>{pendingNonCasterClass ? capitalize(pendingNonCasterClass) : "this class"}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setMarkOfWardingWarningOpen(false);
+              setPendingNonCasterClass("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={() => {
+              if (pendingNonCasterClass) {
+                applyFieldChange("characterClass", pendingNonCasterClass);
+              }
+              setMarkOfWardingWarningOpen(false);
+              setPendingNonCasterClass("");
+            }}
+          >
+            Choose anyway
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Divider sx={{ borderColor: "rgba(139,69,19,0.3)", mb: 2, width: "100%" }} />
 

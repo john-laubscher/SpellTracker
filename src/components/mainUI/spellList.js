@@ -14,6 +14,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
+import { subRaceSpells } from "../RacesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
@@ -107,6 +108,22 @@ const normalizeCompareName = (s) =>
 const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusion";
 const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
 const SHAPECHANGER_BONUS_TAG = "wizard_transmutation_shapechanger";
+const MARK_OF_WARDING_BONUS_TAG = "mark_of_warding_spells_of_the_mark";
+
+const MARK_OF_WARDING_SPELL_ROWS = Object.entries(
+  subRaceSpells?.Dwarf?.["Mark of Warding"]?.additionalPreparedSpells || {}
+)
+.map(([spellLevelKey, spells]) => ({
+    spellLevel: Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).find(([, key]) => key === spellLevelKey)?.[0],
+    spells: Array.isArray(spells) ? spells : [],
+  }))
+  .filter((row) => Number.isFinite(Number(row?.spellLevel)) && row.spells.length > 0)
+  .flatMap((row) =>
+    row.spells.map((spellIndex) => ({
+      spellLevel: Number(row.spellLevel),
+      originalIndex: String(spellIndex || "").trim(),
+    }))
+  );
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -377,6 +394,8 @@ const TOTEM_WARRIOR_RITUAL_SPELLS = [
 export const SpellList = (props) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const rawClassKey = characterInfo?.characterClass;
+  const race = String(characterInfo?.race || "");
+  const subrace = String(characterInfo?.subrace || "");
   const classKey = rawClassKey === "sorceror" ? "sorcerer" : rawClassKey;
   const classMeta = ClassesData?.[classKey] || ClassesData?.[rawClassKey] || null;
   const isNonCaster = classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster";
@@ -602,6 +621,20 @@ export const SpellList = (props) => {
     }
     return base;
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.druidLandType]);
+  const hasActiveSpellcasting = React.useMemo(() => {
+    const tableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
+    if (!tableRow) return false;
+    return (
+      Object.keys(SPELL_LEVEL_KEY_BY_NUMBER).some((level) => Number(tableRow?.[SPELL_LEVEL_KEY_BY_NUMBER[level]] || 0) > 0) ||
+      Number(tableRow?.spellSlots || 0) > 0
+    );
+  }, [characterLevel, spellTableKey]);
+  const isMarkOfWarding = race === "Dwarf" && subrace === "Mark of Warding";
+  const markOfWardingSpellListKey = React.useMemo(
+    () => `race:dwarf:mark_of_warding:${String(spellListClassKey || classKey || "unknown")}`,
+    [classKey, spellListClassKey]
+  );
+  const hasMarkOfWardingSpellList = isMarkOfWarding && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -627,6 +660,8 @@ export const SpellList = (props) => {
     spellLevel: 0,
     domainKey: "",
     originalSpell: null,
+    spellClassKey: "",
+    swapLabel: "Domain Spell",
   });
 
   const [psionicSwapModal, setPsionicSwapModal] = React.useState({
@@ -680,6 +715,100 @@ export const SpellList = (props) => {
   }, [characterInfo]);
 
   // Spirit Session selection is soft-limited (UI warns when over limit).
+
+  useEffect(() => {
+    const swapsForMarkOfWarding = characterInfo?.domainSpellSwaps?.[markOfWardingSpellListKey] || {};
+    const activeRows = hasMarkOfWardingSpellList ? MARK_OF_WARDING_SPELL_ROWS : [];
+
+    setCharacterInfo((prev) => {
+      const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
+      const next = { ...current };
+      let changed = false;
+
+      const allowedByOrigin = new Map(activeRows.map((row) => [String(row.originalIndex || ""), row]));
+
+      Object.keys(next).forEach((levelKey) => {
+        const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+        const filtered = list.filter((spell) => {
+          if (String(spell?.spelltrackerBonus || "") !== MARK_OF_WARDING_BONUS_TAG) return true;
+          const origin = String(spell?.spelltrackerOrigin || "");
+          const row = allowedByOrigin.get(origin);
+          return Boolean(row) && Number(row?.spellLevel) === Number(levelKey);
+        });
+
+        if (filtered.length !== list.length) {
+          changed = true;
+          next[levelKey] = filtered;
+        }
+      });
+
+      if (hasMarkOfWardingSpellList) {
+        activeRows.forEach((row) => {
+          const levelKey = String(row.spellLevel);
+          const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
+          const origin = String(row.originalIndex || "").trim();
+          const swapped = origin ? swapsForMarkOfWarding?.[origin] : null;
+          const desiredIndex = String(swapped?.index || origin).trim();
+          if (!origin || !desiredIndex) return;
+
+          const withoutStaleTaggedEntries = list.filter((spell) => {
+            const isMarkSpell = String(spell?.spelltrackerBonus || "") === MARK_OF_WARDING_BONUS_TAG;
+            if (!isMarkSpell) return true;
+            const spellOrigin = String(spell?.spelltrackerOrigin || "");
+            if (spellOrigin !== origin) return true;
+            return String(spell?.index || "") === desiredIndex;
+          });
+
+          if (withoutStaleTaggedEntries.length !== list.length) {
+            changed = true;
+          }
+
+          const existingIdx = withoutStaleTaggedEntries.findIndex((spell) => String(spell?.index || "") === desiredIndex);
+          if (existingIdx !== -1) {
+            const existing = withoutStaleTaggedEntries[existingIdx] || null;
+            const needsTag =
+              String(existing?.spelltrackerBonus || "") !== MARK_OF_WARDING_BONUS_TAG ||
+              existing?.spelltrackerDoesNotCount !== true ||
+              String(existing?.spelltrackerOrigin || "") !== origin;
+
+            if (!needsTag) return;
+
+            changed = true;
+            const updated = {
+              ...existing,
+              name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: MARK_OF_WARDING_BONUS_TAG,
+              spelltrackerOrigin: origin,
+              spelltrackerDoesNotCount: true,
+            };
+            next[levelKey] = withoutStaleTaggedEntries.map((spell, idx) => (idx === existingIdx ? updated : spell));
+            return;
+          }
+
+          changed = true;
+          next[levelKey] = [
+            ...withoutStaleTaggedEntries,
+            {
+              index: desiredIndex,
+              name: swapped?.name || humanizeSpellIndex(desiredIndex),
+              spelltrackerBonus: MARK_OF_WARDING_BONUS_TAG,
+              spelltrackerOrigin: origin,
+              spelltrackerDoesNotCount: true,
+            },
+          ];
+        });
+      }
+
+      if (!changed) return prev;
+      return { ...prev, spellsPrepared: next };
+    });
+  }, [
+    characterInfo?.domainSpellSwaps,
+    characterInfo?.spellsPrepared,
+    hasMarkOfWardingSpellList,
+    markOfWardingSpellListKey,
+    setCharacterInfo,
+  ]);
 
   useEffect(() => {
     if (!isWizard) return;
@@ -5300,6 +5429,26 @@ export const SpellList = (props) => {
                       }}
                     />
                   </Tooltip>
+                ) : spell?.spelltrackerBonus === MARK_OF_WARDING_BONUS_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Spells of the Mark spell (added to your spell list; does not count against spells known/prepared)."
+                  >
+                    <Chip
+                      size="small"
+                      label="SotM"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.72,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(8, 47, 73, 0.92)",
+                        border: "1px solid rgba(8, 47, 73, 0.22)",
+                        "&:hover": { opacity: 0.88 },
+                      }}
+                    />
+                  </Tooltip>
                 ) : spell?.spelltrackerBonus === ABERRANT_MIND_PSIONIC_SPELL_BONUS_TAG ? (
                   <Tooltip
                     arrow
@@ -5621,6 +5770,33 @@ export const SpellList = (props) => {
                         border: "1px solid rgba(106, 27, 154, 0.22)",
                         backgroundColor: "rgba(106, 27, 154, 0.06)",
                         "&:hover": { backgroundColor: "rgba(106, 27, 154, 0.10)" },
+                      }}
+                    >
+                      <SwapHorizIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                ) : spell?.spelltrackerBonus === MARK_OF_WARDING_BONUS_TAG ? (
+                  <Tooltip arrow title="Swap this Spells of the Mark spell (does not change spells known).">
+                    <IconButton
+                      size="small"
+                      aria-label="Swap Spells of the Mark spell"
+                      onClick={() => {
+                        const origin = String(spell?.spelltrackerOrigin || spell?.index || "").trim();
+                        setDomainSwapModal({
+                          open: true,
+                          spellLevel: Number(numericalSpellLevel),
+                          domainKey: markOfWardingSpellListKey,
+                          originalSpell: origin ? { index: origin, name: humanizeSpellIndex(origin) } : spell,
+                          spellClassKey: String(spellListClassKey || classKey || "wizard"),
+                          swapLabel: "Spells of the Mark Spell",
+                        });
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: "rgba(8, 47, 73, 0.92)",
+                        border: "1px solid rgba(8, 47, 73, 0.22)",
+                        backgroundColor: "rgba(8, 47, 73, 0.06)",
+                        "&:hover": { backgroundColor: "rgba(8, 47, 73, 0.10)" },
                       }}
                     >
                       <SwapHorizIcon fontSize="inherit" />
@@ -6842,16 +7018,23 @@ export const SpellList = (props) => {
       )}
       {renderDailySpellsList(characterInfo, setCharacterInfo)}
 
-	      <DomainSpellSwapModal
-	        open={domainSwapModal.open}
-	        numericalSpellLevel={domainSwapModal.spellLevel}
-	        domainKey={domainSwapModal.domainKey || currentDomainKey}
-	        originalSpell={domainSwapModal.originalSpell}
-	        spellClassKey={String(characterInfo?.characterClass || "cleric")}
-	        onClose={() =>
-	          setDomainSwapModal((s) => ({ ...s, open: false, originalSpell: null }))
-	        }
-	      />
+      <DomainSpellSwapModal
+        open={domainSwapModal.open}
+        numericalSpellLevel={domainSwapModal.spellLevel}
+        domainKey={domainSwapModal.domainKey || currentDomainKey}
+        originalSpell={domainSwapModal.originalSpell}
+        spellClassKey={domainSwapModal.spellClassKey || String(characterInfo?.characterClass || "cleric")}
+        swapLabel={domainSwapModal.swapLabel || "Domain Spell"}
+        onClose={() =>
+          setDomainSwapModal((s) => ({
+            ...s,
+            open: false,
+            originalSpell: null,
+            spellClassKey: "",
+            swapLabel: "Domain Spell",
+          }))
+        }
+      />
 
         <PsionicSpellSwapModal
           open={psionicSwapModal.open}

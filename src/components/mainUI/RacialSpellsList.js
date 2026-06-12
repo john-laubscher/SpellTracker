@@ -206,8 +206,14 @@ export const renderDailySpellsList = (characterInfo, setCharacterInfo) => {
     characterInfo?.subclass === "giant" &&
     Number(characterInfo?.characterLevel || 0) >= 3;
 
-  if (!isGiantsPowerAvailable) return null;
   if (typeof setCharacterInfo !== "function") return null;
+  if (!isGiantsPowerAvailable) return null;
 
-  return <GiantsPowerCantripPicker characterInfo={characterInfo} setCharacterInfo={setCharacterInfo} />;
+  return (
+    <>
+      {isGiantsPowerAvailable ? (
+        <GiantsPowerCantripPicker characterInfo={characterInfo} setCharacterInfo={setCharacterInfo} />
+      ) : null}
+    </>
+  );
 };
