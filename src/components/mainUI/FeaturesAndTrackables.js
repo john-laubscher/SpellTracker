@@ -39,7 +39,7 @@ import {
   UntrackedFeatureChoicesContext,
 } from "../../Contexts/Context"; // Adjust the path based on your project structure
 import classesData from "../../components/ClassesData"; // Adjust the path based on your project structure
-import { HalfElfVersatilityArr, RaceFeaturesData } from "../../components/RacesData";
+import { DragonbornAncestryData, HalfElfVersatilityArr, RaceFeaturesData } from "../../components/RacesData";
 import AddFeatureModal from "./AddFeatureModal";
 import ManageFeaturesModal from "./ManageFeaturesModal";
 import ConfirmDialog from "./ConfirmDialog";
@@ -1700,6 +1700,7 @@ const FeaturesAndTrackables = () => {
     subclass,
     race,
     subrace,
+    draconicAncestry,
     halfElfVersatility,
     fightingStyle,
     additionalFightingStyle,
@@ -2017,8 +2018,75 @@ const FeaturesAndTrackables = () => {
   const raceData = React.useMemo(() => RaceFeaturesData?.[race] || null, [race]);
 
   const raceFeatures = React.useMemo(() => {
-    const features = raceData?.features || null;
-    const base = Array.isArray(features) ? [...features] : [];
+    const baseRaceFeatures = Array.isArray(raceData?.features) ? [...raceData.features] : [];
+    const baseSubraceFeatures = Array.isArray(raceData?.subraceFeatures?.[subrace])
+      ? [...raceData.subraceFeatures[subrace]]
+      : [];
+    const base = [...baseRaceFeatures, ...baseSubraceFeatures];
+
+    if (race === "Dragonborn") {
+      const ancestryMeta = DragonbornAncestryData?.[draconicAncestry] || null;
+      const familyLabel = ancestryMeta?.family || subrace || "Dragonborn";
+      const damageType = ancestryMeta?.damageType || "your ancestry's";
+      const breathArea = ancestryMeta?.breathWeapon?.area || "your ancestry's area";
+      const breathSaveAbility = ancestryMeta?.breathWeapon?.saveAbility || "DEX";
+      const breathShape = String(breathArea || "").toLowerCase().includes("line") ? "Line" : "Cone";
+      const currentBreathDamage =
+        Number(characterLevel || 0) >= 17
+          ? "4d10"
+          : Number(characterLevel || 0) >= 11
+            ? "3d10"
+            : Number(characterLevel || 0) >= 5
+              ? "2d10"
+              : "1d10";
+
+      const dragonbornFeatures = [
+        {
+          id: "dragonborn_ancestry",
+          name: `${familyLabel} Ancestry`,
+          desc: ancestryMeta
+            ? `Chosen ancestry: ${draconicAncestry}. It sets your breath weapon's damage type (${damageType}), area (${breathArea}), and saving throw (${breathSaveAbility}).`
+            : `Choose a ${familyLabel.toLowerCase()} ancestry to set your breath weapon's damage type, area, and saving throw.`,
+          tracked: false,
+        },
+        {
+          id: "dragonborn_breath_weapon",
+          name: "Breath Weapon",
+          desc: [
+            ancestryMeta
+              ? `Ancestry: ${draconicAncestry}.`
+              : "Ancestry: Choose an ancestry.",
+            `Current damage: ${currentBreathDamage}.`,
+            `Damage type: ${damageType}.`,
+            `Shape: ${breathShape} (${breathArea}).`,
+            `When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in a ${breathArea}.`,
+            `Each creature in that area must make a ${breathSaveAbility} saving throw (DC = 8 + your Constitution modifier + your proficiency bonus). On a failed save, the creature takes ${currentBreathDamage} ${damageType} damage. On a successful save, it takes half as much damage.`,
+            "Damage progression: 1d10 at level 1, 2d10 at level 5, 3d10 at level 11, and 4d10 at level 17.",
+          ],
+          tracked: true,
+          uses: "pb",
+          recharge: "lr",
+        },
+      ];
+
+      if (subrace === "Chromatic" || subrace === "Metallic" || subrace === "Gem") {
+        dragonbornFeatures.push({
+          id: "dragonborn_draconic_resistance",
+          name: "Draconic Resistance",
+          desc: ancestryMeta
+            ? `You have resistance to ${damageType.toLowerCase()} damage from your ${draconicAncestry} ancestry.`
+            : "You have resistance to the damage type associated with your ancestry.",
+          tracked: false,
+        });
+      }
+
+      const filteredDragonbornFeatures = [...dragonbornFeatures, ...baseSubraceFeatures].filter(
+        (feature) => !Number.isFinite(Number(feature?.level)) || Number(feature.level) <= Number(characterLevel || 0)
+      );
+
+      if (filteredDragonbornFeatures.length > 0) return filteredDragonbornFeatures;
+      return [notAvailableFeature({ id: "race:not_available" })];
+    }
 
     if (race === "Half Elf" && subrace === "Standard Half Elf" && halfElfVersatility) {
       const v = HalfElfVersatilityArr?.[halfElfVersatility] || null;
@@ -2032,15 +2100,13 @@ const FeaturesAndTrackables = () => {
       }
     }
 
-    if (base.length > 0) return base;
-    return [notAvailableFeature({ id: "race:not_available" })];
-  }, [raceData, race, subrace, halfElfVersatility, notAvailableFeature]);
+    const filtered = base.filter(
+      (feature) => !Number.isFinite(Number(feature?.level)) || Number(feature.level) <= Number(characterLevel || 0)
+    );
 
-  const subraceFeatures = React.useMemo(() => {
-    const features = raceData?.subraceFeatures?.[subrace] || null;
-    if (Array.isArray(features) && features.length > 0) return features;
-    return [notAvailableFeature({ id: "subrace:not_available" })];
-  }, [raceData, subrace, notAvailableFeature]);
+    if (filtered.length > 0) return filtered;
+    return [notAvailableFeature({ id: "race:not_available" })];
+  }, [raceData, race, subrace, draconicAncestry, halfElfVersatility, characterLevel, notAvailableFeature]);
 
   const miscCustomRaw = React.useMemo(() => {
     return (customFeatures || []).filter((f) => f.kind === "misc");
@@ -2063,9 +2129,6 @@ const FeaturesAndTrackables = () => {
   }, [miscCustomForUi, notAvailableFeature]);
 
   const handleManageRaceFeatures = React.useCallback(() => {
-    window.alert("Not available yet");
-  }, []);
-  const handleManageSubraceFeatures = React.useCallback(() => {
     window.alert("Not available yet");
   }, []);
   const handleManageMiscFeatures = React.useCallback(() => {
@@ -4602,13 +4665,13 @@ const FeaturesAndTrackables = () => {
 	        ) : null}
 	
 	        <Grid container spacing={2}>
-	          <Grid item xs={12} md={4}>
+	          <Grid item xs={12} md={6}>
 	            <FeatureDisplay
-              title="Race Features"
-              manageTooltip="Manage which race features are tracked"
+              title="Racial Features"
+              manageTooltip="Manage which racial features are tracked"
               onManage={handleManageRaceFeatures}
               features={raceFeatures}
-              untrackedLabel="Untracked Race Features"
+              untrackedLabel="Untracked Racial Features"
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               intelligenceModValue={intelligenceModValue}
@@ -4620,24 +4683,7 @@ const FeaturesAndTrackables = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <FeatureDisplay
-              title="Subrace Features"
-              manageTooltip="Manage which subrace features are tracked"
-              onManage={handleManageSubraceFeatures}
-              features={subraceFeatures}
-              untrackedLabel="Untracked Subrace Features"
-              proficiencyBonusValue={proficiencyBonusValue}
-              charismaModValue={charismaModValue}
-              intelligenceModValue={intelligenceModValue}
-              wisdomModValue={wisdomModValue}
-              druidLevel={druidLevel}
-              characterClass={characterClass}
-              characterLevel={characterLevel}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <FeatureDisplay
               title="Miscellaneous Features"
               manageTooltip="Manage which miscellaneous features are tracked"

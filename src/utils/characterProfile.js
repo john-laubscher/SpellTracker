@@ -9,6 +9,14 @@ const normalizeStringArray = (value) =>
 const normalizeSpellArray = (value) =>
   Array.isArray(value) ? value.filter((entry) => entry && typeof entry === "object") : [];
 
+const normalizeDragonbornSubrace = (race, subrace, draconicAncestry) => {
+  if (race !== "Dragonborn" || subrace !== "Chromatic/Metallic") return subrace;
+
+  const metallicAncestries = new Set(["Brass", "Bronze", "Copper", "Gold", "Silver"]);
+  if (metallicAncestries.has(String(draconicAncestry || ""))) return "Metallic";
+  return "Chromatic";
+};
+
 export const createEmptySpellLevels = () => ({
   0: [],
   1: [],
@@ -46,11 +54,16 @@ const createDefaultWeapons = () => [
 export const createDefaultCharacterInfo = (overrides = {}) => {
   const safeOverrides = normalizeObject(overrides);
   const defaultSpellLevels = createEmptySpellLevels();
+  const normalizedSubrace = normalizeDragonbornSubrace(
+    safeOverrides.race,
+    safeOverrides.subrace,
+    safeOverrides.draconicAncestry
+  );
 
   return {
     characterName: String(safeOverrides.characterName || "New Character"),
     race: safeOverrides.race || "noRace",
-    subrace: safeOverrides.subrace || "noSubrace",
+    subrace: normalizedSubrace || "noSubrace",
     draconicAncestry: String(safeOverrides.draconicAncestry || ""),
     genieKind: String(safeOverrides.genieKind || ""),
     druidLandType: String(safeOverrides.druidLandType || ""),
