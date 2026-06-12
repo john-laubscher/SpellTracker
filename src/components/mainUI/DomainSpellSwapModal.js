@@ -31,6 +31,7 @@ const DomainSpellSwapModal = ({
   domainKey,
   originalSpell,
   spellClassKey = "cleric",
+  swapLabel = "Domain Spell",
 }) => {
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
@@ -143,7 +144,7 @@ const DomainSpellSwapModal = ({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 5 }}>
         <MagicalSecretsStatus
-          label="Swap Domain Spell"
+          label={`Swap ${swapLabel}`}
           totalAllowed={1}
           actualSelected={currentSwap?.index ? 1 : 0}
           typographySx={{
@@ -172,7 +173,7 @@ const DomainSpellSwapModal = ({
 
       <DialogContent dividers>
         <Typography sx={{ fontSize: "13px", color: "#3e2723", mb: 1 }}>
-          Swapping <strong>{originalSpell?.name || "Domain spell"}</strong> (level {numericalSpellLevel}) for another{" "}
+          Swapping <strong>{originalSpell?.name || swapLabel}</strong> (level {numericalSpellLevel}) for another{" "}
           <strong>{spellClassKey}</strong> spell (or a <strong>custom</strong> spell).
         </Typography>
 

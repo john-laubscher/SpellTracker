@@ -68,6 +68,7 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     genieKind: String(safeOverrides.genieKind || ""),
     druidLandType: String(safeOverrides.druidLandType || ""),
     halfElfVersatility: String(safeOverrides.halfElfVersatility || ""),
+    markOfWardingDailyCast: String(safeOverrides.markOfWardingDailyCast || ""),
     divineSoulAffinity: String(safeOverrides.divineSoulAffinity || ""),
     lunarEmbodimentPhase: String(safeOverrides.lunarEmbodimentPhase || ""),
     fightingStyle: String(safeOverrides.fightingStyle || ""),

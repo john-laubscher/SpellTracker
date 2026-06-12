@@ -221,13 +221,70 @@ export const RaceFeaturesData = {
         desc: "You have advantage on saving throws against poison, and you have resistance against poison damage.",
         tracked: false,
       },
-      {
-        id: "stonecunning",
-        name: "Stonecunning",
-        desc: "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check.",
-        tracked: false,
-      },
     ],
+    subraceFeatures: {
+      Hill: [],
+      Mountain: [],
+      "Mark of Warding": [
+        {
+          id: "mark_of_warding_wards_and_seals",
+          name: "Wards and Seals",
+          desc: [
+            "You can cast Message of Warding (Alarm) and Message of Warding (Mage Armor) with this trait. Starting at 3rd level, you can also cast Message of Warding (Arcane Lock) with it.",
+            "After you cast one of those spells with this trait, you can't cast that spell again until you finish a long rest.",
+            "Intelligence is your spellcasting ability for these spells, and you don't require material components when you cast them with this trait.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "mark_of_warding_alarm",
+          name: "Message of Warding (Alarm)",
+          desc: [
+            "Cast [[spell:alarm|Alarm]] with your Message of Warding trait.",
+            "This shares 1 total use with your other Message of Warding options and recharges on a long rest.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          sharedUsePoolKey: "mark_of_warding_message_pool",
+          sharedUsePoolDisabledMessage: "Message of Warding has 1 use total.",
+        },
+        {
+          id: "mark_of_warding_mage_armor",
+          name: "Message of Warding (Mage Armor)",
+          desc: [
+            "Cast [[spell:mage-armor|Mage Armor]] with your Message of Warding trait.",
+            "This shares 1 total use with your other Message of Warding options and recharges on a long rest.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          sharedUsePoolKey: "mark_of_warding_message_pool",
+          sharedUsePoolDisabledMessage: "Message of Warding has 1 use total.",
+        },
+        {
+          id: "mark_of_warding_arcane_lock",
+          name: "Message of Warding (Arcane Lock)",
+          desc: [
+            "Starting at 3rd level, you can cast [[spell:arcane-lock|Arcane Lock]] with your Message of Warding trait.",
+            "This shares 1 total use with your other Message of Warding options and recharges on a long rest.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+          sharedUsePoolKey: "mark_of_warding_message_pool",
+          sharedUsePoolDisabledMessage: "Message of Warding has 1 use total.",
+        },
+        {
+          id: "mark_of_warding_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Warding spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Plane Shift: Kaladesh": [],
+    },
   },
   Elf: {
     features: [

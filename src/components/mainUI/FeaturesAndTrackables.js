@@ -1470,7 +1470,10 @@ const FeatureDisplay = ({
                 <>
                   {Array.from({ length: usesCount }).map((_, idx) => (
                     idx === 0 && isUsedByOther ? (
-                      <Tooltip arrow title="Channel Divinity only has 1 use per short or long rest.">
+                      <Tooltip
+                        arrow
+                        title={String(feature?.sharedUsePoolDisabledMessage || "This shared feature pool has no uses left.")}
+                      >
                         <span>
                           <Checkbox
                             key={`${feature.id}:pooluse:${idx}`}
