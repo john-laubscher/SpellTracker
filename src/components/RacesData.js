@@ -3,7 +3,7 @@ export const Races = ["Dragonborn", "Dwarf", "Elf", "Gnome", "Half Elf", "Half O
 // dot notation uses identifiers, but bracket notation doesn't--need bracket notation for key strings
 // UA subclasses not included yet as of 6/20/23
 export const Subraces = {
-    Dragonborn: ['Chromatic/Metallic', 'Draconblood', 'Ravenite'],
+    Dragonborn: ['Chromatic', 'Metallic', 'Gem', 'Draconblood', 'Ravenite'],
     Dwarf: ['Hill', 'Mountain', 'Mark of Warding', 'Plane Shift: Kaladesh'],
     Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Self', 'Bishtahar/Tirahar', 'Vahadar'],
     // Zendikar elves not included
@@ -16,6 +16,106 @@ export const Subraces = {
     Tiefling: ['Bloodline of Asmodeus', 'Bloodline of Baalzebul', 'Bloodline of Dispater', 'Bloodline of Fierna', 'Bloodline of Glasya', 'Bloodline of Levistus', 'Bloodline of Mammon', 'Bloodline of Mephistopheles', 'Bloodline of Zariel', 'Variant Tiefling']
   }
 
+export const DragonbornAncestryData = {
+  Black: {
+    family: "Chromatic",
+    damageType: "Acid",
+    breathWeapon: { area: "30-foot line that is 5 feet wide", saveAbility: "DEX" },
+  },
+  Blue: {
+    family: "Chromatic",
+    damageType: "Lightning",
+    breathWeapon: { area: "30-foot line that is 5 feet wide", saveAbility: "DEX" },
+  },
+  Green: {
+    family: "Chromatic",
+    damageType: "Poison",
+    breathWeapon: { area: "30-foot line that is 5 feet wide", saveAbility: "DEX" },
+  },
+  Red: {
+    family: "Chromatic",
+    damageType: "Fire",
+    breathWeapon: { area: "30-foot line that is 5 feet wide", saveAbility: "DEX" },
+  },
+  White: {
+    family: "Chromatic",
+    damageType: "Cold",
+    breathWeapon: { area: "30-foot line that is 5 feet wide", saveAbility: "DEX" },
+  },
+  Brass: {
+    family: "Metallic",
+    damageType: "Fire",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Bronze: {
+    family: "Metallic",
+    damageType: "Lightning",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Copper: {
+    family: "Metallic",
+    damageType: "Acid",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Gold: {
+    family: "Metallic",
+    damageType: "Fire",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Silver: {
+    family: "Metallic",
+    damageType: "Cold",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Amethyst: {
+    family: "Gem",
+    damageType: "Force",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Crystal: {
+    family: "Gem",
+    damageType: "Radiant",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Emerald: {
+    family: "Gem",
+    damageType: "Psychic",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Sapphire: {
+    family: "Gem",
+    damageType: "Thunder",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+  Topaz: {
+    family: "Gem",
+    damageType: "Necrotic",
+    breathWeapon: { area: "15-foot cone", saveAbility: "DEX" },
+  },
+};
+
+export const DragonbornAncestryGroups = {
+  Chromatic: ["Black", "Blue", "Green", "Red", "White"],
+  Metallic: ["Brass", "Bronze", "Copper", "Gold", "Silver"],
+  Gem: ["Amethyst", "Crystal", "Emerald", "Sapphire", "Topaz"],
+};
+
+export const getDragonbornAncestryOptions = (subrace) => {
+  if (subrace === "Chromatic" || subrace === "Metallic" || subrace === "Gem") {
+    return DragonbornAncestryGroups[subrace] || [];
+  }
+
+  if (subrace === "Draconblood" || subrace === "Ravenite") {
+    return [
+      ...DragonbornAncestryGroups.Chromatic,
+      ...DragonbornAncestryGroups.Metallic,
+      ...DragonbornAncestryGroups.Gem,
+    ];
+  }
+
+  return [];
+};
+
 // Combat/trackable-focused race traits (not a full character builder dataset).
 // Source: Roll20 Compendium — Free Basic Rules (2014).
 //
@@ -25,51 +125,93 @@ export const Subraces = {
 export const RaceFeaturesData = {
   Dragonborn: {
     options: {
-      draconicAncestry: {
-        Black: { damageType: "Acid", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
-        Blue: { damageType: "Lightning", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
-        Brass: { damageType: "Fire", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
-        Bronze: { damageType: "Lightning", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
-        Copper: { damageType: "Acid", breathWeapon: { shape: "Line", area: "5 by 30 ft.", saveAbility: "DEX" } },
-        Gold: { damageType: "Fire", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "DEX" } },
-        Green: { damageType: "Poison", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
-        Red: { damageType: "Fire", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "DEX" } },
-        Silver: { damageType: "Cold", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
-        White: { damageType: "Cold", breathWeapon: { shape: "Cone", area: "15 ft.", saveAbility: "CON" } },
-      },
+      draconicAncestry: DragonbornAncestryData,
+      ancestryGroups: DragonbornAncestryGroups,
     },
-    features: [
-      {
-        id: "draconic_ancestry",
-        name: "Draconic Ancestry",
-        desc: "Choose an ancestry (e.g., Red, Green). It determines your Breath Weapon shape/save and your Damage Resistance type.",
-        tracked: false,
-        choiceKey: "draconicAncestry",
-      },
-      {
-        id: "breath_weapon",
-        name: "Breath Weapon",
-        desc: "Action. Creatures in the area make a saving throw (by ancestry) vs DC 8 + CON mod + PB. Fail: 2d6; success: half. Damage scales: 3d6 at level 6, 4d6 at level 11, 5d6 at level 16. Recharge: short or long rest. Damage type/shape depend on Draconic Ancestry.",
-        tracked: true,
-        recharge: "shortOrLongRest",
-        uses: 1,
-        dc: { formula: "8 + CON + PB" },
-        scalingDamage: [
-          { level: 1, dice: "2d6" },
-          { level: 6, dice: "3d6" },
-          { level: 11, dice: "4d6" },
-          { level: 16, dice: "5d6" },
-        ],
-        choiceKey: "draconicAncestry",
-      },
-      {
-        id: "damage_resistance",
-        name: "Damage Resistance",
-        desc: "You have resistance to the damage type associated with your Draconic Ancestry.",
-        tracked: false,
-        choiceKey: "draconicAncestry",
-      },
-    ],
+    features: [],
+    subraceFeatures: {
+      Chromatic: [
+        {
+          id: "chromatic_warding",
+          name: "Chromatic Warding",
+          desc: [
+            "Starting at 5th level, as an action, you can channel your draconic energy to protect yourself.",
+            "For 1 minute, you become immune to the damage type associated with your Chromatic Ancestry.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+      Metallic: [
+        {
+          id: "metallic_breath_weapon",
+          name: "Metallic Breath Weapon",
+          desc: [
+            "At 5th level, you gain a second breath weapon that you can use when you take the Attack action, replacing one of your attacks.",
+            "It affects creatures in a 15-foot cone. The save DC is 8 + your Constitution modifier + your proficiency bonus.",
+            "Choose one each time you use it: Enervating Breath (Constitution save or incapacitated until the start of your next turn) or Repulsion Breath (Strength save or pushed 20 feet away from you and knocked prone).",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+      Gem: [
+        {
+          id: "psionic_mind",
+          name: "Psionic Mind",
+          desc: "You can telepathically speak to any creature you can see within 30 feet of you. You do not need to share a language, but the creature must understand at least one language.",
+          tracked: false,
+        },
+        {
+          id: "gem_flight",
+          name: "Gem Flight",
+          desc: [
+            "Starting at 5th level, you can use a bonus action to manifest spectral wings on your body for 1 minute.",
+            "For the duration, you gain a flying speed equal to your walking speed and can hover.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 5,
+        },
+      ],
+      Draconblood: [
+        {
+          id: "darkvision",
+          name: "Darkvision",
+          desc: "You can see in dim light within 60 feet as if it were bright light, and in darkness as if it were dim light. In darkness, you see only shades of gray.",
+          tracked: false,
+        },
+        {
+          id: "forceful_presence",
+          name: "Forceful Presence",
+          desc: "When you make an Intimidation or Persuasion check, you can do so with advantage once per long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+      ],
+      Ravenite: [
+        {
+          id: "darkvision",
+          name: "Darkvision",
+          desc: "You can see in dim light within 60 feet as if it were bright light, and in darkness as if it were dim light. In darkness, you see only shades of gray.",
+          tracked: false,
+        },
+        {
+          id: "vengeful_assault",
+          name: "Vengeful Assault",
+          desc: "When you take damage from a creature in range of a weapon you are wielding, you can use your reaction to make an attack against that creature once per short or long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "sr_or_lr",
+        },
+      ],
+    },
   },
   Dwarf: {
     features: [

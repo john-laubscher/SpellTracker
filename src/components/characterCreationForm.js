@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CharacterInfoContext } from "../Contexts/Context";
 import ClassesData from "./ClassesData";
-import { Races, Subraces, RaceFeaturesData, HalfElfVersatilityArr } from "./RacesData"
+import { Races, Subraces, getDragonbornAncestryOptions, HalfElfVersatilityArr } from "./RacesData"
 import { WeaponManager } from "./mainUI/WeaponManager"
 import { proficiencyBonus } from "../components/mainUI/header";
 
@@ -76,9 +76,8 @@ export const CharacterCreationForm = (props) => {
   }, [characterInfo.characterLevel, setCharacterInfo]);
 
   const dragonbornAncestryOptions = React.useMemo(() => {
-    // keep insertion order from the data file
-    return Object.keys(RaceFeaturesData?.Dragonborn?.options?.draconicAncestry || {});
-  }, []);
+    return getDragonbornAncestryOptions(characterInfo.subrace);
+  }, [characterInfo.subrace]);
 
   const halfElfVersatilityOptions = React.useMemo(() => {
     return Object.keys(HalfElfVersatilityArr || {});
@@ -108,7 +107,7 @@ export const CharacterCreationForm = (props) => {
 
   useEffect(() => {
     if (characterInfo.race === "Dragonborn") {
-      if (!characterInfo.draconicAncestry && dragonbornAncestryOptions.length > 0) {
+      if (!dragonbornAncestryOptions.includes(characterInfo.draconicAncestry) && dragonbornAncestryOptions.length > 0) {
         setCharacterInfo((prev) => ({ ...prev, draconicAncestry: dragonbornAncestryOptions[0] }));
       }
     } else if (characterInfo.draconicAncestry) {
@@ -255,6 +254,10 @@ export const CharacterCreationForm = (props) => {
         next.subrace = NO_SUBRACE;
         next.draconicAncestry = "";
         next.halfElfVersatility = "";
+      }
+
+      if (name === "subrace" && prev.race === "Dragonborn") {
+        next.draconicAncestry = "";
       }
 
 	      if (name === "characterClass") {
@@ -494,6 +497,9 @@ export const CharacterCreationForm = (props) => {
                 name="draconicAncestry"
                 onChange={handleChange}
               >
+                <MenuItem value="" disabled>
+                  Select an ancestry
+                </MenuItem>
                 {dragonbornAncestryOptions.map((ancestry) => (
                   <MenuItem key={ancestry} value={ancestry}>
                     {ancestry}
