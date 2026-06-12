@@ -459,6 +459,64 @@ export const RaceFeaturesData = {
         tracked: false,
       },
     ],
+    subraceFeatures: {
+      Forest: [
+        {
+          id: "natural_illusionist",
+          name: "Natural Illusionist",
+          desc: "You know the Minor Illusion cantrip. Intelligence is your spellcasting ability for it.",
+          tracked: false,
+        },
+        {
+          id: "speak_with_small_beasts",
+          name: "Speak with Small Beasts",
+          desc: "Through sound and gestures, you may communicate simple ideas with Small or smaller beasts.",
+          tracked: false,
+        },
+      ],
+      Rock: [],
+      "Mark of Scribing": [
+        {
+          id: "gifted_scribe",
+          name: "Gifted Scribe",
+          desc: "Whenever you make an Intelligence (History) check or an ability check involving calligrapher's supplies, you can roll a d4 and add the number rolled to the total ability check.",
+          tracked: false,
+        },
+        {
+          id: "scribes_insight",
+          name: "Scribe's Insight",
+          desc: [
+            "You know the Message cantrip.",
+            "You can cast Comprehend Languages with this trait. Starting at 3rd level, you can also cast Magic Mouth with it.",
+            "You regain all expended uses when you finish a long rest. Intelligence is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "scribes_insight_comprehend_languages",
+          name: "Scribe's Insight (Comprehend Languages)",
+          desc: "Cast [[spell:comprehend-languages|Comprehend Languages]] with your Scribe's Insight trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "scribes_insight_magic_mouth",
+          name: "Scribe's Insight (Magic Mouth)",
+          desc: "At 3rd level, cast [[spell:magic-mouth|Magic Mouth]] with your Scribe's Insight trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mark_of_scribing_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Scribing spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+    },
   },
   "Half Elf": {
     features: [
@@ -621,7 +679,16 @@ export const subRaceSpells = {
       },
       Gnome: {
         // Forest Gnome adds minor illusion cantrip
+        Forest: {
+          dailySpells: {
+            1: ["minor-illusion"],
+          },
+        },
         'Mark of Scribing': {
+            dailySpells: {
+                1: ['message', 'comprehend-languages'],
+                3: ['magic-mouth']
+            },
             additionalPreparedSpells: {
                 // uses Spell Level consistent with spellTables.js (can check if character's level has spells greater than 0 of that level)
                 'first': ['comprehend-languages', 'illusory-script'],

@@ -110,6 +110,8 @@ const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusi
 const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
 const SHAPECHANGER_BONUS_TAG = "wizard_transmutation_shapechanger";
 const SPELLS_OF_THE_MARK_BONUS_TAG = "race_spells_of_the_mark";
+const FOREST_GNOME_CANTRIP_TAG = "gnome_forest_natural_illusionist";
+const MARK_OF_SCRIBING_CANTRIP_TAG = "gnome_mark_of_scribing_message";
 const DROW_MAGIC_CANTRIP_TAG = "elf_drow_magic_cantrip";
 const PALLID_ELF_CANTRIP_TAG = "elf_pallid_blessing_of_the_moonweaver";
 const MARK_OF_SHADOW_CANTRIP_TAG = "elf_mark_of_shadow_shape_shadows";
@@ -610,6 +612,8 @@ export const SpellList = (props) => {
     ? characterInfo.druidicWarriorCantrips
     : [];
   const highElfCantrips = Array.isArray(characterInfo?.highElfCantrips) ? characterInfo.highElfCantrips : [];
+  const forestGnomeCantrip = characterInfo?.forestGnomeCantrip || null;
+  const markOfScribingCantrip = characterInfo?.markOfScribingCantrip || null;
   const drowMagicCantrip = characterInfo?.drowMagicCantrip || null;
   const pallidMoonweaverCantrip = characterInfo?.pallidMoonweaverCantrip || null;
   const markOfShadowCantrip = characterInfo?.markOfShadowCantrip || null;
@@ -649,6 +653,8 @@ export const SpellList = (props) => {
   const hasAstralFire = race === "Elf" && subrace === "Astral Elf";
   const hasVahadarCantripFeature = race === "Elf" && subrace === "Vahadar";
   const hasMulDayaMagic = race === "Elf" && subrace === "Mul Daya";
+  const hasForestNaturalIllusionist = race === "Gnome" && subrace === "Forest";
+  const hasMarkOfScribing = race === "Gnome" && subrace === "Mark of Scribing";
 
   const activeRaceSpellListConfig = React.useMemo(() => {
     if (race === "Dwarf" && subrace === "Mark of Warding") {
@@ -673,8 +679,19 @@ export const SpellList = (props) => {
       };
     }
 
+    if (hasMarkOfScribing) {
+      return {
+        key: `race:gnome:mark_of_scribing:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Gnome?.["Mark of Scribing"]?.additionalPreparedSpells || {}),
+      };
+    }
+
     return null;
-  }, [classKey, hasMarkOfShadow, race, spellListClassKey, subrace]);
+  }, [classKey, hasMarkOfScribing, hasMarkOfShadow, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -951,6 +968,26 @@ export const SpellList = (props) => {
 
   useEffect(() => {
     return syncStoredSingleCantrip({
+      enabled: hasForestNaturalIllusionist,
+      storageKey: "forestGnomeCantrip",
+      spellIndex: "minor-illusion",
+      bonusTag: FOREST_GNOME_CANTRIP_TAG,
+      currentSpell: forestGnomeCantrip,
+    });
+  }, [forestGnomeCantrip, hasForestNaturalIllusionist, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasMarkOfScribing,
+      storageKey: "markOfScribingCantrip",
+      spellIndex: "message",
+      bonusTag: MARK_OF_SCRIBING_CANTRIP_TAG,
+      currentSpell: markOfScribingCantrip,
+    });
+  }, [hasMarkOfScribing, markOfScribingCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
       enabled: hasDrowMagic,
       storageKey: "drowMagicCantrip",
       spellIndex: "dancing-lights",
@@ -988,6 +1025,18 @@ export const SpellList = (props) => {
       currentSpell: mulDayaMagicCantrip,
     });
   }, [hasMulDayaMagic, mulDayaMagicCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    if (hasForestNaturalIllusionist) return;
+    if (!forestGnomeCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, forestGnomeCantrip: null }));
+  }, [forestGnomeCantrip, hasForestNaturalIllusionist, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasMarkOfScribing) return;
+    if (!markOfScribingCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, markOfScribingCantrip: null }));
+  }, [hasMarkOfScribing, markOfScribingCantrip, setCharacterInfo]);
 
   useEffect(() => {
     if (hasHighElfCantripFeature) return;
@@ -5033,6 +5082,8 @@ export const SpellList = (props) => {
     if (!classMeta) return null;
 
     const hasRacialSpellTrackerContent =
+      hasForestNaturalIllusionist ||
+      hasMarkOfScribing ||
       hasDrowMagic ||
       hasHighElfCantripFeature ||
       hasPallidMoonweaver ||
@@ -5118,6 +5169,8 @@ export const SpellList = (props) => {
       (shouldRenderBonusCantripSection ||
         hasDruidicWarrior ||
         hasBlessedWarrior ||
+        hasForestNaturalIllusionist ||
+        hasMarkOfScribing ||
         hasDrowMagic ||
         hasHighElfCantripFeature ||
         hasPallidMoonweaver ||
@@ -5152,6 +5205,8 @@ export const SpellList = (props) => {
     const cantripFeatureSources = [];
     if (hasDruidicWarrior) cantripFeatureSources.push("Druidic Warrior");
     if (hasBlessedWarrior) cantripFeatureSources.push("Blessed Warrior");
+    if (hasForestNaturalIllusionist) cantripFeatureSources.push("Natural Illusionist");
+    if (hasMarkOfScribing) cantripFeatureSources.push("Scribe's Insight");
     if (hasDrowMagic) cantripFeatureSources.push("Drow Magic");
     if (hasHighElfCantripFeature) cantripFeatureSources.push("High Elf Cantrip");
     if (hasPallidMoonweaver) cantripFeatureSources.push("Blessing of the Moonweaver");
@@ -5514,6 +5569,48 @@ export const SpellList = (props) => {
                         color: "rgba(239, 108, 0, 0.90)",
                         border: "1px solid rgba(239, 108, 0, 0.22)",
                         "&:hover": { opacity: 0.85 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === FOREST_GNOME_CANTRIP_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Natural Illusionist cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="NI"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(6, 95, 70, 0.92)",
+                        border: "1px solid rgba(6, 95, 70, 0.22)",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : numericalSpellLevel === 0 &&
+                  spell?.spelltrackerBonus === MARK_OF_SCRIBING_CANTRIP_TAG ? (
+                  <Tooltip
+                    arrow
+                    title="Scribe's Insight cantrip (does not count toward cantrips known)."
+                  >
+                    <Chip
+                      size="small"
+                      label="MoS"
+                      sx={{
+                        height: 18,
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        opacity: 0.75,
+                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "rgba(30, 64, 175, 0.92)",
+                        border: "1px solid rgba(30, 64, 175, 0.22)",
+                        "&:hover": { opacity: 0.9 },
                       }}
                     />
                   </Tooltip>
@@ -6856,6 +6953,78 @@ export const SpellList = (props) => {
     if (Number(numericalSpellLevel) !== 0) return null;
 
     const entries = [
+      forestGnomeCantrip
+        ? {
+            spell: forestGnomeCantrip,
+            tag: "NI",
+            tooltip: "Natural Illusionist cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Natural Illusionist cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Natural Illusionist cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Natural Illusionist Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Natural Illusionist.",
+                      storageKey: "forestGnomeCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                      duplicateChoiceLabel: "Already selected as your Natural Illusionist cantrip.",
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(6, 95, 70, 0.92)",
+                    border: "1px solid rgba(6, 95, 70, 0.22)",
+                    backgroundColor: "rgba(6, 95, 70, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(6, 95, 70, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      markOfScribingCantrip
+        ? {
+            spell: markOfScribingCantrip,
+            tag: "MoS",
+            tooltip: "Scribe's Insight cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Scribe's Insight cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Scribe's Insight cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Scribe's Insight Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Scribe's Insight.",
+                      storageKey: "markOfScribingCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                      duplicateChoiceLabel: "Already selected as your Scribe's Insight cantrip.",
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(30, 64, 175, 0.92)",
+                    border: "1px solid rgba(30, 64, 175, 0.22)",
+                    backgroundColor: "rgba(30, 64, 175, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(30, 64, 175, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
       drowMagicCantrip
         ? {
             spell: drowMagicCantrip,

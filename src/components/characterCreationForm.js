@@ -84,7 +84,8 @@ export const CharacterCreationForm = (props) => {
   const hasRaceSpellListWarning = React.useCallback(
     (raceName, subraceName) =>
       (raceName === "Dwarf" && subraceName === "Mark of Warding") ||
-      (raceName === "Elf" && subraceName === "Mark of Shadow"),
+      (raceName === "Elf" && subraceName === "Mark of Shadow") ||
+      (raceName === "Gnome" && subraceName === "Mark of Scribing"),
     []
   );
 
