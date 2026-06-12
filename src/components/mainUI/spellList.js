@@ -37,6 +37,7 @@ import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
 import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import CelestialBonusCantripSwapModal from "./CelestialBonusCantripSwapModal";
+import RacialCantripSelectionModal from "./RacialCantripSelectionModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
@@ -108,22 +109,11 @@ const normalizeCompareName = (s) =>
 const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusion";
 const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
 const SHAPECHANGER_BONUS_TAG = "wizard_transmutation_shapechanger";
-const MARK_OF_WARDING_BONUS_TAG = "mark_of_warding_spells_of_the_mark";
-
-const MARK_OF_WARDING_SPELL_ROWS = Object.entries(
-  subRaceSpells?.Dwarf?.["Mark of Warding"]?.additionalPreparedSpells || {}
-)
-.map(([spellLevelKey, spells]) => ({
-    spellLevel: Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).find(([, key]) => key === spellLevelKey)?.[0],
-    spells: Array.isArray(spells) ? spells : [],
-  }))
-  .filter((row) => Number.isFinite(Number(row?.spellLevel)) && row.spells.length > 0)
-  .flatMap((row) =>
-    row.spells.map((spellIndex) => ({
-      spellLevel: Number(row.spellLevel),
-      originalIndex: String(spellIndex || "").trim(),
-    }))
-  );
+const SPELLS_OF_THE_MARK_BONUS_TAG = "race_spells_of_the_mark";
+const DROW_MAGIC_CANTRIP_TAG = "elf_drow_magic_cantrip";
+const PALLID_ELF_CANTRIP_TAG = "elf_pallid_blessing_of_the_moonweaver";
+const MARK_OF_SHADOW_CANTRIP_TAG = "elf_mark_of_shadow_shape_shadows";
+const MUL_DAYA_CANTRIP_TAG = "elf_mul_daya_magic_cantrip";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -141,6 +131,22 @@ const humanizeSpellIndex = (idx) => {
     .replace(/\bA\b/g, "a")
     .replace(/\bAn\b/g, "an");
 };
+
+const buildSpellRowsFromPreparedMap = (preparedMap) =>
+  Object.entries(preparedMap || {})
+    .map(([spellLevelKey, spells]) => ({
+      spellLevel: Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).find(([, key]) => key === spellLevelKey)?.[0],
+      spells: Array.isArray(spells) ? spells : [],
+    }))
+    .filter((row) => Number.isFinite(Number(row?.spellLevel)) && row.spells.length > 0)
+    .flatMap((row) =>
+      row.spells.map((spellIndex) => ({
+        spellLevel: Number(row.spellLevel),
+        originalIndex: String(spellIndex || "").trim(),
+      }))
+    );
+
+const RACIAL_SPELL_SWAP_CLASS_KEYS = ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"];
 
 const ARCANA_DOMAIN_SPELLS = [
   { clericLevel: 1, spellLevel: 1, names: [["Detect Magic"], ["Magic Missile"]] },
@@ -603,6 +609,13 @@ export const SpellList = (props) => {
   const druidicWarriorCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
     ? characterInfo.druidicWarriorCantrips
     : [];
+  const highElfCantrips = Array.isArray(characterInfo?.highElfCantrips) ? characterInfo.highElfCantrips : [];
+  const drowMagicCantrip = characterInfo?.drowMagicCantrip || null;
+  const pallidMoonweaverCantrip = characterInfo?.pallidMoonweaverCantrip || null;
+  const markOfShadowCantrip = characterInfo?.markOfShadowCantrip || null;
+  const astralElfCantrip = characterInfo?.astralElfCantrip || null;
+  const vahadarCantrip = characterInfo?.vahadarCantrip || null;
+  const mulDayaMagicCantrip = characterInfo?.mulDayaMagicCantrip || null;
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells
@@ -629,12 +642,40 @@ export const SpellList = (props) => {
       Number(tableRow?.spellSlots || 0) > 0
     );
   }, [characterLevel, spellTableKey]);
-  const isMarkOfWarding = race === "Dwarf" && subrace === "Mark of Warding";
-  const markOfWardingSpellListKey = React.useMemo(
-    () => `race:dwarf:mark_of_warding:${String(spellListClassKey || classKey || "unknown")}`,
-    [classKey, spellListClassKey]
-  );
-  const hasMarkOfWardingSpellList = isMarkOfWarding && hasActiveSpellcasting && Boolean(spellListClassKey);
+  const hasDrowMagic = race === "Elf" && subrace === "Dark Elf";
+  const hasHighElfCantripFeature = race === "Elf" && subrace === "High Elf";
+  const hasPallidMoonweaver = race === "Elf" && subrace === "Pallid Elf";
+  const hasMarkOfShadow = race === "Elf" && subrace === "Mark of Shadow";
+  const hasAstralFire = race === "Elf" && subrace === "Astral Elf";
+  const hasVahadarCantripFeature = race === "Elf" && subrace === "Vahadar";
+  const hasMulDayaMagic = race === "Elf" && subrace === "Mul Daya";
+
+  const activeRaceSpellListConfig = React.useMemo(() => {
+    if (race === "Dwarf" && subrace === "Mark of Warding") {
+      return {
+        key: `race:dwarf:mark_of_warding:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Dwarf?.["Mark of Warding"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasMarkOfShadow) {
+      return {
+        key: `race:elf:mark_of_shadow:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Elf?.["Mark of Shadow"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    return null;
+  }, [classKey, hasMarkOfShadow, race, spellListClassKey, subrace]);
+  const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
   const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -695,6 +736,103 @@ export const SpellList = (props) => {
     originalSpell: null,
   });
 
+  const [racialCantripModal, setRacialCantripModal] = React.useState({
+    open: false,
+    title: "",
+    helperText: "",
+    storageKey: "",
+    spellClassKey: "",
+    spellClassKeys: [],
+    spellIndexes: [],
+    selectionMode: "single",
+    maxSelections: 1,
+    softLimit: false,
+    allowRemove: false,
+    duplicateChoiceLabel: "Already chosen.",
+  });
+
+  const openRacialCantripModal = React.useCallback((config) => {
+    setRacialCantripModal({
+      open: true,
+      title: config?.title || "",
+      helperText: config?.helperText || "",
+      storageKey: config?.storageKey || "",
+      spellClassKey: config?.spellClassKey || "",
+      spellClassKeys: Array.isArray(config?.spellClassKeys) ? config.spellClassKeys : [],
+      spellIndexes: Array.isArray(config?.spellIndexes) ? config.spellIndexes : [],
+      selectionMode: config?.selectionMode || "single",
+      maxSelections: Number(config?.maxSelections) || 1,
+      softLimit: Boolean(config?.softLimit),
+      allowRemove: Boolean(config?.allowRemove),
+      duplicateChoiceLabel: config?.duplicateChoiceLabel || "Already chosen.",
+    });
+  }, []);
+
+  const syncStoredSingleCantrip = React.useCallback(
+    ({ enabled, storageKey, spellIndex, bonusTag, currentSpell, doesNotCount = true }) => {
+      if (!enabled) {
+        if (!currentSpell?.index) return null;
+        setCharacterInfo((prev) => {
+          if (!prev?.[storageKey]) return prev;
+          return { ...prev, [storageKey]: null };
+        });
+        return null;
+      }
+
+      if (currentSpell?.index) {
+        const needsTag =
+          String(currentSpell?.spelltrackerBonus || "") !== String(bonusTag || "") ||
+          currentSpell?.spelltrackerDoesNotCount !== doesNotCount;
+
+        if (!needsTag) return null;
+
+        setCharacterInfo((prev) => {
+          const existing = prev?.[storageKey];
+          if (!existing?.index) return prev;
+          return {
+            ...prev,
+            [storageKey]: {
+              ...existing,
+              spelltrackerBonus: bonusTag,
+              spelltrackerDoesNotCount: doesNotCount,
+              spelltrackerOrigin: String(existing?.spelltrackerOrigin || spellIndex || existing?.index || ""),
+            },
+          };
+        });
+        return null;
+      }
+
+      let cancelled = false;
+      axios
+        .get(`/singlespell/${spellIndex}`)
+        .then((res) => {
+          if (cancelled) return;
+          const spell = res?.data;
+          if (!spell?.index) return;
+          setCharacterInfo((prev) => {
+            if (prev?.[storageKey]?.index) return prev;
+            return {
+              ...prev,
+              [storageKey]: {
+                ...spell,
+                spelltrackerBonus: bonusTag,
+                spelltrackerDoesNotCount: doesNotCount,
+                spelltrackerOrigin: spellIndex,
+              },
+            };
+          });
+        })
+        .catch(() => {
+          // Silently ignore: backend might not be running yet.
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    },
+    [setCharacterInfo]
+  );
+
   const [dwPickerModalOpen, setDwPickerModalOpen] = React.useState(false);
 
   const [spellListLoadStatus, setSpellListLoadStatus] = React.useState({
@@ -717,8 +855,9 @@ export const SpellList = (props) => {
   // Spirit Session selection is soft-limited (UI warns when over limit).
 
   useEffect(() => {
-    const swapsForMarkOfWarding = characterInfo?.domainSpellSwaps?.[markOfWardingSpellListKey] || {};
-    const activeRows = hasMarkOfWardingSpellList ? MARK_OF_WARDING_SPELL_ROWS : [];
+    const raceSpellListKey = String(activeRaceSpellListConfig?.key || "");
+    const swapsForRaceSpellList = characterInfo?.domainSpellSwaps?.[raceSpellListKey] || {};
+    const activeRows = hasActiveRaceSpellList ? activeRaceSpellListConfig?.rows || [] : [];
 
     setCharacterInfo((prev) => {
       const current = prev?.spellsPrepared && typeof prev.spellsPrepared === "object" ? prev.spellsPrepared : {};
@@ -730,7 +869,7 @@ export const SpellList = (props) => {
       Object.keys(next).forEach((levelKey) => {
         const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
         const filtered = list.filter((spell) => {
-          if (String(spell?.spelltrackerBonus || "") !== MARK_OF_WARDING_BONUS_TAG) return true;
+          if (String(spell?.spelltrackerBonus || "") !== SPELLS_OF_THE_MARK_BONUS_TAG) return true;
           const origin = String(spell?.spelltrackerOrigin || "");
           const row = allowedByOrigin.get(origin);
           return Boolean(row) && Number(row?.spellLevel) === Number(levelKey);
@@ -742,17 +881,17 @@ export const SpellList = (props) => {
         }
       });
 
-      if (hasMarkOfWardingSpellList) {
+      if (hasActiveRaceSpellList) {
         activeRows.forEach((row) => {
           const levelKey = String(row.spellLevel);
           const list = Array.isArray(next[levelKey]) ? next[levelKey] : [];
           const origin = String(row.originalIndex || "").trim();
-          const swapped = origin ? swapsForMarkOfWarding?.[origin] : null;
+          const swapped = origin ? swapsForRaceSpellList?.[origin] : null;
           const desiredIndex = String(swapped?.index || origin).trim();
           if (!origin || !desiredIndex) return;
 
           const withoutStaleTaggedEntries = list.filter((spell) => {
-            const isMarkSpell = String(spell?.spelltrackerBonus || "") === MARK_OF_WARDING_BONUS_TAG;
+            const isMarkSpell = String(spell?.spelltrackerBonus || "") === SPELLS_OF_THE_MARK_BONUS_TAG;
             if (!isMarkSpell) return true;
             const spellOrigin = String(spell?.spelltrackerOrigin || "");
             if (spellOrigin !== origin) return true;
@@ -767,7 +906,7 @@ export const SpellList = (props) => {
           if (existingIdx !== -1) {
             const existing = withoutStaleTaggedEntries[existingIdx] || null;
             const needsTag =
-              String(existing?.spelltrackerBonus || "") !== MARK_OF_WARDING_BONUS_TAG ||
+              String(existing?.spelltrackerBonus || "") !== SPELLS_OF_THE_MARK_BONUS_TAG ||
               existing?.spelltrackerDoesNotCount !== true ||
               String(existing?.spelltrackerOrigin || "") !== origin;
 
@@ -777,7 +916,7 @@ export const SpellList = (props) => {
             const updated = {
               ...existing,
               name: existing?.name || swapped?.name || humanizeSpellIndex(desiredIndex),
-              spelltrackerBonus: MARK_OF_WARDING_BONUS_TAG,
+              spelltrackerBonus: SPELLS_OF_THE_MARK_BONUS_TAG,
               spelltrackerOrigin: origin,
               spelltrackerDoesNotCount: true,
             };
@@ -791,7 +930,7 @@ export const SpellList = (props) => {
             {
               index: desiredIndex,
               name: swapped?.name || humanizeSpellIndex(desiredIndex),
-              spelltrackerBonus: MARK_OF_WARDING_BONUS_TAG,
+              spelltrackerBonus: SPELLS_OF_THE_MARK_BONUS_TAG,
               spelltrackerOrigin: origin,
               spelltrackerDoesNotCount: true,
             },
@@ -803,12 +942,70 @@ export const SpellList = (props) => {
       return { ...prev, spellsPrepared: next };
     });
   }, [
+    activeRaceSpellListConfig,
     characterInfo?.domainSpellSwaps,
     characterInfo?.spellsPrepared,
-    hasMarkOfWardingSpellList,
-    markOfWardingSpellListKey,
+    hasActiveRaceSpellList,
     setCharacterInfo,
   ]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasDrowMagic,
+      storageKey: "drowMagicCantrip",
+      spellIndex: "dancing-lights",
+      bonusTag: DROW_MAGIC_CANTRIP_TAG,
+      currentSpell: drowMagicCantrip,
+    });
+  }, [drowMagicCantrip, hasDrowMagic, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasPallidMoonweaver,
+      storageKey: "pallidMoonweaverCantrip",
+      spellIndex: "light",
+      bonusTag: PALLID_ELF_CANTRIP_TAG,
+      currentSpell: pallidMoonweaverCantrip,
+    });
+  }, [hasPallidMoonweaver, pallidMoonweaverCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasMarkOfShadow,
+      storageKey: "markOfShadowCantrip",
+      spellIndex: "minor-illusion",
+      bonusTag: MARK_OF_SHADOW_CANTRIP_TAG,
+      currentSpell: markOfShadowCantrip,
+    });
+  }, [hasMarkOfShadow, markOfShadowCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasMulDayaMagic,
+      storageKey: "mulDayaMagicCantrip",
+      spellIndex: "chill-touch",
+      bonusTag: MUL_DAYA_CANTRIP_TAG,
+      currentSpell: mulDayaMagicCantrip,
+    });
+  }, [hasMulDayaMagic, mulDayaMagicCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    if (hasHighElfCantripFeature) return;
+    if (highElfCantrips.length === 0) return;
+    setCharacterInfo((prev) => ({ ...prev, highElfCantrips: [] }));
+  }, [hasHighElfCantripFeature, highElfCantrips.length, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasAstralFire) return;
+    if (!astralElfCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, astralElfCantrip: null }));
+  }, [astralElfCantrip, hasAstralFire, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasVahadarCantripFeature) return;
+    if (!vahadarCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, vahadarCantrip: null }));
+  }, [hasVahadarCantripFeature, setCharacterInfo, vahadarCantrip]);
 
   useEffect(() => {
     if (!isWizard) return;
@@ -4835,7 +5032,16 @@ export const SpellList = (props) => {
     const classMeta = ClassesData?.[classKey];
     if (!classMeta) return null;
 
-    if (effectiveIsNonCaster && !isTotemWarriorRitualTracker) {
+    const hasRacialSpellTrackerContent =
+      hasDrowMagic ||
+      hasHighElfCantripFeature ||
+      hasPallidMoonweaver ||
+      hasMarkOfShadow ||
+      hasAstralFire ||
+      hasVahadarCantripFeature ||
+      hasMulDayaMagic;
+
+    if (effectiveIsNonCaster && !isTotemWarriorRitualTracker && !hasRacialSpellTrackerContent) {
       return null;
     }
 
@@ -4898,18 +5104,10 @@ export const SpellList = (props) => {
       );
     }
 
-    const levelKey = Number(characterInfo?.characterLevel) || 0;
-    const tableRow = spellTables?.[spellTableKey]?.[levelKey];
-    if (!tableRow) return null;
-
-    const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
     const isCantrips = textualSpellLevel === "cantrips";
-    const isWarlockSpellLevelSection =
-      isWarlock &&
-      !isCantrips &&
-      Number(numericalSpellLevel) >= 1 &&
-      Number(numericalSpellLevel) <= Math.max(1, warlockSlotLevelNumber);
-    const shouldShowWarlockSection = isCantrips || isWarlockSpellLevelSection;
+    const levelKey = Number(characterInfo?.characterLevel) || 0;
+    const tableRow = spellTables?.[spellTableKey]?.[levelKey] || null;
+    const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
     const preparedAtLevel = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? characterInfo.spellsPrepared[numericalSpellLevel]
       : [];
@@ -4920,6 +5118,13 @@ export const SpellList = (props) => {
       (shouldRenderBonusCantripSection ||
         hasDruidicWarrior ||
         hasBlessedWarrior ||
+        hasDrowMagic ||
+        hasHighElfCantripFeature ||
+        hasPallidMoonweaver ||
+        hasMarkOfShadow ||
+        hasAstralFire ||
+        hasVahadarCantripFeature ||
+        hasMulDayaMagic ||
         hasArcanaInitiate ||
         hasAcolyteOfNature ||
         hasReaper ||
@@ -4928,6 +5133,14 @@ export const SpellList = (props) => {
         hasGuidingWhispers ||
         hasCelestialBonusCantrips ||
         hasUndyingAmongTheDeadCantrip);
+    if (!tableRow && !(isCantrips && shouldRenderFeatureCantripSection)) return null;
+
+    const isWarlockSpellLevelSection =
+      isWarlock &&
+      !isCantrips &&
+      Number(numericalSpellLevel) >= 1 &&
+      Number(numericalSpellLevel) <= Math.max(1, warlockSlotLevelNumber);
+    const shouldShowWarlockSection = isCantrips || isWarlockSpellLevelSection;
     if (isWarlock) {
       if (!shouldShowWarlockSection && !shouldRenderFeatureCantripSection) return null;
     } else if (slotCount === 0 && !shouldRenderFeatureCantripSection) {
@@ -4939,6 +5152,13 @@ export const SpellList = (props) => {
     const cantripFeatureSources = [];
     if (hasDruidicWarrior) cantripFeatureSources.push("Druidic Warrior");
     if (hasBlessedWarrior) cantripFeatureSources.push("Blessed Warrior");
+    if (hasDrowMagic) cantripFeatureSources.push("Drow Magic");
+    if (hasHighElfCantripFeature) cantripFeatureSources.push("High Elf Cantrip");
+    if (hasPallidMoonweaver) cantripFeatureSources.push("Blessing of the Moonweaver");
+    if (hasMarkOfShadow) cantripFeatureSources.push("Shape Shadows");
+    if (hasAstralFire) cantripFeatureSources.push("Astral Fire");
+    if (hasVahadarCantripFeature) cantripFeatureSources.push("Vahadar Cantrip");
+    if (hasMulDayaMagic) cantripFeatureSources.push("Mul Daya Magic");
     if (hasDraconicGift) cantripFeatureSources.push("Draconic Gift");
     if (hasSwarmkeeperMagic) cantripFeatureSources.push("Swarmkeeper Magic");
     if (hasArcanaInitiate) cantripFeatureSources.push("Arcana Initiate");
@@ -5070,6 +5290,7 @@ export const SpellList = (props) => {
            {renderMagicalSecretsForLevel(numericalSpellLevel)}
            {renderSpiritSessionForLevel(numericalSpellLevel)}
            {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
+           {renderRacialCantripsForLevel(numericalSpellLevel)}
            {renderBlessedWarriorCantripsInline(numericalSpellLevel)}
            {isCantrips && hasBlessedWarrior ? (
              <Box sx={{ mb: 0.5 }}>
@@ -5429,7 +5650,7 @@ export const SpellList = (props) => {
                       }}
                     />
                   </Tooltip>
-                ) : spell?.spelltrackerBonus === MARK_OF_WARDING_BONUS_TAG ? (
+                ) : spell?.spelltrackerBonus === SPELLS_OF_THE_MARK_BONUS_TAG ? (
                   <Tooltip
                     arrow
                     title="Spells of the Mark spell (added to your spell list; does not count against spells known/prepared)."
@@ -5775,7 +5996,7 @@ export const SpellList = (props) => {
                       <SwapHorizIcon fontSize="inherit" />
                     </IconButton>
                   </Tooltip>
-                ) : spell?.spelltrackerBonus === MARK_OF_WARDING_BONUS_TAG ? (
+                ) : spell?.spelltrackerBonus === SPELLS_OF_THE_MARK_BONUS_TAG ? (
                   <Tooltip arrow title="Swap this Spells of the Mark spell (does not change spells known).">
                     <IconButton
                       size="small"
@@ -5785,10 +6006,10 @@ export const SpellList = (props) => {
                         setDomainSwapModal({
                           open: true,
                           spellLevel: Number(numericalSpellLevel),
-                          domainKey: markOfWardingSpellListKey,
+                          domainKey: String(activeRaceSpellListConfig?.key || currentDomainKey),
                           originalSpell: origin ? { index: origin, name: humanizeSpellIndex(origin) } : spell,
-                          spellClassKey: String(spellListClassKey || classKey || "wizard"),
-                          swapLabel: "Spells of the Mark Spell",
+                          spellClassKey: String(activeRaceSpellListConfig?.spellClassKey || spellListClassKey || classKey || "wizard"),
+                          swapLabel: String(activeRaceSpellListConfig?.swapLabel || "Spells of the Mark Spell"),
                         });
                       }}
                       sx={{
@@ -6631,6 +6852,298 @@ export const SpellList = (props) => {
     );
   };
 
+  const renderRacialCantripsForLevel = (numericalSpellLevel) => {
+    if (Number(numericalSpellLevel) !== 0) return null;
+
+    const entries = [
+      drowMagicCantrip
+        ? {
+            spell: drowMagicCantrip,
+            tag: "DM",
+            tooltip: "Drow Magic cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Drow Magic cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Drow Magic cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Drow Magic Cantrip",
+                      helperText: "Choose a spell list, then choose a cantrip to occupy your Drow Magic slot. This slot cannot be forgotten from the tracker.",
+                      storageKey: "drowMagicCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                      duplicateChoiceLabel: "Already selected as your Drow Magic cantrip.",
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(106, 27, 154, 0.92)",
+                    border: "1px solid rgba(106, 27, 154, 0.22)",
+                    backgroundColor: "rgba(106, 27, 154, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(106, 27, 154, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      ...highElfCantrips.map((spell) => ({
+        spell,
+        tag: "C",
+        tooltip:
+          highElfCantrips.length > 1
+            ? "High Elf cantrip (warning: this feature normally allows only 1 cantrip)."
+            : "High Elf cantrip.",
+        action: (
+          <Tooltip arrow title="Adjust High Elf cantrips">
+            <IconButton
+              size="small"
+              aria-label="Adjust High Elf cantrips"
+              onClick={() =>
+                openRacialCantripModal({
+                  title: "High Elf Cantrip",
+                  helperText:
+                    "Choose a spell list, then choose cantrips. High elves normally know only one, so the picker warns if you go over that limit.",
+                  storageKey: "highElfCantrips",
+                  spellClassKey: "wizard",
+                  spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                  selectionMode: "multiple",
+                  maxSelections: 1,
+                  softLimit: true,
+                  allowRemove: true,
+                  duplicateChoiceLabel: "High elves normally only know one cantrip from this feature.",
+                })
+              }
+              sx={{
+                p: 0.25,
+                color: "rgba(7, 89, 133, 0.92)",
+                border: "1px solid rgba(7, 89, 133, 0.22)",
+                backgroundColor: "rgba(7, 89, 133, 0.06)",
+                "&:hover": { backgroundColor: "rgba(7, 89, 133, 0.10)" },
+              }}
+            >
+              <SwapHorizIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        ),
+      })),
+      pallidMoonweaverCantrip
+        ? {
+            spell: pallidMoonweaverCantrip,
+            tag: "BotM",
+            tooltip: "Blessing of the Moonweaver cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Blessing of the Moonweaver cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Blessing of the Moonweaver cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Blessing of the Moonweaver Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Blessing of the Moonweaver.",
+                      storageKey: "pallidMoonweaverCantrip",
+                      spellClassKey: "cleric",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(180, 83, 9, 0.92)",
+                    border: "1px solid rgba(180, 83, 9, 0.22)",
+                    backgroundColor: "rgba(180, 83, 9, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(180, 83, 9, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      markOfShadowCantrip
+        ? {
+            spell: markOfShadowCantrip,
+            tag: "SS",
+            tooltip: "Shape Shadows cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Shape Shadows cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Shape Shadows cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Shape Shadows Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Shape Shadows.",
+                      storageKey: "markOfShadowCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(55, 48, 163, 0.92)",
+                    border: "1px solid rgba(55, 48, 163, 0.22)",
+                    backgroundColor: "rgba(55, 48, 163, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(55, 48, 163, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      astralElfCantrip
+        ? {
+            spell: astralElfCantrip,
+            tag: "AF",
+            tooltip: "Astral Fire cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Astral Fire cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Astral Fire cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Astral Fire",
+                      helperText: "Choose a spell list, then choose the cantrip for Astral Fire.",
+                      storageKey: "astralElfCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(2, 132, 199, 0.92)",
+                    border: "1px solid rgba(2, 132, 199, 0.22)",
+                    backgroundColor: "rgba(2, 132, 199, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(2, 132, 199, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      vahadarCantrip
+        ? {
+            spell: vahadarCantrip,
+            tag: "C",
+            tooltip: "Vahadar cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Vahadar cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Vahadar cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Vahadar Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for this Vahadar trait.",
+                      storageKey: "vahadarCantrip",
+                      spellClassKey: "druid",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(21, 128, 61, 0.92)",
+                    border: "1px solid rgba(21, 128, 61, 0.22)",
+                    backgroundColor: "rgba(21, 128, 61, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(21, 128, 61, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      mulDayaMagicCantrip
+        ? {
+            spell: mulDayaMagicCantrip,
+            tag: "MDM",
+            tooltip: "Mul Daya Magic cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Mul Daya Magic cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Mul Daya Magic cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Mul Daya Magic Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Mul Daya Magic.",
+                      storageKey: "mulDayaMagicCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(31, 41, 55, 0.92)",
+                    border: "1px solid rgba(31, 41, 55, 0.22)",
+                    backgroundColor: "rgba(31, 41, 55, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(31, 41, 55, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+    ].filter(Boolean);
+
+    if (entries.length === 0) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        {entries.map((entry, idx) => (
+          <Box key={`${entry.spell?.index || "racial"}:${idx}`} sx={{ py: 0.2 }}>
+            <SpellAccordian
+              numericalSpellLevel={0}
+              spell={entry.spell}
+              leadingControl={
+                <Tooltip arrow title={entry.tooltip}>
+                  <Chip
+                    size="small"
+                    label={entry.tag}
+                    sx={{
+                      height: 18,
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      opacity: entry.tag === "C" && highElfCantrips.length > 1 ? 0.9 : 0.72,
+                      backgroundColor: entry.tag === "C" && highElfCantrips.length > 1 ? "rgba(183, 28, 28, 0.10)" : "rgba(0,0,0,0.06)",
+                      color: entry.tag === "C" && highElfCantrips.length > 1 ? "rgba(183, 28, 28, 0.88)" : "rgba(62, 39, 35, 0.82)",
+                      border: entry.tag === "C" && highElfCantrips.length > 1 ? "1px solid rgba(183, 28, 28, 0.28)" : "1px solid rgba(62, 39, 35, 0.22)",
+                      "&:hover": { opacity: 0.88 },
+                    }}
+                  />
+                </Tooltip>
+              }
+              actionButton={entry.action || null}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
   const renderThousandFormsForLevel = (numericalSpellLevel) => {
     if (!hasThousandForms) return null;
     if (Number(numericalSpellLevel) !== 2) return null;
@@ -7017,6 +7530,37 @@ export const SpellList = (props) => {
         </>
       )}
       {renderDailySpellsList(characterInfo, setCharacterInfo)}
+
+      <RacialCantripSelectionModal
+        open={racialCantripModal.open}
+        title={racialCantripModal.title}
+        helperText={racialCantripModal.helperText}
+        storageKey={racialCantripModal.storageKey}
+        spellClassKey={racialCantripModal.spellClassKey}
+        spellClassKeys={racialCantripModal.spellClassKeys}
+        spellIndexes={racialCantripModal.spellIndexes}
+        selectionMode={racialCantripModal.selectionMode}
+        maxSelections={racialCantripModal.maxSelections}
+        softLimit={racialCantripModal.softLimit}
+        allowRemove={racialCantripModal.allowRemove}
+        duplicateChoiceLabel={racialCantripModal.duplicateChoiceLabel}
+        onClose={() =>
+          setRacialCantripModal({
+            open: false,
+            title: "",
+            helperText: "",
+            storageKey: "",
+            spellClassKey: "",
+            spellClassKeys: [],
+            spellIndexes: [],
+            selectionMode: "single",
+            maxSelections: 1,
+            softLimit: false,
+            allowRemove: false,
+            duplicateChoiceLabel: "Already chosen.",
+          })
+        }
+      />
 
       <DomainSpellSwapModal
         open={domainSwapModal.open}

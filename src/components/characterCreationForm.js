@@ -81,6 +81,13 @@ export const CharacterCreationForm = (props) => {
     []
   );
 
+  const hasRaceSpellListWarning = React.useCallback(
+    (raceName, subraceName) =>
+      (raceName === "Dwarf" && subraceName === "Mark of Warding") ||
+      (raceName === "Elf" && subraceName === "Mark of Shadow"),
+    []
+  );
+
   const markOfWardingClassWarningSx = animateMarkOfWardingClassWarning
     ? {
         "@keyframes markOfWardingClassShake": {
@@ -349,8 +356,7 @@ export const CharacterCreationForm = (props) => {
 
     if (
       name === "characterClass" &&
-      characterInfo?.race === "Dwarf" &&
-      characterInfo?.subrace === "Mark of Warding" &&
+      hasRaceSpellListWarning(characterInfo?.race, characterInfo?.subrace) &&
       value !== NO_CLASS &&
       !isActiveSpellcasterSelection({ classKey: value, subclassKey: NO_SUBCLASS })
     ) {
@@ -704,7 +710,7 @@ export const CharacterCreationForm = (props) => {
       />
 
       <Dialog open={markOfWardingWarningOpen} onClose={() => setMarkOfWardingWarningOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Mark of Warding</DialogTitle>
+        <DialogTitle>Spells of the Mark</DialogTitle>
         <DialogContent dividers>
           <Typography sx={{ fontSize: "14px", color: "#3e2723" }}>
             Spells of the Mark are not added for classes that are not spell casters. Are you sure you want to choose{" "}
