@@ -177,7 +177,7 @@ useEffect(() => {
     const race = characterInfo.race;
     const subrace = characterInfo.subrace;
     const draconicAncestry = characterInfo.draconicAncestry;
-    const hasSubrace = subrace && subrace !== "No Subrace" && subrace !== "noSubrace";
+    const hasSubrace = subrace && subrace !== "No Subrace" && subrace !== "noSubrace" && subrace !== "Standard";
 
     if (race === "Dragonborn") {
       if (hasSubrace && draconicAncestry) {

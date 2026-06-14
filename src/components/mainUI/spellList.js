@@ -666,6 +666,7 @@ export const SpellList = (props) => {
   const hasMarkOfScribing = race === "Gnome" && subrace === "Mark of Scribing";
   const hasMarkOfDetection = race === "Half Elf" && subrace === "Mark of Detection";
   const hasMarkOfStorm = race === "Half Elf" && subrace === "Mark of Storm";
+  const hasHalfOrcMarkOfFinding = race === "Half Orc" && subrace === "Mark of Finding";
 
   const activeRaceSpellListConfig = React.useMemo(() => {
     if (race === "Dwarf" && subrace === "Mark of Warding") {
@@ -723,8 +724,19 @@ export const SpellList = (props) => {
       };
     }
 
+    if (hasHalfOrcMarkOfFinding) {
+      return {
+        key: `race:half_orc:mark_of_finding:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.["Half Orc"]?.["Mark of Finding"]?.additionalPreparedSpells || {}),
+      };
+    }
+
     return null;
-  }, [classKey, hasMarkOfDetection, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
+  }, [classKey, hasHalfOrcMarkOfFinding, hasMarkOfDetection, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
