@@ -527,6 +527,81 @@ export const RaceFeaturesData = {
         tracked: false,
       },
     ],
+    subraceFeatures: {
+      "Standard Half Elf": [],
+      "Mark of Detection": [
+        {
+          id: "mark_of_detection_detect_magic",
+          name: "Magical Detection (Detect Magic)",
+          desc: "You can cast [[spell:detect-magic|Detect Magic]] with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "mark_of_detection_detect_poison_and_disease",
+          name: "Magical Detection (Detect Poison and Disease)",
+          desc: "You can cast [[spell:detect-poison-and-disease|Detect Poison and Disease]] with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "mark_of_detection_see_invisibility",
+          name: "Magical Detection (See Invisibility)",
+          desc: "At 3rd level, you can cast [[spell:see-invisibility|See Invisibility]] with this trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mark_of_detection_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Detection spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Mark of Storm": [
+        {
+          id: "mark_of_storm_windwrights_intuition",
+          name: "Windwright's Intuition",
+          desc: "Whenever you make a Dexterity (Acrobatics) check or any ability check involving navigator's tools, you can roll a d4 and add the number rolled to the total ability check.",
+          tracked: false,
+        },
+        {
+          id: "mark_of_storm_storms_boon",
+          name: "Storm's Boon",
+          desc: "You have resistance to lightning damage.",
+          tracked: false,
+        },
+        {
+          id: "mark_of_storm_headwinds",
+          name: "Headwinds",
+          desc: [
+            "You know the [[spell:gust|Gust]] cantrip.",
+            "Starting at 3rd level, you can cast [[spell:gust-of-wind|Gust of Wind]] once with this trait and regain the ability to do so when you finish a long rest.",
+            "Charisma is your spellcasting ability for this spell.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "mark_of_storm_gust_of_wind",
+          name: "Headwinds (Gust of Wind)",
+          desc: "At 3rd level, you can cast [[spell:gust-of-wind|Gust of Wind]] once with your Headwinds trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mark_of_storm_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Storm spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+    },
   },
   "Half Orc": {
     features: [
@@ -700,6 +775,34 @@ export const subRaceSpells = {
             }
         }
       },
+      "Half Elf": {
+        "Mark of Detection": {
+            dailySpells: {
+                1: ["detect-magic", "detect-poison-and-disease"],
+                3: ["see-invisibility"]
+            },
+            additionalPreparedSpells: {
+                "first": ["detect-magic", "detect-poison-and-disease"],
+                "second": ["detect-thoughts", "find-traps"],
+                "third": ["clairvoyance", "nondetection"],
+                "fourth": ["arcane-eye", "divination"],
+                "fifth": ["legend-lore"]
+            }
+        },
+        "Mark of Storm": {
+            dailySpells: {
+                1: ["gust"],
+                3: ["gust-of-wind"]
+            },
+            additionalPreparedSpells: {
+                "first": ["feather-fall", "fog-cloud"],
+                "second": ["gust-of-wind", "levitate"],
+                "third": ["sleet-storm", "wind-wall"],
+                "fourth": ["conjure-minor-elementals", "control-water"],
+                "fifth": ["conjure-elemental"]
+            }
+        }
+      },
       Human: {
         // all Mark subraces have 1/LR for 1st spell trait
 
@@ -769,47 +872,6 @@ export const subRaceSpells = {
                 'fourth': ['death-ward', 'guardian-of-faith'],
                 'fifth': ['bigbys-hand']
             }
-        },
-        'Half-Elf': {
-            'Standard': {
-                // not sure how to do this--Only if the player chooses Cantrip or Drow magic does the player get spells
-                'Half-Elf Versatility': {
-                    'Cantrip': 'You know one cantrip of your choice from the wizard spell list.',
-                    'Drow Magic': {
-                        1: 'dancing-lights',
-                        3: 'faerie-fire',
-                        5: 'darkness'
-                        // 1xLR
-                    }
-                }
-            },
-            'Mark of Detection': {
-                dailySpells: {
-                    1: ['detect-magic', 'detect-poison-and-disease'],
-                    3: ['see-invisibility']
-                },
-                additionalPreparedSpells: {
-                    'first': ['detect-magic', 'detect-poison-and-disease'],
-                    'second': ['detect-thoughts', 'find-traps'],
-                    'third': ['clairvoyance', 'nondetection'],
-                    'fourth': ['arcane-eye', 'divination'],
-                    'fifth': ['legend-lore']
-                }
-            },
-            'Mark of Storm': {
-                dailySpells: {
-                    1: ['gust', 'gust-of-wind'],
-                    // 1XLR
-                },
-                additionalPreparedSpells: {
-                    'first': ['feather-fall', 'fog-cloud'],
-                    'second': ['gust-of-wind', 'levitate'],
-                    'third': ['sleet-storm', 'wind-wall'],
-                    'fourth': ['conjure-minor-elementals', 'control-water'],
-                    'fifth': ['conjure-elemental']
-                    // ADD TO SPELL LIST
-                }
-            },
         },
         'Half-Orc': {
             'Mark of Finding': {

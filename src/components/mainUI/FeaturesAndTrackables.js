@@ -2113,10 +2113,33 @@ const FeaturesAndTrackables = () => {
       if (v?.name) {
         base.push({
           id: `half_elf_versatility:${halfElfVersatility}`,
-          name: v.name,
+          name: `Half-Elf Versatility (${v.name})`,
           desc: v.description || "",
           tracked: false,
         });
+      }
+
+      if (halfElfVersatility === "Drow Magic") {
+        base.push(
+          {
+            id: "half_elf_drow_magic_faerie_fire",
+            name: "Drow Magic (Faerie Fire)",
+            desc: "At 3rd level, you can cast [[spell:faerie-fire|Faerie Fire]] once with your Drow Magic trait. Recharge: long rest.",
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+            level: 3,
+          },
+          {
+            id: "half_elf_drow_magic_darkness",
+            name: "Drow Magic (Darkness)",
+            desc: "At 5th level, you can cast [[spell:darkness|Darkness]] once with your Drow Magic trait. Recharge: long rest.",
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+            level: 5,
+          }
+        );
       }
     }
 
@@ -4736,6 +4759,41 @@ const FeaturesAndTrackables = () => {
                           ml: 0.25,
                           p: 0.25,
                           color: selectedCount > 1 ? "#b71c1c" : selectedCount === 1 ? "#0f766e" : "#075985",
+                          border: "1px solid rgba(93, 64, 55, 0.25)",
+                          backgroundColor: "rgba(244, 233, 221, 0.65)",
+                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                        }}
+                      >
+                        <MenuBookIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  );
+                }
+
+                if (race === "Half Elf" && feature?.id === "half_elf_versatility:Cantrip") {
+                  const hasSelection = Boolean(characterInfo?.halfElfVersatilityCantrip?.index);
+                  return (
+                    <Tooltip arrow title={hasSelection ? `Change Half-Elf Versatility cantrip (${characterInfo?.halfElfVersatilityCantrip?.name || "selected"})` : "Choose Half-Elf Versatility cantrip"}>
+                      <IconButton
+                        size="small"
+                        aria-label="Choose Half-Elf Versatility cantrip"
+                        onClick={() =>
+                          openRacialCantripModal({
+                            title: "Half-Elf Versatility Cantrip",
+                            helperText: "Choose one wizard cantrip for Half-Elf Versatility.",
+                            storageKey: "halfElfVersatilityCantrip",
+                            spellClassKey: "wizard",
+                            spellClassKeys: ["wizard"],
+                            selectionMode: "single",
+                            maxSelections: 1,
+                            allowRemove: true,
+                            duplicateChoiceLabel: "Half-Elf Versatility grants one wizard cantrip.",
+                          })
+                        }
+                        sx={{
+                          ml: 0.25,
+                          p: 0.25,
+                          color: hasSelection ? "#0f766e" : "#075985",
                           border: "1px solid rgba(93, 64, 55, 0.25)",
                           backgroundColor: "rgba(244, 233, 221, 0.65)",
                           "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
