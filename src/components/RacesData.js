@@ -8,9 +8,9 @@ export const Subraces = {
     Elf: ['Dark Elf', 'High Elf', 'Wood Elf', 'Pallid Elf', 'Mark of Shadow', 'Astral Elf', 'Bishtahar/Tirahar', 'Vahadar', 'Zendikar', 'Tajuru', 'Juraga', 'Mul Daya'],
     Gnome: ['Forest', 'Rock', 'Mark of Scribing'],
     'Half Elf': ['Standard Half Elf', 'Mark of Detection', 'Mark of Storm'],
-    'Half Orc': ['No Subrace', 'Mark of Finding'],
+    'Half Orc': ['Standard', 'Mark of Finding'],
     Halfling: ['Lightfoot', 'Stout', 'Ghostwise', 'Lotusden', 'Mark of Hospitality', 'Mark of Healing'],
-    Human: ['No Subrace', 'Variant', 'Mark of Finding', 'Mark of Handling', 'Mark of Making', 'Mark of Passage', 'Mark of Sentinel', ],
+    Human: ['Standard', 'Variant', 'Mark of Finding', 'Mark of Handling', 'Mark of Making', 'Mark of Passage', 'Mark of Sentinel', ],
     // Plane Shift Humans not included (but don't have spells)
     Tiefling: ['Bloodline of Asmodeus', 'Bloodline of Baalzebul', 'Bloodline of Dispater', 'Bloodline of Fierna', 'Bloodline of Glasya', 'Bloodline of Levistus', 'Bloodline of Mammon', 'Bloodline of Mephistopheles', 'Bloodline of Zariel', 'Variant Tiefling']
   }
@@ -610,7 +610,7 @@ export const RaceFeaturesData = {
         name: "Relentless Endurance",
         desc: "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. Recharge: long rest.",
         tracked: true,
-        recharge: "longRest",
+        recharge: "lr",
         uses: 1,
       },
       {
@@ -620,6 +620,44 @@ export const RaceFeaturesData = {
         tracked: false,
       },
     ],
+    subraceFeatures: {
+      Standard: [],
+      "Mark of Finding": [
+        {
+          id: "mark_of_finding_finders_magic",
+          name: "Finder's Magic",
+          desc: [
+            "You can cast [[spell:hunters-mark|Hunter's Mark]] with this trait.",
+            "Starting at 3rd level, you can also cast [[spell:locate-object|Locate Object]] with it.",
+            "Wisdom is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "mark_of_finding_hunters_mark",
+          name: "Finder's Magic (Hunter's Mark)",
+          desc: "Cast [[spell:hunters-mark|Hunter's Mark]] with your Finder's Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "mark_of_finding_locate_object",
+          name: "Finder's Magic (Locate Object)",
+          desc: "At 3rd level, cast [[spell:locate-object|Locate Object]] with your Finder's Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "mark_of_finding_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Finding spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+    },
   },
   Halfling: {
     features: [
@@ -873,25 +911,26 @@ export const subRaceSpells = {
                 'fifth': ['bigbys-hand']
             }
         },
-        'Half-Orc': {
-            'Mark of Finding': {
-                dailySpells: {
-                    1: ['hunters-mark'],
-                    3: ['locate-object']
-                    // 1/LR
-                },
-                additionalPreparedSpells: {
-                    // uses Spell Level consistent with spellTables.js (can check if character's level has spells greater than 0 of that level)
-                    'first': ['faerie-fire', 'longstrider'],
-                    'second': ['locate-plants-or-animals', 'locate-object'],
-                    'third': ['clairvoyance', 'speak-with-plants'],
-                    'fourth': ['divination', 'locate-creature'],
-                    'fifth': ['commune-with-nature']
-                    //  ADD TO SPELL LIST
-                }
+      },
+      "Half Orc": {
+        'Mark of Finding': {
+            dailySpells: {
+                1: ['hunters-mark'],
+                3: ['locate-object']
+                // 1/LR
             },
+            additionalPreparedSpells: {
+                // uses Spell Level consistent with spellTables.js (can check if character's level has spells greater than 0 of that level)
+                'first': ['faerie-fire', 'longstrider'],
+                'second': ['locate-plants-or-animals', 'locate-object'],
+                'third': ['clairvoyance', 'speak-with-plants'],
+                'fourth': ['divination', 'locate-creature'],
+                'fifth': ['commune-with-nature']
+                //  ADD TO SPELL LIST
+            }
         },
-        Halfling: {
+      },
+      Halfling: {
             'Lotusden': {
                 dailySpells: {
                     1: ['druidcraft'],
@@ -1004,6 +1043,4 @@ export const subRaceSpells = {
                 }
             }
         }
-      },
-
-}
+      };

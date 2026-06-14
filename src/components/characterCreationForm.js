@@ -87,7 +87,8 @@ export const CharacterCreationForm = (props) => {
       (raceName === "Elf" && subraceName === "Mark of Shadow") ||
       (raceName === "Gnome" && subraceName === "Mark of Scribing") ||
       (raceName === "Half Elf" && subraceName === "Mark of Detection") ||
-      (raceName === "Half Elf" && subraceName === "Mark of Storm"),
+      (raceName === "Half Elf" && subraceName === "Mark of Storm") ||
+      (raceName === "Half Orc" && subraceName === "Mark of Finding"),
     []
   );
 
@@ -290,6 +291,10 @@ export const CharacterCreationForm = (props) => {
     }
 
     if (allowedSubraces.length === 0) return;
+    if (characterInfo.subrace === "No Subrace" && allowedSubraces.includes("Standard")) {
+      setCharacterInfo((prev) => ({ ...prev, subrace: "Standard" }));
+      return;
+    }
     if (!allowedSubraces.includes(characterInfo.subrace)) {
       setCharacterInfo((prev) => ({ ...prev, subrace: NO_SUBRACE }));
     }
