@@ -110,12 +110,14 @@ const IMPROVED_MINOR_ILLUSION_BONUS_TAG = "wizard_illusion_improved_minor_illusi
 const UNDEAD_THRALLS_BONUS_TAG = "wizard_necromancy_undead_thralls";
 const SHAPECHANGER_BONUS_TAG = "wizard_transmutation_shapechanger";
 const SPELLS_OF_THE_MARK_BONUS_TAG = "race_spells_of_the_mark";
+const HALF_ELF_VERSATILITY_CANTRIP_TAG = "half_elf_versatility_cantrip";
 const FOREST_GNOME_CANTRIP_TAG = "gnome_forest_natural_illusionist";
 const MARK_OF_SCRIBING_CANTRIP_TAG = "gnome_mark_of_scribing_message";
 const DROW_MAGIC_CANTRIP_TAG = "elf_drow_magic_cantrip";
 const PALLID_ELF_CANTRIP_TAG = "elf_pallid_blessing_of_the_moonweaver";
 const MARK_OF_SHADOW_CANTRIP_TAG = "elf_mark_of_shadow_shape_shadows";
 const MUL_DAYA_CANTRIP_TAG = "elf_mul_daya_magic_cantrip";
+const MARK_OF_STORM_CANTRIP_TAG = "half_elf_mark_of_storm_headwinds";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -404,6 +406,7 @@ export const SpellList = (props) => {
   const rawClassKey = characterInfo?.characterClass;
   const race = String(characterInfo?.race || "");
   const subrace = String(characterInfo?.subrace || "");
+  const halfElfVersatility = String(characterInfo?.halfElfVersatility || "");
   const classKey = rawClassKey === "sorceror" ? "sorcerer" : rawClassKey;
   const classMeta = ClassesData?.[classKey] || ClassesData?.[rawClassKey] || null;
   const isNonCaster = classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster";
@@ -611,6 +614,7 @@ export const SpellList = (props) => {
   const druidicWarriorCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
     ? characterInfo.druidicWarriorCantrips
     : [];
+  const halfElfVersatilityCantrip = characterInfo?.halfElfVersatilityCantrip || null;
   const highElfCantrips = Array.isArray(characterInfo?.highElfCantrips) ? characterInfo.highElfCantrips : [];
   const forestGnomeCantrip = characterInfo?.forestGnomeCantrip || null;
   const markOfScribingCantrip = characterInfo?.markOfScribingCantrip || null;
@@ -620,6 +624,7 @@ export const SpellList = (props) => {
   const astralElfCantrip = characterInfo?.astralElfCantrip || null;
   const vahadarCantrip = characterInfo?.vahadarCantrip || null;
   const mulDayaMagicCantrip = characterInfo?.mulDayaMagicCantrip || null;
+  const markOfStormCantrip = characterInfo?.markOfStormCantrip || null;
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells
@@ -646,7 +651,11 @@ export const SpellList = (props) => {
       Number(tableRow?.spellSlots || 0) > 0
     );
   }, [characterLevel, spellTableKey]);
-  const hasDrowMagic = race === "Elf" && subrace === "Dark Elf";
+  const hasHalfElfVersatilityCantrip =
+    race === "Half Elf" && subrace === "Standard Half Elf" && halfElfVersatility === "Cantrip";
+  const hasHalfElfDrowMagic =
+    race === "Half Elf" && subrace === "Standard Half Elf" && halfElfVersatility === "Drow Magic";
+  const hasDrowMagic = (race === "Elf" && subrace === "Dark Elf") || hasHalfElfDrowMagic;
   const hasHighElfCantripFeature = race === "Elf" && subrace === "High Elf";
   const hasPallidMoonweaver = race === "Elf" && subrace === "Pallid Elf";
   const hasMarkOfShadow = race === "Elf" && subrace === "Mark of Shadow";
@@ -655,6 +664,8 @@ export const SpellList = (props) => {
   const hasMulDayaMagic = race === "Elf" && subrace === "Mul Daya";
   const hasForestNaturalIllusionist = race === "Gnome" && subrace === "Forest";
   const hasMarkOfScribing = race === "Gnome" && subrace === "Mark of Scribing";
+  const hasMarkOfDetection = race === "Half Elf" && subrace === "Mark of Detection";
+  const hasMarkOfStorm = race === "Half Elf" && subrace === "Mark of Storm";
 
   const activeRaceSpellListConfig = React.useMemo(() => {
     if (race === "Dwarf" && subrace === "Mark of Warding") {
@@ -690,8 +701,30 @@ export const SpellList = (props) => {
       };
     }
 
+    if (hasMarkOfDetection) {
+      return {
+        key: `race:half_elf:mark_of_detection:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.["Half Elf"]?.["Mark of Detection"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasMarkOfStorm) {
+      return {
+        key: `race:half_elf:mark_of_storm:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "MotS",
+        tagTooltip: "Mark of the Storm spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.["Half Elf"]?.["Mark of Storm"]?.additionalPreparedSpells || {}),
+      };
+    }
+
     return null;
-  }, [classKey, hasMarkOfScribing, hasMarkOfShadow, race, spellListClassKey, subrace]);
+  }, [classKey, hasMarkOfDetection, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -967,6 +1000,31 @@ export const SpellList = (props) => {
   ]);
 
   useEffect(() => {
+    if (!hasHalfElfVersatilityCantrip) return;
+    if (!halfElfVersatilityCantrip?.index) return;
+
+    const needsTag =
+      String(halfElfVersatilityCantrip?.spelltrackerBonus || "") !== HALF_ELF_VERSATILITY_CANTRIP_TAG ||
+      halfElfVersatilityCantrip?.spelltrackerDoesNotCount !== true;
+
+    if (!needsTag) return;
+
+    setCharacterInfo((prev) => {
+      const existing = prev?.halfElfVersatilityCantrip;
+      if (!existing?.index) return prev;
+      return {
+        ...prev,
+        halfElfVersatilityCantrip: {
+          ...existing,
+          spelltrackerBonus: HALF_ELF_VERSATILITY_CANTRIP_TAG,
+          spelltrackerDoesNotCount: true,
+          spelltrackerOrigin: String(existing?.spelltrackerOrigin || existing?.index || ""),
+        },
+      };
+    });
+  }, [halfElfVersatilityCantrip, hasHalfElfVersatilityCantrip, setCharacterInfo]);
+
+  useEffect(() => {
     return syncStoredSingleCantrip({
       enabled: hasForestNaturalIllusionist,
       storageKey: "forestGnomeCantrip",
@@ -1027,6 +1085,22 @@ export const SpellList = (props) => {
   }, [hasMulDayaMagic, mulDayaMagicCantrip, syncStoredSingleCantrip]);
 
   useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasMarkOfStorm,
+      storageKey: "markOfStormCantrip",
+      spellIndex: "gust",
+      bonusTag: MARK_OF_STORM_CANTRIP_TAG,
+      currentSpell: markOfStormCantrip,
+    });
+  }, [hasMarkOfStorm, markOfStormCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    if (hasHalfElfVersatilityCantrip) return;
+    if (!halfElfVersatilityCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, halfElfVersatilityCantrip: null }));
+  }, [halfElfVersatilityCantrip, hasHalfElfVersatilityCantrip, setCharacterInfo]);
+
+  useEffect(() => {
     if (hasForestNaturalIllusionist) return;
     if (!forestGnomeCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, forestGnomeCantrip: null }));
@@ -1055,6 +1129,12 @@ export const SpellList = (props) => {
     if (!vahadarCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, vahadarCantrip: null }));
   }, [hasVahadarCantripFeature, setCharacterInfo, vahadarCantrip]);
+
+  useEffect(() => {
+    if (hasMarkOfStorm) return;
+    if (!markOfStormCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, markOfStormCantrip: null }));
+  }, [hasMarkOfStorm, markOfStormCantrip, setCharacterInfo]);
 
   useEffect(() => {
     if (!isWizard) return;
@@ -5082,6 +5162,7 @@ export const SpellList = (props) => {
     if (!classMeta) return null;
 
     const hasRacialSpellTrackerContent =
+      hasHalfElfVersatilityCantrip ||
       hasForestNaturalIllusionist ||
       hasMarkOfScribing ||
       hasDrowMagic ||
@@ -5090,7 +5171,8 @@ export const SpellList = (props) => {
       hasMarkOfShadow ||
       hasAstralFire ||
       hasVahadarCantripFeature ||
-      hasMulDayaMagic;
+      hasMulDayaMagic ||
+      hasMarkOfStorm;
 
     if (effectiveIsNonCaster && !isTotemWarriorRitualTracker && !hasRacialSpellTrackerContent) {
       return null;
@@ -5169,6 +5251,7 @@ export const SpellList = (props) => {
       (shouldRenderBonusCantripSection ||
         hasDruidicWarrior ||
         hasBlessedWarrior ||
+        hasHalfElfVersatilityCantrip ||
         hasForestNaturalIllusionist ||
         hasMarkOfScribing ||
         hasDrowMagic ||
@@ -5178,6 +5261,7 @@ export const SpellList = (props) => {
         hasAstralFire ||
         hasVahadarCantripFeature ||
         hasMulDayaMagic ||
+        hasMarkOfStorm ||
         hasArcanaInitiate ||
         hasAcolyteOfNature ||
         hasReaper ||
@@ -5205,6 +5289,7 @@ export const SpellList = (props) => {
     const cantripFeatureSources = [];
     if (hasDruidicWarrior) cantripFeatureSources.push("Druidic Warrior");
     if (hasBlessedWarrior) cantripFeatureSources.push("Blessed Warrior");
+    if (hasHalfElfVersatilityCantrip) cantripFeatureSources.push("Half-Elf Versatility");
     if (hasForestNaturalIllusionist) cantripFeatureSources.push("Natural Illusionist");
     if (hasMarkOfScribing) cantripFeatureSources.push("Scribe's Insight");
     if (hasDrowMagic) cantripFeatureSources.push("Drow Magic");
@@ -5214,6 +5299,7 @@ export const SpellList = (props) => {
     if (hasAstralFire) cantripFeatureSources.push("Astral Fire");
     if (hasVahadarCantripFeature) cantripFeatureSources.push("Vahadar Cantrip");
     if (hasMulDayaMagic) cantripFeatureSources.push("Mul Daya Magic");
+    if (hasMarkOfStorm) cantripFeatureSources.push("Headwinds");
     if (hasDraconicGift) cantripFeatureSources.push("Draconic Gift");
     if (hasSwarmkeeperMagic) cantripFeatureSources.push("Swarmkeeper Magic");
     if (hasArcanaInitiate) cantripFeatureSources.push("Arcana Initiate");
@@ -5750,11 +5836,14 @@ export const SpellList = (props) => {
                 ) : spell?.spelltrackerBonus === SPELLS_OF_THE_MARK_BONUS_TAG ? (
                   <Tooltip
                     arrow
-                    title="Spells of the Mark spell (added to your spell list; does not count against spells known/prepared)."
+                    title={String(
+                      activeRaceSpellListConfig?.tagTooltip ||
+                        "Spells of the Mark spell (added to your spell list; does not count against spells known/prepared)."
+                    )}
                   >
                     <Chip
                       size="small"
-                      label="SotM"
+                      label={String(activeRaceSpellListConfig?.tagLabel || "SotM")}
                       sx={{
                         height: 18,
                         fontSize: "11px",
@@ -6953,6 +7042,43 @@ export const SpellList = (props) => {
     if (Number(numericalSpellLevel) !== 0) return null;
 
     const entries = [
+      halfElfVersatilityCantrip
+        ? {
+            spell: halfElfVersatilityCantrip,
+            tag: "HEV",
+            tooltip: "Half-Elf Versatility cantrip.",
+            action: (
+              <Tooltip arrow title="Change Half-Elf Versatility cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Change Half-Elf Versatility cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Half-Elf Versatility Cantrip",
+                      helperText: "Choose one wizard cantrip for Half-Elf Versatility.",
+                      storageKey: "halfElfVersatilityCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: ["wizard"],
+                      selectionMode: "single",
+                      maxSelections: 1,
+                      allowRemove: true,
+                      duplicateChoiceLabel: "Half-Elf Versatility grants one wizard cantrip.",
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(8, 47, 73, 0.92)",
+                    border: "1px solid rgba(8, 47, 73, 0.22)",
+                    backgroundColor: "rgba(8, 47, 73, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(8, 47, 73, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
       forestGnomeCantrip
         ? {
             spell: forestGnomeCantrip,
@@ -7274,6 +7400,14 @@ export const SpellList = (props) => {
                 </IconButton>
               </Tooltip>
             ),
+          }
+        : null,
+      markOfStormCantrip
+        ? {
+            spell: markOfStormCantrip,
+            tag: "MotS",
+            tooltip: "Headwinds cantrip.",
+            action: null,
           }
         : null,
     ].filter(Boolean);
