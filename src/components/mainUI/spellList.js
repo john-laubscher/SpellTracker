@@ -118,6 +118,8 @@ const PALLID_ELF_CANTRIP_TAG = "elf_pallid_blessing_of_the_moonweaver";
 const MARK_OF_SHADOW_CANTRIP_TAG = "elf_mark_of_shadow_shape_shadows";
 const MUL_DAYA_CANTRIP_TAG = "elf_mul_daya_magic_cantrip";
 const MARK_OF_STORM_CANTRIP_TAG = "half_elf_mark_of_storm_headwinds";
+const LOTUSDEN_CANTRIP_TAG = "halfling_lotusden_children_of_the_woods";
+const MARK_OF_HOSPITALITY_CANTRIP_TAG = "halfling_mark_of_hospitality_innkeepers_magic";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -625,6 +627,8 @@ export const SpellList = (props) => {
   const vahadarCantrip = characterInfo?.vahadarCantrip || null;
   const mulDayaMagicCantrip = characterInfo?.mulDayaMagicCantrip || null;
   const markOfStormCantrip = characterInfo?.markOfStormCantrip || null;
+  const lotusdenCantrip = characterInfo?.lotusdenCantrip || null;
+  const markOfHospitalityCantrip = characterInfo?.markOfHospitalityCantrip || null;
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells
@@ -667,6 +671,9 @@ export const SpellList = (props) => {
   const hasMarkOfDetection = race === "Half Elf" && subrace === "Mark of Detection";
   const hasMarkOfStorm = race === "Half Elf" && subrace === "Mark of Storm";
   const hasHalfOrcMarkOfFinding = race === "Half Orc" && subrace === "Mark of Finding";
+  const hasLotusden = race === "Halfling" && subrace === "Lotusden";
+  const hasMarkOfHospitality = race === "Halfling" && subrace === "Mark of Hospitality";
+  const hasMarkOfHealing = race === "Halfling" && subrace === "Mark of Healing";
 
   const activeRaceSpellListConfig = React.useMemo(() => {
     if (race === "Dwarf" && subrace === "Mark of Warding") {
@@ -735,8 +742,30 @@ export const SpellList = (props) => {
       };
     }
 
+    if (hasMarkOfHospitality) {
+      return {
+        key: `race:halfling:mark_of_hospitality:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Halfling?.["Mark of Hospitality"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasMarkOfHealing) {
+      return {
+        key: `race:halfling:mark_of_healing:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Halfling?.["Mark of Healing"]?.additionalPreparedSpells || {}),
+      };
+    }
+
     return null;
-  }, [classKey, hasHalfOrcMarkOfFinding, hasMarkOfDetection, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
+  }, [classKey, hasHalfOrcMarkOfFinding, hasMarkOfDetection, hasMarkOfHealing, hasMarkOfHospitality, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -1107,6 +1136,26 @@ export const SpellList = (props) => {
   }, [hasMarkOfStorm, markOfStormCantrip, syncStoredSingleCantrip]);
 
   useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasLotusden,
+      storageKey: "lotusdenCantrip",
+      spellIndex: "druidcraft",
+      bonusTag: LOTUSDEN_CANTRIP_TAG,
+      currentSpell: lotusdenCantrip,
+    });
+  }, [hasLotusden, lotusdenCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasMarkOfHospitality,
+      storageKey: "markOfHospitalityCantrip",
+      spellIndex: "prestidigitation",
+      bonusTag: MARK_OF_HOSPITALITY_CANTRIP_TAG,
+      currentSpell: markOfHospitalityCantrip,
+    });
+  }, [hasMarkOfHospitality, markOfHospitalityCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
     if (hasHalfElfVersatilityCantrip) return;
     if (!halfElfVersatilityCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, halfElfVersatilityCantrip: null }));
@@ -1147,6 +1196,18 @@ export const SpellList = (props) => {
     if (!markOfStormCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, markOfStormCantrip: null }));
   }, [hasMarkOfStorm, markOfStormCantrip, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasLotusden) return;
+    if (!lotusdenCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, lotusdenCantrip: null }));
+  }, [hasLotusden, lotusdenCantrip, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasMarkOfHospitality) return;
+    if (!markOfHospitalityCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, markOfHospitalityCantrip: null }));
+  }, [hasMarkOfHospitality, markOfHospitalityCantrip, setCharacterInfo]);
 
   useEffect(() => {
     if (!isWizard) return;
@@ -5312,6 +5373,8 @@ export const SpellList = (props) => {
     if (hasVahadarCantripFeature) cantripFeatureSources.push("Vahadar Cantrip");
     if (hasMulDayaMagic) cantripFeatureSources.push("Mul Daya Magic");
     if (hasMarkOfStorm) cantripFeatureSources.push("Headwinds");
+    if (hasLotusden) cantripFeatureSources.push("Children of the Woods");
+    if (hasMarkOfHospitality) cantripFeatureSources.push("Innkeeper's Magic");
     if (hasDraconicGift) cantripFeatureSources.push("Draconic Gift");
     if (hasSwarmkeeperMagic) cantripFeatureSources.push("Swarmkeeper Magic");
     if (hasArcanaInitiate) cantripFeatureSources.push("Arcana Initiate");
@@ -7420,6 +7483,76 @@ export const SpellList = (props) => {
             tag: "MotS",
             tooltip: "Headwinds cantrip.",
             action: null,
+          }
+        : null,
+      lotusdenCantrip
+        ? {
+            spell: lotusdenCantrip,
+            tag: "CotW",
+            tooltip: "Children of the Woods cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Children of the Woods cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Children of the Woods cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Children of the Woods Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Children of the Woods.",
+                      storageKey: "lotusdenCantrip",
+                      spellClassKey: "druid",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(21, 128, 61, 0.92)",
+                    border: "1px solid rgba(21, 128, 61, 0.22)",
+                    backgroundColor: "rgba(21, 128, 61, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(21, 128, 61, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      markOfHospitalityCantrip
+        ? {
+            spell: markOfHospitalityCantrip,
+            tag: "MoH",
+            tooltip: "Innkeeper's Magic cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Innkeeper's Magic cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Innkeeper's Magic cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Innkeeper's Magic Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Innkeeper's Magic.",
+                      storageKey: "markOfHospitalityCantrip",
+                      spellClassKey: "bard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(180, 83, 9, 0.92)",
+                    border: "1px solid rgba(180, 83, 9, 0.22)",
+                    backgroundColor: "rgba(180, 83, 9, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(180, 83, 9, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
           }
         : null,
     ].filter(Boolean);
