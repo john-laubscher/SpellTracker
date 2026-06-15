@@ -827,6 +827,157 @@ export const RaceFeaturesData = {
   },
   Human: {
     features: [],
+    subraceFeatures: {
+      Standard: [],
+      Variant: [],
+      "Mark of Finding": [
+        {
+          id: "human_mark_of_finding_finders_magic",
+          name: "Finder's Magic",
+          desc: [
+            "You can cast [[spell:hunters-mark|Hunter's Mark]] with this trait.",
+            "Starting at 3rd level, you can also cast [[spell:locate-object|Locate Object]] with it.",
+            "Wisdom is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "human_mark_of_finding_hunters_mark",
+          name: "Finder's Magic (Hunter's Mark)",
+          desc: "Cast [[spell:hunters-mark|Hunter's Mark]] with your Finder's Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_finding_locate_object",
+          name: "Finder's Magic (Locate Object)",
+          desc: "At 3rd level, cast [[spell:locate-object|Locate Object]] with your Finder's Magic trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+          level: 3,
+        },
+        {
+          id: "human_mark_of_finding_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Finding spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Mark of Handling": [
+        {
+          id: "human_mark_of_handling_primal_connection",
+          name: "Primal Connection",
+          desc: [
+            "You can cast [[spell:animal-friendship|Animal Friendship]] and [[spell:speak-with-animals|Speak with Animals]] with this trait.",
+            "These spells require no material components. Wisdom is your spellcasting ability for them.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "human_mark_of_handling_the_bigger_they_are",
+          name: "The Bigger They Are",
+          desc: "Starting at 3rd level, you can target a Beast or a Monstrosity when you cast [[spell:animal-friendship|Animal Friendship]] or [[spell:speak-with-animals|Speak with Animals]], provided that the creature's intelligence is 3 or lower.",
+          tracked: false,
+          level: 3,
+        },
+        {
+          id: "human_mark_of_handling_animal_friendship",
+          name: "Primal Connection (Animal Friendship)",
+          desc: "Cast [[spell:animal-friendship|Animal Friendship]] with your Primal Connection trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_handling_speak_with_animals",
+          name: "Primal Connection (Speak with Animals)",
+          desc: "Cast [[spell:speak-with-animals|Speak with Animals]] with your Primal Connection trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_handling_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Handling spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Mark of Making": [
+        {
+          id: "human_mark_of_making_spellsmith",
+          name: "Spellsmith",
+          desc: [
+            "You learn the [[spell:mending|Mending]] cantrip.",
+            "You can also cast [[spell:magic-weapon|Magic Weapon]] with this trait.",
+            "When you do so, the spell lasts for 1 hour and doesn't require concentration. Intelligence is your spellcasting ability for these spells.",
+          ],
+          tracked: false,
+        },
+        {
+          id: "human_mark_of_making_magic_weapon",
+          name: "Spellsmith (Magic Weapon)",
+          desc: "Cast [[spell:magic-weapon|Magic Weapon]] with your Spellsmith trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_making_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Making spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Mark of Passage": [
+        {
+          id: "human_mark_of_passage_magical_passage",
+          name: "Magical Passage",
+          desc: "You can cast [[spell:misty-step|Misty Step]] with this trait. Dexterity is your spellcasting ability for this spell.",
+          tracked: false,
+        },
+        {
+          id: "human_mark_of_passage_misty_step",
+          name: "Magical Passage (Misty Step)",
+          desc: "Cast [[spell:misty-step|Misty Step]] with your Magical Passage trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_passage_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Passage spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+      "Mark of Sentinel": [
+        {
+          id: "human_mark_of_sentinel_shield",
+          name: "Guardian Shield (Shield)",
+          desc: "Cast [[spell:shield|Shield]] with your Guardian Shield trait. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_sentinel_vigilant_guardian",
+          name: "Vigilant Guardian",
+          desc: "Once a creature that you can see within 5 feet of you is hit with an attack roll, you can use your reaction to swap places with it, and you are hit by the attack instead. Recharge: long rest.",
+          tracked: true,
+          uses: 1,
+          recharge: "lr",
+        },
+        {
+          id: "human_mark_of_sentinel_spells_of_the_mark",
+          name: "Spells of the Mark",
+          desc: "If you have the Spellcasting or Pact Magic class feature, the Mark of Sentinel spells are added to the spell list of your spellcasting class.",
+          tracked: false,
+        },
+      ],
+    },
   },
   Tiefling: {
     features: [
@@ -1006,7 +1157,7 @@ export const subRaceSpells = {
         },
         'Mark of Handling': {
             dailySpells: {
-                1: ['animal-friendship, speak-with-animals'],
+                1: ['animal-friendship', 'speak-with-animals'],
                 // 1/LR
             },
             additionalPreparedSpells: {
@@ -1021,7 +1172,7 @@ export const subRaceSpells = {
         },
         'Mark of Making': {
             dailySpells: {
-                1: ['mending, magic-weapon']
+                1: ['mending', 'magic-weapon']
             },
             additionalPreparedSpells: {
                 'first': ['identify', 'tensers-floating-disk'],
