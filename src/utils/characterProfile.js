@@ -123,6 +123,7 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     vahadarCantrip: safeOverrides.vahadarCantrip || null,
     mulDayaMagicCantrip: safeOverrides.mulDayaMagicCantrip || null,
     markOfStormCantrip: safeOverrides.markOfStormCantrip || null,
+    spellsmithCantrip: safeOverrides.spellsmithCantrip || null,
     reaperCantrip: safeOverrides.reaperCantrip || null,
     acolyteOfNatureCantrip: safeOverrides.acolyteOfNatureCantrip || null,
     arcaneArcherLoreCantrip: safeOverrides.arcaneArcherLoreCantrip || null,

@@ -120,6 +120,7 @@ const MUL_DAYA_CANTRIP_TAG = "elf_mul_daya_magic_cantrip";
 const MARK_OF_STORM_CANTRIP_TAG = "half_elf_mark_of_storm_headwinds";
 const LOTUSDEN_CANTRIP_TAG = "halfling_lotusden_children_of_the_woods";
 const MARK_OF_HOSPITALITY_CANTRIP_TAG = "halfling_mark_of_hospitality_innkeepers_magic";
+const SPELLSMITH_CANTRIP_TAG = "human_mark_of_making_spellsmith";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -629,6 +630,7 @@ export const SpellList = (props) => {
   const markOfStormCantrip = characterInfo?.markOfStormCantrip || null;
   const lotusdenCantrip = characterInfo?.lotusdenCantrip || null;
   const markOfHospitalityCantrip = characterInfo?.markOfHospitalityCantrip || null;
+  const spellsmithCantrip = characterInfo?.spellsmithCantrip || null;
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells
@@ -670,6 +672,11 @@ export const SpellList = (props) => {
   const hasMarkOfScribing = race === "Gnome" && subrace === "Mark of Scribing";
   const hasMarkOfDetection = race === "Half Elf" && subrace === "Mark of Detection";
   const hasMarkOfStorm = race === "Half Elf" && subrace === "Mark of Storm";
+  const hasHumanMarkOfFinding = race === "Human" && subrace === "Mark of Finding";
+  const hasHumanMarkOfHandling = race === "Human" && subrace === "Mark of Handling";
+  const hasHumanMarkOfMaking = race === "Human" && subrace === "Mark of Making";
+  const hasHumanMarkOfPassage = race === "Human" && subrace === "Mark of Passage";
+  const hasHumanMarkOfSentinel = race === "Human" && subrace === "Mark of Sentinel";
   const hasHalfOrcMarkOfFinding = race === "Half Orc" && subrace === "Mark of Finding";
   const hasLotusden = race === "Halfling" && subrace === "Lotusden";
   const hasMarkOfHospitality = race === "Halfling" && subrace === "Mark of Hospitality";
@@ -731,6 +738,61 @@ export const SpellList = (props) => {
       };
     }
 
+    if (hasHumanMarkOfFinding) {
+      return {
+        key: `race:human:mark_of_finding:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Human?.["Mark of Finding"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasHumanMarkOfHandling) {
+      return {
+        key: `race:human:mark_of_handling:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Human?.["Mark of Handling"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasHumanMarkOfMaking) {
+      return {
+        key: `race:human:mark_of_making:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Human?.["Mark of Making"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasHumanMarkOfPassage) {
+      return {
+        key: `race:human:mark_of_passage:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Human?.["Mark of Passage"]?.additionalPreparedSpells || {}),
+      };
+    }
+
+    if (hasHumanMarkOfSentinel) {
+      return {
+        key: `race:human:mark_of_sentinel:${String(spellListClassKey || classKey || "unknown")}`,
+        spellClassKey: String(spellListClassKey || classKey || "wizard"),
+        swapLabel: "Spells of the Mark Spell",
+        tagLabel: "SotM",
+        tagTooltip: "Spells of the Mark spell (added to your spell list; does not count against spells known).",
+        rows: buildSpellRowsFromPreparedMap(subRaceSpells?.Human?.["Mark of Sentinel"]?.additionalPreparedSpells || {}),
+      };
+    }
+
     if (hasHalfOrcMarkOfFinding) {
       return {
         key: `race:half_orc:mark_of_finding:${String(spellListClassKey || classKey || "unknown")}`,
@@ -765,7 +827,7 @@ export const SpellList = (props) => {
     }
 
     return null;
-  }, [classKey, hasHalfOrcMarkOfFinding, hasMarkOfDetection, hasMarkOfHealing, hasMarkOfHospitality, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
+  }, [classKey, hasHalfOrcMarkOfFinding, hasHumanMarkOfFinding, hasHumanMarkOfHandling, hasHumanMarkOfMaking, hasHumanMarkOfPassage, hasHumanMarkOfSentinel, hasMarkOfDetection, hasMarkOfHealing, hasMarkOfHospitality, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
   const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
@@ -1156,6 +1218,16 @@ export const SpellList = (props) => {
   }, [hasMarkOfHospitality, markOfHospitalityCantrip, syncStoredSingleCantrip]);
 
   useEffect(() => {
+    return syncStoredSingleCantrip({
+      enabled: hasHumanMarkOfMaking,
+      storageKey: "spellsmithCantrip",
+      spellIndex: "mending",
+      bonusTag: SPELLSMITH_CANTRIP_TAG,
+      currentSpell: spellsmithCantrip,
+    });
+  }, [hasHumanMarkOfMaking, spellsmithCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
     if (hasHalfElfVersatilityCantrip) return;
     if (!halfElfVersatilityCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, halfElfVersatilityCantrip: null }));
@@ -1208,6 +1280,12 @@ export const SpellList = (props) => {
     if (!markOfHospitalityCantrip?.index) return;
     setCharacterInfo((prev) => ({ ...prev, markOfHospitalityCantrip: null }));
   }, [hasMarkOfHospitality, markOfHospitalityCantrip, setCharacterInfo]);
+
+  useEffect(() => {
+    if (hasHumanMarkOfMaking) return;
+    if (!spellsmithCantrip?.index) return;
+    setCharacterInfo((prev) => ({ ...prev, spellsmithCantrip: null }));
+  }, [hasHumanMarkOfMaking, setCharacterInfo, spellsmithCantrip]);
 
   useEffect(() => {
     if (!isWizard) return;
@@ -7547,6 +7625,42 @@ export const SpellList = (props) => {
                     border: "1px solid rgba(180, 83, 9, 0.22)",
                     backgroundColor: "rgba(180, 83, 9, 0.06)",
                     "&:hover": { backgroundColor: "rgba(180, 83, 9, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      spellsmithCantrip
+        ? {
+            spell: spellsmithCantrip,
+            tag: "MoM",
+            tooltip: "Spellsmith cantrip.",
+            action: (
+              <Tooltip arrow title="Swap Spellsmith cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Spellsmith cantrip"
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: "Spellsmith Cantrip",
+                      helperText: "Choose a spell list, then choose the cantrip for Spellsmith.",
+                      storageKey: "spellsmithCantrip",
+                      spellClassKey: "wizard",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                      duplicateChoiceLabel: "Already selected as your Spellsmith cantrip.",
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(15, 23, 42, 0.92)",
+                    border: "1px solid rgba(15, 23, 42, 0.22)",
+                    backgroundColor: "rgba(15, 23, 42, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(15, 23, 42, 0.10)" },
                   }}
                 >
                   <SwapHorizIcon fontSize="inherit" />
