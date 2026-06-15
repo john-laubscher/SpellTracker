@@ -88,7 +88,9 @@ export const CharacterCreationForm = (props) => {
       (raceName === "Gnome" && subraceName === "Mark of Scribing") ||
       (raceName === "Half Elf" && subraceName === "Mark of Detection") ||
       (raceName === "Half Elf" && subraceName === "Mark of Storm") ||
-      (raceName === "Half Orc" && subraceName === "Mark of Finding"),
+      (raceName === "Half Orc" && subraceName === "Mark of Finding") ||
+      (raceName === "Halfling" && subraceName === "Mark of Hospitality") ||
+      (raceName === "Halfling" && subraceName === "Mark of Healing"),
     []
   );
 
