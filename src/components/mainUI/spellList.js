@@ -14,7 +14,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
-import { subRaceSpells } from "../RacesData";
+import { subRaceSpells, TieflingLegacyCantripData } from "../RacesData";
 import spellTables from "../spellTables";
 import AddSpellModal from "./AddSpellModal"
 import SpellCheckboxes from "./SpellCheckboxes";
@@ -631,6 +631,13 @@ export const SpellList = (props) => {
   const lotusdenCantrip = characterInfo?.lotusdenCantrip || null;
   const markOfHospitalityCantrip = characterInfo?.markOfHospitalityCantrip || null;
   const spellsmithCantrip = characterInfo?.spellsmithCantrip || null;
+  const activeTieflingLegacyCantripConfig = React.useMemo(() => {
+    if (race !== "Tiefling") return null;
+    return TieflingLegacyCantripData?.[subrace] || null;
+  }, [race, subrace]);
+  const tieflingLegacyCantrip = activeTieflingLegacyCantripConfig?.storageKey
+    ? characterInfo?.[activeTieflingLegacyCantripConfig.storageKey] || null
+    : null;
 
   const arcaneMasterySpells = Array.isArray(characterInfo?.arcaneMasterySpells)
     ? characterInfo.arcaneMasterySpells
@@ -681,6 +688,7 @@ export const SpellList = (props) => {
   const hasLotusden = race === "Halfling" && subrace === "Lotusden";
   const hasMarkOfHospitality = race === "Halfling" && subrace === "Mark of Hospitality";
   const hasMarkOfHealing = race === "Halfling" && subrace === "Mark of Healing";
+  const hasTieflingLegacyCantrip = Boolean(activeTieflingLegacyCantripConfig?.storageKey);
 
   const activeRaceSpellListConfig = React.useMemo(() => {
     if (race === "Dwarf" && subrace === "Mark of Warding") {
@@ -976,7 +984,21 @@ export const SpellList = (props) => {
           });
         })
         .catch(() => {
-          // Silently ignore: backend might not be running yet.
+          if (cancelled) return;
+          setCharacterInfo((prev) => {
+            if (prev?.[storageKey]?.index) return prev;
+            return {
+              ...prev,
+              [storageKey]: {
+                index: spellIndex,
+                name: humanizeSpellIndex(spellIndex),
+                level: 0,
+                spelltrackerBonus: bonusTag,
+                spelltrackerDoesNotCount: doesNotCount,
+                spelltrackerOrigin: spellIndex,
+              },
+            };
+          });
         });
 
       return () => {
@@ -1226,6 +1248,17 @@ export const SpellList = (props) => {
       currentSpell: spellsmithCantrip,
     });
   }, [hasHumanMarkOfMaking, spellsmithCantrip, syncStoredSingleCantrip]);
+
+  useEffect(() => {
+    if (!activeTieflingLegacyCantripConfig) return undefined;
+    return syncStoredSingleCantrip({
+      enabled: hasTieflingLegacyCantrip,
+      storageKey: activeTieflingLegacyCantripConfig.storageKey,
+      spellIndex: activeTieflingLegacyCantripConfig.defaultSpellIndex,
+      bonusTag: activeTieflingLegacyCantripConfig.bonusTag,
+      currentSpell: tieflingLegacyCantrip,
+    });
+  }, [activeTieflingLegacyCantripConfig, hasTieflingLegacyCantrip, syncStoredSingleCantrip, tieflingLegacyCantrip]);
 
   useEffect(() => {
     if (hasHalfElfVersatilityCantrip) return;
@@ -5323,7 +5356,8 @@ export const SpellList = (props) => {
       hasAstralFire ||
       hasVahadarCantripFeature ||
       hasMulDayaMagic ||
-      hasMarkOfStorm;
+      hasMarkOfStorm ||
+      hasTieflingLegacyCantrip;
 
     if (effectiveIsNonCaster && !isTotemWarriorRitualTracker && !hasRacialSpellTrackerContent) {
       return null;
@@ -5413,6 +5447,7 @@ export const SpellList = (props) => {
         hasVahadarCantripFeature ||
         hasMulDayaMagic ||
         hasMarkOfStorm ||
+        hasTieflingLegacyCantrip ||
         hasArcanaInitiate ||
         hasAcolyteOfNature ||
         hasReaper ||
@@ -7661,6 +7696,41 @@ export const SpellList = (props) => {
                     border: "1px solid rgba(15, 23, 42, 0.22)",
                     backgroundColor: "rgba(15, 23, 42, 0.06)",
                     "&:hover": { backgroundColor: "rgba(15, 23, 42, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ),
+          }
+        : null,
+      tieflingLegacyCantrip && activeTieflingLegacyCantripConfig
+        ? {
+            spell: tieflingLegacyCantrip,
+            tag: activeTieflingLegacyCantripConfig.tag,
+            tooltip: `${activeTieflingLegacyCantripConfig.featureName} cantrip.`,
+            action: (
+              <Tooltip arrow title={`Swap ${activeTieflingLegacyCantripConfig.featureName} cantrip`}>
+                <IconButton
+                  size="small"
+                  aria-label={`Swap ${activeTieflingLegacyCantripConfig.featureName} cantrip`}
+                  onClick={() =>
+                    openRacialCantripModal({
+                      title: `${activeTieflingLegacyCantripConfig.featureName} Cantrip`,
+                      helperText: `Choose a spell list, then choose the cantrip for ${activeTieflingLegacyCantripConfig.featureName}.`,
+                      storageKey: activeTieflingLegacyCantripConfig.storageKey,
+                      spellClassKey: "warlock",
+                      spellClassKeys: RACIAL_SPELL_SWAP_CLASS_KEYS,
+                      selectionMode: "single",
+                      maxSelections: 1,
+                    })
+                  }
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(127, 29, 29, 0.92)",
+                    border: "1px solid rgba(127, 29, 29, 0.22)",
+                    backgroundColor: "rgba(127, 29, 29, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(127, 29, 29, 0.10)" },
                   }}
                 >
                   <SwapHorizIcon fontSize="inherit" />
