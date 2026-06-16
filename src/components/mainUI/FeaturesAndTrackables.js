@@ -1835,7 +1835,6 @@ const FeaturesAndTrackables = () => {
     e?.stopPropagation?.();
     setLandTypeMenuAnchorEl(null);
   };
-
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
     subclass === "lore" &&
@@ -4871,7 +4870,6 @@ const FeaturesAndTrackables = () => {
                     </Tooltip>
                   );
                 }
-
                 return null;
               }}
               proficiencyBonusValue={proficiencyBonusValue}
