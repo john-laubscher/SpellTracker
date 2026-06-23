@@ -11,16 +11,9 @@ import {WeaponsDisplay} from "./WeaponManager";
 import { calculateTotalPreparedSpells } from "../../utils/preparedSpells";
 import AuthControls from "../AuthControls";
 import CharacterSwitcherMenu from "../CharacterSwitcherMenu";
-import { formatClassLevelSummary, getTotalCharacterLevel } from "../../utils/multiclassing";
+import { formatClassLevelSummary, getSpellcastingEntries, getTotalCharacterLevel } from "../../utils/multiclassing";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const formatUiLabel = (value) =>
-  String(value || "")
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[_-]+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (match) => match.toUpperCase());
-const NO_SUBCLASS = "noSubclass";
 
 const proficiencyBonus = {
   1: 2,
@@ -54,6 +47,7 @@ const Header = () => {
     (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
     0
   );
+  const wizardLevel = Number(characterInfo?.classLevels?.wizard || (characterInfo?.characterClass === "wizard" ? characterInfo?.characterLevel : 0)) || 0;
 
   const [showDetails, setShowDetails] = useState(false);
   const [spellData, setSpellData] = useState({
@@ -82,20 +76,21 @@ const Header = () => {
 
   const classKey = String(characterInfo?.characterClass || "");
   const classMeta = ClassesData?.[classKey] || null;
+  const spellcastingEntries = getSpellcastingEntries(characterInfo);
+  const primarySpellcastingEntry = spellcastingEntries[0] || null;
   const subclassKey = String(characterInfo?.subclass || "");
   const subclassMeta = classMeta?.subclasses?.[subclassKey] || null;
   const characterLevel = Number(characterInfo?.characterLevel) || 0;
   const subclassSpellcasting = subclassMeta?.spellcasting || null;
   const hasSubclassSpellcasting =
     Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
-  const spellcastingAbility = hasSubclassSpellcasting
-    ? String(subclassSpellcasting?.spellcastingAbility || classMeta?.spellcastingAbility || "nonCaster")
-    : String(classMeta?.spellcastingAbility || "nonCaster");
-  const subclassDisplayName =
-    subclassKey && subclassKey !== NO_SUBCLASS
-      ? subclassMeta?.name || formatUiLabel(subclassKey)
-      : "";
-  const effectiveIsNonCaster = spellcastingAbility === "nonCaster";
+  const spellcastingAbility = primarySpellcastingEntry?.spellcasting?.spellcastingAbility
+    ? String(primarySpellcastingEntry.spellcasting.spellcastingAbility)
+    : hasSubclassSpellcasting
+      ? String(subclassSpellcasting?.spellcastingAbility || classMeta?.spellcastingAbility || "nonCaster")
+      : String(classMeta?.spellcastingAbility || "nonCaster");
+  const effectiveIsNonCaster = spellcastingEntries.length === 0 && spellcastingAbility === "nonCaster";
+  const hasMultipleSpellcastingEntries = spellcastingEntries.length > 1;
   const isArcaneArcher =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
   const isBattleMaster =
@@ -158,8 +153,8 @@ useEffect(() => {
     }));
   }
 
-  if (ClassesData[characterInfo.characterClass]?.isSpellCaster) {
-    if (characterInfo.characterClass === "wizard") {
+  if (ClassesData[characterInfo.characterClass]?.isSpellCaster || wizardLevel > 0) {
+    if (wizardLevel > 0) {
       // Wizard keeps track of spells Known in spellbook (only class to be able to add to spells known).
       setSpellData(prevState => ({
         ...prevState,
@@ -168,7 +163,7 @@ useEffect(() => {
       }));
     }
   }
-}, [characterInfo, effectiveIsNonCaster, spellcastingAbility, wizardSpellbookTrackedCount]);
+}, [characterInfo, effectiveIsNonCaster, spellcastingAbility, wizardLevel, wizardSpellbookTrackedCount]);
 
   const determineNoncasters = () => {
     if (effectiveIsNonCaster) {
@@ -180,7 +175,7 @@ useEffect(() => {
     }
     return (
       <Typography variant="h6" sx={theme.typography.body1}>
-        Spellcasting ability is {spellData.spellcastingAbility}
+        {hasMultipleSpellcastingEntries ? "Spellcasting abilities vary by class" : `Spellcasting ability is ${spellData.spellcastingAbility}`}
       </Typography>
     );
   };
@@ -261,7 +256,7 @@ useEffect(() => {
           <Card sx={{ backgroundColor: "rgba(139,69,19,0.04)", display: "inline-block" }}>
             <CardContent sx={{ py: 1, px: 1.25, "&:last-child": { pb: 1 } }}>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "baseline" }}>
-                {!effectiveIsNonCaster ? (
+                {!effectiveIsNonCaster && !hasMultipleSpellcastingEntries ? (
                   <Tooltip
                     arrow
                     title={`${proficiencyBonusValue} (proficiency bonus) + ${spellcastingModValue} (${formatSpellcastingAbility(spellcastingAbility)} modifier) = ${spellAttackBonus}`}
@@ -288,6 +283,10 @@ useEffect(() => {
                 ) : isMonk ? (
                   <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
                     Ki Save DC: {kiSaveDc}
+                  </Typography>
+                ) : hasMultipleSpellcastingEntries ? (
+                  <Typography sx={{ fontSize: "14px", fontWeight: 800 }}>
+                    Spell Save DCs vary by class
                   </Typography>
                 ) : (
                   <Tooltip
@@ -337,7 +336,7 @@ useEffect(() => {
                 <Tooltip placement="top" title="Does not include cantrips">
                   <Typography variant="h6" sx={theme.typography.body1}>Total Prepared Spells: {spellData.totalPreparedSpells} </Typography>
                 </Tooltip>
-                {characterInfo.characterClass === "wizard" && (
+                {wizardLevel > 0 && (
                   <>
                     <Tooltip placement="top" title="Does not include cantrips">
                       <Typography variant="h6" sx={theme.typography.body1}>

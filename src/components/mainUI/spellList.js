@@ -45,7 +45,17 @@ import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
 import { getGenieExpandedSpellOptions } from "../../utils/genieData";
-import { getEffectiveSpellSlotsRow, usesMulticlassSpellcasterTable } from "../../utils/multiclassing";
+import {
+  getSpellSlotSummary,
+  getSpellcastingEntries,
+  getSpellcastingEntryForSlot,
+} from "../../utils/multiclassing";
+import {
+  getPreparedSpellsForClass,
+  updatePreparedSpellsForClass,
+  getWizardSpellbookForClass,
+  updateWizardSpellbookForClass,
+} from "../../utils/spellcastingState";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -61,6 +71,11 @@ const spellLevelColors = {
 };
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const formatClassHeading = (value) => {
+  const normalized = String(value || "");
+  if (!normalized) return "Spellcasting";
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
 
 const ORDINAL_LABELS = {
   first: "1st",
@@ -405,8 +420,27 @@ const TOTEM_WARRIOR_RITUAL_SPELLS = [
 
 //**Needs to account for classFeatures like Bard's Magical Secrets that allows for additional spells added to spell list. Might be just a bard thing, but possibly more classes */
 
-export const SpellList = (props) => {
-  const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
+  const { characterInfo: baseCharacterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  const allSpellcastingEntries = React.useMemo(() => getSpellcastingEntries(baseCharacterInfo), [baseCharacterInfo]);
+  const spellcastingEntry = React.useMemo(
+    () => getSpellcastingEntryForSlot(baseCharacterInfo, classSlot),
+    [baseCharacterInfo, classSlot]
+  );
+  const characterInfo = React.useMemo(() => {
+    if (!spellcastingEntry) return baseCharacterInfo;
+    return {
+      ...baseCharacterInfo,
+      characterClass: spellcastingEntry.classKey,
+      subclass: spellcastingEntry.subclassKey,
+      characterLevel: spellcastingEntry.level,
+    };
+  }, [baseCharacterInfo, spellcastingEntry]);
+  const activeSpellClassKey = String(spellcastingEntry?.classKey || characterInfo?.characterClass || "");
+  const spellSlotSummary = React.useMemo(() => getSpellSlotSummary(baseCharacterInfo), [baseCharacterInfo]);
+  const isUnifiedMulticlassTracker =
+    !detailMode && allSpellcastingEntries.length > 1 && String(classSlot || "primary") === "primary";
+  const showMulticlassSummary = isUnifiedMulticlassTracker;
   const rawClassKey = characterInfo?.characterClass;
   const race = String(characterInfo?.race || "");
   const subrace = String(characterInfo?.subrace || "");
@@ -464,9 +498,11 @@ export const SpellList = (props) => {
     classKey === "barbarian" &&
     String(characterInfo?.subclass || "") === "totemWarrior" &&
     characterLevel >= 3;
-  const isUsingMulticlassSlots = usesMulticlassSpellcasterTable(characterInfo);
-  const currentSpellTableRow = isUsingMulticlassSlots
-    ? getEffectiveSpellSlotsRow(characterInfo)
+  const isUsingSharedSpellcastingSlots =
+    spellSlotSummary.hasCombinedSpellcasting &&
+    spellSlotSummary.preparedEntries.some((entry) => String(entry?.slot || "") === String(classSlot || ""));
+  const currentSpellTableRow = isUsingSharedSpellcastingSlots
+    ? spellSlotSummary.combinedSpellcastingRow
     : spellTables?.[spellTableKey]?.[characterLevel] || null;
   const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
   const warlockSlotLevelNumber = isWarlock
@@ -5069,6 +5105,59 @@ export const SpellList = (props) => {
       [numericalSpellLevel]: { loading: true, error: '' },
     }));
 
+    if (isUnifiedMulticlassTracker) {
+      const entriesToLoad = allSpellcastingEntries
+        .map((entry) => ({
+          classKey: String(entry?.classKey || ""),
+          subclassKey: String(entry?.subclassKey || ""),
+          spellListClassKey: String(entry?.spellcasting?.spellListClassKey || entry?.classKey || ""),
+        }))
+        .filter((entry) => entry.classKey && entry.spellListClassKey);
+
+      Promise.all(
+        entriesToLoad.map((entry) =>
+          axios.get(`/allspells/${numericalSpellLevel}/${entry.spellListClassKey}`).then((res) => ({
+            entry,
+            results: res.data?.results || [],
+          }))
+        )
+      )
+        .then((responses) => {
+          const combined = responses.flatMap(({ entry, results }) =>
+            results.map((spell) => ({
+              ...spell,
+              spelltrackerClassKey: entry.classKey,
+              spelltrackerClassKeys: [entry.classKey],
+              spelltrackerOriginLabel:
+                entry.classKey.charAt(0).toUpperCase() + entry.classKey.slice(1),
+            }))
+          );
+
+          setSpells((prevSpells) => ({
+            ...prevSpells,
+            [numericalSpellLevel]: {
+              ...prevSpells[numericalSpellLevel],
+              classSpells: combined,
+            },
+          }));
+          setSpellListLoadStatus((prev) => ({
+            ...prev,
+            [numericalSpellLevel]: { loading: false, error: '' },
+          }));
+        })
+        .catch((error) => {
+          console.log('Error fetching multiclass spells:', error);
+          setSpellListLoadStatus((prev) => ({
+            ...prev,
+            [numericalSpellLevel]: {
+              loading: false,
+              error: 'Failed to load spells. Is the backend running on port 3001?',
+            },
+          }));
+        });
+      return;
+    }
+
     const baseReq = axios.get(`/allspells/${numericalSpellLevel}/${spellListClassKey}`);
     const clericReq = includeDivineSoulClericSpellList ? axios.get(`/allspells/${numericalSpellLevel}/cleric`) : null;
     const expandedRowsForLevel = expandedSpellOptionsRows.filter(
@@ -5163,7 +5252,9 @@ export const SpellList = (props) => {
         : "Close Spell List";
     const buttonClosedLabel = isCantrips
       ? "Learn more cantrips"
-      : isWarlockKnownSpellSection
+      : isUnifiedMulticlassTracker
+        ? "Manage multiclass spells"
+        : isWarlockKnownSpellSection
         ? "Choose known spells"
         : isWizard
           ? "Add to Spellbook"
@@ -5231,7 +5322,9 @@ export const SpellList = (props) => {
           spellsLoading={spellListLoadStatus[numericalSpellLevel]?.loading}
           spellsError={spellListLoadStatus[numericalSpellLevel]?.error}
           dialogTitle={dialogTitle}
-          wizardMode={isWizard}
+          wizardMode={isWizard && !isUnifiedMulticlassTracker}
+          targetClassKey={activeSpellClassKey}
+          multiclassUnifiedMode={isUnifiedMulticlassTracker}
         /> : null}
       </div>
     )
@@ -5246,21 +5339,18 @@ export const SpellList = (props) => {
   }
 
   const unprepareAllSpells = () => {
-    setCharacterInfo((prevCharacterInfo) => ({
-      ...prevCharacterInfo,
-      spellsPrepared: {
-        0: [],
-        1: [],
-        2: [],
-        3: [],
-        4: [],
-        5: [],
-        6: [],
-        7: [],
-        8: [],
-        9: [],
-      },
-    }));
+    setCharacterInfo((prevCharacterInfo) => {
+      let next = prevCharacterInfo;
+      const classKeysToClear = isUnifiedMulticlassTracker
+        ? allSpellcastingEntries.map((entry) => String(entry?.classKey || "")).filter(Boolean)
+        : [activeSpellClassKey || prevCharacterInfo?.characterClass];
+      classKeysToClear.forEach((classKey) => {
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
+          next = updatePreparedSpellsForClass(next, classKey, level, []);
+        });
+      });
+      return next;
+    });
   };
 
   const renderBattleMasterManeuvers = () => {
@@ -5428,7 +5518,7 @@ export const SpellList = (props) => {
 
     const isCantrips = textualSpellLevel === "cantrips";
     const levelKey = Number(characterInfo?.characterLevel) || 0;
-    const tableRow = isUsingMulticlassSlots ? currentSpellTableRow : spellTables?.[spellTableKey]?.[levelKey] || null;
+    const tableRow = isUsingSharedSpellcastingSlots ? currentSpellTableRow : spellTables?.[spellTableKey]?.[levelKey] || null;
     const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
     const preparedAtLevel = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? characterInfo.spellsPrepared[numericalSpellLevel]
@@ -5665,15 +5755,24 @@ export const SpellList = (props) => {
 
 
   const renderPreparedSpells = (numericalSpellLevel) => {
-    const prepared = isWizard
-      ? Array.isArray(characterInfo?.wizardSpellbook?.[numericalSpellLevel])
-        ? characterInfo.wizardSpellbook[numericalSpellLevel]
+    const prepared = isUnifiedMulticlassTracker
+      ? [
+          ...(Array.isArray(baseCharacterInfo?.spellsPrepared?.[numericalSpellLevel]) ? baseCharacterInfo.spellsPrepared[numericalSpellLevel] : []),
+          ...(Array.isArray(baseCharacterInfo?.wizardSpellbook?.[numericalSpellLevel]) ? baseCharacterInfo.wizardSpellbook[numericalSpellLevel] : []),
+        ].filter((spell, idx, arr) => {
+          const key = `${String(spell?.index || "")}:${String(spell?.spelltrackerClassKey || "")}:${String(spell?.spelltrackerBonus || "")}`;
+          return arr.findIndex((entry) => `${String(entry?.index || "")}:${String(entry?.spelltrackerClassKey || "")}:${String(entry?.spelltrackerBonus || "")}` === key) === idx;
+        })
+      : isWizard
+        ? getWizardSpellbookForClass(baseCharacterInfo, activeSpellClassKey, numericalSpellLevel)
+        : getPreparedSpellsForClass(baseCharacterInfo, activeSpellClassKey, numericalSpellLevel);
+    const classPreparedSpells = isUnifiedMulticlassTracker
+      ? Array.isArray(baseCharacterInfo?.spellsPrepared?.[numericalSpellLevel])
+        ? baseCharacterInfo.spellsPrepared[numericalSpellLevel]
         : []
-      : Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
-        ? characterInfo.spellsPrepared[numericalSpellLevel]
-        : [];
-    const preparedSpellIndexes = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
-      ? new Set(characterInfo.spellsPrepared[numericalSpellLevel].map((spell) => String(spell?.index || "")))
+      : getPreparedSpellsForClass(baseCharacterInfo, activeSpellClassKey, numericalSpellLevel);
+    const preparedSpellIndexes = Array.isArray(classPreparedSpells)
+      ? new Set(classPreparedSpells.map((spell) => String(spell?.index || "")))
       : [];
     const disappearedSpellIndexes = new Set(
       (Array.isArray(characterInfo?.wizardScribesLostSpells) ? characterInfo.wizardScribesLostSpells : []).map((spell) =>
@@ -5704,24 +5803,15 @@ export const SpellList = (props) => {
       if (!spellToRemove?.index) return;
       setCharacterInfo((prev) => {
         const levelKey = Number(numericalSpellLevel);
-        const currentSpellbook = { ...(prev?.wizardSpellbook || {}) };
-        const atLevel = Array.isArray(currentSpellbook?.[levelKey]) ? currentSpellbook[levelKey] : [];
-        const nextAtLevel = atLevel.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index));
-
-        const nextPrepared = { ...(prev?.spellsPrepared || {}) };
-        Object.keys(nextPrepared).forEach((key) => {
-          nextPrepared[key] = Array.isArray(nextPrepared[key])
-            ? nextPrepared[key].filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
-            : [];
-        });
+        let next = updateWizardSpellbookForClass(prev, "wizard", levelKey, (currentSpellbook) =>
+          currentSpellbook.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+        );
+        next = updatePreparedSpellsForClass(next, "wizard", levelKey, (currentPrepared) =>
+          currentPrepared.filter((entry) => String(entry?.index || "") !== String(spellToRemove.index))
+        );
 
         return {
-          ...prev,
-          wizardSpellbook: {
-            ...currentSpellbook,
-            [levelKey]: nextAtLevel,
-          },
-          spellsPrepared: nextPrepared,
+          ...next,
           wizardSpellMastery: {
             1: prev?.wizardSpellMastery?.[1]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[1] || null,
             2: prev?.wizardSpellMastery?.[2]?.index === spellToRemove.index ? null : prev?.wizardSpellMastery?.[2] || null,
@@ -6593,6 +6683,7 @@ export const SpellList = (props) => {
                         numericalSpellLevel={numericalSpellLevel}
                         spell={spell}
                         index={index}
+                        targetClassKey={isUnifiedMulticlassTracker ? String(spell?.spelltrackerClassKey || activeSpellClassKey) : activeSpellClassKey}
                         blockedReason={
                           isDisappearedSpell
                             ? "This spell has disappeared from your spellbook. To prepare this spell, modify the One with the Word feature"
@@ -6605,6 +6696,7 @@ export const SpellList = (props) => {
                       numericalSpellLevel={numericalSpellLevel}
                       spell={spell}
                       index={index}
+                      targetClassKey={isUnifiedMulticlassTracker ? String(spell?.spelltrackerClassKey || activeSpellClassKey) : activeSpellClassKey}
                       blockedReason={
                         isDisappearedSpell
                           ? "This spell has disappeared from your spellbook. To prepare this spell, modify the One with the Word feature"
@@ -8082,6 +8174,50 @@ export const SpellList = (props) => {
 
   return (
       <Box sx={{ mt: 2 }}>
+      {detailMode ? (
+        <Box sx={{ mb: 1.5, pb: 1, borderBottom: "1px solid rgba(93,64,55,0.12)" }}>
+          <Typography
+            sx={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              fontSize: "16px",
+              color: "#4e342e",
+              textTransform: "uppercase",
+              letterSpacing: "0.8px",
+            }}
+          >
+            {formatClassHeading(activeSpellClassKey)} Spells
+          </Typography>
+          <Typography sx={{ fontSize: "12px", color: "#6b4f3a", mt: 0.25 }}>
+            Class-specific spell list, spell preparation, and known-spell choices.
+          </Typography>
+        </Box>
+      ) : null}
+      {showMulticlassSummary ? (
+        <Box
+          sx={{
+            mb: 1.5,
+            p: 1.25,
+            borderRadius: 1.5,
+            border: "1px solid rgba(93,64,55,0.14)",
+            backgroundColor: "rgba(255,255,255,0.58)",
+          }}
+        >
+          <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037", textTransform: "uppercase", letterSpacing: "0.7px" }}>
+            Spell Slot Pools
+          </Typography>
+          {spellSlotSummary.combinedSpellcastingRow ? (
+            <Typography sx={{ fontSize: "13px", color: "#3e2723", mt: 0.5 }}>
+              Spellcasting slots are shared across your non-warlock caster classes.
+            </Typography>
+          ) : null}
+          {spellSlotSummary.pactMagicRow ? (
+            <Typography sx={{ fontSize: "13px", color: "#3e2723", mt: spellSlotSummary.combinedSpellcastingRow ? 0.5 : 0 }}>
+              Pact Magic slots are tracked separately for warlock and refresh on a short rest.
+            </Typography>
+          ) : null}
+        </Box>
+      ) : null}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
         {effectiveIsNonCaster && isFighter ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -8131,7 +8267,16 @@ export const SpellList = (props) => {
               Ritual Spell Tracker
             </Typography>
           ) : (
-            <PreparedSpellsStatus label={showSoulknifePsionicUses ? "Psionic Energy Die Uses" : "Spell Tracker"} />
+            <PreparedSpellsStatus
+              label={
+                showSoulknifePsionicUses
+                  ? "Psionic Energy Die Uses"
+                  : detailMode
+                    ? `${formatClassHeading(activeSpellClassKey)} Tracker`
+                    : "Spell Tracker"
+              }
+              targetClassKey={effectiveIsNonCaster ? "" : activeSpellClassKey}
+            />
           )
         )}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -8152,6 +8297,21 @@ export const SpellList = (props) => {
         <SoulknifePsionicEnergyDieUsesPanel />
       ) : (
         <>
+          {detailMode ? null : spellSlotSummary.preparedEntries.length + spellSlotSummary.pactEntries.length > 1 ? (
+            <Typography
+              sx={{
+                mb: 1,
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "14px",
+                letterSpacing: "0.8px",
+                textTransform: "uppercase",
+                color: "#6b4f3a",
+              }}
+            >
+              {formatClassHeading(activeSpellClassKey)} Spellcasting
+            </Typography>
+          ) : null}
           {renderBattleMasterManeuvers()}
           {renderPCSpells("cantrips", 0)}
           {renderPCSpells("first", 1)}
@@ -8165,7 +8325,7 @@ export const SpellList = (props) => {
           {renderPCSpells("ninth", 9)}
         </>
       )}
-      {renderDailySpellsList(characterInfo, setCharacterInfo)}
+      {!detailMode ? renderDailySpellsList(characterInfo, setCharacterInfo) : null}
 
       <RacialCantripSelectionModal
         open={racialCantripModal.open}

@@ -4,13 +4,24 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
-import { calculateActualPreparedSpells, calculateTotalPreparedSpells } from "../../utils/preparedSpells";
+import {
+  calculateActualPreparedSpells,
+  calculateActualPreparedSpellsForClass,
+  calculatePreparedSpellLimitForClass,
+  calculateTotalPreparedSpells,
+} from "../../utils/preparedSpells";
+import { getClassEntries } from "../../utils/multiclassing";
 
-export const PreparedSpellsStatus = ({ label = "Spell Tracker", typographySx = null }) => {
+export const PreparedSpellsStatus = ({ label = "Spell Tracker", typographySx = null, targetClassKey = "" }) => {
   const { characterInfo } = useContext(CharacterInfoContext);
 
-  const totalPreparedSpells = calculateTotalPreparedSpells(characterInfo);
-  const actualPreparedSpells = calculateActualPreparedSpells(characterInfo);
+  const targetEntry = getClassEntries(characterInfo).find((entry) => String(entry?.classKey || "") === String(targetClassKey || ""));
+  const totalPreparedSpells = targetEntry
+    ? calculatePreparedSpellLimitForClass(characterInfo, targetEntry)
+    : calculateTotalPreparedSpells(characterInfo);
+  const actualPreparedSpells = targetClassKey
+    ? calculateActualPreparedSpellsForClass(characterInfo, targetClassKey)
+    : calculateActualPreparedSpells(characterInfo);
 
   const isPreparedOverLimit =
     totalPreparedSpells > 0 && actualPreparedSpells > totalPreparedSpells;

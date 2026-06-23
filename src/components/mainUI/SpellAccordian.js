@@ -11,6 +11,12 @@ import Box from '@mui/material/Box';
 
 import { ClassSpellsDetailsContext } from '../../Contexts/Context';
 
+const formatClassLabel = (value) => {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+
 const SpellAccordian = ({
   numericalSpellLevel,
   spell,
@@ -69,6 +75,16 @@ const SpellAccordian = ({
       if (typeof details.desc === 'string') return [details.desc];
       return [];
     }, [details]);
+
+    const classOriginLabel = React.useMemo(() => {
+      const keys = Array.isArray(spell?.spelltrackerClassKeys)
+        ? spell.spelltrackerClassKeys
+        : spell?.spelltrackerClassKey
+          ? [spell.spelltrackerClassKey]
+          : [];
+      const labels = keys.map((key) => formatClassLabel(key)).filter(Boolean);
+      return labels.join(", ");
+    }, [spell?.spelltrackerClassKey, spell?.spelltrackerClassKeys]);
 
     return (
         <Accordion
@@ -153,6 +169,9 @@ const SpellAccordian = ({
                   ) : null}
                   {details ? (
                     <>
+                      {classOriginLabel ? (
+                        <p><strong>Class:</strong> {classOriginLabel}</p>
+                      ) : null}
                       <p><strong>Range:</strong> {details?.range}</p>
                       <p><strong>Duration:</strong> {details?.duration}</p>
                       <p><strong>Casting time:</strong> {details?.casting_time}</p>

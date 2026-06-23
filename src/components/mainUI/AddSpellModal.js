@@ -28,6 +28,12 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import { AuthContext, CharacterInfoContext, CharacterSessionContext } from '../../Contexts/Context';
 import PreparedSpellsStatus from './PreparedSpellsStatus';
+import {
+  getPreparedSpellsForClass,
+  getWizardSpellbookForClass,
+  updatePreparedSpellsForClass,
+  updateWizardSpellbookForClass,
+} from "../../utils/spellcastingState";
 
 const AddSpellsModal = ({
   isModalOpen,
@@ -38,6 +44,8 @@ const AddSpellsModal = ({
   spellsError,
   dialogTitle,
   wizardMode = false,
+  targetClassKey = "",
+  multiclassUnifiedMode = false,
 }) => {
   const { auth, setAuth } = React.useContext(AuthContext);
   const token = auth?.token;
@@ -370,9 +378,18 @@ const AddSpellsModal = ({
         Object.keys(nextCollection).forEach((k) => {
           nextCollection[k] = nextCollection[k].map((sp) => (sp.index === created.index ? created : sp));
         });
-        const next = { ...prev, [targetCollectionKey]: nextCollection };
+        let next = { ...prev, [targetCollectionKey]: nextCollection };
         if (wizardMode) {
-          next.spellsPrepared = { ...(prev?.spellsPrepared || {}) };
+          next = updateWizardSpellbookForClass(next, targetClassKey || "wizard", numericalSpellLevel, (current) =>
+            current.map((sp) => (sp.index === created.index ? created : sp))
+          );
+        } else {
+          next = updatePreparedSpellsForClass(next, targetClassKey || prev?.characterClass, numericalSpellLevel, (current) =>
+            current.map((sp) => (sp.index === created.index ? created : sp))
+          );
+        }
+        if (wizardMode) {
+          next.spellsPrepared = { ...(next?.spellsPrepared || {}) };
           Object.keys(next.spellsPrepared).forEach((k) => {
             next.spellsPrepared[k] = next.spellsPrepared[k].map((sp) => (sp.index === created.index ? created : sp));
           });
@@ -449,7 +466,16 @@ const AddSpellsModal = ({
         Object.keys(nextCollection).forEach((k) => {
           nextCollection[k] = nextCollection[k].filter((sp) => sp.index !== spell.index);
         });
-        const next = { ...prev, [targetCollectionKey]: nextCollection };
+        let next = { ...prev, [targetCollectionKey]: nextCollection };
+        if (wizardMode) {
+          next = updateWizardSpellbookForClass(next, targetClassKey || "wizard", numericalSpellLevel, (current) =>
+            current.filter((sp) => sp.index !== spell.index)
+          );
+        } else {
+          next = updatePreparedSpellsForClass(next, targetClassKey || prev?.characterClass, numericalSpellLevel, (current) =>
+            current.filter((sp) => sp.index !== spell.index)
+          );
+        }
         if (wizardMode) {
           const nextPrepared = { ...(prev?.spellsPrepared || {}) };
           Object.keys(nextPrepared).forEach((k) => {
@@ -534,18 +560,38 @@ const AddSpellsModal = ({
     if (selectedSpells.length === 0) return;
 
     setCharacterInfo((prev) => {
+      if (multiclassUnifiedMode) {
+        let next = prev;
+        selectedSpells.forEach((spell) => {
+          const classKey = String(spell?.spelltrackerClassKey || "");
+          if (!classKey) return;
+          if (classKey === "wizard") {
+            next = updateWizardSpellbookForClass(next, "wizard", numericalSpellLevel, (currentAtLevel) => [...currentAtLevel, spell]);
+            next = updatePreparedSpellsForClass(next, "wizard", numericalSpellLevel, (currentAtLevel) => [...currentAtLevel, spell]);
+          } else {
+            next = updatePreparedSpellsForClass(next, classKey, numericalSpellLevel, (currentAtLevel) => [...currentAtLevel, spell]);
+          }
+        });
+        return next;
+      }
+
       const levelKey = numericalSpellLevel;
-      const current = Array.isArray(prev?.[targetCollectionKey]?.[levelKey]) ? prev[targetCollectionKey][levelKey] : [];
+      const current = wizardMode
+        ? getWizardSpellbookForClass(prev, targetClassKey || "wizard", levelKey)
+        : getPreparedSpellsForClass(prev, targetClassKey || prev?.characterClass, levelKey);
       const existing = new Set(current.map((s) => String(s?.index)));
       const toAdd = selectedSpells.filter((s) => !existing.has(String(s.index)));
       if (toAdd.length === 0) return prev;
-      return {
+      const nextBase = {
         ...prev,
         [targetCollectionKey]: {
           ...prev[targetCollectionKey],
           [levelKey]: [...current, ...toAdd],
         },
       };
+      return wizardMode
+        ? updateWizardSpellbookForClass(nextBase, targetClassKey || "wizard", levelKey, (currentAtLevel) => [...currentAtLevel, ...toAdd])
+        : updatePreparedSpellsForClass(nextBase, targetClassKey || prev?.characterClass, levelKey, (currentAtLevel) => [...currentAtLevel, ...toAdd]);
     });
 
     setCheckedSpellIndexes(new Set());
@@ -561,6 +607,7 @@ const AddSpellsModal = ({
             dialogTitle || (
               <PreparedSpellsStatus
                 label={wizardMode ? "Add spells to spellbook" : "Choose spells to prepare"}
+                targetClassKey={targetClassKey}
                 typographySx={{
                   fontFamily: 'inherit',
                   fontWeight: 700,
@@ -696,7 +743,11 @@ const AddSpellsModal = ({
               ? isCantrips
                 ? 'Add Checked Cantrips'
                 : 'Add Checked Spells'
-              : isCantrips
+              : multiclassUnifiedMode
+                ? isCantrips
+                  ? 'Add Checked Cantrips'
+                  : 'Add Checked Spells'
+                : isCantrips
                 ? 'Learn Checked Cantrips'
                 : 'Prepare Checked Spells'}
           </Button>

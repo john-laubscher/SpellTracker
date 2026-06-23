@@ -22,7 +22,7 @@ export const MULTICLASS_REQUIREMENTS = {
 
 const FULL_CASTER_CLASSES = new Set(["bard", "cleric", "druid", "sorcerer", "wizard"]);
 const HALF_CASTER_CLASSES = new Set(["paladin", "ranger"]);
-
+const THIRD_CASTER_TABLE_KEYS = new Set(["fighterEldritchKnight", "rogueArcaneTrickster"]);
 const SPELL_SLOT_LEVEL_KEYS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"];
 
 export const getNormalizedClassKey = (classKey) => {
@@ -35,6 +35,9 @@ const sanitizeLevel = (value, fallback = 0) => {
   if (!Number.isFinite(numeric)) return fallback;
   return Math.max(0, Math.trunc(numeric));
 };
+
+const hasSlotsOnRow = (row) =>
+  SPELL_SLOT_LEVEL_KEYS.some((slotKey) => Number(row?.[slotKey] || 0) > 0) || Number(row?.spellSlots || 0) > 0;
 
 export const buildClassLevelsMap = (characterInfo = {}) => {
   const raw = characterInfo?.classLevels && typeof characterInfo.classLevels === "object" ? characterInfo.classLevels : {};
@@ -76,14 +79,15 @@ export const getClassEntries = (characterInfo = {}) => {
   const primaryLevel = sanitizeLevel(classLevels?.[primaryClass], sanitizeLevel(characterInfo?.characterLevel, 1));
   const secondaryLevel = sanitizeLevel(classLevels?.[secondaryClass], sanitizeLevel(characterInfo?.secondaryCharacterLevel, 0));
 
-  const primary = primaryClass && primaryClass !== NO_CLASS
-    ? {
-        slot: "primary",
-        classKey: primaryClass,
-        subclassKey: String(characterInfo?.subclass || NO_SUBCLASS),
-        level: primaryLevel,
-      }
-    : null;
+  const primary =
+    primaryClass && primaryClass !== NO_CLASS
+      ? {
+          slot: "primary",
+          classKey: primaryClass,
+          subclassKey: String(characterInfo?.subclass || NO_SUBCLASS),
+          level: primaryLevel,
+        }
+      : null;
 
   const secondary =
     Boolean(characterInfo?.multiclassEnabled) && secondaryClass && secondaryClass !== NO_CLASS
@@ -140,47 +144,113 @@ export const getUnmetMulticlassRequirements = (characterInfo = {}, classKey) => 
   return requirements.filter((requirement) => sanitizeLevel(stats?.[requirement.stat]?.value, 0) < sanitizeLevel(requirement.min, 0));
 };
 
-export const isStandardSpellcasterClass = (classKey) => {
-  const normalizedClassKey = getNormalizedClassKey(classKey);
-  return FULL_CASTER_CLASSES.has(normalizedClassKey) || HALF_CASTER_CLASSES.has(normalizedClassKey);
-};
-
-export const hasSpellcastingForClass = ({ classKey, subclassKey, level }) => {
-  const normalizedClassKey = getNormalizedClassKey(classKey);
-  const normalizedLevel = sanitizeLevel(level, 0);
-  if (!normalizedClassKey || normalizedClassKey === NO_CLASS || normalizedLevel <= 0) return false;
+export const getSpellcastingDetailsForEntry = (entry = {}) => {
+  const normalizedClassKey = getNormalizedClassKey(entry?.classKey);
+  const normalizedLevel = sanitizeLevel(entry?.level, 0);
+  const normalizedSubclassKey = String(entry?.subclassKey || NO_SUBCLASS);
+  if (!normalizedClassKey || normalizedClassKey === NO_CLASS || normalizedLevel <= 0) return null;
 
   const classMeta = ClassesData?.[normalizedClassKey] || null;
-  if (!classMeta) return false;
+  if (!classMeta) return null;
 
-  const subclassMeta = classMeta?.subclasses?.[subclassKey] || null;
+  if (normalizedClassKey === "warlock") {
+    const row = spellTables?.warlock?.[normalizedLevel] || null;
+    return {
+      classKey: normalizedClassKey,
+      subclassKey: normalizedSubclassKey,
+      level: normalizedLevel,
+      slotType: "pact",
+      progression: "pact",
+      spellListClassKey: "warlock",
+      spellcastingAbility: String(classMeta?.spellcastingAbility || "cha"),
+      spellTableKey: "warlock",
+      row,
+      hasSlots: hasSlotsOnRow(row),
+    };
+  }
+
+  const subclassMeta = classMeta?.subclasses?.[normalizedSubclassKey] || null;
   const subclassSpellcasting = subclassMeta?.spellcasting || null;
   if (subclassSpellcasting && normalizedLevel >= sanitizeLevel(subclassSpellcasting?.startsAtLevel, 1)) {
     const tableKey = String(subclassSpellcasting?.spellTableKey || "");
     const row = spellTables?.[tableKey]?.[normalizedLevel] || null;
-    return SPELL_SLOT_LEVEL_KEYS.some((slotKey) => Number(row?.[slotKey] || 0) > 0) || Number(row?.spellSlots || 0) > 0;
+    const progression = THIRD_CASTER_TABLE_KEYS.has(tableKey)
+      ? "third"
+      : HALF_CASTER_CLASSES.has(normalizedClassKey)
+        ? "half"
+        : FULL_CASTER_CLASSES.has(normalizedClassKey)
+          ? "full"
+          : "full";
+    return {
+      classKey: normalizedClassKey,
+      subclassKey: normalizedSubclassKey,
+      level: normalizedLevel,
+      slotType: "spellcasting",
+      progression,
+      spellListClassKey: String(subclassSpellcasting?.spellListClassKey || normalizedClassKey),
+      spellcastingAbility: String(subclassSpellcasting?.spellcastingAbility || classMeta?.spellcastingAbility || "nonCaster"),
+      spellTableKey: tableKey,
+      row,
+      hasSlots: hasSlotsOnRow(row),
+    };
   }
 
-  if (classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster") return false;
+  if (classMeta?.isSpellCaster === "nonCaster" || classMeta?.spellcastingAbility === "nonCaster") return null;
   const row = spellTables?.[normalizedClassKey]?.[normalizedLevel] || null;
-  return SPELL_SLOT_LEVEL_KEYS.some((slotKey) => Number(row?.[slotKey] || 0) > 0) || Number(row?.spellSlots || 0) > 0;
+  const progression = FULL_CASTER_CLASSES.has(normalizedClassKey)
+    ? "full"
+    : HALF_CASTER_CLASSES.has(normalizedClassKey)
+      ? "half"
+      : null;
+
+  if (!progression) return null;
+
+  return {
+    classKey: normalizedClassKey,
+    subclassKey: normalizedSubclassKey,
+    level: normalizedLevel,
+    slotType: "spellcasting",
+    progression,
+    spellListClassKey: normalizedClassKey,
+    spellcastingAbility: String(classMeta?.spellcastingAbility || "nonCaster"),
+    spellTableKey: normalizedClassKey,
+    row,
+    hasSlots: hasSlotsOnRow(row),
+  };
 };
 
-export const getMulticlassSpellcasterLevel = (characterInfo = {}) => {
-  return getClassEntries(characterInfo).reduce((sum, entry) => {
-    const classKey = getNormalizedClassKey(entry.classKey);
-    const level = sanitizeLevel(entry.level, 0);
-    if (FULL_CASTER_CLASSES.has(classKey)) return sum + level;
-    if (HALF_CASTER_CLASSES.has(classKey)) return sum + Math.floor(level / 2);
+export const hasSpellcastingForClass = (entry = {}) => {
+  const details = getSpellcastingDetailsForEntry(entry);
+  return Boolean(details?.hasSlots);
+};
+
+export const getSpellcastingEntries = (characterInfo = {}) =>
+  getClassEntries(characterInfo)
+    .map((entry) => ({
+      ...entry,
+      spellcasting: getSpellcastingDetailsForEntry(entry),
+    }))
+    .filter((entry) => entry?.spellcasting);
+
+export const getPreparedCasterEntries = (characterInfo = {}) =>
+  getSpellcastingEntries(characterInfo).filter((entry) => entry?.spellcasting?.slotType === "spellcasting");
+
+export const getPactCasterEntries = (characterInfo = {}) =>
+  getSpellcastingEntries(characterInfo).filter((entry) => entry?.spellcasting?.slotType === "pact");
+
+export const getMulticlassSpellcasterLevel = (characterInfo = {}) =>
+  getPreparedCasterEntries(characterInfo).reduce((sum, entry) => {
+    const progression = entry?.spellcasting?.progression;
+    const level = sanitizeLevel(entry?.level, 0);
+    if (progression === "full") return sum + level;
+    if (progression === "half") return sum + Math.floor(level / 2);
+    if (progression === "third") return sum + Math.floor(level / 3);
     return sum;
   }, 0);
-};
 
 export const usesMulticlassSpellcasterTable = (characterInfo = {}) => {
-  if (!characterInfo?.multiclassEnabled) return false;
-  const entries = getClassEntries(characterInfo);
-  if (entries.length !== 2) return false;
-  return entries.every((entry) => isStandardSpellcasterClass(entry.classKey) && hasSpellcastingForClass(entry));
+  const entries = getPreparedCasterEntries(characterInfo);
+  return entries.length > 1 && getMulticlassSpellcasterLevel(characterInfo) > 0;
 };
 
 export const getEffectiveSpellSlotsRow = (characterInfo = {}) => {
@@ -189,3 +259,32 @@ export const getEffectiveSpellSlotsRow = (characterInfo = {}) => {
   if (casterLevel <= 0) return null;
   return spellTables?.multiclassSpellcaster?.[casterLevel] || null;
 };
+
+export const getPactMagicSlotsRow = (characterInfo = {}) => {
+  const pactEntries = getPactCasterEntries(characterInfo);
+  if (pactEntries.length === 0) return null;
+  return pactEntries[0]?.spellcasting?.row || null;
+};
+
+export const getSpellSlotSummary = (characterInfo = {}) => {
+  const preparedEntries = getPreparedCasterEntries(characterInfo);
+  const pactEntries = getPactCasterEntries(characterInfo);
+  const combinedSpellcastingRow =
+    preparedEntries.length > 1
+      ? getEffectiveSpellSlotsRow(characterInfo)
+      : preparedEntries[0]?.spellcasting?.row || null;
+  const pactMagicRow = pactEntries[0]?.spellcasting?.row || null;
+
+  return {
+    hasCombinedSpellcasting: Boolean(combinedSpellcastingRow),
+    hasPactMagic: Boolean(pactMagicRow),
+    combinedSpellcastingRow,
+    pactMagicRow,
+    multiclassSpellcasterLevel: getMulticlassSpellcasterLevel(characterInfo),
+    preparedEntries,
+    pactEntries,
+  };
+};
+
+export const getSpellcastingEntryForSlot = (characterInfo = {}, slot = "primary") =>
+  getSpellcastingEntries(characterInfo).find((entry) => String(entry?.slot || "") === String(slot || ""));
