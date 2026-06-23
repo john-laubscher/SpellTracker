@@ -55,7 +55,7 @@ export const CharacterCreationForm = (props) => {
   const isMissingRace = !characterInfo.race || characterInfo.race === NO_RACE;
   const isMissingSubrace = !characterInfo.subrace || characterInfo.subrace === NO_SUBRACE;
   const isMissingClass = !characterInfo.characterClass || characterInfo.characterClass === NO_CLASS;
-  const isMissingSubclass = !characterInfo.subclass || characterInfo.subclass === NO_SUBCLASS;
+  const isMissingSubclass = !characterInfo.subclass;
 
   const missingFieldSx = (shouldHighlight) => {
     if (!shouldHighlight) return null;
@@ -402,7 +402,7 @@ export const CharacterCreationForm = (props) => {
 	  };
 
   const handleContinue = () => {
-    const missingAny = isMissingRace || isMissingSubrace || isMissingClass || isMissingSubclass;
+    const missingAny = isMissingRace || isMissingSubrace || isMissingClass;
     if (!missingAny) {
       navigate("/mainUI");
       return;
@@ -570,13 +570,13 @@ export const CharacterCreationForm = (props) => {
                 onChange={handleChange}
                 displayEmpty
                 renderValue={(selected) => {
-                  if (selected === NO_SUBCLASS) return "Select a subclass";
+                  if (selected === NO_SUBCLASS) return "No subclass";
                   const meta = ClassesData?.[characterInfo.characterClass]?.subclasses?.[selected] || null;
                   return meta?.name || capitalize(selected);
                 }}
               >
-                <MenuItem value={NO_SUBCLASS} disabled>
-                  Select a subclass
+                <MenuItem value={NO_SUBCLASS}>
+                  No subclass
                 </MenuItem>
                 {Object.keys(ClassesData?.[characterInfo.characterClass]?.subclasses || {}).map((subclass) => {
                   const meta = ClassesData?.[characterInfo.characterClass]?.subclasses?.[subclass] || null;

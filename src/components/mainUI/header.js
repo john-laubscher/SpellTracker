@@ -13,6 +13,7 @@ import AuthControls from "../AuthControls";
 import CharacterSwitcherMenu from "../CharacterSwitcherMenu";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const NO_SUBCLASS = "noSubclass";
 
 const proficiencyBonus = {
   1: 2,
@@ -83,7 +84,10 @@ const Header = () => {
   const spellcastingAbility = hasSubclassSpellcasting
     ? String(subclassSpellcasting?.spellcastingAbility || classMeta?.spellcastingAbility || "nonCaster")
     : String(classMeta?.spellcastingAbility || "nonCaster");
-  const subclassDisplayName = subclassMeta?.name || (subclassKey ? capitalize(subclassKey) : "");
+  const subclassDisplayName =
+    subclassKey && subclassKey !== NO_SUBCLASS
+      ? subclassMeta?.name || capitalize(subclassKey)
+      : "";
   const effectiveIsNonCaster = spellcastingAbility === "nonCaster";
   const isArcaneArcher =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "arcaneArcher";
@@ -310,7 +314,8 @@ useEffect(() => {
                   {ClassesData[characterInfo.characterClass].hitDice} hit dice
                 </Typography>
                 <Typography variant="body2">
-                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)} ({subclassDisplayName})
+                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)}
+                  {subclassDisplayName ? ` (${subclassDisplayName})` : ""}
                 </Typography>
                 <Typography variant="body2">
                   Race: {getRaceDisplay()}
