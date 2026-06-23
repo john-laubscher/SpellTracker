@@ -444,7 +444,6 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   const spellSlotSummary = React.useMemo(() => getSpellSlotSummary(baseCharacterInfo), [baseCharacterInfo]);
   const isUnifiedMulticlassTracker =
     !detailMode && allSpellcastingEntries.length > 1 && String(classSlot || "primary") === "primary";
-  const showMulticlassSummary = isUnifiedMulticlassTracker;
   const rawClassKey = characterInfo?.characterClass;
   const race = String(characterInfo?.race || "");
   const subrace = String(characterInfo?.subrace || "");
@@ -496,6 +495,8 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     [expandedSpellOptionsRows]
   );
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
+  const showDedicatedPactMagicSection = isUnifiedMulticlassTracker && Boolean(spellSlotSummary.pactMagicRow);
+  const useWarlockKnownSpellMode = isWarlock && !showDedicatedPactMagicSection;
   const isWizard = classKey === "wizard" && !hasSubclassSpellcasting;
   const effectiveIsNonCaster = allSpellcastingEntries.length === 0 && isNonCaster && !hasSubclassSpellcasting;
   const isTotemWarriorRitualTracker =
@@ -511,10 +512,17 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   const currentSpellTableRow = isUsingSharedSpellcastingSlots
     ? spellSlotSummary.combinedSpellcastingRow
     : spellTables?.[spellTableKey]?.[characterLevel] || null;
-  const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
-  const warlockSlotLevelNumber = isWarlock
+  const warlockSlotLevelKey = useWarlockKnownSpellMode ? String(currentSpellTableRow?.slotLevel || "") : "";
+  const warlockSlotLevelNumber = useWarlockKnownSpellMode
     ? Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).reduce((match, [lvl, key]) => (key === warlockSlotLevelKey ? Number(lvl) : match), 0)
     : 0;
+  const pactMagicSlotLevelKey = String(spellSlotSummary.pactMagicRow?.slotLevel || "");
+  const pactMagicSlotLabel = ORDINAL_LABELS[pactMagicSlotLevelKey] || capitalize(pactMagicSlotLevelKey || "spell");
+  const pactMagicSlotCount = Number(spellSlotSummary.pactMagicRow?.spellSlots || 0);
+  const pactMagicSlotLevelNumber = Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).reduce(
+    (match, [lvl, key]) => (key === pactMagicSlotLevelKey ? Number(lvl) : match),
+    0
+  );
   const includeDivineSoulClericSpellList =
     classKey === "sorcerer" && String(characterInfo?.subclass || "") === "divineSoul";
   const isFighter = String(characterInfo?.characterClass || "") === "fighter";
@@ -5251,7 +5259,8 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
 
   const showClassSpellsButton = (numericalSpellLevel) => {
     const isCantrips = Number(numericalSpellLevel) === 0;
-    const isWarlockKnownSpellSection = isWarlock && !isCantrips && Number(numericalSpellLevel) !== Number(warlockSlotLevelNumber);
+    const isWarlockKnownSpellSection =
+      useWarlockKnownSpellMode && !isCantrips && Number(numericalSpellLevel) !== Number(warlockSlotLevelNumber);
     const buttonOpenLabel = isCantrips
       ? "Close Cantrip List"
       : isWarlockKnownSpellSection
@@ -5265,10 +5274,10 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
         ? "Choose known spells"
         : isWizard
           ? "Add to Spellbook"
-        : isWarlock
+        : useWarlockKnownSpellMode
           ? "Choose warlock spells"
           : "Prepare more spells";
-    const dialogTitle = !isCantrips && isWarlock
+    const dialogTitle = !isCantrips && useWarlockKnownSpellMode
       ? (
         <Typography
           sx={{
@@ -5358,6 +5367,53 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
       });
       return next;
     });
+  };
+
+  const renderPactMagicSection = () => {
+    if (!showDedicatedPactMagicSection || !pactMagicSlotCount || !pactMagicSlotLevelKey) return null;
+
+    return (
+      <Box
+        sx={{
+          mb: 1.5,
+          p: 1.25,
+          borderRadius: 1.5,
+          border: "1px solid rgba(93,64,55,0.14)",
+          backgroundColor: "rgba(255,255,255,0.58)",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "15px",
+                color: "#4e342e",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+              }}
+            >
+              Warlock Pact Magic
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Typography
+              sx={{
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                fontSize: "14px",
+                color: "#6b4f3a",
+                letterSpacing: "0.4px",
+              }}
+            >
+              {pactMagicSlotLabel} Level Slots
+            </Typography>
+            <SpellCheckboxes textualSpellLevel={pactMagicSlotLevelKey} slotCount={pactMagicSlotCount} showLabel={false} />
+          </Box>
+        </Box>
+      </Box>
+    );
   };
 
   const renderBattleMasterManeuvers = () => {
@@ -5560,14 +5616,20 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     if (!tableRow && !(isCantrips && shouldRenderFeatureCantripSection)) return null;
 
     const isWarlockSpellLevelSection =
-      isWarlock &&
+      useWarlockKnownSpellMode &&
       !isCantrips &&
       Number(numericalSpellLevel) >= 1 &&
       Number(numericalSpellLevel) <= Math.max(1, warlockSlotLevelNumber);
+    const isDedicatedPactMagicSpellSection =
+      showDedicatedPactMagicSection &&
+      !isCantrips &&
+      Number(numericalSpellLevel) >= 1 &&
+      Number(numericalSpellLevel) <= Math.max(1, pactMagicSlotLevelNumber);
     const shouldShowWarlockSection = isCantrips || isWarlockSpellLevelSection;
-    if (isWarlock) {
+    const shouldShowUnifiedWarlockSection = isCantrips || isDedicatedPactMagicSpellSection;
+    if (useWarlockKnownSpellMode) {
       if (!shouldShowWarlockSection && !shouldRenderFeatureCantripSection) return null;
-    } else if (slotCount === 0 && !shouldRenderFeatureCantripSection) {
+    } else if (slotCount === 0 && !shouldRenderFeatureCantripSection && !shouldShowUnifiedWarlockSection) {
       return null;
     }
 
@@ -5631,15 +5693,20 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
 
     const heading = (() => {
       if (isCantrips) return cantripHeading;
-      if (isWarlock) {
+      if (useWarlockKnownSpellMode) {
         if (Number(numericalSpellLevel) === Number(warlockSlotLevelNumber)) {
           return `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Spell Slots`;
         }
         return `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Spells Known`;
       }
+      if (slotCount === 0 && isDedicatedPactMagicSpellSection) {
+        return `${ORDINAL_LABELS[textualSpellLevel] || capitalize(textualSpellLevel)}-Level Spells`;
+      }
       return `${capitalize(textualSpellLevel)} Level Spell Slots`;
     })();
-    const shouldRenderSpellCheckboxes = !isCantrips && (!isWarlock || Number(numericalSpellLevel) === Number(warlockSlotLevelNumber));
+    const shouldRenderSpellCheckboxes =
+      !isCantrips &&
+      (!useWarlockKnownSpellMode || Number(numericalSpellLevel) === Number(warlockSlotLevelNumber));
 
       return (
         <Box
@@ -8200,31 +8267,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
           </Typography>
         </Box>
       ) : null}
-      {showMulticlassSummary ? (
-        <Box
-          sx={{
-            mb: 1.5,
-            p: 1.25,
-            borderRadius: 1.5,
-            border: "1px solid rgba(93,64,55,0.14)",
-            backgroundColor: "rgba(255,255,255,0.58)",
-          }}
-        >
-          <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "#5d4037", textTransform: "uppercase", letterSpacing: "0.7px" }}>
-            Spell Slot Pools
-          </Typography>
-          {spellSlotSummary.combinedSpellcastingRow ? (
-            <Typography sx={{ fontSize: "13px", color: "#3e2723", mt: 0.5 }}>
-              Spellcasting slots are shared across your non-warlock caster classes.
-            </Typography>
-          ) : null}
-          {spellSlotSummary.pactMagicRow ? (
-            <Typography sx={{ fontSize: "13px", color: "#3e2723", mt: spellSlotSummary.combinedSpellcastingRow ? 0.5 : 0 }}>
-              Pact Magic slots are tracked separately for warlock and refresh on a short rest.
-            </Typography>
-          ) : null}
-        </Box>
-      ) : null}
+      {renderPactMagicSection()}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
         {effectiveIsNonCaster && isFighter ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -8304,7 +8347,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
         <SoulknifePsionicEnergyDieUsesPanel />
       ) : (
         <>
-          {detailMode ? null : spellSlotSummary.preparedEntries.length + spellSlotSummary.pactEntries.length > 1 ? (
+          {detailMode ? null : !showDedicatedPactMagicSection && spellSlotSummary.preparedEntries.length + spellSlotSummary.pactEntries.length > 1 ? (
             <Typography
               sx={{
                 mb: 1,
@@ -8316,7 +8359,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
                 color: "#6b4f3a",
               }}
             >
-              {formatClassHeading(activeSpellClassKey)} Spellcasting
+              {`${formatClassHeading(activeSpellClassKey)} Spellcasting`}
             </Typography>
           ) : null}
           {renderBattleMasterManeuvers()}
