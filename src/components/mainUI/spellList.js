@@ -423,10 +423,14 @@ const TOTEM_WARRIOR_RITUAL_SPELLS = [
 export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   const { characterInfo: baseCharacterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
   const allSpellcastingEntries = React.useMemo(() => getSpellcastingEntries(baseCharacterInfo), [baseCharacterInfo]);
-  const spellcastingEntry = React.useMemo(
-    () => getSpellcastingEntryForSlot(baseCharacterInfo, classSlot),
-    [baseCharacterInfo, classSlot]
-  );
+  const spellcastingEntry = React.useMemo(() => {
+    const directEntry = getSpellcastingEntryForSlot(baseCharacterInfo, classSlot);
+    if (directEntry) return directEntry;
+    if (String(classSlot || "primary") === "primary" && allSpellcastingEntries.length > 0) {
+      return allSpellcastingEntries[0];
+    }
+    return null;
+  }, [allSpellcastingEntries, baseCharacterInfo, classSlot]);
   const characterInfo = React.useMemo(() => {
     if (!spellcastingEntry) return baseCharacterInfo;
     return {
@@ -493,14 +497,17 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   );
   const isWarlock = classKey === "warlock" && !hasSubclassSpellcasting;
   const isWizard = classKey === "wizard" && !hasSubclassSpellcasting;
-  const effectiveIsNonCaster = isNonCaster && !hasSubclassSpellcasting;
+  const effectiveIsNonCaster = allSpellcastingEntries.length === 0 && isNonCaster && !hasSubclassSpellcasting;
   const isTotemWarriorRitualTracker =
     classKey === "barbarian" &&
     String(characterInfo?.subclass || "") === "totemWarrior" &&
     characterLevel >= 3;
   const isUsingSharedSpellcastingSlots =
     spellSlotSummary.hasCombinedSpellcasting &&
-    spellSlotSummary.preparedEntries.some((entry) => String(entry?.slot || "") === String(classSlot || ""));
+    (
+      isUnifiedMulticlassTracker ||
+      spellSlotSummary.preparedEntries.some((entry) => String(entry?.slot || "") === String(classSlot || ""))
+    );
   const currentSpellTableRow = isUsingSharedSpellcastingSlots
     ? spellSlotSummary.combinedSpellcastingRow
     : spellTables?.[spellTableKey]?.[characterLevel] || null;
@@ -8170,7 +8177,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   };
 
   if (hideFighterSpellSection) return null;
-  if (isMonk) return <MonkKiUsesPanel />;
+  if (isMonk && effectiveIsNonCaster) return <MonkKiUsesPanel />;
 
   return (
       <Box sx={{ mt: 2 }}>
