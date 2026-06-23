@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Checkbox from '@mui/material/Checkbox';
 
-const SpellCheckboxes = ({ textualSpellLevel, slotCount }) => {
+const SpellCheckboxes = ({ textualSpellLevel, slotCount, showLabel = true }) => {
   const [checkedSlots, setCheckedSlots] = useState({});
 
   const handleCheckboxChange = (slotIndex) => {
@@ -17,9 +17,11 @@ const SpellCheckboxes = ({ textualSpellLevel, slotCount }) => {
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-      <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#5d4037', mr: 0.5 }}>
-        Slots
-      </Typography>
+      {showLabel ? (
+        <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#5d4037', mr: 0.5 }}>
+          Slots
+        </Typography>
+      ) : null}
       {Array.from({ length: slotCount }, (_, i) => (
         <Checkbox
           key={i}

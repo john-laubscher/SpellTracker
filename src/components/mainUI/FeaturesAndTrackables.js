@@ -2052,6 +2052,90 @@ const FeaturesAndTrackables = () => {
     return (subclassData || []).filter((feature) => feature.level <= characterLevel);
   }, [subclassData, characterLevel]);
 
+  const augmentWarlockFeatures = React.useCallback(
+    (baseFeatures, targetClassKey, targetWarlockLevel) => {
+      if (targetClassKey !== "warlock") return baseFeatures;
+
+      const invocationList = classesData?.warlock?.eldritchInvocations || [];
+      const invocationById = new Map((Array.isArray(invocationList) ? invocationList : []).map((entry) => [entry?.id, entry]));
+      const selectedInvocationIds = Array.isArray(characterInfo?.warlockInvocations)
+        ? characterInfo.warlockInvocations
+        : [];
+      const selectedInvocations = selectedInvocationIds
+        .map((id) => invocationById.get(id))
+        .filter(Boolean);
+
+      const pactOptions = classesData?.warlock?.pactBoons || [];
+      const pactById = new Map((Array.isArray(pactOptions) ? pactOptions : []).map((entry) => [entry?.id, entry]));
+      const selectedPact = pactById.get(String(characterInfo?.warlockPactBoon || "")) || null;
+
+      let next = (Array.isArray(baseFeatures) ? baseFeatures : []).map((feature) => {
+        const descLines = Array.isArray(feature?.desc)
+          ? feature.desc
+          : typeof feature?.desc === "string"
+            ? [feature.desc]
+            : [];
+
+        if (feature?.id === "eldritch_invocations") {
+          const prefix =
+            selectedInvocations.length > 0
+              ? `Chosen invocations: ${selectedInvocations.map((entry) => entry?.name).join(", ")}.`
+              : "Chosen invocations: (none selected).";
+          return { ...feature, desc: [prefix, ...descLines] };
+        }
+
+        if (feature?.id === "pact_boon") {
+          const prefix = selectedPact ? `Chosen pact boon: ${selectedPact.name}.` : "Chosen pact boon: (none selected).";
+          const pactDesc = selectedPact?.desc || [];
+          return { ...feature, desc: [prefix, ...pactDesc, ...descLines] };
+        }
+
+        if (feature?.id === "mystic_arcanum") {
+          const prefix =
+            warlockMysticArcanum.length > 0
+              ? `Chosen arcanum spells: ${warlockMysticArcanum.map((spell) => spell?.name).filter(Boolean).join(", ")}.`
+              : "Chosen arcanum spells: (none selected).";
+          const guidance = `Expected arcanum selections at Warlock level ${targetWarlockLevel}: ${getWarlockMysticArcanumExpectedTotal(targetWarlockLevel)}.`;
+          return { ...feature, desc: [prefix, guidance, ...descLines] };
+        }
+
+        return feature;
+      });
+
+      if (targetWarlockLevel >= 11 && warlockMysticArcanum.length > 0) {
+        const arcanumFeatures = warlockMysticArcanum.map((spell) => {
+          const spellLevel = Number(spell?.level) || 0;
+          const ordinalLevelLabel = (() => {
+            if (spellLevel === 1) return "1st";
+            if (spellLevel === 2) return "2nd";
+            if (spellLevel === 3) return "3rd";
+            if (spellLevel > 3) return `${spellLevel}th`;
+            return "Unknown";
+          })();
+          const levelLabel = spellLevel > 0 ? `${spellLevel}th-level` : "Arcanum";
+          return {
+            id: `warlock_mystic_arcanum:${spell.index}`,
+            name: `${ordinalLevelLabel} lvl Mystic Arcanum: ${spell.name}`,
+            desc: [
+              `${levelLabel} arcanum spell.`,
+              `Spell details: [[spell:${spell.index}|${spell.name}]].`,
+              "You can cast this spell once without expending a spell slot, and it refreshes on a long rest.",
+            ],
+            level: 11,
+            tracked: true,
+            uses: 1,
+            recharge: "lr",
+          };
+        });
+
+        next = [...next, ...arcanumFeatures];
+      }
+
+      return next;
+    },
+    [characterInfo?.warlockInvocations, characterInfo?.warlockPactBoon, warlockMysticArcanum]
+  );
+
   const secondaryClassEntry = React.useMemo(() => {
     const entries = getClassEntries(characterInfo);
     return entries.find((entry) => entry.slot === "secondary") || null;
@@ -2060,8 +2144,9 @@ const FeaturesAndTrackables = () => {
   const secondaryClassFeatures = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return [];
     const all = classesData?.[secondaryClassEntry.classKey]?.classFeatures || [];
-    return all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack");
-  }, [secondaryClassEntry]);
+    const base = all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack");
+    return augmentWarlockFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
+  }, [secondaryClassEntry, augmentWarlockFeatures]);
   const secondaryClassTitle = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return "2nd Class Features";
     const label = String(classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)).trim();
@@ -2078,8 +2163,9 @@ const FeaturesAndTrackables = () => {
       return [];
     }
     const all = classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.features || [];
-    return all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0));
-  }, [secondaryClassEntry]);
+    const base = all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0));
+    return augmentWarlockFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
+  }, [secondaryClassEntry, augmentWarlockFeatures]);
   const secondarySubclassTitle = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
       return "2nd Subclass Features";
@@ -2546,82 +2632,7 @@ const FeaturesAndTrackables = () => {
     }
 
     if (characterClass === "warlock") {
-      const invocationList = classesData?.warlock?.eldritchInvocations || [];
-      const invocationById = new Map((Array.isArray(invocationList) ? invocationList : []).map((entry) => [entry?.id, entry]));
-      const selectedInvocationIds = Array.isArray(characterInfo?.warlockInvocations)
-        ? characterInfo.warlockInvocations
-        : [];
-      const selectedInvocations = selectedInvocationIds
-        .map((id) => invocationById.get(id))
-        .filter(Boolean);
-
-      const pactOptions = classesData?.warlock?.pactBoons || [];
-      const pactById = new Map((Array.isArray(pactOptions) ? pactOptions : []).map((entry) => [entry?.id, entry]));
-      const selectedPact = pactById.get(String(characterInfo?.warlockPactBoon || "")) || null;
-
-      let next = base.map((feature) => {
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        if (feature?.id === "eldritch_invocations") {
-          const prefix =
-            selectedInvocations.length > 0
-              ? `Chosen invocations: ${selectedInvocations.map((entry) => entry?.name).join(", ")}.`
-              : "Chosen invocations: (none selected).";
-          return { ...feature, desc: [prefix, ...descLines] };
-        }
-
-        if (feature?.id === "pact_boon") {
-          const prefix = selectedPact ? `Chosen pact boon: ${selectedPact.name}.` : "Chosen pact boon: (none selected).";
-          const pactDesc = selectedPact?.desc || [];
-          return { ...feature, desc: [prefix, ...pactDesc, ...descLines] };
-        }
-
-        if (feature?.id === "mystic_arcanum") {
-          const prefix =
-            warlockMysticArcanum.length > 0
-              ? `Chosen arcanum spells: ${warlockMysticArcanum.map((spell) => spell?.name).filter(Boolean).join(", ")}.`
-              : "Chosen arcanum spells: (none selected).";
-          const guidance = `Expected arcanum selections at Warlock level ${warlockLevel}: ${warlockMysticArcanumExpected}.`;
-          return { ...feature, desc: [prefix, guidance, ...descLines] };
-        }
-
-        return feature;
-      });
-
-      if (hasWarlockMysticArcanum && warlockMysticArcanum.length > 0) {
-        const arcanumFeatures = warlockMysticArcanum.map((spell) => {
-          const spellLevel = Number(spell?.level) || 0;
-          const ordinalLevelLabel = (() => {
-            if (spellLevel === 1) return "1st";
-            if (spellLevel === 2) return "2nd";
-            if (spellLevel === 3) return "3rd";
-            if (spellLevel > 3) return `${spellLevel}th`;
-            return "Unknown";
-          })();
-          const levelLabel = spellLevel > 0 ? `${spellLevel}th-level` : "Arcanum";
-          return {
-            id: `warlock_mystic_arcanum:${spell.index}`,
-            name: `${ordinalLevelLabel} lvl Mystic Arcanum: ${spell.name}`,
-            desc: [
-              `${levelLabel} arcanum spell.`,
-              `Spell details: [[spell:${spell.index}|${spell.name}]].`,
-              "You can cast this spell once without expending a spell slot, and it refreshes on a long rest.",
-            ],
-            level: 11,
-            tracked: true,
-            uses: 1,
-            recharge: "lr",
-          };
-        });
-
-        next = [...next, ...arcanumFeatures];
-      }
-
-      return next;
+      return augmentWarlockFeatures(base, characterClass, warlockLevel);
     }
 
     return base;
@@ -2640,15 +2651,11 @@ const FeaturesAndTrackables = () => {
     rangerFavoredEnemyOptions,
     rangerNaturalExplorerOptions,
     characterLevel,
-    characterInfo?.warlockInvocations,
-    characterInfo?.warlockPactBoon,
     characterInfo?.wizardSignatureSpells,
     characterInfo?.wizardSpellMastery,
     characterInfo?.wizardSpellbook,
     warlockLevel,
-    warlockMysticArcanum,
-    warlockMysticArcanumExpected,
-    hasWarlockMysticArcanum,
+    augmentWarlockFeatures,
   ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
@@ -3078,6 +3085,303 @@ const FeaturesAndTrackables = () => {
     [activeCharacterId, token]
   );
 
+  const renderWarlockFeatureTrailingControls = React.useCallback(
+    (feature, targetClassKey, targetSubclassKey) => {
+      if (targetClassKey !== "warlock") return null;
+
+      if (warlockLevel >= 2 && feature?.id === "eldritch_invocations") {
+        const selectedCount = warlockInvocationCount;
+        const allowed = warlockInvocationAllowed;
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+
+        return (
+          <Tooltip arrow title={`Choose Eldritch Invocations (${selectedCount}/${allowed})`}>
+            <IconButton
+              size="small"
+              aria-label="Choose Eldritch Invocations"
+              onClick={() => setWarlockInvocationsModalOpen(true)}
+              sx={{
+                ml: 0.25,
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                border: "1px solid rgba(93, 64, 55, 0.25)",
+                backgroundColor: isOver
+                  ? "rgba(194, 65, 12, 0.10)"
+                  : isUnder
+                    ? "rgba(2, 132, 199, 0.10)"
+                    : "rgba(20, 184, 166, 0.10)",
+                "&:hover": {
+                  backgroundColor: isOver
+                    ? "rgba(194, 65, 12, 0.14)"
+                    : isUnder
+                      ? "rgba(244, 233, 221, 0.85)"
+                      : "rgba(20, 184, 166, 0.14)",
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src="https://www.clipartmax.com/png/small/30-301325_official-eldritch-moon-set-symbol-star-wars-destiny.png"
+                alt="Choose Eldritch Invocations"
+                sx={{ width: 16, height: 16, display: "block", filter: "contrast(1.15) saturate(0.8)" }}
+              />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (warlockLevel >= 3 && feature?.id === "pact_boon") {
+        const selectedCount = warlockPactBoonCount;
+        const isOver = selectedCount > 1;
+        const isUnder = selectedCount < 1;
+
+        return (
+          <Tooltip arrow title={`Choose Pact Boon (${selectedCount}/1)`}>
+            <IconButton
+              size="small"
+              aria-label="Choose Pact Boon"
+              onClick={() => setWarlockPactBoonModalOpen(true)}
+              sx={{
+                ml: 0.25,
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                border: "1px solid rgba(93, 64, 55, 0.25)",
+                backgroundColor: isOver
+                  ? "rgba(194, 65, 12, 0.10)"
+                  : isUnder
+                    ? "rgba(2, 132, 199, 0.10)"
+                    : "rgba(20, 184, 166, 0.10)",
+                "&:hover": {
+                  backgroundColor: isOver
+                    ? "rgba(194, 65, 12, 0.14)"
+                    : isUnder
+                      ? "rgba(244, 233, 221, 0.85)"
+                      : "rgba(20, 184, 166, 0.14)",
+                },
+              }}
+            >
+              <PactScrollIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (warlockLevel >= 11 && feature?.id === "mystic_arcanum") {
+        const selectedCount = warlockMysticArcanumCount;
+        const allowed = warlockMysticArcanumExpected;
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+
+        return (
+          <Tooltip arrow title={`Choose Mystic Arcanum spells (${selectedCount}/${allowed} expected, max 10)`}>
+            <IconButton
+              size="small"
+              aria-label="Choose Mystic Arcanum spells"
+              onClick={() => setWarlockMysticArcanumModalOpen(true)}
+              sx={{
+                ml: 0.25,
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                border: "1px solid rgba(93, 64, 55, 0.25)",
+                backgroundColor: isOver
+                  ? "rgba(194, 65, 12, 0.10)"
+                  : isUnder
+                    ? "rgba(2, 132, 199, 0.10)"
+                    : "rgba(20, 184, 166, 0.10)",
+                "&:hover": {
+                  backgroundColor: isOver
+                    ? "rgba(194, 65, 12, 0.14)"
+                    : isUnder
+                      ? "rgba(244, 233, 221, 0.85)"
+                      : "rgba(20, 184, 166, 0.14)",
+                },
+              }}
+            >
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetSubclassKey === "genie" && feature?.id === "genies_vessel") {
+        const selected = getGenieKindData(characterInfo?.genieKind);
+        const label = selected?.name ? `Change Genie Kind (${selected.name})` : "Choose Genie Kind";
+
+        return (
+          <Tooltip arrow title={label}>
+            <IconButton
+              size="small"
+              aria-label={label}
+              onClick={(e) => {
+                e.stopPropagation();
+                setGenieKindModalOpen(true);
+              }}
+              sx={{
+                ml: 0.25,
+                p: 0.25,
+                color: "rgba(93, 64, 55, 0.92)",
+                border: "1px solid rgba(93, 64, 55, 0.25)",
+                backgroundColor: "rgba(244, 233, 221, 0.65)",
+                "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+              }}
+            >
+              <GenieLampIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      return null;
+    },
+    [
+      characterInfo?.genieKind,
+      warlockInvocationAllowed,
+      warlockInvocationCount,
+      warlockLevel,
+      warlockMysticArcanumCount,
+      warlockMysticArcanumExpected,
+      warlockPactBoonCount,
+    ]
+  );
+
+  const renderWarlockFeatureDetailsHeader = React.useCallback(
+    (feature, trackerHelpers, targetClassKey, targetSubclassKey) => {
+      if (targetClassKey !== "warlock") return null;
+
+      const featureTrackers = trackerHelpers?.featureTrackers || {};
+      const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
+
+      if (feature?.id === "eldritch_invocations") {
+        const invocationList = classesData?.warlock?.eldritchInvocations || [];
+        const byId = new Map((Array.isArray(invocationList) ? invocationList : []).map((entry) => [entry?.id, entry]));
+        const selected = (Array.isArray(characterInfo?.warlockInvocations) ? characterInfo.warlockInvocations : [])
+          .map((id) => byId.get(id))
+          .filter(Boolean);
+
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Selected invocations:</strong>{" "}
+              {selected.length === 0 ? <em>None</em> : selected.map((entry) => entry?.name).join(", ")} ({selected.length}/{warlockInvocationAllowed})
+            </p>
+          </div>
+        );
+      }
+
+      if (feature?.id === "pact_boon") {
+        const pactList = classesData?.warlock?.pactBoons || [];
+        const selected =
+          (Array.isArray(pactList) ? pactList : []).find(
+            (entry) => String(entry?.id || "") === String(characterInfo?.warlockPactBoon || "")
+          ) || null;
+
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Chosen pact boon:</strong> {selected ? selected.name : <em>None</em>}
+            </p>
+          </div>
+        );
+      }
+
+      if (feature?.id === "mystic_arcanum") {
+        const unlockedLabel = warlockMysticArcanumLevels.length > 0 ? warlockMysticArcanumLevels.join(", ") : "none";
+
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Unlocked arcanum levels:</strong> {unlockedLabel}
+            </p>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Chosen arcanum spells:</strong>{" "}
+              {warlockMysticArcanum.length === 0
+                ? <em>None</em>
+                : warlockMysticArcanum.map((spell) => `${spell?.name} (${spell?.level})`).join(", ")} ({warlockMysticArcanumCount}/{warlockMysticArcanumExpected})
+            </p>
+          </div>
+        );
+      }
+
+      if (targetSubclassKey === "celestial" && feature?.id === "healing_light") {
+        const trackerKey = `${String(targetClassKey || "unknown")}:${String(feature?.id || "feature")}`;
+        const tracker = featureTrackers?.[trackerKey] || {};
+        const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
+        const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
+        const currentMax = overrideActive
+          ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
+          : autoMax;
+
+        return (
+          <div style={{ margin: "2px 0 8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Max dice:</strong> {currentMax} d6
+              {overrideActive ? ` (auto ${autoMax})` : ""}
+            </p>
+            <Tooltip arrow title="Override max Healing Light dice">
+              <IconButton
+                size="small"
+                aria-label="Override Healing Light max dice"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof setFeatureTrackers !== "function") return;
+                  const nextValue = window.prompt(
+                    "Set Healing Light max dice. Leave blank to reset to automatic.",
+                    String(currentMax)
+                  );
+                  if (nextValue === null) return;
+                  const trimmed = String(nextValue).trim();
+                  if (!trimmed) {
+                    setFeatureTrackers((prev) => ({
+                      ...(prev || {}),
+                      [trackerKey]: {
+                        ...(prev?.[trackerKey] || {}),
+                        poolMaxOverride: null,
+                        spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, autoMax)),
+                      },
+                    }));
+                    return;
+                  }
+                  const parsed = Number(trimmed);
+                  if (!Number.isFinite(parsed)) return;
+                  const nextMax = Math.max(0, Math.min(99, Math.trunc(parsed)));
+                  setFeatureTrackers((prev) => ({
+                    ...(prev || {}),
+                    [trackerKey]: {
+                      ...(prev?.[trackerKey] || {}),
+                      poolMaxOverride: nextMax,
+                      spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, nextMax)),
+                    },
+                  }));
+                }}
+                sx={{
+                  p: 0.25,
+                  border: "1px solid rgba(93, 64, 55, 0.25)",
+                  backgroundColor: "rgba(244, 233, 221, 0.65)",
+                  "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
+                }}
+              >
+                <SettingsIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </div>
+        );
+      }
+
+      return null;
+    },
+    [
+      characterInfo?.warlockInvocations,
+      characterInfo?.warlockPactBoon,
+      warlockInvocationAllowed,
+      warlockLevel,
+      warlockMysticArcanum,
+      warlockMysticArcanumCount,
+      warlockMysticArcanumExpected,
+      warlockMysticArcanumLevels,
+    ]
+  );
+
   return (
     <div>
 	        <Grid container spacing={2}>
@@ -3091,6 +3395,9 @@ const FeaturesAndTrackables = () => {
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel={primaryClassUntrackedLabel}
               renderUntrackedTrailingControls={(feature) => {
+                const warlockControls = renderWarlockFeatureTrailingControls(feature, characterClass, subclass);
+                if (warlockControls) return warlockControls;
+
                 if (characterClass === "wizard" && feature?.id === "spellbook") {
                   return (
                     <Tooltip arrow title={`Open Spellbook (${wizardSpellbookCount} spells)`}>
@@ -3363,6 +3670,9 @@ const FeaturesAndTrackables = () => {
               characterClass={characterClass}
               characterLevel={characterLevel}
               renderDetailsHeaderForFeature={(feature, trackerHelpers) => {
+                const warlockHeader = renderWarlockFeatureDetailsHeader(feature, trackerHelpers, characterClass, subclass);
+                if (warlockHeader) return warlockHeader;
+
                 const featureTrackers = trackerHelpers?.featureTrackers || {};
                 const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
                 if (characterClass === "warlock") {
@@ -4122,6 +4432,9 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
+                const warlockControls = renderWarlockFeatureTrailingControls(feature, characterClass, subclass);
+                if (warlockControls) return warlockControls;
+
                 if (hasBlessedWarrior && feature?.id === "fighting_style") {
                   const isOver = blessedWarriorCantripCount > 2;
                   const isUnder = blessedWarriorCantripCount < 2;
@@ -4788,6 +5101,28 @@ const FeaturesAndTrackables = () => {
                 warlockLevel={warlockLevel}
                 characterClass={secondaryClassEntry.classKey}
                 characterLevel={secondaryClassEntry.level}
+                renderTrackedTrailingControls={(feature) =>
+                  renderWarlockFeatureTrailingControls(
+                    feature,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
+                renderUntrackedTrailingControls={(feature) =>
+                  renderWarlockFeatureTrailingControls(
+                    feature,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
+                renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
+                  renderWarlockFeatureDetailsHeader(
+                    feature,
+                    trackerHelpers,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
               />
             </Grid>
           ) : null}
@@ -4812,6 +5147,28 @@ const FeaturesAndTrackables = () => {
                 warlockLevel={warlockLevel}
                 characterClass={secondaryClassEntry.classKey}
                 characterLevel={secondaryClassEntry.level}
+                renderTrackedTrailingControls={(feature) =>
+                  renderWarlockFeatureTrailingControls(
+                    feature,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
+                renderUntrackedTrailingControls={(feature) =>
+                  renderWarlockFeatureTrailingControls(
+                    feature,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
+                renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
+                  renderWarlockFeatureDetailsHeader(
+                    feature,
+                    trackerHelpers,
+                    secondaryClassEntry.classKey,
+                    secondaryClassEntry.subclassKey
+                  )
+                }
               />
             </Grid>
           ) : null}

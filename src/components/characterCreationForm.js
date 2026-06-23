@@ -81,6 +81,7 @@ export const CharacterCreationForm = (props) => {
     [characterInfo]
   );
   const totalCharacterLevel = React.useMemo(() => getTotalCharacterLevel(characterInfo), [characterInfo]);
+  const isOverLevelCap = totalCharacterLevel > 20;
 
   const missingFieldSx = (shouldHighlight) => {
     if (!shouldHighlight) return null;
@@ -546,7 +547,7 @@ export const CharacterCreationForm = (props) => {
 
   const handleContinue = () => {
     const missingAny = isMissingRace || isMissingSubrace || isMissingClass;
-    if (!missingAny) {
+    if (!missingAny && !isOverLevelCap) {
       navigate("/mainUI");
       return;
     }
@@ -1085,9 +1086,14 @@ export const CharacterCreationForm = (props) => {
           </Grid>
           {isMulticlassed ? (
             <Grid item xs={12}>
-              <Typography sx={{ fontSize: "12px", color: "#6b4f38", textAlign: "center" }}>
+              <Typography sx={{ fontSize: "12px", color: isOverLevelCap ? "#b71c1c" : "#6b4f38", textAlign: "center", fontWeight: isOverLevelCap ? 700 : 400 }}>
                 Total character level: {totalCharacterLevel}
               </Typography>
+              {isOverLevelCap ? (
+                <Typography sx={{ fontSize: "12px", color: "#b71c1c", textAlign: "center", mt: 0.35 }}>
+                  Multiclass characters cannot go over level 20.
+                </Typography>
+              ) : null}
             </Grid>
           ) : null}
         </Grid>
@@ -1136,6 +1142,7 @@ export const CharacterCreationForm = (props) => {
       <Button
         variant="contained"
         onClick={handleContinue}
+        disabled={isOverLevelCap}
         sx={{
           mt: 1,
           mb: 1,
