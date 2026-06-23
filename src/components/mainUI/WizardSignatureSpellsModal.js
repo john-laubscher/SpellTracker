@@ -14,13 +14,14 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import SpellAccordian from "./SpellAccordian";
+import { getPreparedSpellsForClass, getWizardSpellbookForClass, updatePreparedSpellsForClass } from "../../utils/spellcastingState";
 
 const SIGNATURE_BONUS_TAG = "wizard_signature_spell";
 
 const WizardSignatureSpellsModal = ({ open, onClose }) => {
   const { characterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
 
-  const spellbook = characterInfo?.wizardSpellbook || {};
+  const spellbook = getWizardSpellbookForClass(characterInfo, "wizard");
   const entries = Array.isArray(spellbook?.[3]) ? spellbook[3] : [];
   const chosen = Array.isArray(characterInfo?.wizardSignatureSpells) ? characterInfo.wizardSignatureSpells : [];
   const chosenIndexes = new Set(chosen.map((spell) => String(spell?.index || "")));
@@ -34,7 +35,9 @@ const WizardSignatureSpellsModal = ({ open, onClose }) => {
         ? currentChosen.filter((entry) => String(entry?.index || "") !== String(spell.index))
         : [...currentChosen, spell];
 
-      const currentPrepared = Array.isArray(prev?.spellsPrepared?.[3]) ? prev.spellsPrepared[3] : [];
+      const currentPrepared = Array.isArray(getPreparedSpellsForClass(prev, "wizard", 3))
+        ? getPreparedSpellsForClass(prev, "wizard", 3)
+        : [];
       let nextPrepared = currentPrepared.filter(
         (entry) =>
           !(
@@ -55,13 +58,10 @@ const WizardSignatureSpellsModal = ({ open, onClose }) => {
           : [...nextPrepared, withTag];
       }
 
+      const next = updatePreparedSpellsForClass(prev, "wizard", 3, nextPrepared);
       return {
-        ...prev,
+        ...next,
         wizardSignatureSpells: nextChosen,
-        spellsPrepared: {
-          ...prev.spellsPrepared,
-          3: nextPrepared,
-        },
       };
     });
   };

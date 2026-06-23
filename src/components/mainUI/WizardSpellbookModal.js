@@ -19,6 +19,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import SpellAccordian from "./SpellAccordian";
+import { getWizardSpellbookForClass, updatePreparedSpellsForClass, updateWizardSpellbookForClass } from "../../utils/spellcastingState";
 
 const LEVEL_LABELS = {
   0: "Cantrips",
@@ -60,7 +61,7 @@ const WizardSpellbookModal = ({ open, onClose }) => {
   const [loadStatusByLevel, setLoadStatusByLevel] = React.useState(() => emptyStatusByLevel(maxSpellLevel));
   const [expandedByLevel, setExpandedByLevel] = React.useState(() => emptyExpandedByLevel(maxSpellLevel));
 
-  const spellbook = characterInfo?.wizardSpellbook || {};
+  const spellbook = getWizardSpellbookForClass(characterInfo, "wizard");
 
   useEffect(() => {
     if (!open) return;
@@ -111,27 +112,17 @@ const WizardSpellbookModal = ({ open, onClose }) => {
   const toggleSpellbookSpell = (spellLevel, spell) => {
     if (!spell?.index) return;
     setCharacterInfo((prev) => {
-      const currentAtLevel = Array.isArray(prev?.wizardSpellbook?.[spellLevel]) ? prev.wizardSpellbook[spellLevel] : [];
+      const currentAtLevel = getWizardSpellbookForClass(prev, "wizard", spellLevel);
       const exists = currentAtLevel.some((entry) => String(entry?.index || "") === String(spell.index));
       const nextAtLevel = exists
         ? currentAtLevel.filter((entry) => String(entry?.index || "") !== String(spell.index))
         : [...currentAtLevel, spell];
-
-      const nextSpellbook = {
-        ...(prev?.wizardSpellbook || {}),
-        [spellLevel]: nextAtLevel,
-      };
-
-      const next = { ...prev, wizardSpellbook: nextSpellbook };
+      let next = updateWizardSpellbookForClass(prev, "wizard", spellLevel, nextAtLevel);
 
       if (exists) {
-        const nextPrepared = { ...(prev?.spellsPrepared || {}) };
-        Object.keys(nextPrepared).forEach((key) => {
-          nextPrepared[key] = Array.isArray(nextPrepared[key])
-            ? nextPrepared[key].filter((entry) => String(entry?.index || "") !== String(spell.index))
-            : [];
-        });
-        next.spellsPrepared = nextPrepared;
+        next = updatePreparedSpellsForClass(next, "wizard", spellLevel, (currentPrepared) =>
+          currentPrepared.filter((entry) => String(entry?.index || "") !== String(spell.index))
+        );
         next.wizardSpellMastery = {
           1: prev?.wizardSpellMastery?.[1]?.index === spell.index ? null : prev?.wizardSpellMastery?.[1] || null,
           2: prev?.wizardSpellMastery?.[2]?.index === spell.index ? null : prev?.wizardSpellMastery?.[2] || null,

@@ -1,3 +1,10 @@
+import {
+  buildMergedPreparedSpells,
+  buildMergedWizardSpellbook,
+  createEmptySpellLevels,
+  normalizeSpellCollectionsByClass,
+} from "./spellcastingState";
+
 const normalizeObject = (value, fallback = {}) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
   return value;
@@ -27,19 +34,6 @@ const normalizeDragonbornSubrace = (race, subrace, draconicAncestry) => {
   if (metallicAncestries.has(String(draconicAncestry || ""))) return "Metallic";
   return "Chromatic";
 };
-
-export const createEmptySpellLevels = () => ({
-  0: [],
-  1: [],
-  2: [],
-  3: [],
-  4: [],
-  5: [],
-  6: [],
-  7: [],
-  8: [],
-  9: [],
-});
 
 export const createDefaultStats = () => ({
   str: { value: 8, mod: -1 },
@@ -93,6 +87,29 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     safeOverrides.draconicAncestry
   );
 
+  const preparedSpellsByClass = normalizeSpellCollectionsByClass(safeOverrides.preparedSpellsByClass);
+  if (
+    primaryCharacterClass !== "noClass" &&
+    !preparedSpellsByClass[primaryCharacterClass] &&
+    safeOverrides.spellsPrepared
+  ) {
+    preparedSpellsByClass[primaryCharacterClass] = { ...defaultSpellLevels, ...normalizeObject(safeOverrides.spellsPrepared) };
+  }
+
+  const wizardSpellbookByClass = normalizeSpellCollectionsByClass(safeOverrides.wizardSpellbookByClass);
+  if (!wizardSpellbookByClass.wizard && safeOverrides.wizardSpellbook) {
+    wizardSpellbookByClass.wizard = { ...defaultSpellLevels, ...normalizeObject(safeOverrides.wizardSpellbook) };
+  }
+
+  const mergedPreparedSpells = buildMergedPreparedSpells(
+    { ...safeOverrides, preparedSpellsByClass },
+    { preparedSpellsByClass }
+  );
+  const mergedWizardSpellbook = buildMergedWizardSpellbook(
+    { ...safeOverrides, wizardSpellbookByClass },
+    { wizardSpellbookByClass }
+  );
+
   return {
     characterName: String(safeOverrides.characterName || "New Character"),
     race: safeOverrides.race || "noRace",
@@ -131,8 +148,10 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
       ...normalizeObject(safeOverrides.stats),
     },
     classLevels: normalizedClassLevels,
-    spellsPrepared: { ...defaultSpellLevels, ...normalizeObject(safeOverrides.spellsPrepared) },
-    wizardSpellbook: { ...defaultSpellLevels, ...normalizeObject(safeOverrides.wizardSpellbook) },
+    preparedSpellsByClass,
+    spellsPrepared: mergedPreparedSpells,
+    wizardSpellbookByClass,
+    wizardSpellbook: mergedWizardSpellbook,
     wizardSpellMastery: {
       1: safeOverrides?.wizardSpellMastery?.[1] || safeOverrides?.wizardSpellMastery?.first || null,
       2: safeOverrides?.wizardSpellMastery?.[2] || safeOverrides?.wizardSpellMastery?.second || null,

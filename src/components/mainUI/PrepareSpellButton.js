@@ -6,6 +6,7 @@ import {useContext} from 'react'
 import { useState } from 'react';
 import { makeStyles } from '@mui/styles';
 import ConfirmDialog from "./ConfirmDialog";
+import { getPreparedSpellsForClass, updatePreparedSpellsForClass } from "../../utils/spellcastingState";
 
 export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     prepareButton: {
@@ -44,7 +45,7 @@ export const togglePreparedSpellBtnStyle = makeStyles((theme) => ({
     },
     }));
 
-export const PrepareSpellButton = ({numericalSpellLevel, spell, index, blockedReason = ""}) => {
+export const PrepareSpellButton = ({numericalSpellLevel, spell, index, blockedReason = "", targetClassKey = ""}) => {
 
     const [clickedButtons, setClickedButtons] = useState([]); // State for tracking clicked buttons
     const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
@@ -60,7 +61,8 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index, blockedRe
       String(characterInfo?.characterClass || "") === "rogue" &&
       String(characterInfo?.subclass || "") === "arcaneTrickster";
 
-    const matchingPreparedSpell = characterInfo.spellsPrepared[numericalSpellLevel]?.find(
+    const preparedSpellsForClass = getPreparedSpellsForClass(characterInfo, targetClassKey || characterInfo?.characterClass, numericalSpellLevel);
+    const matchingPreparedSpell = preparedSpellsForClass?.find(
         (preparedSpell) => preparedSpell.index === spell.index
       );
     const isSpellAlreadyPrepared = Boolean(matchingPreparedSpell);
@@ -77,30 +79,28 @@ export const PrepareSpellButton = ({numericalSpellLevel, spell, index, blockedRe
       String(matchingPreparedSpell?.spelltrackerBonus || "") === "wizard_signature_spell";
 
     const togglePreparedSpell = (spell, numericalSpellLevel) => {
-        const isSpellAlreadyPrepared = characterInfo.spellsPrepared[numericalSpellLevel]?.some((preparedSpellList) => preparedSpellList.index === spell.index)
+        const isSpellAlreadyPrepared = preparedSpellsForClass?.some((preparedSpellList) => preparedSpellList.index === spell.index)
         if(!isSpellAlreadyPrepared) {
-          setCharacterInfo((characterInfo) => ({
-            ...characterInfo,
-            spellsPrepared: {
-              ...characterInfo.spellsPrepared,
-              [numericalSpellLevel]: [...characterInfo.spellsPrepared[numericalSpellLevel], spell],
-            },
-          }));
+          setCharacterInfo((currentCharacterInfo) =>
+            updatePreparedSpellsForClass(currentCharacterInfo, targetClassKey || currentCharacterInfo?.characterClass, numericalSpellLevel, (current) => [
+              ...current,
+              spell,
+            ])
+          );
           // else unprepares the spell
         } else {
           console.log("You un-prepared the spell")
           setCharacterInfo((characterInfo) => {
-            const updatedSpellsPrepared = characterInfo.spellsPrepared[numericalSpellLevel].filter(
-              (preparedSpell) => preparedSpell.index !== spell.index
+            const nextCharacterInfo = updatePreparedSpellsForClass(
+              characterInfo,
+              targetClassKey || characterInfo?.characterClass,
+              numericalSpellLevel,
+              (current) => current.filter((preparedSpell) => preparedSpell.index !== spell.index)
             );
-      
+
             return {
-              ...characterInfo,
+              ...nextCharacterInfo,
               ...(isArcaneTricksterMageHand ? { arcaneTricksterMageHandOptOut: true } : {}),
-              spellsPrepared: {
-                ...characterInfo.spellsPrepared,
-                [numericalSpellLevel]: updatedSpellsPrepared,
-              },
             };
           });
         }
