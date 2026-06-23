@@ -98,6 +98,7 @@ import {
   getWarlockUnlockedArcanumLevels,
 } from "../warlockOptionsData";
 import { GENIE_KIND_OPTIONS, getGenieBenefitsSummaryLines, getGenieKindData } from "../../utils/genieData";
+import { getClassEntries, getTotalCharacterLevel } from "../../utils/multiclassing";
 
 const RACIAL_SPELL_SWAP_CLASS_KEYS = ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"];
 
@@ -132,6 +133,13 @@ const formatSpellCountLabel = (entry) => {
   const count = Math.max(1, Number(entry?.count || 1));
   return count > 1 ? `${name} x${count}` : name;
 };
+
+const formatUiLabel = (value) =>
+  String(value || "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
 
 
 const FeatureAccordionRow = ({
@@ -1714,7 +1722,8 @@ const FeaturesAndTrackables = () => {
   const { auth } = useContext(AuthContext);
   const { activeCharacterId } = useContext(CharacterSessionContext);
   const token = auth?.token;
-  const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
+  const totalCharacterLevel = getTotalCharacterLevel(characterInfo);
+  const proficiencyBonusValue = proficiencyBonus[totalCharacterLevel] || 2;
   const charismaModValue = characterInfo?.stats?.cha?.mod ?? characterInfo?.stats?.charisma?.mod ?? 0;
   const intelligenceModValue = characterInfo?.stats?.int?.mod ?? characterInfo?.stats?.intelligence?.mod ?? 0;
   const wisdomModValue = characterInfo?.stats?.wis?.mod ?? characterInfo?.stats?.wisdom?.mod ?? 0;
@@ -2010,6 +2019,16 @@ const FeaturesAndTrackables = () => {
 
   // Retrieve class data
   const classData = React.useMemo(() => classesData[characterClass] || {}, [characterClass]);
+  const primaryClassTitle = React.useMemo(() => {
+    if (!characterClass || characterClass === "noClass") return "Class Features";
+    const label = String(classData?.name || formatUiLabel(characterClass)).trim();
+    return `${label} Features`;
+  }, [characterClass, classData]);
+  const primaryClassUntrackedLabel = React.useMemo(() => {
+    if (!characterClass || characterClass === "noClass") return "Untracked Class Features";
+    const label = String(classData?.name || formatUiLabel(characterClass)).trim();
+    return `Untracked ${label} Features`;
+  }, [characterClass, classData]);
   const classFeatures = React.useMemo(() => {
     const all = classData.classFeatures || [];
     return all.filter((f) => f.level <= characterLevel && f?.id !== "extra_attack");
@@ -2019,9 +2038,68 @@ const FeaturesAndTrackables = () => {
   const subclassData = React.useMemo(() => {
     return classesData[characterClass]?.subclasses?.[subclass]?.features || [];
   }, [characterClass, subclass]);
+  const primarySubclassTitle = React.useMemo(() => {
+    if (!subclass || subclass === "noSubclass") return "Subclass Features";
+    const label = String(classesData?.[characterClass]?.subclasses?.[subclass]?.name || formatUiLabel(subclass)).trim();
+    return `${label} Features`;
+  }, [characterClass, subclass]);
+  const primarySubclassUntrackedLabel = React.useMemo(() => {
+    if (!subclass || subclass === "noSubclass") return "Untracked Subclass Features";
+    const label = String(classesData?.[characterClass]?.subclasses?.[subclass]?.name || formatUiLabel(subclass)).trim();
+    return `Untracked ${label} Features`;
+  }, [characterClass, subclass]);
   const subclassFeatures = React.useMemo(() => {
     return (subclassData || []).filter((feature) => feature.level <= characterLevel);
   }, [subclassData, characterLevel]);
+
+  const secondaryClassEntry = React.useMemo(() => {
+    const entries = getClassEntries(characterInfo);
+    return entries.find((entry) => entry.slot === "secondary") || null;
+  }, [characterInfo]);
+
+  const secondaryClassFeatures = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey) return [];
+    const all = classesData?.[secondaryClassEntry.classKey]?.classFeatures || [];
+    return all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack");
+  }, [secondaryClassEntry]);
+  const secondaryClassTitle = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey) return "2nd Class Features";
+    const label = String(classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)).trim();
+    return `${label} Features`;
+  }, [secondaryClassEntry]);
+  const secondaryClassUntrackedLabel = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey) return "Untracked 2nd Class Features";
+    const label = String(classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)).trim();
+    return `Untracked ${label} Features`;
+  }, [secondaryClassEntry]);
+
+  const secondarySubclassFeatures = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+      return [];
+    }
+    const all = classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.features || [];
+    return all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0));
+  }, [secondaryClassEntry]);
+  const secondarySubclassTitle = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+      return "2nd Subclass Features";
+    }
+    const label = String(
+      classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.name ||
+        formatUiLabel(secondaryClassEntry.subclassKey)
+    ).trim();
+    return `${label} Features`;
+  }, [secondaryClassEntry]);
+  const secondarySubclassUntrackedLabel = React.useMemo(() => {
+    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+      return "Untracked 2nd Subclass Features";
+    }
+    const label = String(
+      classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.name ||
+        formatUiLabel(secondaryClassEntry.subclassKey)
+    ).trim();
+    return `Untracked ${label} Features`;
+  }, [secondaryClassEntry]);
 
   const notAvailableFeature = React.useCallback(
     ({ id }) => ({
@@ -3005,13 +3083,13 @@ const FeaturesAndTrackables = () => {
 	        <Grid container spacing={2}>
 	          <Grid item xs={12} md={6}>
             <FeatureDisplay
-              title="Class Features"
+              title={primaryClassTitle}
               addTooltip="Add custom Class Feature"
               onAdd={() => setAddModal({ open: true, kind: "class" })}
               manageTooltip="Manage which class features are tracked"
               onManage={() => setManageModal({ open: true, kind: "class" })}
               features={[...visibleClassFeatures, ...visibleClassCustom]}
-              untrackedLabel="Untracked Class Features"
+              untrackedLabel={primaryClassUntrackedLabel}
               renderUntrackedTrailingControls={(feature) => {
                 if (characterClass === "wizard" && feature?.id === "spellbook") {
                   return (
@@ -3512,14 +3590,14 @@ const FeaturesAndTrackables = () => {
 
           <Grid item xs={12} md={6}>
             <FeatureDisplay
-              title="Subclass Features"
+              title={primarySubclassTitle}
               addTooltip="Add custom Subclass Feature"
               onAdd={() => setAddModal({ open: true, kind: "subclass" })}
               manageTooltip="Manage which subclass features are tracked"
               onManage={() => setManageModal({ open: true, kind: "subclass" })}
               features={[...visibleSubclassFeatures, ...visibleSubclassCustom]}
               defaultUntrackedExpanded={true}
-              untrackedLabel="Untracked Subclass Features"
+              untrackedLabel={primarySubclassUntrackedLabel}
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               intelligenceModValue={intelligenceModValue}
@@ -4689,6 +4767,54 @@ const FeaturesAndTrackables = () => {
               }}
             />
           </Grid>
+
+          {secondaryClassEntry?.classKey ? (
+            <Grid item xs={12} md={6}>
+              <FeatureDisplay
+                title={secondaryClassTitle}
+                features={secondaryClassFeatures}
+                defaultUntrackedExpanded={true}
+                untrackedLabel={secondaryClassUntrackedLabel}
+                proficiencyBonusValue={proficiencyBonusValue}
+                charismaModValue={charismaModValue}
+                intelligenceModValue={intelligenceModValue}
+                wisdomModValue={wisdomModValue}
+                strengthModValue={strengthModValue}
+                constitutionModValue={constitutionModValue}
+                druidLevel={druidLevel}
+                fighterLevel={fighterLevel}
+                paladinLevel={paladinLevel}
+                sorcererLevel={sorcererLevel}
+                warlockLevel={warlockLevel}
+                characterClass={secondaryClassEntry.classKey}
+                characterLevel={secondaryClassEntry.level}
+              />
+            </Grid>
+          ) : null}
+
+          {secondaryClassEntry?.classKey && secondarySubclassFeatures.length > 0 ? (
+            <Grid item xs={12} md={6}>
+              <FeatureDisplay
+                title={secondarySubclassTitle}
+                features={secondarySubclassFeatures}
+                defaultUntrackedExpanded={true}
+                untrackedLabel={secondarySubclassUntrackedLabel}
+                proficiencyBonusValue={proficiencyBonusValue}
+                charismaModValue={charismaModValue}
+                intelligenceModValue={intelligenceModValue}
+                wisdomModValue={wisdomModValue}
+                strengthModValue={strengthModValue}
+                constitutionModValue={constitutionModValue}
+                druidLevel={druidLevel}
+                fighterLevel={fighterLevel}
+                paladinLevel={paladinLevel}
+                sorcererLevel={sorcererLevel}
+                warlockLevel={warlockLevel}
+                characterClass={secondaryClassEntry.classKey}
+                characterLevel={secondaryClassEntry.level}
+              />
+            </Grid>
+          ) : null}
 	        </Grid>
 
 	        {characterClass === "druid" && subclass === "land" ? (

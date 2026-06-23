@@ -247,6 +247,29 @@ export const spellTables = {
     20: { cantrips: 5, first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
   },
 
+  multiclassSpellcaster: {
+    1: { first: 2, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    2: { first: 3, second: 0, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    3: { first: 4, second: 2, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    4: { first: 4, second: 3, third: 0, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    5: { first: 4, second: 3, third: 2, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    6: { first: 4, second: 3, third: 3, fourth: 0, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    7: { first: 4, second: 3, third: 3, fourth: 1, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    8: { first: 4, second: 3, third: 3, fourth: 2, fifth: 0, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    9: { first: 4, second: 3, third: 3, fourth: 3, fifth: 1, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    10: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 0, seventh: 0, eighth: 0, ninth: 0 },
+    11: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    12: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 0, eighth: 0, ninth: 0 },
+    13: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    14: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 0, ninth: 0 },
+    15: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    16: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 0 },
+    17: { first: 4, second: 3, third: 3, fourth: 3, fifth: 2, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    18: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 1, seventh: 1, eighth: 1, ninth: 1 },
+    19: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 1, eighth: 1, ninth: 1 },
+    20: { first: 4, second: 3, third: 3, fourth: 3, fifth: 3, sixth: 2, seventh: 2, eighth: 1, ninth: 1 },
+  },
+
   //Will need to add artificer cantrips, and maybe infusions tracker as well)
 };
 

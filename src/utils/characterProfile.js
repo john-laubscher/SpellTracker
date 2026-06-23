@@ -9,6 +9,17 @@ const normalizeStringArray = (value) =>
 const normalizeSpellArray = (value) =>
   Array.isArray(value) ? value.filter((entry) => entry && typeof entry === "object") : [];
 
+const normalizeClassLevels = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.entries(value).reduce((acc, [key, rawValue]) => {
+    const normalizedKey = String(key || "").trim();
+    const normalizedValue = Number(rawValue);
+    if (!normalizedKey || !Number.isFinite(normalizedValue) || normalizedValue <= 0) return acc;
+    acc[normalizedKey] = Math.max(1, Math.trunc(normalizedValue));
+    return acc;
+  }, {});
+};
+
 const normalizeDragonbornSubrace = (race, subrace, draconicAncestry) => {
   if (race !== "Dragonborn" || subrace !== "Chromatic/Metallic") return subrace;
 
@@ -54,6 +65,28 @@ const createDefaultWeapons = () => [
 export const createDefaultCharacterInfo = (overrides = {}) => {
   const safeOverrides = normalizeObject(overrides);
   const defaultSpellLevels = createEmptySpellLevels();
+  const primaryCharacterClass = safeOverrides.characterClass || "noClass";
+  const primaryCharacterLevel = Number.isFinite(Number(safeOverrides.characterLevel))
+    ? Math.max(1, Math.trunc(Number(safeOverrides.characterLevel)))
+    : 1;
+  const normalizedClassLevels = normalizeClassLevels(safeOverrides.classLevels);
+  if (primaryCharacterClass !== "noClass" && !normalizedClassLevels[primaryCharacterClass]) {
+    normalizedClassLevels[primaryCharacterClass] = primaryCharacterLevel;
+  }
+  const secondaryCharacterLevel = Number.isFinite(Number(safeOverrides.secondaryCharacterLevel))
+    ? Math.max(1, Math.trunc(Number(safeOverrides.secondaryCharacterLevel)))
+    : 1;
+  if (
+    Boolean(safeOverrides.multiclassEnabled) &&
+    safeOverrides.secondaryCharacterClass &&
+    safeOverrides.secondaryCharacterClass !== "noClass" &&
+    !normalizedClassLevels[safeOverrides.secondaryCharacterClass]
+  ) {
+    normalizedClassLevels[safeOverrides.secondaryCharacterClass] = secondaryCharacterLevel;
+  }
+  const totalCharacterLevel =
+    Object.values(normalizedClassLevels).reduce((sum, value) => sum + Math.max(0, Math.trunc(Number(value) || 0)), 0) ||
+    primaryCharacterLevel;
   const normalizedSubrace = normalizeDragonbornSubrace(
     safeOverrides.race,
     safeOverrides.subrace,
@@ -73,11 +106,14 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     lunarEmbodimentPhase: String(safeOverrides.lunarEmbodimentPhase || ""),
     fightingStyle: String(safeOverrides.fightingStyle || ""),
     additionalFightingStyle: String(safeOverrides.additionalFightingStyle || ""),
-    characterClass: safeOverrides.characterClass || "noClass",
+    characterClass: primaryCharacterClass,
     subclass: safeOverrides.subclass || "noSubclass",
-    characterLevel: Number.isFinite(Number(safeOverrides.characterLevel))
-      ? Math.max(1, Math.trunc(Number(safeOverrides.characterLevel)))
-      : 1,
+    multiclassEnabled: Boolean(safeOverrides.multiclassEnabled),
+    secondaryCharacterClass: safeOverrides.secondaryCharacterClass || "noClass",
+    secondarySubclass: safeOverrides.secondarySubclass || "noSubclass",
+    secondaryCharacterLevel: secondaryCharacterLevel,
+    characterLevel: primaryCharacterLevel,
+    totalCharacterLevel: Math.max(1, totalCharacterLevel),
     proficiencyMod: Number.isFinite(Number(safeOverrides.proficiencyMod))
       ? Math.trunc(Number(safeOverrides.proficiencyMod))
       : 2,
@@ -94,7 +130,7 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
       ...createDefaultStats(),
       ...normalizeObject(safeOverrides.stats),
     },
-    classLevels: normalizeObject(safeOverrides.classLevels),
+    classLevels: normalizedClassLevels,
     spellsPrepared: { ...defaultSpellLevels, ...normalizeObject(safeOverrides.spellsPrepared) },
     wizardSpellbook: { ...defaultSpellLevels, ...normalizeObject(safeOverrides.wizardSpellbook) },
     wizardSpellMastery: {

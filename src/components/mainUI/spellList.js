@@ -45,6 +45,7 @@ import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
 import { getGenieExpandedSpellOptions } from "../../utils/genieData";
+import { getEffectiveSpellSlotsRow, usesMulticlassSpellcasterTable } from "../../utils/multiclassing";
 
 const spellLevelColors = {
   0: '#607d8b',
@@ -463,7 +464,10 @@ export const SpellList = (props) => {
     classKey === "barbarian" &&
     String(characterInfo?.subclass || "") === "totemWarrior" &&
     characterLevel >= 3;
-  const currentSpellTableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
+  const isUsingMulticlassSlots = usesMulticlassSpellcasterTable(characterInfo);
+  const currentSpellTableRow = isUsingMulticlassSlots
+    ? getEffectiveSpellSlotsRow(characterInfo)
+    : spellTables?.[spellTableKey]?.[characterLevel] || null;
   const warlockSlotLevelKey = isWarlock ? String(currentSpellTableRow?.slotLevel || "") : "";
   const warlockSlotLevelNumber = isWarlock
     ? Object.entries(SPELL_LEVEL_KEY_BY_NUMBER).reduce((match, [lvl, key]) => (key === warlockSlotLevelKey ? Number(lvl) : match), 0)
@@ -657,13 +661,13 @@ export const SpellList = (props) => {
     return base;
   }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.druidLandType]);
   const hasActiveSpellcasting = React.useMemo(() => {
-    const tableRow = spellTables?.[spellTableKey]?.[characterLevel] || null;
+    const tableRow = currentSpellTableRow;
     if (!tableRow) return false;
     return (
       Object.keys(SPELL_LEVEL_KEY_BY_NUMBER).some((level) => Number(tableRow?.[SPELL_LEVEL_KEY_BY_NUMBER[level]] || 0) > 0) ||
       Number(tableRow?.spellSlots || 0) > 0
     );
-  }, [characterLevel, spellTableKey]);
+  }, [currentSpellTableRow]);
   const hasHalfElfVersatilityCantrip =
     race === "Half Elf" && subrace === "Standard Half Elf" && halfElfVersatility === "Cantrip";
   const hasHalfElfDrowMagic =
@@ -5424,7 +5428,7 @@ export const SpellList = (props) => {
 
     const isCantrips = textualSpellLevel === "cantrips";
     const levelKey = Number(characterInfo?.characterLevel) || 0;
-    const tableRow = spellTables?.[spellTableKey]?.[levelKey] || null;
+    const tableRow = isUsingMulticlassSlots ? currentSpellTableRow : spellTables?.[spellTableKey]?.[levelKey] || null;
     const slotCount = Number(tableRow?.[textualSpellLevel]) || 0;
     const preparedAtLevel = Array.isArray(characterInfo?.spellsPrepared?.[numericalSpellLevel])
       ? characterInfo.spellsPrepared[numericalSpellLevel]
