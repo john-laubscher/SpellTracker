@@ -1,7 +1,50 @@
 import ClassesData from "../components/ClassesData";
 import spellTables from "../components/spellTables";
+import { getClassEntries, usesMulticlassSpellcasterTable } from "./multiclassing";
 
 export const calculateTotalPreparedSpells = (characterInfo) => {
+  if (usesMulticlassSpellcasterTable(characterInfo)) {
+    return getClassEntries(characterInfo).reduce((sum, entry) => {
+      const characterClass = entry?.classKey;
+      const characterLevel = Number(entry?.level) || 0;
+      const spellcastingAbility = ClassesData?.[characterClass]?.spellcastingAbility;
+      const stats = characterInfo?.stats || {};
+      const statModRaw =
+        spellcastingAbility && spellcastingAbility !== "nonCaster"
+          ? stats?.[spellcastingAbility]?.mod
+          : undefined;
+      const statMod = Number.isFinite(Number(statModRaw)) ? Number(statModRaw) : Number(characterInfo?.spellcastingMod) || 0;
+      const classMeta = ClassesData?.[characterClass] || null;
+      const subclassMeta = classMeta?.subclasses?.[
+        entry?.slot === "secondary" ? characterInfo?.secondarySubclass : characterInfo?.subclass
+      ] || null;
+      const subclassSpellcasting = subclassMeta?.spellcasting || null;
+      const hasSubclassSpellcasting =
+        Boolean(subclassSpellcasting) && characterLevel >= Number(subclassSpellcasting?.startsAtLevel || 1);
+
+      if (hasSubclassSpellcasting) {
+        const tableKey = String(subclassSpellcasting?.spellTableKey || "");
+        return sum + (Number(spellTables?.[tableKey]?.[characterLevel]?.spellsKnown) || 0);
+      }
+
+      if (!spellcastingAbility || spellcastingAbility === "nonCaster") return sum;
+
+      const isSpellCaster = classMeta?.isSpellCaster;
+      if (isSpellCaster === "refer to spellTables") {
+        return sum + (Number(spellTables?.[characterClass]?.[characterLevel]?.spellsKnown) || 0);
+      }
+
+      if (isSpellCaster === "halfCaster") {
+        if (characterLevel < 2) return sum;
+        return sum + Math.max(1, Math.floor(0.5 * characterLevel + statMod));
+      }
+
+      if (characterClass === "wizard") return sum + characterLevel + statMod;
+      if (isSpellCaster === "fullCaster") return sum + characterLevel + statMod;
+      return sum;
+    }, 0);
+  }
+
   const characterClass = characterInfo?.characterClass;
   const characterLevel = Number(characterInfo?.characterLevel) || 0;
 

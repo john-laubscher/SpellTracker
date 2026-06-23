@@ -11,8 +11,15 @@ import {WeaponsDisplay} from "./WeaponManager";
 import { calculateTotalPreparedSpells } from "../../utils/preparedSpells";
 import AuthControls from "../AuthControls";
 import CharacterSwitcherMenu from "../CharacterSwitcherMenu";
+import { formatClassLevelSummary, getTotalCharacterLevel } from "../../utils/multiclassing";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const formatUiLabel = (value) =>
+  String(value || "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
 const NO_SUBCLASS = "noSubclass";
 
 const proficiencyBonus = {
@@ -86,7 +93,7 @@ const Header = () => {
     : String(classMeta?.spellcastingAbility || "nonCaster");
   const subclassDisplayName =
     subclassKey && subclassKey !== NO_SUBCLASS
-      ? subclassMeta?.name || capitalize(subclassKey)
+      ? subclassMeta?.name || formatUiLabel(subclassKey)
       : "";
   const effectiveIsNonCaster = spellcastingAbility === "nonCaster";
   const isArcaneArcher =
@@ -96,7 +103,8 @@ const Header = () => {
   const isCavalier =
     characterInfo.characterClass === "fighter" && String(characterInfo.subclass || "") === "cavalier";
   const isMonk = characterInfo.characterClass === "monk";
-  const proficiencyBonusValue = proficiencyBonus[characterLevel] || 2;
+  const totalCharacterLevel = getTotalCharacterLevel(characterInfo);
+  const proficiencyBonusValue = proficiencyBonus[totalCharacterLevel] || 2;
   const fighterLevel = (() => {
     const raw = characterInfo?.classLevels?.fighter;
     const numeric = Number(raw);
@@ -314,8 +322,7 @@ useEffect(() => {
                   {ClassesData[characterInfo.characterClass].hitDice} hit dice
                 </Typography>
                 <Typography variant="body2">
-                  Level {characterInfo.characterLevel} {capitalize(characterInfo.characterClass)}
-                  {subclassDisplayName ? ` (${subclassDisplayName})` : ""}
+                  Level {totalCharacterLevel} overall ({formatClassLevelSummary(characterInfo) || `${capitalize(characterInfo.characterClass)} ${characterInfo.characterLevel}`})
                 </Typography>
                 <Typography variant="body2">
                   Race: {getRaceDisplay()}
@@ -345,7 +352,7 @@ useEffect(() => {
                   </>
                 )}
                 <Typography variant="h6" sx={theme.typography.body1}>
-                  Proficiency Bonus: + {proficiencyBonus[characterInfo.characterLevel]}
+                  Proficiency Bonus: + {proficiencyBonusValue}
                 </Typography>
               </CardContent>
             </Card>

@@ -32,6 +32,7 @@ import RogueIcon from "../assets/class-icons/Rogue.png";
 import SorcererIcon from "../assets/class-icons/Sorcerer.png";
 import WarlockIcon from "../assets/class-icons/Warlock.png";
 import WizardIcon from "../assets/class-icons/Wizard.png";
+import { formatClassLevelSummary, getTotalCharacterLevel } from "../utils/multiclassing";
 
 const CLASS_STYLES = {
   artificer: {
@@ -272,10 +273,10 @@ export default function CharacterSelectionScreen() {
             const classKey = String(info.characterClass || "").toLowerCase();
             const classStyle = CLASS_STYLES[classKey] || DEFAULT_CLASS_STYLE;
             const ClassIcon = classStyle.icon;
-            const level = Math.max(1, Number(info.characterLevel) || 1);
+            const level = getTotalCharacterLevel(info);
             const race = formatDisplayValue(info.race, "Unknown Lineage");
-            const characterClass = formatDisplayValue(info.characterClass, "Adventurer");
-            const subtitle = `Lvl ${level} ${race} ${characterClass}`;
+            const classSummary = formatClassLevelSummary(info) || formatDisplayValue(info.characterClass, "Adventurer");
+            const subtitle = `Lvl ${level} ${race} ${classSummary}`;
             return (
               <Grid item xs={12} md={6} key={character.id}>
                 <Card
