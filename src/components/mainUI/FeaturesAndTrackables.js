@@ -1973,22 +1973,15 @@ const FeaturesAndTrackables = () => {
     return 0;
   }, [characterInfo?.classLevels?.warlock, characterClass, characterLevel]);
 
-  const hasWarlockInvocations = characterClass === "warlock" && warlockLevel >= 2;
-  const hasWarlockPactBoon = characterClass === "warlock" && warlockLevel >= 3;
-  const hasWarlockMysticArcanum = characterClass === "warlock" && warlockLevel >= 11;
-
   const warlockInvocationCount = Array.isArray(characterInfo?.warlockInvocations)
     ? characterInfo.warlockInvocations.length
     : 0;
-  const warlockInvocationAllowed = getWarlockInvocationAllowance(warlockLevel);
   const warlockPactBoonCount = characterInfo?.warlockPactBoon ? 1 : 0;
   const warlockMysticArcanum = React.useMemo(
     () => (Array.isArray(characterInfo?.warlockMysticArcanum) ? characterInfo.warlockMysticArcanum : []),
     [characterInfo?.warlockMysticArcanum]
   );
   const warlockMysticArcanumCount = warlockMysticArcanum.length;
-  const warlockMysticArcanumExpected = getWarlockMysticArcanumExpectedTotal(warlockLevel);
-  const warlockMysticArcanumLevels = getWarlockUnlockedArcanumLevels(warlockLevel);
 
   const [rangerFavoredEnemyOptions, setRangerFavoredEnemyOptions] = React.useState([]);
   const [rangerNaturalExplorerOptions, setRangerNaturalExplorerOptions] = React.useState([]);
@@ -2156,14 +2149,134 @@ const FeaturesAndTrackables = () => {
     [secondaryClassEntry]
   );
 
-  const augmentSecondaryClassFeatures = React.useCallback(
+  const augmentDisplayedClassFeatures = React.useCallback(
     (base, targetClassKey, targetLevel) => {
-      if (targetClassKey === "fighter" || targetClassKey === "paladin" || targetClassKey === "ranger") {
-        const chosenNames = hasDruidicWarrior
-          ? (Array.isArray(characterInfo?.druidicWarriorCantrips) ? characterInfo.druidicWarriorCantrips : [])
-              .map((spell) => spell?.name)
-              .filter(Boolean)
+      if (targetClassKey === "fighter" && (fightingStyle || additionalFightingStyle)) {
+        return base.map((feature) => {
+          if (feature?.id !== "fighting_style") return feature;
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+          const prefixes = [];
+          if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+          if (additionalFightingStyle) prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
+          return {
+            ...feature,
+            desc: [...prefixes, ...descLines],
+          };
+        });
+      }
+
+      if (targetClassKey === "paladin" && fightingStyle) {
+        const chosenCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
+          ? characterInfo.blessedWarriorCantrips
           : [];
+        const chosenNames = chosenCantrips
+          .map((s) => String(s?.name || "").trim())
+          .filter(Boolean);
+
+        return base.map((feature) => {
+          if (feature?.id !== "fighting_style") return feature;
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+          const prefixes = [`Fighting Style: ${fightingStyle}.`];
+          if (hasBlessedWarrior) {
+            prefixes.push(
+              chosenNames.length > 0
+                ? `Blessed Warrior cantrips: ${chosenNames.join(", ")}.`
+                : "Blessed Warrior cantrips: Choose cantrips."
+            );
+          }
+          return { ...feature, desc: [...prefixes, ...descLines] };
+        });
+      }
+
+      if (targetClassKey === "wizard") {
+        const spellbookCount = Object.values(characterInfo?.wizardSpellbook || {}).reduce(
+          (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
+          0
+        );
+        const masteryFirst = String(characterInfo?.wizardSpellMastery?.[1]?.name || "").trim();
+        const masterySecond = String(characterInfo?.wizardSpellMastery?.[2]?.name || "").trim();
+        const signatureEntries = Array.isArray(characterInfo?.wizardSignatureSpells)
+          ? characterInfo.wizardSignatureSpells
+          : [];
+        const signatureNames = signatureEntries
+          .map((spell) => String(spell?.name || "").trim())
+          .filter(Boolean);
+
+        const mapped = base.map((feature) => {
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+
+          if (feature?.id === "spellbook") {
+            return {
+              ...feature,
+              desc: [`Spells currently in spellbook: ${spellbookCount}.`, ...descLines],
+            };
+          }
+
+          if (feature?.id === "spell_mastery") {
+            return {
+              ...feature,
+              desc: [
+                masteryFirst
+                  ? `Chosen 1st-level Spell Mastery spell: ${masteryFirst}.`
+                  : "Chosen 1st-level Spell Mastery spell: none selected.",
+                masterySecond
+                  ? `Chosen 2nd-level Spell Mastery spell: ${masterySecond}.`
+                  : "Chosen 2nd-level Spell Mastery spell: none selected.",
+                ...descLines,
+              ],
+            };
+          }
+
+          if (feature?.id === "signature_spells") {
+            return {
+              ...feature,
+              desc: [
+                signatureNames.length > 0
+                  ? `Chosen Signature Spells: ${signatureNames.join(", ")}.`
+                  : "Chosen Signature Spells: none selected.",
+                ...descLines,
+              ],
+            };
+          }
+
+          return feature;
+        });
+        const generatedSignatureFeatures = signatureEntries.map((spell) => ({
+          id: `wizard_signature_spell:${spell?.index}`,
+          name: `Signature Spell: ${spell?.name || spell?.index || "Unknown Spell"}`,
+          desc: [
+            "You can cast this signature spell once at 3rd level without expending a spell slot.",
+            "You regain this use when you finish a short or long rest.",
+          ],
+          tracked: true,
+          uses: 1,
+          recharge: "sr_or_lr",
+        }));
+        return [...mapped, ...generatedSignatureFeatures];
+      }
+
+      if (targetClassKey === "ranger") {
+        const favoredEnemies = Array.isArray(rangerFavoredEnemyOptions) ? rangerFavoredEnemyOptions : [];
+        const favoredTerrains = Array.isArray(rangerNaturalExplorerOptions) ? rangerNaturalExplorerOptions : [];
+
+        const chosenCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
+          ? characterInfo.druidicWarriorCantrips
+          : [];
+        const chosenNames = chosenCantrips
+          .map((s) => String(s?.name || "").trim())
+          .filter(Boolean);
 
         return base.map((feature) => {
           const descLines = Array.isArray(feature?.desc)
@@ -2184,18 +2297,18 @@ const FeaturesAndTrackables = () => {
             return { ...feature, desc: [...prefixes, ...descLines] };
           }
 
-          if (targetClassKey === "ranger" && feature?.id === "favored_enemy") {
+          if (feature?.id === "favored_enemy") {
             const prefix =
-              rangerFavoredEnemyOptions.length > 0
-                ? `Favored enemies: ${rangerFavoredEnemyOptions.join(", ")}.`
+              favoredEnemies.length > 0
+                ? `Favored enemies: ${favoredEnemies.join(", ")}.`
                 : "Favored enemies: (none selected).";
             return { ...feature, desc: [prefix, ...descLines] };
           }
 
-          if (targetClassKey === "ranger" && feature?.id === "natural_explorer") {
+          if (feature?.id === "natural_explorer") {
             const prefix =
-              rangerNaturalExplorerOptions.length > 0
-                ? `Favored terrains: ${rangerNaturalExplorerOptions.join(", ")}.`
+              favoredTerrains.length > 0
+                ? `Favored terrains: ${favoredTerrains.join(", ")}.`
                 : "Favored terrains: (none selected).";
             return { ...feature, desc: [prefix, ...descLines] };
           }
@@ -2224,16 +2337,22 @@ const FeaturesAndTrackables = () => {
       return base;
     },
     [
+      additionalFightingStyle,
       augmentWarlockFeatures,
+      characterInfo?.blessedWarriorCantrips,
       characterInfo?.druidicWarriorCantrips,
+      characterInfo?.wizardSignatureSpells,
+      characterInfo?.wizardSpellMastery,
+      characterInfo?.wizardSpellbook,
       fightingStyle,
+      hasBlessedWarrior,
       hasDruidicWarrior,
       rangerFavoredEnemyOptions,
       rangerNaturalExplorerOptions,
     ]
   );
 
-  const augmentSecondarySubclassFeatures = React.useCallback(
+  const augmentDisplayedSubclassFeatures = React.useCallback(
     (base, targetClassKey, targetSubclassKey, targetLevel, choiceKey) => {
       let next = base.map((feature) => {
         if (feature?.sharedUsePoolKey === "channel_divinity") return { ...feature, tracked: true };
@@ -2244,7 +2363,10 @@ const FeaturesAndTrackables = () => {
         const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
         const displayName = cantripName ? `${cantripName} (Arcane Archer Lore)` : "Choose Cantrip (Arcane Archer Lore)";
 
-        next = next.map((feature) => (feature?.id === "arcane_archer_lore" ? { ...feature, name: displayName } : feature));
+        next = next.map((feature) => {
+          if (feature?.id !== "arcane_archer_lore") return feature;
+          return { ...feature, name: displayName };
+        });
       }
 
       if (targetClassKey === "fighter" && targetSubclassKey === "champion" && hasChampionAdditionalFightingStyle) {
@@ -2257,46 +2379,70 @@ const FeaturesAndTrackables = () => {
               : [];
           const prefixes = [];
           if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
-          prefixes.push(additionalFightingStyle ? `Champion Fighting Style: ${additionalFightingStyle}.` : "Champion Fighting Style: Choose one.");
+          if (additionalFightingStyle) {
+            prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
+          } else {
+            prefixes.push("Champion Fighting Style: Choose one.");
+          }
           return { ...feature, desc: [...prefixes, ...descLines] };
         });
       }
 
-      if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && hasRuneKnight && Number(fighterLevel || 0) >= 15) {
+      if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && hasRuneKnight && Number(targetLevel || 0) >= 15) {
         const runeList = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
         const byId = new Map((Array.isArray(runeList) ? runeList : []).map((r) => [r?.id, r]));
         const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
+
         const selectedRunes = selectedIds
           .map((id) => byId.get(id))
           .filter(Boolean)
           .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
 
         if (selectedRunes.length > 0) {
-          next = [
-            ...next,
-            ...selectedRunes.map((rune) => ({
-              id: `rune_knight_rune:${rune.id}`,
-              name: rune.name,
-              desc: rune.desc,
-              level: 15,
-              tracked: true,
-              uses: 2,
-              recharge: "sr_or_lr",
-            })),
-          ];
+          const runeFeatures = selectedRunes.map((rune) => ({
+            id: `rune_knight_rune:${rune.id}`,
+            name: rune.name,
+            desc: rune.desc,
+            level: 15,
+            tracked: true,
+            uses: 2,
+            recharge: "sr_or_lr",
+          }));
+
+          next = [...next, ...runeFeatures];
         }
       }
 
       if (targetClassKey === "ranger" && targetSubclassKey === "hunter") {
         next = next.map((feature) => {
-          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+            ? feature.untrackedChoiceOptions
+            : [];
           if (choiceOptions.length === 0) return feature;
+
           const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
           const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
-          const selectedDescLines = selected ? (Array.isArray(selected?.desc) ? selected.desc : typeof selected?.desc === "string" ? [selected.desc] : []) : [];
-          const prefixLines = selected ? [`Chosen: ${selected.name}.`, ...selectedDescLines] : ["Chosen: (none selected). Click the bow icon to choose one."];
+
+          const baseDescLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+
+          const selectedDescLines = selected
+            ? Array.isArray(selected?.desc)
+              ? selected.desc
+              : typeof selected?.desc === "string"
+                ? [selected.desc]
+                : []
+            : [];
+
+          const prefixLines = selected
+            ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
+            : ["Chosen: (none selected). Click the bow icon to choose one."];
+
           const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+
           return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
         });
       }
@@ -2304,14 +2450,28 @@ const FeaturesAndTrackables = () => {
       if (targetClassKey === "sorcerer" && targetSubclassKey === "draconicBloodline") {
         next = next.map((feature) => {
           if (feature?.id !== "dragon_ancestor") return feature;
-          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+            ? feature.untrackedChoiceOptions
+            : [];
           if (choiceOptions.length === 0) return feature;
+
           const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
           const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+
+          const baseDescLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+
           const damageType = selected?.damageType ? String(selected.damageType) : "";
-          const prefixLines = selected ? [`Chosen: ${selected.name}${damageType ? ` (${damageType})` : ""}.`] : ["Chosen: (none selected). Click the dragon icon to choose one."];
+          const prefixLines = selected
+            ? [`Chosen: ${selected.name}${damageType ? ` (${damageType})` : ""}.`]
+            : ["Chosen: (none selected). Click the dragon icon to choose one."];
+
           const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+
           return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
         });
       }
@@ -2321,8 +2481,15 @@ const FeaturesAndTrackables = () => {
         const genieSummaryLines = getGenieBenefitsSummaryLines(characterInfo?.genieKind);
 
         next = next.map((feature) => {
-          if (!["genies_vessel", "genies_wrath", "elemental_gift"].includes(String(feature?.id || ""))) return feature;
-          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+          if (!["genies_vessel", "genies_wrath", "elemental_gift"].includes(String(feature?.id || ""))) {
+            return feature;
+          }
+
+          const baseDescLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
 
           if (feature?.id === "genies_vessel") {
             const nextName = genieKindData ? `${feature.name} (${genieKindData.name})` : `${feature.name} (Choose Kind)`;
@@ -2330,44 +2497,87 @@ const FeaturesAndTrackables = () => {
           }
 
           if (feature?.id === "genies_wrath") {
-            const prefix = genieKindData ? `Current damage type: ${genieKindData.damageType}.` : "Choose a genie kind to set the damage type.";
+            const prefix = genieKindData
+              ? `Current damage type: ${genieKindData.damageType}.`
+              : "Choose a genie kind to set the damage type.";
             return { ...feature, desc: [prefix, ...baseDescLines] };
           }
 
-          const prefix = genieKindData
-            ? `Current permanent resistance: ${genieKindData.damageType}.`
-            : "Choose a genie kind to set the permanent resistance type.";
-          return { ...feature, desc: [prefix, ...baseDescLines] };
+          if (feature?.id === "elemental_gift") {
+            const prefix = genieKindData
+              ? `Current permanent resistance: ${genieKindData.damageType}.`
+              : "Choose a genie kind to set the permanent resistance type.";
+            return { ...feature, desc: [prefix, ...baseDescLines] };
+          }
+
+          return feature;
         });
       }
 
       if (targetClassKey === "barbarian" && targetSubclassKey === "totemWarrior") {
         next = next.map((feature) => {
-          if (!["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) return feature;
-          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+          if (!["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) {
+            return feature;
+          }
+
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
+            ? feature.untrackedChoiceOptions
+            : [];
           if (choiceOptions.length === 0) return feature;
+
           const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
           const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
-          const selectedDescLines = selected ? (Array.isArray(selected?.desc) ? selected.desc : typeof selected?.desc === "string" ? [selected.desc] : []) : [];
+          const baseDescLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+          const selectedDescLines = selected
+            ? Array.isArray(selected?.desc)
+              ? selected.desc
+              : typeof selected?.desc === "string"
+                ? [selected.desc]
+                : []
+            : [];
           const promptByFeatureId = {
             totem_spirit: "Click the totem icon to choose your spirit animal.",
             aspect_of_the_beast: "Click the totem icon to choose your beast aspect.",
             totemic_attunement: "Click the totem icon to choose your attunement animal.",
           };
-          const prefixLines = selected ? [`Chosen: ${selected.name}.`, ...selectedDescLines] : [`Chosen: (none selected). ${promptByFeatureId[feature.id] || "Click the totem icon to choose one."}`];
+          const prefixLines = selected
+            ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
+            : [`Chosen: (none selected). ${promptByFeatureId[feature.id] || "Click the totem icon to choose one."}`];
           const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
-          return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+
+          return {
+            ...feature,
+            name: nextName,
+            desc: [...prefixLines, ...baseDescLines],
+          };
         });
       }
 
       if (targetClassKey === "wizard" && targetSubclassKey === "divination") {
         const hasGreaterPortent = Number(targetLevel || 0) >= 14;
+
         next = next.map((feature) => {
           if (feature?.id !== "portent") return feature;
-          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
-          const prefixLines = hasGreaterPortent ? ["Greater Portent active: roll 3 d20s for Portent instead of 2."] : [];
-          return { ...feature, portentCount: hasGreaterPortent ? 3 : 2, desc: [...prefixLines, ...baseDescLines] };
+
+          const baseDescLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+
+          const prefixLines = hasGreaterPortent
+            ? ["Greater Portent active: roll 3 d20s for Portent instead of 2."]
+            : [];
+
+          return {
+            ...feature,
+            portentCount: hasGreaterPortent ? 3 : 2,
+            desc: [...prefixLines, ...baseDescLines],
+          };
         });
       }
 
@@ -2380,7 +2590,6 @@ const FeaturesAndTrackables = () => {
       characterInfo?.genieKind,
       characterInfo?.runeKnightRunes,
       fightingStyle,
-      fighterLevel,
       hasArcaneArcherLore,
       hasChampionAdditionalFightingStyle,
       hasRuneKnight,
@@ -2395,8 +2604,8 @@ const FeaturesAndTrackables = () => {
       (feature) =>
         Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack"
     );
-    return augmentSecondaryClassFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
-  }, [secondaryClassEntry, augmentSecondaryClassFeatures]);
+    return augmentDisplayedClassFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
+  }, [secondaryClassEntry, augmentDisplayedClassFeatures]);
 
   const secondaryClassTitle = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return "2nd Class Features";
@@ -2425,14 +2634,14 @@ const FeaturesAndTrackables = () => {
     const all =
       classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.features || [];
     const base = all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0));
-    return augmentSecondarySubclassFeatures(
+    return augmentDisplayedSubclassFeatures(
       base,
       secondaryClassEntry.classKey,
       secondaryClassEntry.subclassKey,
       Number(secondaryClassEntry.level || 0),
       secondarySubclassChoiceKey
     );
-  }, [secondaryClassEntry, augmentSecondarySubclassFeatures, secondarySubclassChoiceKey]);
+  }, [secondaryClassEntry, augmentDisplayedSubclassFeatures, secondarySubclassChoiceKey]);
 
   const secondarySubclassTitle = React.useMemo(() => {
     if (
@@ -2728,211 +2937,15 @@ const FeaturesAndTrackables = () => {
     const base = classFeatures
       .map((f) => applyTrackedOverride({ overrideKey: classOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: classOverrideKey, featureId: f.id }));
-
-    if (characterClass === "fighter" && (fightingStyle || additionalFightingStyle)) {
-      return base.map((feature) => {
-        if (feature?.id !== "fighting_style") return feature;
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-        const prefixes = [];
-        if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
-        if (additionalFightingStyle) prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
-        return {
-          ...feature,
-          desc: [...prefixes, ...descLines],
-        };
-      });
-    }
-
-    if (characterClass === "paladin" && fightingStyle) {
-      const chosenCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
-        ? characterInfo.blessedWarriorCantrips
-        : [];
-      const chosenNames = chosenCantrips
-        .map((s) => String(s?.name || "").trim())
-        .filter(Boolean);
-
-      return base.map((feature) => {
-        if (feature?.id !== "fighting_style") return feature;
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-        const prefixes = [`Fighting Style: ${fightingStyle}.`];
-        if (hasBlessedWarrior) {
-          prefixes.push(
-            chosenNames.length > 0
-              ? `Blessed Warrior cantrips: ${chosenNames.join(", ")}.`
-              : "Blessed Warrior cantrips: Choose cantrips."
-          );
-        }
-        return { ...feature, desc: [...prefixes, ...descLines] };
-      });
-    }
-
-    if (characterClass === "wizard") {
-      const spellbookCount = Object.values(characterInfo?.wizardSpellbook || {}).reduce(
-        (acc, entries) => acc + (Array.isArray(entries) ? entries.length : 0),
-        0
-      );
-      const masteryFirst = String(characterInfo?.wizardSpellMastery?.[1]?.name || "").trim();
-      const masterySecond = String(characterInfo?.wizardSpellMastery?.[2]?.name || "").trim();
-      const signatureEntries = Array.isArray(characterInfo?.wizardSignatureSpells)
-        ? characterInfo.wizardSignatureSpells
-        : [];
-      const signatureNames = signatureEntries
-        .map((spell) => String(spell?.name || "").trim())
-        .filter(Boolean);
-
-      const mapped = base.map((feature) => {
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        if (feature?.id === "spellbook") {
-          return {
-            ...feature,
-            desc: [`Spells currently in spellbook: ${spellbookCount}.`, ...descLines],
-          };
-        }
-
-        if (feature?.id === "spell_mastery") {
-          return {
-            ...feature,
-            desc: [
-              masteryFirst
-                ? `Chosen 1st-level Spell Mastery spell: ${masteryFirst}.`
-                : "Chosen 1st-level Spell Mastery spell: none selected.",
-              masterySecond
-                ? `Chosen 2nd-level Spell Mastery spell: ${masterySecond}.`
-                : "Chosen 2nd-level Spell Mastery spell: none selected.",
-              ...descLines,
-            ],
-          };
-        }
-
-        if (feature?.id === "signature_spells") {
-          return {
-            ...feature,
-            desc: [
-              signatureNames.length > 0
-                ? `Chosen Signature Spells: ${signatureNames.join(", ")}.`
-                : "Chosen Signature Spells: none selected.",
-              ...descLines,
-            ],
-          };
-        }
-
-        return feature;
-      });
-      const generatedSignatureFeatures = signatureEntries.map((spell) => ({
-        id: `wizard_signature_spell:${spell?.index}`,
-        name: `Signature Spell: ${spell?.name || spell?.index || "Unknown Spell"}`,
-        desc: [
-          "You can cast this signature spell once at 3rd level without expending a spell slot.",
-          "You regain this use when you finish a short or long rest.",
-        ],
-        tracked: true,
-        uses: 1,
-        recharge: "sr_or_lr",
-      }));
-      return [...mapped, ...generatedSignatureFeatures];
-    }
-
-    if (characterClass === "ranger") {
-      const favoredEnemies = Array.isArray(rangerFavoredEnemyOptions) ? rangerFavoredEnemyOptions : [];
-      const favoredTerrains = Array.isArray(rangerNaturalExplorerOptions) ? rangerNaturalExplorerOptions : [];
-
-      const chosenCantrips = Array.isArray(characterInfo?.druidicWarriorCantrips)
-        ? characterInfo.druidicWarriorCantrips
-        : [];
-      const chosenNames = chosenCantrips
-        .map((s) => String(s?.name || "").trim())
-        .filter(Boolean);
-
-      return base.map((feature) => {
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        if (feature?.id === "fighting_style") {
-          const prefixes = fightingStyle ? [`Fighting Style: ${fightingStyle}.`] : [];
-          if (hasDruidicWarrior) {
-            prefixes.push(
-              chosenNames.length > 0
-                ? `Druidic Warrior cantrips: ${chosenNames.join(", ")}.`
-                : "Druidic Warrior cantrips: Choose cantrips."
-            );
-          }
-          return { ...feature, desc: [...prefixes, ...descLines] };
-        }
-
-        if (feature?.id === "favored_enemy") {
-          const prefix =
-            favoredEnemies.length > 0
-              ? `Favored enemies: ${favoredEnemies.join(", ")}.`
-              : "Favored enemies: (none selected).";
-          return { ...feature, desc: [prefix, ...descLines] };
-        }
-
-        if (feature?.id === "natural_explorer") {
-          const prefix =
-            favoredTerrains.length > 0
-              ? `Favored terrains: ${favoredTerrains.join(", ")}.`
-              : "Favored terrains: (none selected).";
-          return { ...feature, desc: [prefix, ...descLines] };
-        }
-
-        return feature;
-      });
-    }
-
-    if (characterClass === "rogue") {
-      const dice = getRogueSneakAttackDice(characterLevel);
-      return base.map((feature) => {
-        if (feature?.id !== "sneak_attack") return feature;
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-        return { ...feature, desc: [`Current Sneak Attack extra damage: ${dice}.`, ...descLines] };
-      });
-    }
-
-    if (characterClass === "warlock") {
-      return augmentWarlockFeatures(base, characterClass, warlockLevel);
-    }
-
-    return base;
+    return augmentDisplayedClassFeatures(base, characterClass, characterLevel);
   }, [
-    classFeatures,
+    augmentDisplayedClassFeatures,
     applyTrackedOverride,
-    classOverrideKey,
-    isHidden,
     characterClass,
-    fightingStyle,
-    additionalFightingStyle,
-    characterInfo?.blessedWarriorCantrips,
-    characterInfo?.druidicWarriorCantrips,
-    hasBlessedWarrior,
-    hasDruidicWarrior,
-    rangerFavoredEnemyOptions,
-    rangerNaturalExplorerOptions,
     characterLevel,
-    characterInfo?.wizardSignatureSpells,
-    characterInfo?.wizardSpellMastery,
-    characterInfo?.wizardSpellbook,
-    warlockLevel,
-    augmentWarlockFeatures,
+    classFeatures,
+    isHidden,
+    classOverrideKey,
   ]);
 
   const visibleSubclassFeatures = React.useMemo(() => {
@@ -2940,253 +2953,17 @@ const FeaturesAndTrackables = () => {
       .map((f) => applyTrackedOverride({ overrideKey: subclassOverrideKey, feature: f }))
       .filter((f) => !isHidden({ overrideKey: subclassOverrideKey, featureId: f.id }));
 
-    let next = base.map((feature) => {
-      if (feature?.sharedUsePoolKey === "channel_divinity") return { ...feature, tracked: true };
-      return feature;
-    });
-
-    if (hasArcaneArcherLore) {
-      const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
-      const displayName = cantripName ? `${cantripName} (Arcane Archer Lore)` : "Choose Cantrip (Arcane Archer Lore)";
-
-      next = next.map((feature) => {
-        if (feature?.id !== "arcane_archer_lore") return feature;
-        return { ...feature, name: displayName };
-      });
-    }
-
-    if (hasChampionAdditionalFightingStyle) {
-      next = next.map((feature) => {
-        if (feature?.id !== "additional_fighting_style") return feature;
-        const descLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-        const prefixes = [];
-        if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
-        if (additionalFightingStyle) {
-          prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
-        } else {
-          prefixes.push("Champion Fighting Style: Choose one.");
-        }
-        return { ...feature, desc: [...prefixes, ...descLines] };
-      });
-    }
-
-    if (hasRuneKnight && Number(fighterLevel || 0) >= 15) {
-      const runeList = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
-      const byId = new Map((Array.isArray(runeList) ? runeList : []).map((r) => [r?.id, r]));
-      const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
-
-      const selectedRunes = selectedIds
-        .map((id) => byId.get(id))
-        .filter(Boolean)
-        .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
-
-      if (selectedRunes.length > 0) {
-        const runeFeatures = selectedRunes.map((rune) => ({
-          id: `rune_knight_rune:${rune.id}`,
-          name: rune.name,
-          desc: rune.desc,
-          level: 15,
-          tracked: true,
-          uses: 2,
-          recharge: "sr_or_lr",
-        }));
-
-        next = [...next, ...runeFeatures];
-      }
-    }
-
-    if (characterClass === "ranger" && subclass === "hunter") {
-      next = next.map((feature) => {
-        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
-          ? feature.untrackedChoiceOptions
-          : [];
-        if (choiceOptions.length === 0) return feature;
-
-        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
-        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-
-        const baseDescLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        const selectedDescLines = selected
-          ? Array.isArray(selected?.desc)
-            ? selected.desc
-            : typeof selected?.desc === "string"
-              ? [selected.desc]
-              : []
-          : [];
-
-        const prefixLines = selected
-          ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
-          : ["Chosen: (none selected). Click the bow icon to choose one."];
-
-        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
-
-        return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
-      });
-    }
-
-    if (characterClass === "sorcerer" && subclass === "draconicBloodline") {
-      next = next.map((feature) => {
-        if (feature?.id !== "dragon_ancestor") return feature;
-
-        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
-          ? feature.untrackedChoiceOptions
-          : [];
-        if (choiceOptions.length === 0) return feature;
-
-        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
-        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-
-        const baseDescLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        const damageType = selected?.damageType ? String(selected.damageType) : "";
-        const prefixLines = selected
-          ? [`Chosen: ${selected.name}${damageType ? ` (${damageType})` : ""}.`]
-          : ["Chosen: (none selected). Click the dragon icon to choose one."];
-
-        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
-
-        return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
-      });
-    }
-
-    if (characterClass === "warlock" && subclass === "genie") {
-      const genieKindData = getGenieKindData(characterInfo?.genieKind);
-      const genieSummaryLines = getGenieBenefitsSummaryLines(characterInfo?.genieKind);
-
-      next = next.map((feature) => {
-        if (!["genies_vessel", "genies_wrath", "elemental_gift"].includes(String(feature?.id || ""))) {
-          return feature;
-        }
-
-        const baseDescLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        if (feature?.id === "genies_vessel") {
-          const nextName = genieKindData ? `${feature.name} (${genieKindData.name})` : `${feature.name} (Choose Kind)`;
-          return { ...feature, name: nextName, desc: [...genieSummaryLines, ...baseDescLines] };
-        }
-
-        if (feature?.id === "genies_wrath") {
-          const prefix = genieKindData
-            ? `Current damage type: ${genieKindData.damageType}.`
-            : "Choose a genie kind to set the damage type.";
-          return { ...feature, desc: [prefix, ...baseDescLines] };
-        }
-
-        if (feature?.id === "elemental_gift") {
-          const prefix = genieKindData
-            ? `Current permanent resistance: ${genieKindData.damageType}.`
-            : "Choose a genie kind to set the permanent resistance type.";
-          return { ...feature, desc: [prefix, ...baseDescLines] };
-        }
-
-        return feature;
-      });
-    }
-
-    if (characterClass === "barbarian" && subclass === "totemWarrior") {
-      next = next.map((feature) => {
-        if (!["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) {
-          return feature;
-        }
-
-        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions)
-          ? feature.untrackedChoiceOptions
-          : [];
-        if (choiceOptions.length === 0) return feature;
-
-        const selectedId = getFeatureChoice(untrackedFeatureChoices, subclassChoiceKey, feature.id);
-        const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
-        const baseDescLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-        const selectedDescLines = selected
-          ? Array.isArray(selected?.desc)
-            ? selected.desc
-            : typeof selected?.desc === "string"
-              ? [selected.desc]
-              : []
-          : [];
-        const promptByFeatureId = {
-          totem_spirit: "Click the totem icon to choose your spirit animal.",
-          aspect_of_the_beast: "Click the totem icon to choose your beast aspect.",
-          totemic_attunement: "Click the totem icon to choose your attunement animal.",
-        };
-        const prefixLines = selected
-          ? [`Chosen: ${selected.name}.`, ...selectedDescLines]
-          : [`Chosen: (none selected). ${promptByFeatureId[feature.id] || "Click the totem icon to choose one."}`];
-        const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
-
-        return {
-          ...feature,
-          name: nextName,
-          desc: [...prefixLines, ...baseDescLines],
-        };
-      });
-    }
-
-    if (characterClass === "wizard" && subclass === "divination") {
-      const hasGreaterPortent = Number(characterLevel || 0) >= 14;
-
-      next = next.map((feature) => {
-        if (feature?.id !== "portent") return feature;
-
-        const baseDescLines = Array.isArray(feature?.desc)
-          ? feature.desc
-          : typeof feature?.desc === "string"
-            ? [feature.desc]
-            : [];
-
-        const prefixLines = hasGreaterPortent
-          ? ["Greater Portent active: roll 3 d20s for Portent instead of 2."]
-          : [];
-
-        return {
-          ...feature,
-          portentCount: hasGreaterPortent ? 3 : 2,
-          desc: [...prefixLines, ...baseDescLines],
-        };
-      });
-    }
-
-    return next;
+    return augmentDisplayedSubclassFeatures(base, characterClass, subclass, characterLevel, subclassChoiceKey);
   }, [
-    subclassFeatures,
+    augmentDisplayedSubclassFeatures,
     applyTrackedOverride,
-    subclassOverrideKey,
-    isHidden,
-    hasArcaneArcherLore,
-    characterInfo?.arcaneArcherLoreCantrip?.name,
-    hasChampionAdditionalFightingStyle,
-    hasRuneKnight,
-    characterInfo?.runeKnightRunes,
-    fightingStyle,
-    additionalFightingStyle,
-    fighterLevel,
     characterClass,
-    subclass,
     characterLevel,
-    characterInfo?.genieKind,
-    untrackedFeatureChoices,
+    isHidden,
+    subclass,
+    subclassFeatures,
     subclassChoiceKey,
+    subclassOverrideKey,
   ]);
 
   const activeChoiceFeature = React.useMemo(() => {
@@ -3372,12 +3149,15 @@ const FeaturesAndTrackables = () => {
   );
 
   const renderWarlockFeatureTrailingControls = React.useCallback(
-    (feature, targetClassKey, targetSubclassKey) => {
+    (feature, targetClassKey, targetSubclassKey, targetLevel) => {
       if (targetClassKey !== "warlock") return null;
+      const normalizedLevel = Math.max(0, Math.trunc(Number(targetLevel) || 0));
+      const invocationAllowed = getWarlockInvocationAllowance(normalizedLevel);
+      const mysticArcanumExpected = getWarlockMysticArcanumExpectedTotal(normalizedLevel);
 
-      if (warlockLevel >= 2 && feature?.id === "eldritch_invocations") {
+      if (normalizedLevel >= 2 && feature?.id === "eldritch_invocations") {
         const selectedCount = warlockInvocationCount;
-        const allowed = warlockInvocationAllowed;
+        const allowed = invocationAllowed;
         const isOver = selectedCount > allowed;
         const isUnder = selectedCount < allowed;
 
@@ -3417,7 +3197,7 @@ const FeaturesAndTrackables = () => {
         );
       }
 
-      if (warlockLevel >= 3 && feature?.id === "pact_boon") {
+      if (normalizedLevel >= 3 && feature?.id === "pact_boon") {
         const selectedCount = warlockPactBoonCount;
         const isOver = selectedCount > 1;
         const isUnder = selectedCount < 1;
@@ -3453,9 +3233,9 @@ const FeaturesAndTrackables = () => {
         );
       }
 
-      if (warlockLevel >= 11 && feature?.id === "mystic_arcanum") {
+      if (normalizedLevel >= 11 && feature?.id === "mystic_arcanum") {
         const selectedCount = warlockMysticArcanumCount;
-        const allowed = warlockMysticArcanumExpected;
+        const allowed = mysticArcanumExpected;
         const isOver = selectedCount > allowed;
         const isUnder = selectedCount < allowed;
 
@@ -3522,21 +3302,22 @@ const FeaturesAndTrackables = () => {
     },
     [
       characterInfo?.genieKind,
-      warlockInvocationAllowed,
       warlockInvocationCount,
-      warlockLevel,
       warlockMysticArcanumCount,
-      warlockMysticArcanumExpected,
       warlockPactBoonCount,
     ]
   );
 
   const renderWarlockFeatureDetailsHeader = React.useCallback(
-    (feature, trackerHelpers, targetClassKey, targetSubclassKey) => {
+    (feature, trackerHelpers, targetClassKey, targetSubclassKey, targetLevel) => {
       if (targetClassKey !== "warlock") return null;
 
       const featureTrackers = trackerHelpers?.featureTrackers || {};
       const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
+      const normalizedLevel = Math.max(0, Math.trunc(Number(targetLevel) || 0));
+      const invocationAllowed = getWarlockInvocationAllowance(normalizedLevel);
+      const mysticArcanumExpected = getWarlockMysticArcanumExpectedTotal(normalizedLevel);
+      const mysticArcanumLevels = getWarlockUnlockedArcanumLevels(normalizedLevel);
 
       if (feature?.id === "eldritch_invocations") {
         const invocationList = classesData?.warlock?.eldritchInvocations || [];
@@ -3549,7 +3330,7 @@ const FeaturesAndTrackables = () => {
           <div style={{ margin: "2px 0 8px 0" }}>
             <p style={{ margin: "2px 0" }}>
               <strong>Selected invocations:</strong>{" "}
-              {selected.length === 0 ? <em>None</em> : selected.map((entry) => entry?.name).join(", ")} ({selected.length}/{warlockInvocationAllowed})
+              {selected.length === 0 ? <em>None</em> : selected.map((entry) => entry?.name).join(", ")} ({selected.length}/{invocationAllowed})
             </p>
           </div>
         );
@@ -3572,7 +3353,7 @@ const FeaturesAndTrackables = () => {
       }
 
       if (feature?.id === "mystic_arcanum") {
-        const unlockedLabel = warlockMysticArcanumLevels.length > 0 ? warlockMysticArcanumLevels.join(", ") : "none";
+        const unlockedLabel = mysticArcanumLevels.length > 0 ? mysticArcanumLevels.join(", ") : "none";
 
         return (
           <div style={{ margin: "2px 0 8px 0" }}>
@@ -3583,7 +3364,7 @@ const FeaturesAndTrackables = () => {
               <strong>Chosen arcanum spells:</strong>{" "}
               {warlockMysticArcanum.length === 0
                 ? <em>None</em>
-                : warlockMysticArcanum.map((spell) => `${spell?.name} (${spell?.level})`).join(", ")} ({warlockMysticArcanumCount}/{warlockMysticArcanumExpected})
+                : warlockMysticArcanum.map((spell) => `${spell?.name} (${spell?.level})`).join(", ")} ({warlockMysticArcanumCount}/{mysticArcanumExpected})
             </p>
           </div>
         );
@@ -3592,7 +3373,7 @@ const FeaturesAndTrackables = () => {
       if (targetSubclassKey === "celestial" && feature?.id === "healing_light") {
         const trackerKey = `${String(targetClassKey || "unknown")}:${String(feature?.id || "feature")}`;
         const tracker = featureTrackers?.[trackerKey] || {};
-        const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
+        const autoMax = normalizedLevel + 1;
         const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
         const currentMax = overrideActive
           ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
@@ -3659,12 +3440,8 @@ const FeaturesAndTrackables = () => {
     [
       characterInfo?.warlockInvocations,
       characterInfo?.warlockPactBoon,
-      warlockInvocationAllowed,
-      warlockLevel,
       warlockMysticArcanum,
       warlockMysticArcanumCount,
-      warlockMysticArcanumExpected,
-      warlockMysticArcanumLevels,
     ]
   );
 
@@ -3680,7 +3457,7 @@ const FeaturesAndTrackables = () => {
 
   const renderSecondaryFeatureTrailingControls = React.useCallback(
     (feature, targetClassKey, targetSubclassKey, targetLevel, choiceKey) => {
-      const warlockControls = renderWarlockFeatureTrailingControls(feature, targetClassKey, targetSubclassKey);
+      const warlockControls = renderWarlockFeatureTrailingControls(feature, targetClassKey, targetSubclassKey, targetLevel);
       if (warlockControls) return warlockControls;
 
       if (targetClassKey === "wizard" && feature?.id === "spellbook") {
@@ -3717,9 +3494,22 @@ const FeaturesAndTrackables = () => {
         );
       }
 
+      if (targetClassKey === "paladin" && hasBlessedWarrior && feature?.id === "fighting_style") {
+        const isOver = blessedWarriorCantripCount > 2;
+        const isUnder = blessedWarriorCantripCount < 2;
+
+        return (
+          <Tooltip arrow title={`Choose Blessed Warrior cantrips (${blessedWarriorCantripCount}/2)`}>
+            <IconButton size="small" aria-label="Choose Blessed Warrior cantrips" onClick={() => setBlessedWarriorCantripsModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
       if ((targetClassKey === "sorcerer" || targetClassKey === "sorceror") && feature?.id === "metamagic") {
         const selectedCount = Array.isArray(characterInfo?.metamagicOptions) ? characterInfo.metamagicOptions.length : 0;
-        const level = Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
+        const level = Math.max(0, Math.trunc(Number(targetLevel) || 0));
         const allowed = level < 3 ? 0 : level >= 17 ? 4 : level >= 10 ? 3 : 2;
         const isOver = selectedCount > allowed;
         const isUnder = selectedCount < allowed;
@@ -3782,6 +3572,50 @@ const FeaturesAndTrackables = () => {
           <Tooltip arrow title={`Choose maneuvers (${selectedCount}/${allowed})`}>
             <IconButton size="small" aria-label="Choose maneuvers" onClick={() => setBattleMasterManeuversModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
               <SwordIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "wizard" && targetSubclassKey === "scribes" && feature?.id === "master_scriviner") {
+        return (
+          <Tooltip arrow title={`Manage Master Scriviner scrolls (${wizardMasterScrivinerCount} total)`}>
+            <IconButton size="small" aria-label="Manage Master Scriviner scrolls" onClick={(e) => { e.stopPropagation(); setWizardMasterScrivinerModalOpen(true); }} sx={{ ml: 0.25, p: 0.25, color: wizardMasterScrivinerCount > 0 ? "#0f766e" : "#075985", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <TiedScrollIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "wizard" && targetSubclassKey === "scribes" && feature?.id === "one_with_the_word") {
+        return (
+          <>
+            <Tooltip arrow title="Roll 1d6 long rests for the lost spells to return">
+              <IconButton size="small" aria-label="Roll 1d6 long rests" onClick={(e) => { e.stopPropagation(); setCharacterInfo((prev) => ({ ...prev, wizardScribesLostSpellRestCount: Math.floor(Math.random() * 6) + 1 })); }} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+                <CasinoIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+            <FormControl size="small" variant="standard" sx={{ ml: 0.5, minWidth: 46 }} onClick={(e) => e.stopPropagation()}>
+              <Select value={wizardLostSpellRestCount} onChange={(e) => { const nextValue = Math.max(0, Math.min(6, Number(e.target.value) || 0)); setCharacterInfo((prev) => ({ ...prev, wizardScribesLostSpellRestCount: nextValue })); }} sx={{ fontSize: "12px", fontWeight: 700 }}>
+                {Array.from({ length: 7 }).map((_, idx) => (
+                  <MenuItem key={`one-with-the-word:rest:${idx}`} value={idx} sx={{ fontSize: "12px" }}>
+                    {idx}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </>
+        );
+      }
+
+      if (targetClassKey === "bard" && targetSubclassKey === "spirits" && feature?.id === "spirit_session") {
+        const isOver = spiritSessionCount > 1;
+        const isUnder = spiritSessionCount < 1;
+
+        return (
+          <Tooltip arrow title={`Choose Spirit Session Spell (${spiritSessionCount}/1)`}>
+            <IconButton size="small" aria-label="Choose Spirit Session Spell" onClick={() => setSpiritSessionModalOpen(true)} sx={{ ml: 0.5, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(15, 118, 110, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(244, 233, 221, 0.65)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : isUnder ? "rgba(244, 233, 221, 0.85)" : "rgba(20, 184, 166, 0.14)" } }}>
+              <MenuBookIcon fontSize="inherit" />
             </IconButton>
           </Tooltip>
         );
@@ -3917,6 +3751,7 @@ const FeaturesAndTrackables = () => {
     [
       additionalFightingStyleCount,
       arcaneArcherLoreCantripCount,
+      blessedWarriorCantripCount,
       characterInfo?.arcaneShotOptions,
       battleMasterManeuverCount,
       characterInfo?.arcaneShotBonusOptions,
@@ -3925,12 +3760,19 @@ const FeaturesAndTrackables = () => {
       characterInfo?.metamagicOptions,
       currentLandType,
       fighterLevel,
+      hasBlessedWarrior,
       openFeatureChoiceModal,
       openLandTypeMenu,
       renderWarlockFeatureTrailingControls,
       runeKnightRuneCount,
-      sorcererLevel,
+      setCharacterInfo,
+      spiritSessionCount,
       untrackedFeatureChoices,
+      wizardLostSpellRestCount,
+      wizardMasterScrivinerCount,
+      setBlessedWarriorCantripsModalOpen,
+      setSpiritSessionModalOpen,
+      setWizardMasterScrivinerModalOpen,
       wizardSpellMasteryCount,
       wizardSpellbookCount,
       wizardSignatureSpellCount,
@@ -3939,14 +3781,20 @@ const FeaturesAndTrackables = () => {
 
   const renderSecondaryFeatureDetailsHeader = React.useCallback(
     (feature, trackerHelpers, targetClassKey, targetSubclassKey, targetLevel) => {
-      const warlockHeader = renderWarlockFeatureDetailsHeader(feature, trackerHelpers, targetClassKey, targetSubclassKey);
+      const warlockHeader = renderWarlockFeatureDetailsHeader(
+        feature,
+        trackerHelpers,
+        targetClassKey,
+        targetSubclassKey,
+        targetLevel
+      );
       if (warlockHeader) return warlockHeader;
 
       if (targetClassKey === "fighter" && targetSubclassKey === "battleMaster" && feature?.id === "combat_superiority_maneuvers") {
         const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
         const dexMod = characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0;
         const dc = 8 + (Number(proficiencyBonusValue) || 2) + Math.max(Number(strMod) || 0, Number(dexMod) || 0);
-        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const level = Math.max(0, Math.trunc(Number(targetLevel) || 0));
         const allowed = level < 3 ? 0 : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
         const selectedIds = Array.isArray(characterInfo?.battleMasterManeuvers) ? characterInfo.battleMasterManeuvers : [];
         const allManeuvers = classesData?.fighter?.subclasses?.battleMaster?.maneuvers || [];
@@ -3955,8 +3803,109 @@ const FeaturesAndTrackables = () => {
         return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Maneuver Save DC:</strong> {dc}</p><p style={{ margin: "2px 0" }}><strong>Selected maneuvers:</strong> {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})</p></div>;
       }
 
+      if ((targetClassKey === "sorcerer" || targetClassKey === "sorceror") && feature?.id === "metamagic") {
+        const selectedIds = Array.isArray(characterInfo?.metamagicOptions)
+          ? characterInfo.metamagicOptions
+          : [];
+        const allOptions =
+          classesData?.sorcerer?.metamagicOptions || classesData?.sorceror?.metamagicOptions || [];
+
+        const selected = selectedIds
+          .map((id) => allOptions.find((opt) => String(opt?.id || "") === String(id)))
+          .filter(Boolean);
+
+        if (selected.length === 0) {
+          return (
+            <p style={{ margin: "2px 0", opacity: 0.8 }}>
+              <em>No Metamagic options selected yet.</em>
+            </p>
+          );
+        }
+
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Chosen Metamagic options:</strong>
+            </p>
+            {selected.map((opt) => {
+              const descLines = Array.isArray(opt?.desc)
+                ? opt.desc
+                : opt?.desc
+                  ? [String(opt.desc)]
+                  : [];
+              const cost = opt?.cost;
+              const costLabel =
+                cost === "spell_level"
+                  ? "Cost: spell level (1 for cantrip)"
+                  : Number.isFinite(Number(cost))
+                    ? `Cost: ${Number(cost)} sorcery point${Number(cost) === 1 ? "" : "s"}`
+                    : "";
+
+              return (
+                <Accordion
+                  key={`metamagic:${opt.id}`}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    backgroundColor: "transparent",
+                    "&:before": { display: "none" },
+                    "&.Mui-expanded": { margin: 0 },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon sx={{ fontSize: "18px" }} />}
+                    sx={{
+                      minHeight: 32,
+                      px: 0.5,
+                      py: 0,
+                      "& .MuiAccordionSummary-content": {
+                        margin: "4px 0 !important",
+                        alignItems: "center",
+                        gap: 0.5,
+                        width: "100%",
+                        display: "flex",
+                      },
+                      "&.Mui-expanded": { minHeight: 32 },
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "13px", fontWeight: 700, flexGrow: 1, minWidth: 0 }}>
+                      {opt?.name}
+                    </Typography>
+                    {costLabel ? (
+                      <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "rgba(62, 39, 35, 0.75)" }}>
+                        {costLabel.replace(/^Cost:\s*/i, "")}
+                      </Typography>
+                    ) : null}
+                  </AccordionSummary>
+                  <AccordionDetails
+                    sx={{
+                      px: 1.5,
+                      py: 1,
+                      backgroundColor: "rgba(255,255,255,0.5)",
+                      borderRadius: "4px",
+                      mx: 0.5,
+                      mb: 0.5,
+                    }}
+                  >
+                    <Typography component="div" sx={{ fontSize: "13px", "& p": { margin: "2px 0" } }}>
+                      {descLines.length === 0 ? (
+                        <p style={{ opacity: 0.7 }}>
+                          <em>No description available.</em>
+                        </p>
+                      ) : (
+                        descLines.map((line, idx) => <p key={`metamagic:${opt.id}:desc:${idx}`}>{line}</p>)
+                      )}
+                    </Typography>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
+          </div>
+        );
+      }
+
       if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && feature?.id === "rune_carver") {
-        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const level = Math.max(0, Math.trunc(Number(targetLevel) || 0));
         const allowed = level < 3 ? 0 : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
         const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
         const allRunes = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
@@ -3985,6 +3934,63 @@ const FeaturesAndTrackables = () => {
         return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Chosen cantrip:</strong></p><SpellAccordian numericalSpellLevel={0} spell={cantrip} /></div>;
       }
 
+      if (targetClassKey === "wizard" && targetSubclassKey === "scribes" && feature?.id === "master_scriviner") {
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Stored Scrolls</strong>
+            </p>
+            {wizardMasterScrivinerEntries.length === 0 ? (
+              <p style={{ margin: "2px 0", opacity: 0.8 }}>
+                <em>No scrolls chosen yet.</em>
+              </p>
+            ) : (
+              wizardMasterScrivinerEntries.map((entry) => (
+                <div key={`master-scriviner-entry:${entry?.index}`} style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}>
+                  <span style={{ flexGrow: 1 }}>{formatSpellCountLabel(entry)}</span>
+                  <IconButton size="small" aria-label={`Remove one ${entry?.name || entry?.index || "scroll"}`} onClick={(e) => { e.stopPropagation(); setCharacterInfo((prev) => { const current = Array.isArray(prev?.wizardScribesMasterScriviner) ? prev.wizardScribesMasterScriviner : []; const next = current.map((row) => String(row?.index || "") === String(entry?.index || "") ? { ...row, count: Math.max(0, Number(row?.count || 1) - 1) } : row).filter((row) => Math.max(0, Number(row?.count || 0)) > 0); return { ...prev, wizardScribesMasterScriviner: next }; }); }} sx={{ p: 0.2 }}>
+                    <RemoveIcon fontSize="inherit" />
+                  </IconButton>
+                  <IconButton size="small" aria-label={`Add one ${entry?.name || entry?.index || "scroll"}`} onClick={(e) => { e.stopPropagation(); setCharacterInfo((prev) => { const current = Array.isArray(prev?.wizardScribesMasterScriviner) ? prev.wizardScribesMasterScriviner : []; const next = current.map((row) => String(row?.index || "") === String(entry?.index || "") ? { ...row, count: Math.max(1, Number(row?.count || 1)) + 1 } : row); return { ...prev, wizardScribesMasterScriviner: next }; }); }} sx={{ p: 0.2 }}>
+                    <AddIcon fontSize="inherit" />
+                  </IconButton>
+                  <IconButton size="small" aria-label={`Delete ${entry?.name || entry?.index || "scroll"}`} onClick={(e) => { e.stopPropagation(); setCharacterInfo((prev) => ({ ...prev, wizardScribesMasterScriviner: (Array.isArray(prev?.wizardScribesMasterScriviner) ? prev.wizardScribesMasterScriviner : []).filter((row) => String(row?.index || "") !== String(entry?.index || "")) })); }} sx={{ p: 0.2 }}>
+                    <DeleteOutlineIcon fontSize="inherit" />
+                  </IconButton>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      }
+
+      if (targetClassKey === "wizard" && targetSubclassKey === "scribes" && feature?.id === "one_with_the_word") {
+        return (
+          <div style={{ margin: "2px 0 8px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "2px 0" }}>
+              <strong>Lost Spells</strong>
+              <Tooltip arrow title="Choose disappeared spells">
+                <IconButton size="small" aria-label="Choose disappeared spells" onClick={(e) => { e.stopPropagation(); setWizardOneWithTheWordModalOpen(true); }} sx={{ p: 0.25, border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+                  <MenuBookIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            </div>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Selected spell levels:</strong> {wizardLostSpellLevelTotal}
+            </p>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Long rests remaining:</strong> {wizardLostSpellRestCount}
+            </p>
+            <p style={{ margin: "2px 0" }}>
+              <strong>Spells:</strong>{" "}
+              {wizardLostSpellEntries.length === 0
+                ? <em>None</em>
+                : wizardLostSpellEntries.map((entry) => entry?.name).join(", ")}
+            </p>
+          </div>
+        );
+      }
+
       if (targetClassKey === "wizard" && targetSubclassKey === "divination" && feature?.id === "portent" && Number(targetLevel || 0) >= 14) {
         return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Greater Portent:</strong> 3 portent rolls are active at this level.</p></div>;
       }
@@ -3996,15 +4002,21 @@ const FeaturesAndTrackables = () => {
       characterInfo?.arcaneShotBonusOptions,
       characterInfo?.arcaneShotOptions,
       characterInfo?.battleMasterManeuvers,
+      characterInfo?.metamagicOptions,
       characterInfo?.runeKnightRunes,
       characterInfo?.stats?.dex?.mod,
       characterInfo?.stats?.dexterity?.mod,
       characterInfo?.stats?.int?.mod,
       characterInfo?.stats?.str?.mod,
       characterInfo?.stats?.strength?.mod,
-      fighterLevel,
       proficiencyBonusValue,
       renderWarlockFeatureDetailsHeader,
+      setCharacterInfo,
+      setWizardOneWithTheWordModalOpen,
+      wizardLostSpellEntries,
+      wizardLostSpellLevelTotal,
+      wizardLostSpellRestCount,
+      wizardMasterScrivinerEntries,
     ]
   );
 
@@ -4020,268 +4032,15 @@ const FeaturesAndTrackables = () => {
               onManage={() => setManageModal({ open: true, kind: "class" })}
               features={[...visibleClassFeatures, ...visibleClassCustom]}
               untrackedLabel={primaryClassUntrackedLabel}
-              renderUntrackedTrailingControls={(feature) => {
-                const warlockControls = renderWarlockFeatureTrailingControls(feature, characterClass, subclass);
-                if (warlockControls) return warlockControls;
-
-                if (characterClass === "wizard" && feature?.id === "spellbook") {
-                  return (
-                    <Tooltip arrow title={`Open Spellbook (${wizardSpellbookCount} spells)`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Open Spellbook"
-                        onClick={() => setWizardSpellbookModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: wizardSpellbookCount > 0 ? "#0f766e" : "#075985",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: "rgba(244, 233, 221, 0.65)",
-                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                        }}
-                      >
-                        <MenuBookIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (characterClass === "wizard" && feature?.id === "spell_mastery") {
-                  const isOver = wizardSpellMasteryCount > 2;
-                  const isUnder = wizardSpellMasteryCount < 2;
-                  return (
-                    <Tooltip arrow title={`Choose Spell Mastery spells (${wizardSpellMasteryCount}/2)`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Spell Mastery spells"
-                        onClick={() => setWizardSpellMasteryModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: "rgba(244, 233, 221, 0.65)",
-                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                        }}
-                      >
-                        <MenuBookIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (characterClass === "wizard" && feature?.id === "signature_spells") {
-                  const isOver = wizardSignatureSpellCount > 2;
-                  const isUnder = wizardSignatureSpellCount < 2;
-                  return (
-                    <Tooltip arrow title={`Choose Signature Spells (${wizardSignatureSpellCount}/2)`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Signature Spells"
-                        onClick={() => setWizardSignatureSpellsModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: "rgba(244, 233, 221, 0.65)",
-                          "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                        }}
-                      >
-                        <MenuBookIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (hasWarlockInvocations && feature?.id === "eldritch_invocations") {
-                  const selectedCount = warlockInvocationCount;
-                  const allowed = warlockInvocationAllowed;
-                  const isOver = selectedCount > allowed;
-                  const isUnder = selectedCount < allowed;
-
-                  return (
-                    <Tooltip arrow title={`Choose Eldritch Invocations (${selectedCount}/${allowed})`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Eldritch Invocations"
-                        onClick={() => setWarlockInvocationsModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: isOver
-                            ? "rgba(194, 65, 12, 0.10)"
-                            : isUnder
-                              ? "rgba(2, 132, 199, 0.10)"
-                              : "rgba(20, 184, 166, 0.10)",
-                          "&:hover": {
-                            backgroundColor: isOver
-                              ? "rgba(194, 65, 12, 0.14)"
-                              : isUnder
-                                ? "rgba(244, 233, 221, 0.85)"
-                                : "rgba(20, 184, 166, 0.14)",
-                          },
-                        }}
-                      >
-                        <Box
-                          component="img"
-                          src="https://www.clipartmax.com/png/small/30-301325_official-eldritch-moon-set-symbol-star-wars-destiny.png"
-                          alt="Choose Eldritch Invocations"
-                          sx={{ width: 16, height: 16, display: "block", filter: "contrast(1.15) saturate(0.8)" }}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (hasWarlockPactBoon && feature?.id === "pact_boon") {
-                  const selectedCount = warlockPactBoonCount;
-                  const isOver = selectedCount > 1;
-                  const isUnder = selectedCount < 1;
-
-                  return (
-                    <Tooltip arrow title={`Choose Pact Boon (${selectedCount}/1)`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Pact Boon"
-                        onClick={() => setWarlockPactBoonModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: isOver
-                            ? "rgba(194, 65, 12, 0.10)"
-                            : isUnder
-                              ? "rgba(2, 132, 199, 0.10)"
-                              : "rgba(20, 184, 166, 0.10)",
-                          "&:hover": {
-                            backgroundColor: isOver
-                              ? "rgba(194, 65, 12, 0.14)"
-                              : isUnder
-                                ? "rgba(244, 233, 221, 0.85)"
-                                : "rgba(20, 184, 166, 0.14)",
-                          },
-                        }}
-                      >
-                        <PactScrollIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (hasWarlockMysticArcanum && feature?.id === "mystic_arcanum") {
-                  const selectedCount = warlockMysticArcanumCount;
-                  const allowed = warlockMysticArcanumExpected;
-                  const isOver = selectedCount > allowed;
-                  const isUnder = selectedCount < allowed;
-
-                  return (
-                    <Tooltip arrow title={`Choose Mystic Arcanum spells (${selectedCount}/${allowed} expected, max 10)`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Mystic Arcanum spells"
-                        onClick={() => setWarlockMysticArcanumModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: isOver
-                            ? "rgba(194, 65, 12, 0.10)"
-                            : isUnder
-                              ? "rgba(2, 132, 199, 0.10)"
-                              : "rgba(20, 184, 166, 0.10)",
-                          "&:hover": {
-                            backgroundColor: isOver
-                              ? "rgba(194, 65, 12, 0.14)"
-                              : isUnder
-                                ? "rgba(244, 233, 221, 0.85)"
-                                : "rgba(20, 184, 166, 0.14)",
-                          },
-                        }}
-                      >
-                        <MenuBookIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if ((characterClass === "sorcerer" || characterClass === "sorceror") && feature?.id === "metamagic") {
-                  const selectedCount = Array.isArray(characterInfo?.metamagicOptions)
-                    ? characterInfo.metamagicOptions.length
-                    : 0;
-                  const level = Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
-                  const allowed = level < 3 ? 0 : level >= 17 ? 4 : level >= 10 ? 3 : 2;
-                  const isOver = selectedCount > allowed;
-                  const isUnder = selectedCount < allowed;
-
-                  return (
-                    <Tooltip arrow title={`Choose Metamagic options (${selectedCount}/${allowed})`}>
-                      <IconButton
-                        size="small"
-                        aria-label="Choose Metamagic options"
-                        onClick={() => setMetamagicOptionsModalOpen(true)}
-                        sx={{
-                          ml: 0.25,
-                          p: 0.25,
-                          color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
-                          border: "1px solid rgba(93, 64, 55, 0.25)",
-                          backgroundColor: isOver
-                            ? "rgba(194, 65, 12, 0.10)"
-                            : isUnder
-                              ? "rgba(244, 233, 221, 0.65)"
-                              : "rgba(20, 184, 166, 0.10)",
-                          "&:hover": {
-                            backgroundColor: isOver
-                              ? "rgba(194, 65, 12, 0.14)"
-                              : isUnder
-                                ? "rgba(244, 233, 221, 0.85)"
-                                : "rgba(20, 184, 166, 0.14)",
-                          },
-                        }}
-                      >
-                        <MenuBookIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                }
-
-                if (characterClass !== "ranger") return null;
-                if (feature?.id !== "favored_enemy" && feature?.id !== "natural_explorer") return null;
-
-                const label =
-                  feature?.id === "favored_enemy"
-                    ? "Edit Favored Enemy options"
-                    : "Edit Natural Explorer options";
-
-                return (
-                  <Tooltip arrow title={label}>
-                    <IconButton
-                      size="small"
-                      aria-label={label}
-                      onClick={() =>
-                        setRangerOptionsModal({
-                          open: true,
-                          kind: feature.id === "favored_enemy" ? "favored_enemy" : "natural_explorer",
-                        })
-                      }
-                      sx={{
-                        ml: 0.25,
-                        p: 0.25,
-                        color: "rgba(93, 64, 55, 0.92)",
-                        border: "1px solid rgba(93, 64, 55, 0.25)",
-                        backgroundColor: "rgba(244, 233, 221, 0.65)",
-                        "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                      }}
-                    >
-                      <BowIcon fontSize="inherit" />
-                    </IconButton>
-                  </Tooltip>
-                );
-              }}
+              renderUntrackedTrailingControls={(feature) =>
+                renderSecondaryFeatureTrailingControls(
+                  feature,
+                  characterClass,
+                  subclass,
+                  characterLevel,
+                  subclassChoiceKey
+                )
+              }
               proficiencyBonusValue={proficiencyBonusValue}
               charismaModValue={charismaModValue}
               intelligenceModValue={intelligenceModValue}
@@ -4295,232 +4054,15 @@ const FeaturesAndTrackables = () => {
               warlockLevel={warlockLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
-              renderDetailsHeaderForFeature={(feature, trackerHelpers) => {
-                const warlockHeader = renderWarlockFeatureDetailsHeader(feature, trackerHelpers, characterClass, subclass);
-                if (warlockHeader) return warlockHeader;
-
-                const featureTrackers = trackerHelpers?.featureTrackers || {};
-                const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
-                if (characterClass === "warlock") {
-                  if (feature?.id === "eldritch_invocations") {
-                    const invocationList = classesData?.warlock?.eldritchInvocations || [];
-                    const byId = new Map((Array.isArray(invocationList) ? invocationList : []).map((entry) => [entry?.id, entry]));
-                    const selected = (Array.isArray(characterInfo?.warlockInvocations) ? characterInfo.warlockInvocations : [])
-                      .map((id) => byId.get(id))
-                      .filter(Boolean);
-
-                    return (
-                      <div style={{ margin: "2px 0 8px 0" }}>
-                        <p style={{ margin: "2px 0" }}>
-                          <strong>Selected invocations:</strong>{" "}
-                          {selected.length === 0 ? <em>None</em> : selected.map((entry) => entry?.name).join(", ")} ({selected.length}/{warlockInvocationAllowed})
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  if (feature?.id === "pact_boon") {
-                    const pactList = classesData?.warlock?.pactBoons || [];
-                    const selected =
-                      (Array.isArray(pactList) ? pactList : []).find(
-                        (entry) => String(entry?.id || "") === String(characterInfo?.warlockPactBoon || "")
-                      ) || null;
-
-                    return (
-                      <div style={{ margin: "2px 0 8px 0" }}>
-                        <p style={{ margin: "2px 0" }}>
-                          <strong>Chosen pact boon:</strong> {selected ? selected.name : <em>None</em>}
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  if (feature?.id === "mystic_arcanum") {
-                    const unlockedLabel =
-                      warlockMysticArcanumLevels.length > 0 ? warlockMysticArcanumLevels.join(", ") : "none";
-
-                    return (
-                      <div style={{ margin: "2px 0 8px 0" }}>
-                        <p style={{ margin: "2px 0" }}>
-                          <strong>Unlocked arcanum levels:</strong> {unlockedLabel}
-                        </p>
-                        <p style={{ margin: "2px 0" }}>
-                          <strong>Chosen arcanum spells:</strong>{" "}
-                          {warlockMysticArcanum.length === 0
-                            ? <em>None</em>
-                            : warlockMysticArcanum.map((spell) => `${spell?.name} (${spell?.level})`).join(", ")} ({warlockMysticArcanumCount}/{warlockMysticArcanumExpected})
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  if (feature?.id === "healing_light") {
-                    const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
-                    const tracker = featureTrackers?.[trackerKey] || {};
-                    const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
-                    const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
-                    const currentMax = overrideActive
-                      ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
-                      : autoMax;
-
-                    return (
-                      <div style={{ margin: "2px 0 8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <p style={{ margin: "2px 0" }}>
-                          <strong>Max dice:</strong> {currentMax} d6
-                          {overrideActive ? ` (auto ${autoMax})` : ""}
-                        </p>
-                        <Tooltip arrow title="Override max Healing Light dice">
-                          <IconButton
-                            size="small"
-                            aria-label="Override Healing Light max dice"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const nextValue = window.prompt(
-                                "Set Healing Light max dice. Leave blank to reset to automatic.",
-                                String(currentMax)
-                              );
-                              if (nextValue === null || typeof setFeatureTrackers !== "function") return;
-                              const trimmed = String(nextValue).trim();
-                              if (!trimmed) {
-                                setFeatureTrackers((prev) => ({
-                                  ...(prev || {}),
-                                  [trackerKey]: {
-                                    ...(prev?.[trackerKey] || {}),
-                                    poolMaxOverride: null,
-                                    spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, autoMax)),
-                                  },
-                                }));
-                                return;
-                              }
-                              const parsed = Number(trimmed);
-                              if (!Number.isFinite(parsed)) return;
-                              const nextMax = Math.max(0, Math.min(99, Math.trunc(parsed)));
-                              setFeatureTrackers((prev) => ({
-                                ...(prev || {}),
-                                [trackerKey]: {
-                                  ...(prev?.[trackerKey] || {}),
-                                  poolMaxOverride: nextMax,
-                                  spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, nextMax)),
-                                },
-                              }));
-                            }}
-                            sx={{
-                              p: 0.25,
-                              border: "1px solid rgba(93, 64, 55, 0.25)",
-                              backgroundColor: "rgba(244, 233, 221, 0.65)",
-                              "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                            }}
-                          >
-                            <SettingsIcon fontSize="inherit" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
-                    );
-                  }
-                }
-
-                if (!(characterClass === "sorcerer" || characterClass === "sorceror")) return null;
-                if (feature?.id !== "metamagic") return null;
-
-                const selectedIds = Array.isArray(characterInfo?.metamagicOptions)
-                  ? characterInfo.metamagicOptions
-                  : [];
-                const allOptions =
-                  classesData?.sorcerer?.metamagicOptions || classesData?.sorceror?.metamagicOptions || [];
-
-                const selected = selectedIds
-                  .map((id) => allOptions.find((opt) => String(opt?.id || "") === String(id)))
-                  .filter(Boolean);
-
-                if (selected.length === 0) {
-                  return (
-                    <p style={{ margin: "2px 0", opacity: 0.8 }}>
-                      <em>No Metamagic options selected yet.</em>
-                    </p>
-                  );
-                }
-
-                return (
-                  <div style={{ margin: "2px 0 8px 0" }}>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Chosen Metamagic options:</strong>
-                    </p>
-                    {selected.map((opt) => {
-                      const descLines = Array.isArray(opt?.desc)
-                        ? opt.desc
-                        : opt?.desc
-                          ? [String(opt.desc)]
-                          : [];
-                      const cost = opt?.cost;
-                      const costLabel =
-                        cost === "spell_level"
-                          ? "Cost: spell level (1 for cantrip)"
-                          : Number.isFinite(Number(cost))
-                            ? `Cost: ${Number(cost)} sorcery point${Number(cost) === 1 ? "" : "s"}`
-                            : "";
-
-                      return (
-                        <Accordion
-                          key={`metamagic:${opt.id}`}
-                          disableGutters
-                          elevation={0}
-                          sx={{
-                            backgroundColor: "transparent",
-                            "&:before": { display: "none" },
-                            "&.Mui-expanded": { margin: 0 },
-                          }}
-                        >
-                          <AccordionSummary
-                            expandIcon={<ExpandMoreIcon sx={{ fontSize: "18px" }} />}
-                            sx={{
-                              minHeight: 32,
-                              px: 0.5,
-                              py: 0,
-                              "& .MuiAccordionSummary-content": {
-                                margin: "4px 0 !important",
-                                alignItems: "center",
-                                gap: 0.5,
-                                width: "100%",
-                                display: "flex",
-                              },
-                              "&.Mui-expanded": { minHeight: 32 },
-                            }}
-                          >
-                            <Typography sx={{ fontSize: "13px", fontWeight: 700, flexGrow: 1, minWidth: 0 }}>
-                              {opt?.name}
-                            </Typography>
-                            {costLabel ? (
-                              <Typography sx={{ fontSize: "12px", fontWeight: 800, color: "rgba(62, 39, 35, 0.75)" }}>
-                                {costLabel.replace(/^Cost:\s*/i, "")}
-                              </Typography>
-                            ) : null}
-                          </AccordionSummary>
-                          <AccordionDetails
-                            sx={{
-                              px: 1.5,
-                              py: 1,
-                              backgroundColor: "rgba(255,255,255,0.5)",
-                              borderRadius: "4px",
-                              mx: 0.5,
-                              mb: 0.5,
-                            }}
-                          >
-                            <Typography component="div" sx={{ fontSize: "13px", "& p": { margin: "2px 0" } }}>
-                              {descLines.length === 0 ? (
-                                <p style={{ opacity: 0.7 }}>
-                                  <em>No description available.</em>
-                                </p>
-                              ) : (
-                                descLines.map((line, idx) => <p key={`metamagic:${opt.id}:desc:${idx}`}>{line}</p>)
-                              )}
-                            </Typography>
-                          </AccordionDetails>
-                        </Accordion>
-                      );
-                    })}
-                  </div>
-                );
-              }}
+              renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
+                renderSecondaryFeatureDetailsHeader(
+                  feature,
+                  trackerHelpers,
+                  characterClass,
+                  subclass,
+                  characterLevel
+                )
+              }
             />
           </Grid>
 
@@ -4547,315 +4089,25 @@ const FeaturesAndTrackables = () => {
               warlockLevel={warlockLevel}
               characterClass={characterClass}
               characterLevel={characterLevel}
-              renderDetailsHeaderForFeature={(feature, trackerHelpers) => {
-                const featureTrackers = trackerHelpers?.featureTrackers || {};
-                const setFeatureTrackers = trackerHelpers?.setFeatureTrackers;
-                if (hasBattleMaster && feature?.id === "combat_superiority_maneuvers") {
-                  const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
-                  const dexMod = characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0;
-                  const dc = 8 + (Number(proficiencyBonusValue) || 2) + Math.max(Number(strMod) || 0, Number(dexMod) || 0);
-
-                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
-                  const allowed =
-                    level < 3
-                      ? 0
-                      : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
-
-                  const selectedIds = Array.isArray(characterInfo?.battleMasterManeuvers)
-                    ? characterInfo.battleMasterManeuvers
-                    : [];
-
-                  const allManeuvers = classesData?.fighter?.subclasses?.battleMaster?.maneuvers || [];
-                  const byId = new Map((Array.isArray(allManeuvers) ? allManeuvers : []).map((m) => [m?.id, m]));
-                  const selectedNames = selectedIds
-                    .map((id) => byId.get(id)?.name || id)
-                    .filter(Boolean);
-
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Maneuver Save DC:</strong> {dc}
-                      </p>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Selected maneuvers:</strong>{" "}
-                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "master_scriviner") {
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Stored Scrolls</strong>
-                      </p>
-                      {wizardMasterScrivinerEntries.length === 0 ? (
-                        <p style={{ margin: "2px 0", opacity: 0.8 }}>
-                          <em>No scrolls chosen yet.</em>
-                        </p>
-                      ) : (
-                        wizardMasterScrivinerEntries.map((entry) => (
-                          <div
-                            key={`master-scriviner-entry:${entry?.index}`}
-                            style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}
-                          >
-                            <span style={{ flexGrow: 1 }}>{formatSpellCountLabel(entry)}</span>
-                            <IconButton
-                              size="small"
-                              aria-label={`Remove one ${entry?.name || entry?.index || "scroll"}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCharacterInfo((prev) => {
-                                  const current = Array.isArray(prev?.wizardScribesMasterScriviner)
-                                    ? prev.wizardScribesMasterScriviner
-                                    : [];
-                                  const next = current
-                                    .map((row) =>
-                                      String(row?.index || "") === String(entry?.index || "")
-                                        ? { ...row, count: Math.max(0, Number(row?.count || 1) - 1) }
-                                        : row
-                                    )
-                                    .filter((row) => Math.max(0, Number(row?.count || 0)) > 0);
-                                  return { ...prev, wizardScribesMasterScriviner: next };
-                                });
-                              }}
-                              sx={{ p: 0.2 }}
-                            >
-                              <RemoveIcon fontSize="inherit" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              aria-label={`Add one ${entry?.name || entry?.index || "scroll"}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCharacterInfo((prev) => {
-                                  const current = Array.isArray(prev?.wizardScribesMasterScriviner)
-                                    ? prev.wizardScribesMasterScriviner
-                                    : [];
-                                  const next = current.map((row) =>
-                                    String(row?.index || "") === String(entry?.index || "")
-                                      ? { ...row, count: Math.max(1, Number(row?.count || 1)) + 1 }
-                                      : row
-                                  );
-                                  return { ...prev, wizardScribesMasterScriviner: next };
-                                });
-                              }}
-                              sx={{ p: 0.2 }}
-                            >
-                              <AddIcon fontSize="inherit" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              aria-label={`Delete ${entry?.name || entry?.index || "scroll"}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCharacterInfo((prev) => ({
-                                  ...prev,
-                                  wizardScribesMasterScriviner: (Array.isArray(prev?.wizardScribesMasterScriviner)
-                                    ? prev.wizardScribesMasterScriviner
-                                    : []
-                                  ).filter((row) => String(row?.index || "") !== String(entry?.index || "")),
-                                }));
-                              }}
-                              sx={{ p: 0.2 }}
-                            >
-                              <DeleteOutlineIcon fontSize="inherit" />
-                            </IconButton>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  );
-                }
-
-                if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "one_with_the_word") {
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "2px 0" }}>
-                        <strong>Lost Spells</strong>
-                        <Tooltip arrow title="Choose disappeared spells">
-                          <IconButton
-                            size="small"
-                            aria-label="Choose disappeared spells"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setWizardOneWithTheWordModalOpen(true);
-                            }}
-                            sx={{
-                              p: 0.25,
-                              border: "1px solid rgba(93, 64, 55, 0.25)",
-                              backgroundColor: "rgba(244, 233, 221, 0.65)",
-                              "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                            }}
-                          >
-                            <MenuBookIcon fontSize="inherit" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Selected spell levels:</strong> {wizardLostSpellLevelTotal}
-                      </p>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Long rests remaining:</strong> {wizardLostSpellRestCount}
-                      </p>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Spells:</strong>{" "}
-                        {wizardLostSpellEntries.length === 0
-                          ? <em>None</em>
-                          : wizardLostSpellEntries.map((entry) => entry?.name).join(", ")}
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (
-                  characterClass === "warlock" &&
-                  String(subclass || "") === "celestial" &&
-                  feature?.id === "healing_light"
-                ) {
-                  const trackerKey = `${String(characterClass || "unknown")}:${String(feature?.id || "feature")}`;
-                  const tracker = featureTrackers?.[trackerKey] || {};
-                  const autoMax = Math.max(0, Math.trunc(Number(warlockLevel) || 0)) + 1;
-                  const overrideActive = Number.isFinite(Number(tracker?.poolMaxOverride));
-                  const currentMax = overrideActive
-                    ? Math.max(0, Math.trunc(Number(tracker?.poolMaxOverride) || 0))
-                    : autoMax;
-
-                  return (
-                    <div style={{ margin: "2px 0 8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Max dice:</strong> {currentMax} d6
-                        {overrideActive ? ` (auto ${autoMax})` : ""}
-                      </p>
-                      <Tooltip arrow title="Override max Healing Light dice">
-                        <IconButton
-                          size="small"
-                          aria-label="Override Healing Light max dice"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (typeof setFeatureTrackers !== "function") return;
-                            const nextValue = window.prompt(
-                              "Set Healing Light max dice. Leave blank to reset to automatic.",
-                              String(currentMax)
-                            );
-                            if (nextValue === null) return;
-                            const trimmed = String(nextValue).trim();
-                            if (!trimmed) {
-                              setFeatureTrackers((prev) => ({
-                                ...(prev || {}),
-                                [trackerKey]: {
-                                  ...(prev?.[trackerKey] || {}),
-                                  poolMaxOverride: null,
-                                  spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, autoMax)),
-                                },
-                              }));
-                              return;
-                            }
-                            const parsed = Number(trimmed);
-                            if (!Number.isFinite(parsed)) return;
-                            const nextMax = Math.max(0, Math.min(99, Math.trunc(parsed)));
-                            setFeatureTrackers((prev) => ({
-                              ...(prev || {}),
-                              [trackerKey]: {
-                                ...(prev?.[trackerKey] || {}),
-                                poolMaxOverride: nextMax,
-                                spentDice: Math.max(0, Math.min(Number(prev?.[trackerKey]?.spentDice) || 0, nextMax)),
-                              },
-                            }));
-                          }}
-                          sx={{
-                            p: 0.25,
-                            border: "1px solid rgba(93, 64, 55, 0.25)",
-                            backgroundColor: "rgba(244, 233, 221, 0.65)",
-                            "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
-                          }}
-                        >
-                          <SettingsIcon fontSize="inherit" />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  );
-                }
-
-                if (hasRuneKnight && feature?.id === "rune_carver") {
-                  const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
-                  const allowed =
-                    level < 3
-                      ? 0
-                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
-
-                  const selectedIds = Array.isArray(characterInfo?.runeKnightRunes)
-                    ? characterInfo.runeKnightRunes
-                    : [];
-
-                  const allRunes = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
-                  const byId = new Map((Array.isArray(allRunes) ? allRunes : []).map((r) => [r?.id, r]));
-                  const selectedNames = selectedIds
-                    .map((id) => byId.get(id)?.name || id)
-                    .filter(Boolean);
-
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Selected runes:</strong>{" "}
-                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
-                      </p>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Tracking:</strong>{" "}
-                        {level >= 15 ? "Runes are tracked (2 uses each)." : "Runes are not tracked until Master of Runes (Fighter 15)."}
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (hasArcaneArcherLore && feature?.id === "arcane_shot") {
-                  const intMod = characterInfo?.stats?.int?.mod ?? 0;
-                  const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(intMod) || 0);
-                  const selectedIds = Array.isArray(characterInfo?.arcaneShotOptions) ? characterInfo.arcaneShotOptions : [];
-                  const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
-                  const level = Math.max(0, Math.trunc(Number(characterLevel) || 0));
-                  const baseAllowed =
-                    level < 3
-                      ? 0
-                      : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0) + (level >= 18 ? 1 : 0);
-                  const allowed = baseAllowed + bonusSlots;
-
-                  const allOptions = classesData?.fighter?.subclasses?.arcaneArcher?.arcaneShotOptions || [];
-                  const byId = new Map((Array.isArray(allOptions) ? allOptions : []).map((o) => [o?.id, o]));
-                  const selectedNames = selectedIds
-                    .map((id) => byId.get(id)?.name || id)
-                    .filter(Boolean);
-
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Arcane Shot DC:</strong> {dc}
-                      </p>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Selected options:</strong>{" "}
-                        {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (hasArcaneArcherLore && feature?.id === "arcane_archer_lore") {
-                  const cantrip = characterInfo?.arcaneArcherLoreCantrip || null;
-                  if (!cantrip?.index) return null;
-                  return (
-                    <div style={{ margin: "2px 0 8px 0" }}>
-                      <p style={{ margin: "2px 0" }}>
-                        <strong>Chosen cantrip:</strong>
-                      </p>
-                      <SpellAccordian numericalSpellLevel={0} spell={cantrip} />
-                    </div>
-                  );
-                }
-
-                return null;
-              }}
+              renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
+                renderSecondaryFeatureDetailsHeader(
+                  feature,
+                  trackerHelpers,
+                  characterClass,
+                  subclass,
+                  characterLevel
+                )
+              }
               renderTrackedTrailingControls={(feature) => {
+                const sharedControls = renderSecondaryFeatureTrailingControls(
+                  feature,
+                  characterClass,
+                  subclass,
+                  characterLevel,
+                  subclassChoiceKey
+                );
+                if (sharedControls) return sharedControls;
+
                 if (characterClass === "wizard" && subclass === "scribes" && feature?.id === "master_scriviner") {
                   return (
                     <Tooltip arrow title={`Manage Master Scriviner scrolls (${wizardMasterScrivinerCount} total)`}>
@@ -5058,8 +4310,14 @@ const FeaturesAndTrackables = () => {
                 );
               }}
 		              renderUntrackedTrailingControls={(feature) => {
-                const warlockControls = renderWarlockFeatureTrailingControls(feature, characterClass, subclass);
-                if (warlockControls) return warlockControls;
+                const sharedControls = renderSecondaryFeatureTrailingControls(
+                  feature,
+                  characterClass,
+                  subclass,
+                  characterLevel,
+                  subclassChoiceKey
+                );
+                if (sharedControls) return sharedControls;
 
                 if (hasBlessedWarrior && feature?.id === "fighting_style") {
                   const isOver = blessedWarriorCantripCount > 2;
