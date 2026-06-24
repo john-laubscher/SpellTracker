@@ -1995,7 +1995,13 @@ const FeaturesAndTrackables = () => {
   const [rangerOptionsModal, setRangerOptionsModal] = React.useState({ open: false, kind: "" });
 
   const { untrackedFeatureChoices, setUntrackedFeatureChoices } = React.useContext(UntrackedFeatureChoicesContext);
-  const [featureChoiceModal, setFeatureChoiceModal] = React.useState({ open: false, featureId: "" });
+  const [featureChoiceModal, setFeatureChoiceModal] = React.useState({
+    open: false,
+    featureId: "",
+    targetClassKey: "",
+    targetSubclassKey: "",
+    choiceKey: "",
+  });
 
   const subclassChoiceKey = React.useMemo(
     () => getChoiceKey({ kind: "subclass", characterClass, subclass }),
@@ -2140,34 +2146,300 @@ const FeaturesAndTrackables = () => {
     const entries = getClassEntries(characterInfo);
     return entries.find((entry) => entry.slot === "secondary") || null;
   }, [characterInfo]);
+  const secondarySubclassChoiceKey = React.useMemo(
+    () =>
+      getChoiceKey({
+        kind: "subclass",
+        characterClass: secondaryClassEntry?.classKey,
+        subclass: secondaryClassEntry?.subclassKey,
+      }),
+    [secondaryClassEntry]
+  );
+
+  const augmentSecondaryClassFeatures = React.useCallback(
+    (base, targetClassKey, targetLevel) => {
+      if (targetClassKey === "fighter" || targetClassKey === "paladin" || targetClassKey === "ranger") {
+        const chosenNames = hasDruidicWarrior
+          ? (Array.isArray(characterInfo?.druidicWarriorCantrips) ? characterInfo.druidicWarriorCantrips : [])
+              .map((spell) => spell?.name)
+              .filter(Boolean)
+          : [];
+
+        return base.map((feature) => {
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+
+          if (feature?.id === "fighting_style") {
+            const prefixes = fightingStyle ? [`Fighting Style: ${fightingStyle}.`] : [];
+            if (hasDruidicWarrior) {
+              prefixes.push(
+                chosenNames.length > 0
+                  ? `Druidic Warrior cantrips: ${chosenNames.join(", ")}.`
+                  : "Druidic Warrior cantrips: Choose cantrips."
+              );
+            }
+            return { ...feature, desc: [...prefixes, ...descLines] };
+          }
+
+          if (targetClassKey === "ranger" && feature?.id === "favored_enemy") {
+            const prefix =
+              rangerFavoredEnemyOptions.length > 0
+                ? `Favored enemies: ${rangerFavoredEnemyOptions.join(", ")}.`
+                : "Favored enemies: (none selected).";
+            return { ...feature, desc: [prefix, ...descLines] };
+          }
+
+          if (targetClassKey === "ranger" && feature?.id === "natural_explorer") {
+            const prefix =
+              rangerNaturalExplorerOptions.length > 0
+                ? `Favored terrains: ${rangerNaturalExplorerOptions.join(", ")}.`
+                : "Favored terrains: (none selected).";
+            return { ...feature, desc: [prefix, ...descLines] };
+          }
+
+          return feature;
+        });
+      }
+
+      if (targetClassKey === "rogue") {
+        const dice = getRogueSneakAttackDice(targetLevel);
+        return base.map((feature) => {
+          if (feature?.id !== "sneak_attack") return feature;
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+          return { ...feature, desc: [`Current Sneak Attack extra damage: ${dice}.`, ...descLines] };
+        });
+      }
+
+      if (targetClassKey === "warlock") {
+        return augmentWarlockFeatures(base, targetClassKey, targetLevel);
+      }
+
+      return base;
+    },
+    [
+      augmentWarlockFeatures,
+      characterInfo?.druidicWarriorCantrips,
+      fightingStyle,
+      hasDruidicWarrior,
+      rangerFavoredEnemyOptions,
+      rangerNaturalExplorerOptions,
+    ]
+  );
+
+  const augmentSecondarySubclassFeatures = React.useCallback(
+    (base, targetClassKey, targetSubclassKey, targetLevel, choiceKey) => {
+      let next = base.map((feature) => {
+        if (feature?.sharedUsePoolKey === "channel_divinity") return { ...feature, tracked: true };
+        return feature;
+      });
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "arcaneArcher" && hasArcaneArcherLore) {
+        const cantripName = characterInfo?.arcaneArcherLoreCantrip?.name || "";
+        const displayName = cantripName ? `${cantripName} (Arcane Archer Lore)` : "Choose Cantrip (Arcane Archer Lore)";
+
+        next = next.map((feature) => (feature?.id === "arcane_archer_lore" ? { ...feature, name: displayName } : feature));
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "champion" && hasChampionAdditionalFightingStyle) {
+        next = next.map((feature) => {
+          if (feature?.id !== "additional_fighting_style") return feature;
+          const descLines = Array.isArray(feature?.desc)
+            ? feature.desc
+            : typeof feature?.desc === "string"
+              ? [feature.desc]
+              : [];
+          const prefixes = [];
+          if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+          prefixes.push(additionalFightingStyle ? `Champion Fighting Style: ${additionalFightingStyle}.` : "Champion Fighting Style: Choose one.");
+          return { ...feature, desc: [...prefixes, ...descLines] };
+        });
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && hasRuneKnight && Number(fighterLevel || 0) >= 15) {
+        const runeList = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
+        const byId = new Map((Array.isArray(runeList) ? runeList : []).map((r) => [r?.id, r]));
+        const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
+        const selectedRunes = selectedIds
+          .map((id) => byId.get(id))
+          .filter(Boolean)
+          .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+
+        if (selectedRunes.length > 0) {
+          next = [
+            ...next,
+            ...selectedRunes.map((rune) => ({
+              id: `rune_knight_rune:${rune.id}`,
+              name: rune.name,
+              desc: rune.desc,
+              level: 15,
+              tracked: true,
+              uses: 2,
+              recharge: "sr_or_lr",
+            })),
+          ];
+        }
+      }
+
+      if (targetClassKey === "ranger" && targetSubclassKey === "hunter") {
+        next = next.map((feature) => {
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+          if (choiceOptions.length === 0) return feature;
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+          const selectedDescLines = selected ? (Array.isArray(selected?.desc) ? selected.desc : typeof selected?.desc === "string" ? [selected.desc] : []) : [];
+          const prefixLines = selected ? [`Chosen: ${selected.name}.`, ...selectedDescLines] : ["Chosen: (none selected). Click the bow icon to choose one."];
+          const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+          return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+        });
+      }
+
+      if (targetClassKey === "sorcerer" && targetSubclassKey === "draconicBloodline") {
+        next = next.map((feature) => {
+          if (feature?.id !== "dragon_ancestor") return feature;
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+          if (choiceOptions.length === 0) return feature;
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+          const damageType = selected?.damageType ? String(selected.damageType) : "";
+          const prefixLines = selected ? [`Chosen: ${selected.name}${damageType ? ` (${damageType})` : ""}.`] : ["Chosen: (none selected). Click the dragon icon to choose one."];
+          const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+          return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+        });
+      }
+
+      if (targetClassKey === "warlock" && targetSubclassKey === "genie") {
+        const genieKindData = getGenieKindData(characterInfo?.genieKind);
+        const genieSummaryLines = getGenieBenefitsSummaryLines(characterInfo?.genieKind);
+
+        next = next.map((feature) => {
+          if (!["genies_vessel", "genies_wrath", "elemental_gift"].includes(String(feature?.id || ""))) return feature;
+          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+
+          if (feature?.id === "genies_vessel") {
+            const nextName = genieKindData ? `${feature.name} (${genieKindData.name})` : `${feature.name} (Choose Kind)`;
+            return { ...feature, name: nextName, desc: [...genieSummaryLines, ...baseDescLines] };
+          }
+
+          if (feature?.id === "genies_wrath") {
+            const prefix = genieKindData ? `Current damage type: ${genieKindData.damageType}.` : "Choose a genie kind to set the damage type.";
+            return { ...feature, desc: [prefix, ...baseDescLines] };
+          }
+
+          const prefix = genieKindData
+            ? `Current permanent resistance: ${genieKindData.damageType}.`
+            : "Choose a genie kind to set the permanent resistance type.";
+          return { ...feature, desc: [prefix, ...baseDescLines] };
+        });
+      }
+
+      if (targetClassKey === "barbarian" && targetSubclassKey === "totemWarrior") {
+        next = next.map((feature) => {
+          if (!["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) return feature;
+          const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+          if (choiceOptions.length === 0) return feature;
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+          const selectedDescLines = selected ? (Array.isArray(selected?.desc) ? selected.desc : typeof selected?.desc === "string" ? [selected.desc] : []) : [];
+          const promptByFeatureId = {
+            totem_spirit: "Click the totem icon to choose your spirit animal.",
+            aspect_of_the_beast: "Click the totem icon to choose your beast aspect.",
+            totemic_attunement: "Click the totem icon to choose your attunement animal.",
+          };
+          const prefixLines = selected ? [`Chosen: ${selected.name}.`, ...selectedDescLines] : [`Chosen: (none selected). ${promptByFeatureId[feature.id] || "Click the totem icon to choose one."}`];
+          const nextName = selected?.name ? `${feature.name} (${selected.name})` : `${feature.name} (Choose)`;
+          return { ...feature, name: nextName, desc: [...prefixLines, ...baseDescLines] };
+        });
+      }
+
+      if (targetClassKey === "wizard" && targetSubclassKey === "divination") {
+        const hasGreaterPortent = Number(targetLevel || 0) >= 14;
+        next = next.map((feature) => {
+          if (feature?.id !== "portent") return feature;
+          const baseDescLines = Array.isArray(feature?.desc) ? feature.desc : typeof feature?.desc === "string" ? [feature.desc] : [];
+          const prefixLines = hasGreaterPortent ? ["Greater Portent active: roll 3 d20s for Portent instead of 2."] : [];
+          return { ...feature, portentCount: hasGreaterPortent ? 3 : 2, desc: [...prefixLines, ...baseDescLines] };
+        });
+      }
+
+      return targetClassKey === "warlock" ? augmentWarlockFeatures(next, targetClassKey, targetLevel) : next;
+    },
+    [
+      additionalFightingStyle,
+      augmentWarlockFeatures,
+      characterInfo?.arcaneArcherLoreCantrip?.name,
+      characterInfo?.genieKind,
+      characterInfo?.runeKnightRunes,
+      fightingStyle,
+      fighterLevel,
+      hasArcaneArcherLore,
+      hasChampionAdditionalFightingStyle,
+      hasRuneKnight,
+      untrackedFeatureChoices,
+    ]
+  );
 
   const secondaryClassFeatures = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return [];
     const all = classesData?.[secondaryClassEntry.classKey]?.classFeatures || [];
-    const base = all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack");
-    return augmentWarlockFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
-  }, [secondaryClassEntry, augmentWarlockFeatures]);
+    const base = all.filter(
+      (feature) =>
+        Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0) && feature?.id !== "extra_attack"
+    );
+    return augmentSecondaryClassFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
+  }, [secondaryClassEntry, augmentSecondaryClassFeatures]);
+
   const secondaryClassTitle = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return "2nd Class Features";
-    const label = String(classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)).trim();
+    const label = String(
+      classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)
+    ).trim();
     return `${label} Features`;
   }, [secondaryClassEntry]);
+
   const secondaryClassUntrackedLabel = React.useMemo(() => {
     if (!secondaryClassEntry?.classKey) return "Untracked 2nd Class Features";
-    const label = String(classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)).trim();
+    const label = String(
+      classesData?.[secondaryClassEntry.classKey]?.name || formatUiLabel(secondaryClassEntry.classKey)
+    ).trim();
     return `Untracked ${label} Features`;
   }, [secondaryClassEntry]);
 
   const secondarySubclassFeatures = React.useMemo(() => {
-    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+    if (
+      !secondaryClassEntry?.classKey ||
+      !secondaryClassEntry?.subclassKey ||
+      secondaryClassEntry.subclassKey === "noSubclass"
+    ) {
       return [];
     }
-    const all = classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.features || [];
+    const all =
+      classesData?.[secondaryClassEntry.classKey]?.subclasses?.[secondaryClassEntry.subclassKey]?.features || [];
     const base = all.filter((feature) => Number(feature?.level || 0) <= Number(secondaryClassEntry.level || 0));
-    return augmentWarlockFeatures(base, secondaryClassEntry.classKey, Number(secondaryClassEntry.level || 0));
-  }, [secondaryClassEntry, augmentWarlockFeatures]);
+    return augmentSecondarySubclassFeatures(
+      base,
+      secondaryClassEntry.classKey,
+      secondaryClassEntry.subclassKey,
+      Number(secondaryClassEntry.level || 0),
+      secondarySubclassChoiceKey
+    );
+  }, [secondaryClassEntry, augmentSecondarySubclassFeatures, secondarySubclassChoiceKey]);
+
   const secondarySubclassTitle = React.useMemo(() => {
-    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+    if (
+      !secondaryClassEntry?.classKey ||
+      !secondaryClassEntry?.subclassKey ||
+      secondaryClassEntry.subclassKey === "noSubclass"
+    ) {
       return "2nd Subclass Features";
     }
     const label = String(
@@ -2176,8 +2448,13 @@ const FeaturesAndTrackables = () => {
     ).trim();
     return `${label} Features`;
   }, [secondaryClassEntry]);
+
   const secondarySubclassUntrackedLabel = React.useMemo(() => {
-    if (!secondaryClassEntry?.classKey || !secondaryClassEntry?.subclassKey || secondaryClassEntry.subclassKey === "noSubclass") {
+    if (
+      !secondaryClassEntry?.classKey ||
+      !secondaryClassEntry?.subclassKey ||
+      secondaryClassEntry.subclassKey === "noSubclass"
+    ) {
       return "Untracked 2nd Subclass Features";
     }
     const label = String(
@@ -2915,10 +3192,19 @@ const FeaturesAndTrackables = () => {
   const activeChoiceFeature = React.useMemo(() => {
     const featureId = String(featureChoiceModal?.featureId || "");
     if (!featureChoiceModal?.open || !featureId) return null;
-    const raw = classesData?.[characterClass]?.subclasses?.[subclass]?.features || [];
+    const modalClassKey = String(featureChoiceModal?.targetClassKey || characterClass || "");
+    const modalSubclassKey = String(featureChoiceModal?.targetSubclassKey || subclass || "");
+    const raw = classesData?.[modalClassKey]?.subclasses?.[modalSubclassKey]?.features || [];
     const list = Array.isArray(raw) ? raw : [];
     return list.find((f) => f?.id === featureId) || null;
-  }, [featureChoiceModal?.open, featureChoiceModal?.featureId, characterClass, subclass]);
+  }, [
+    featureChoiceModal?.open,
+    featureChoiceModal?.featureId,
+    featureChoiceModal?.targetClassKey,
+    featureChoiceModal?.targetSubclassKey,
+    characterClass,
+    subclass,
+  ]);
 
   const classTrackedById = React.useMemo(() => {
     const map = {};
@@ -3379,6 +3665,346 @@ const FeaturesAndTrackables = () => {
       warlockMysticArcanumCount,
       warlockMysticArcanumExpected,
       warlockMysticArcanumLevels,
+    ]
+  );
+
+  const openFeatureChoiceModal = React.useCallback((featureId, targetClassKey, targetSubclassKey, choiceKey) => {
+    setFeatureChoiceModal({
+      open: true,
+      featureId: String(featureId || ""),
+      targetClassKey: String(targetClassKey || ""),
+      targetSubclassKey: String(targetSubclassKey || ""),
+      choiceKey: String(choiceKey || ""),
+    });
+  }, []);
+
+  const renderSecondaryFeatureTrailingControls = React.useCallback(
+    (feature, targetClassKey, targetSubclassKey, targetLevel, choiceKey) => {
+      const warlockControls = renderWarlockFeatureTrailingControls(feature, targetClassKey, targetSubclassKey);
+      if (warlockControls) return warlockControls;
+
+      if (targetClassKey === "wizard" && feature?.id === "spellbook") {
+        return (
+          <Tooltip arrow title={`Open Spellbook (${wizardSpellbookCount} spells)`}>
+            <IconButton size="small" aria-label="Open Spellbook" onClick={() => setWizardSpellbookModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: wizardSpellbookCount > 0 ? "#0f766e" : "#075985", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "wizard" && feature?.id === "spell_mastery") {
+        const isOver = wizardSpellMasteryCount > 2;
+        const isUnder = wizardSpellMasteryCount < 2;
+        return (
+          <Tooltip arrow title={`Choose Spell Mastery spells (${wizardSpellMasteryCount}/2)`}>
+            <IconButton size="small" aria-label="Choose Spell Mastery spells" onClick={() => setWizardSpellMasteryModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "wizard" && feature?.id === "signature_spells") {
+        const isOver = wizardSignatureSpellCount > 2;
+        const isUnder = wizardSignatureSpellCount < 2;
+        return (
+          <Tooltip arrow title={`Choose Signature Spells (${wizardSignatureSpellCount}/2)`}>
+            <IconButton size="small" aria-label="Choose Signature Spells" onClick={() => setWizardSignatureSpellsModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if ((targetClassKey === "sorcerer" || targetClassKey === "sorceror") && feature?.id === "metamagic") {
+        const selectedCount = Array.isArray(characterInfo?.metamagicOptions) ? characterInfo.metamagicOptions.length : 0;
+        const level = Math.max(0, Math.trunc(Number(sorcererLevel) || 0));
+        const allowed = level < 3 ? 0 : level >= 17 ? 4 : level >= 10 ? 3 : 2;
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+        return (
+          <Tooltip arrow title={`Choose Metamagic options (${selectedCount}/${allowed})`}>
+            <IconButton size="small" aria-label="Choose Metamagic options" onClick={() => setMetamagicOptionsModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(244, 233, 221, 0.65)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : isUnder ? "rgba(244, 233, 221, 0.85)" : "rgba(20, 184, 166, 0.14)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "ranger" && (feature?.id === "favored_enemy" || feature?.id === "natural_explorer")) {
+        const label = feature?.id === "favored_enemy" ? "Edit Favored Enemy options" : "Edit Natural Explorer options";
+        return (
+          <Tooltip arrow title={label}>
+            <IconButton size="small" aria-label={label} onClick={() => setRangerOptionsModal({ open: true, kind: feature.id === "favored_enemy" ? "favored_enemy" : "natural_explorer" })} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <BowIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "arcaneArcher" && feature?.id === "arcane_archer_lore") {
+        const isOver = arcaneArcherLoreCantripCount > 1;
+        const isUnder = arcaneArcherLoreCantripCount < 1;
+        return (
+          <Tooltip arrow title={`Choose Arcane Archer Lore cantrip (${arcaneArcherLoreCantripCount}/1)`}>
+            <IconButton size="small" aria-label="Choose Arcane Archer Lore cantrip" onClick={() => setArcaneArcherLoreCantripModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "arcaneArcher" && feature?.id === "arcane_shot") {
+        const selectedCount = Array.isArray(characterInfo?.arcaneShotOptions) ? characterInfo.arcaneShotOptions.length : 0;
+        const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
+        const level = Math.max(0, Math.trunc(Number(targetLevel) || 0));
+        const baseAllowed = level < 3 ? 0 : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0) + (level >= 18 ? 1 : 0);
+        const allowed = baseAllowed + bonusSlots;
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+        return (
+          <Tooltip arrow title={`Choose Arcane Shot options (${selectedCount}/${allowed})`}>
+            <IconButton size="small" aria-label="Choose Arcane Shot options" onClick={() => setArcaneShotOptionsModalOpen(true)} sx={{ ml: 0.5, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(15, 118, 110, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(244, 233, 221, 0.65)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : isUnder ? "rgba(244, 233, 221, 0.85)" : "rgba(20, 184, 166, 0.14)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "battleMaster" && feature?.id === "combat_superiority_maneuvers") {
+        const selectedCount = battleMasterManeuverCount;
+        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const allowed = level < 3 ? 0 : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+        return (
+          <Tooltip arrow title={`Choose maneuvers (${selectedCount}/${allowed})`}>
+            <IconButton size="small" aria-label="Choose maneuvers" onClick={() => setBattleMasterManeuversModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
+              <SwordIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "champion" && feature?.id === "additional_fighting_style") {
+        const selectedCount = additionalFightingStyleCount;
+        const isOver = selectedCount > 1;
+        const isUnder = selectedCount < 1;
+        return (
+          <Tooltip arrow title={`Choose fighting style (${selectedCount}/1)`}>
+            <IconButton size="small" aria-label="Choose additional fighting style" onClick={() => setAdditionalFightingStyleModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
+              <SwordIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && feature?.id === "rune_carver") {
+        const selectedCount = runeKnightRuneCount;
+        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const allowed = level < 3 ? 0 : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
+        const isOver = selectedCount > allowed;
+        const isUnder = selectedCount < allowed;
+        return (
+          <Tooltip arrow title={`Choose runes (${selectedCount}/${allowed})`}>
+            <IconButton size="small" aria-label="Choose runes" onClick={() => setRuneKnightRunesModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "druid" && targetSubclassKey === "land" && feature?.id === "land_circle_spells") {
+        const label = String(currentLandType || "arctic");
+        const prettyLabel = label.split("-").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : "")).join(" ");
+        return (
+          <Tooltip arrow title={`Land Type: ${prettyLabel} (click to change)`}>
+            <IconButton size="small" aria-label="Choose Land Type" onClick={openLandTypeMenu} sx={{ ml: 0.25, p: 0.25, color: "#5d4037", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "ranger" && targetSubclassKey === "hunter") {
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+        if (choiceOptions.length > 0) {
+          const baseName = String(feature?.name || "").replace(/\s*\(.*\)\s*$/, "") || "Feature";
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const label = selected?.name ? `Change ${baseName} (${selected.name})` : `Choose ${baseName}`;
+          return (
+            <Tooltip arrow title={label}>
+              <IconButton size="small" aria-label={label} onClick={() => openFeatureChoiceModal(feature.id, targetClassKey, targetSubclassKey, choiceKey)} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+                <BowIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          );
+        }
+      }
+
+      if ((targetClassKey === "sorcerer" || targetClassKey === "sorceror") && targetSubclassKey === "wildMagic" && feature?.id === "wild_magic_surge") {
+        return (
+          <Tooltip arrow title="Open Wild Magic Surge table">
+            <IconButton size="small" aria-label="Open Wild Magic Surge table" onClick={(e) => { e.stopPropagation(); setWildMagicSurgeModalOpen(true); }} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MagicSparklesIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "sorcerer" && targetSubclassKey === "draconicBloodline" && feature?.id === "dragon_ancestor") {
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+        if (choiceOptions.length > 0) {
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const label = selected?.name ? `Change Dragon Ancestor (${selected.name})` : "Choose Dragon Ancestor";
+          return (
+            <Tooltip arrow title={label}>
+              <IconButton size="small" aria-label={label} onClick={() => openFeatureChoiceModal(feature.id, targetClassKey, targetSubclassKey, choiceKey)} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+                <DragonHeadIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          );
+        }
+      }
+
+      if (targetClassKey === "barbarian" && targetSubclassKey === "totemWarrior" && ["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(feature?.id || ""))) {
+        const choiceOptions = Array.isArray(feature?.untrackedChoiceOptions) ? feature.untrackedChoiceOptions : [];
+        if (choiceOptions.length > 0) {
+          const baseName = String(feature?.name || "").replace(/\s*\(.*\)\s*$/, "") || "Feature";
+          const selectedId = getFeatureChoice(untrackedFeatureChoices, choiceKey, feature.id);
+          const selected = choiceOptions.find((opt) => String(opt?.id || "") === selectedId) || null;
+          const label = selected?.name ? `Change ${baseName} (${selected.name})` : `Choose ${baseName}`;
+          return (
+            <Tooltip arrow title={label}>
+              <IconButton size="small" aria-label={label} onClick={() => openFeatureChoiceModal(feature.id, targetClassKey, targetSubclassKey, choiceKey)} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+                <TotemAnimalIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          );
+        }
+      }
+
+      if (targetClassKey === "sorcerer" && targetSubclassKey === "divineSoul" && feature?.id === "divine_magic") {
+        const selectedId = String(characterInfo?.divineSoulAffinity || "");
+        const selected = DIVINE_SOUL_AFFINITY_OPTIONS.find((opt) => String(opt?.id || "") === selectedId) || null;
+        const label = selected?.name ? `Change Divine Affinity (${selected.name})` : "Choose Divine Affinity";
+        return (
+          <Tooltip arrow title={label}>
+            <IconButton size="small" aria-label={label} onClick={(e) => { e.stopPropagation(); setDivineSoulAffinityModalOpen(true); }} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "sorcerer" && targetSubclassKey === "lunarSorcery" && feature?.id === "lunar_embodiment") {
+        const phaseId = String(characterInfo?.lunarEmbodimentPhase || "full");
+        const phaseLabel = phaseId === "new" ? "New Moon" : phaseId === "crescent" ? "Crescent Moon" : "Full Moon";
+        return (
+          <Tooltip arrow title={`Lunar Embodiment Phase (${phaseLabel})`}>
+            <IconButton size="small" aria-label="Lunar Embodiment Phase" onClick={(e) => { e.stopPropagation(); setLunarEmbodimentModalOpen(true); }} sx={{ ml: 0.25, p: 0.25, color: "rgba(93, 64, 55, 0.92)", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: "rgba(244, 233, 221, 0.65)", "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" } }}>
+              <Brightness2Icon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      return null;
+    },
+    [
+      additionalFightingStyleCount,
+      arcaneArcherLoreCantripCount,
+      characterInfo?.arcaneShotOptions,
+      battleMasterManeuverCount,
+      characterInfo?.arcaneShotBonusOptions,
+      characterInfo?.divineSoulAffinity,
+      characterInfo?.lunarEmbodimentPhase,
+      characterInfo?.metamagicOptions,
+      currentLandType,
+      fighterLevel,
+      openFeatureChoiceModal,
+      openLandTypeMenu,
+      renderWarlockFeatureTrailingControls,
+      runeKnightRuneCount,
+      sorcererLevel,
+      untrackedFeatureChoices,
+      wizardSpellMasteryCount,
+      wizardSpellbookCount,
+      wizardSignatureSpellCount,
+    ]
+  );
+
+  const renderSecondaryFeatureDetailsHeader = React.useCallback(
+    (feature, trackerHelpers, targetClassKey, targetSubclassKey, targetLevel) => {
+      const warlockHeader = renderWarlockFeatureDetailsHeader(feature, trackerHelpers, targetClassKey, targetSubclassKey);
+      if (warlockHeader) return warlockHeader;
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "battleMaster" && feature?.id === "combat_superiority_maneuvers") {
+        const strMod = characterInfo?.stats?.str?.mod ?? characterInfo?.stats?.strength?.mod ?? 0;
+        const dexMod = characterInfo?.stats?.dex?.mod ?? characterInfo?.stats?.dexterity?.mod ?? 0;
+        const dc = 8 + (Number(proficiencyBonusValue) || 2) + Math.max(Number(strMod) || 0, Number(dexMod) || 0);
+        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const allowed = level < 3 ? 0 : 3 + (level >= 7 ? 2 : 0) + (level >= 10 ? 2 : 0) + (level >= 15 ? 2 : 0);
+        const selectedIds = Array.isArray(characterInfo?.battleMasterManeuvers) ? characterInfo.battleMasterManeuvers : [];
+        const allManeuvers = classesData?.fighter?.subclasses?.battleMaster?.maneuvers || [];
+        const byId = new Map((Array.isArray(allManeuvers) ? allManeuvers : []).map((m) => [m?.id, m]));
+        const selectedNames = selectedIds.map((id) => byId.get(id)?.name || id).filter(Boolean);
+        return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Maneuver Save DC:</strong> {dc}</p><p style={{ margin: "2px 0" }}><strong>Selected maneuvers:</strong> {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})</p></div>;
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "runeKnight" && feature?.id === "rune_carver") {
+        const level = Math.max(0, Math.trunc(Number(fighterLevel) || 0));
+        const allowed = level < 3 ? 0 : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0);
+        const selectedIds = Array.isArray(characterInfo?.runeKnightRunes) ? characterInfo.runeKnightRunes : [];
+        const allRunes = classesData?.fighter?.subclasses?.runeKnight?.runes || [];
+        const byId = new Map((Array.isArray(allRunes) ? allRunes : []).map((r) => [r?.id, r]));
+        const selectedNames = selectedIds.map((id) => byId.get(id)?.name || id).filter(Boolean);
+        return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Selected runes:</strong> {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})</p><p style={{ margin: "2px 0" }}><strong>Tracking:</strong> {level >= 15 ? "Runes are tracked (2 uses each)." : "Runes are not tracked until Master of Runes (Fighter 15)."}</p></div>;
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "arcaneArcher" && feature?.id === "arcane_shot") {
+        const intMod = characterInfo?.stats?.int?.mod ?? 0;
+        const dc = 8 + (Number(proficiencyBonusValue) || 2) + (Number(intMod) || 0);
+        const selectedIds = Array.isArray(characterInfo?.arcaneShotOptions) ? characterInfo.arcaneShotOptions : [];
+        const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
+        const level = Math.max(0, Math.trunc(Number(targetLevel) || 0));
+        const baseAllowed = level < 3 ? 0 : 2 + (level >= 7 ? 1 : 0) + (level >= 10 ? 1 : 0) + (level >= 15 ? 1 : 0) + (level >= 18 ? 1 : 0);
+        const allowed = baseAllowed + bonusSlots;
+        const allOptions = classesData?.fighter?.subclasses?.arcaneArcher?.arcaneShotOptions || [];
+        const byId = new Map((Array.isArray(allOptions) ? allOptions : []).map((o) => [o?.id, o]));
+        const selectedNames = selectedIds.map((id) => byId.get(id)?.name || id).filter(Boolean);
+        return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Arcane Shot DC:</strong> {dc}</p><p style={{ margin: "2px 0" }}><strong>Selected options:</strong> {selectedNames.length === 0 ? <em>None</em> : selectedNames.join(", ")} ({selectedNames.length}/{allowed})</p></div>;
+      }
+
+      if (targetClassKey === "fighter" && targetSubclassKey === "arcaneArcher" && feature?.id === "arcane_archer_lore") {
+        const cantrip = characterInfo?.arcaneArcherLoreCantrip || null;
+        if (!cantrip?.index) return null;
+        return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Chosen cantrip:</strong></p><SpellAccordian numericalSpellLevel={0} spell={cantrip} /></div>;
+      }
+
+      if (targetClassKey === "wizard" && targetSubclassKey === "divination" && feature?.id === "portent" && Number(targetLevel || 0) >= 14) {
+        return <div style={{ margin: "2px 0 8px 0" }}><p style={{ margin: "2px 0" }}><strong>Greater Portent:</strong> 3 portent rolls are active at this level.</p></div>;
+      }
+
+      return null;
+    },
+    [
+      characterInfo?.arcaneArcherLoreCantrip,
+      characterInfo?.arcaneShotBonusOptions,
+      characterInfo?.arcaneShotOptions,
+      characterInfo?.battleMasterManeuvers,
+      characterInfo?.runeKnightRunes,
+      characterInfo?.stats?.dex?.mod,
+      characterInfo?.stats?.dexterity?.mod,
+      characterInfo?.stats?.int?.mod,
+      characterInfo?.stats?.str?.mod,
+      characterInfo?.stats?.strength?.mod,
+      fighterLevel,
+      proficiencyBonusValue,
+      renderWarlockFeatureDetailsHeader,
     ]
   );
 
@@ -5102,25 +5728,30 @@ const FeaturesAndTrackables = () => {
                 characterClass={secondaryClassEntry.classKey}
                 characterLevel={secondaryClassEntry.level}
                 renderTrackedTrailingControls={(feature) =>
-                  renderWarlockFeatureTrailingControls(
+                  renderSecondaryFeatureTrailingControls(
                     feature,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level,
+                    secondarySubclassChoiceKey
                   )
                 }
                 renderUntrackedTrailingControls={(feature) =>
-                  renderWarlockFeatureTrailingControls(
+                  renderSecondaryFeatureTrailingControls(
                     feature,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level,
+                    secondarySubclassChoiceKey
                   )
                 }
                 renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
-                  renderWarlockFeatureDetailsHeader(
+                  renderSecondaryFeatureDetailsHeader(
                     feature,
                     trackerHelpers,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level
                   )
                 }
               />
@@ -5148,25 +5779,30 @@ const FeaturesAndTrackables = () => {
                 characterClass={secondaryClassEntry.classKey}
                 characterLevel={secondaryClassEntry.level}
                 renderTrackedTrailingControls={(feature) =>
-                  renderWarlockFeatureTrailingControls(
+                  renderSecondaryFeatureTrailingControls(
                     feature,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level,
+                    secondarySubclassChoiceKey
                   )
                 }
                 renderUntrackedTrailingControls={(feature) =>
-                  renderWarlockFeatureTrailingControls(
+                  renderSecondaryFeatureTrailingControls(
                     feature,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level,
+                    secondarySubclassChoiceKey
                   )
                 }
                 renderDetailsHeaderForFeature={(feature, trackerHelpers) =>
-                  renderWarlockFeatureDetailsHeader(
+                  renderSecondaryFeatureDetailsHeader(
                     feature,
                     trackerHelpers,
                     secondaryClassEntry.classKey,
-                    secondaryClassEntry.subclassKey
+                    secondaryClassEntry.subclassKey,
+                    secondaryClassEntry.level
                   )
                 }
               />
@@ -5498,11 +6134,13 @@ const FeaturesAndTrackables = () => {
 
       <FeatureChoiceModal
         open={Boolean(featureChoiceModal?.open)}
-        onClose={() => setFeatureChoiceModal({ open: false, featureId: "" })}
+        onClose={() =>
+          setFeatureChoiceModal({ open: false, featureId: "", targetClassKey: "", targetSubclassKey: "", choiceKey: "" })
+        }
         title={activeChoiceFeature?.name || "Choose Option"}
         helperText={
-          characterClass === "barbarian" &&
-          subclass === "totemWarrior" &&
+          String(featureChoiceModal?.targetClassKey || characterClass || "") === "barbarian" &&
+          String(featureChoiceModal?.targetSubclassKey || subclass || "") === "totemWarrior" &&
           ["totem_spirit", "aspect_of_the_beast", "totemic_attunement"].includes(String(activeChoiceFeature?.id || ""))
             ? "Choose one animal. The selected animal is shown in the feature description, and the other options stay tucked inside this picker."
             : "Choose one option. This feature is untracked (no uses are tracked here)."
@@ -5510,16 +6148,16 @@ const FeaturesAndTrackables = () => {
         options={activeChoiceFeature?.untrackedChoiceOptions || []}
         selectedId={getFeatureChoice(
           untrackedFeatureChoices,
-          subclassChoiceKey,
+          String(featureChoiceModal?.choiceKey || subclassChoiceKey),
           String(featureChoiceModal?.featureId || "")
         )}
         onSelect={(optionId) => {
           const featureId = String(featureChoiceModal?.featureId || "");
           if (!featureId) return;
           setUntrackedFeatureChoices((prev) =>
-            setFeatureChoice(prev, subclassChoiceKey, featureId, optionId)
+            setFeatureChoice(prev, String(featureChoiceModal?.choiceKey || subclassChoiceKey), featureId, optionId)
           );
-          setFeatureChoiceModal({ open: false, featureId: "" });
+          setFeatureChoiceModal({ open: false, featureId: "", targetClassKey: "", targetSubclassKey: "", choiceKey: "" });
         }}
       />
 
