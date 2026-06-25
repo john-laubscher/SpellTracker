@@ -38,6 +38,13 @@ import {
   getTotalCharacterLevel,
   getUnmetMulticlassRequirements,
 } from "../utils/multiclassing";
+import {
+  canClassChooseFightingStyle,
+  classSupportsFightingStyle,
+  getDefaultFightingStyleForClass,
+  getFightingStyleForClass,
+  normalizeFightingStylesByClass,
+} from "../utils/fightingStyles";
 
 export const CharacterCreationForm = (props) => {
   const NO_RACE = "noRace";
@@ -218,6 +225,40 @@ export const CharacterCreationForm = (props) => {
     return Array.isArray(raw) ? raw : [];
   }, []);
 
+  const getFightingStyleOptionsForClass = React.useCallback(
+    (classKey) => {
+      if (classKey === "fighter") return fighterFightingStyleOptions;
+      if (classKey === "paladin") return paladinFightingStyleOptions;
+      if (classKey === "ranger") return rangerFightingStyleOptions;
+      return [];
+    },
+    [fighterFightingStyleOptions, paladinFightingStyleOptions, rangerFightingStyleOptions]
+  );
+
+  const primaryFightingStyle = React.useMemo(
+    () => getFightingStyleForClass(characterInfo, characterInfo?.characterClass),
+    [characterInfo]
+  );
+  const secondaryFightingStyle = React.useMemo(
+    () => getFightingStyleForClass(characterInfo, characterInfo?.secondaryCharacterClass),
+    [characterInfo]
+  );
+  const primaryFightingStyleOptions = React.useMemo(
+    () => getFightingStyleOptionsForClass(characterInfo?.characterClass),
+    [characterInfo?.characterClass, getFightingStyleOptionsForClass]
+  );
+  const secondaryFightingStyleOptions = React.useMemo(
+    () => getFightingStyleOptionsForClass(characterInfo?.secondaryCharacterClass),
+    [characterInfo?.secondaryCharacterClass, getFightingStyleOptionsForClass]
+  );
+  const showPrimaryFightingStyleSelect =
+    primaryFightingStyleOptions.length > 0 &&
+    canClassChooseFightingStyle(characterInfo?.characterClass, primaryClassLevel);
+  const showSecondaryFightingStyleSelect =
+    isMulticlassed &&
+    secondaryFightingStyleOptions.length > 0 &&
+    canClassChooseFightingStyle(characterInfo?.secondaryCharacterClass, secondaryClassLevel);
+
   useEffect(() => {
     if (characterInfo.race === "Dragonborn") {
       if (!dragonbornAncestryOptions.includes(characterInfo.draconicAncestry) && dragonbornAncestryOptions.length > 0) {
@@ -281,43 +322,83 @@ export const CharacterCreationForm = (props) => {
   ]);
 
   useEffect(() => {
-    if (characterInfo.characterClass === "fighter") {
-      if (!characterInfo.fightingStyle && fighterFightingStyleOptions.length > 0) {
-        setCharacterInfo((prev) => ({ ...prev, fightingStyle: fighterFightingStyleOptions[0] }));
-      }
-      return;
-    }
+    setCharacterInfo((prev) => {
+      const nextMap = normalizeFightingStylesByClass(prev?.fightingStylesByClass);
+      let changed = false;
 
-    if (characterInfo.characterClass === "paladin") {
-      if (!characterInfo.fightingStyle && paladinFightingStyleOptions.length > 0) {
-        const preferred = paladinFightingStyleOptions.includes("Defense")
-          ? "Defense"
-          : paladinFightingStyleOptions[0];
-        setCharacterInfo((prev) => ({ ...prev, fightingStyle: preferred }));
+      const legacyPrimaryClassKey = String(prev?.characterClass || "");
+      const legacyPrimaryStyle = String(prev?.fightingStyle || "").trim();
+      if (legacyPrimaryClassKey && legacyPrimaryClassKey !== NO_CLASS && legacyPrimaryStyle && !nextMap[legacyPrimaryClassKey]) {
+        nextMap[legacyPrimaryClassKey] = legacyPrimaryStyle;
+        changed = true;
       }
-      return;
-    }
 
-    if (characterInfo.characterClass === "ranger") {
-      if (!characterInfo.fightingStyle && rangerFightingStyleOptions.length > 0) {
-        const preferred = rangerFightingStyleOptions.includes("Archery")
-          ? "Archery"
-          : rangerFightingStyleOptions[0];
-        setCharacterInfo((prev) => ({ ...prev, fightingStyle: preferred }));
+      const activeClassConfigs = [
+        { classKey: String(prev?.characterClass || ""), level: primaryClassLevel },
+        isMulticlassed
+          ? { classKey: String(prev?.secondaryCharacterClass || ""), level: secondaryClassLevel }
+          : { classKey: "", level: 0 },
+      ];
+      const activeStyleClassKeys = new Set();
+
+      activeClassConfigs.forEach(({ classKey, level }) => {
+        if (!classSupportsFightingStyle(classKey)) return;
+        activeStyleClassKeys.add(classKey);
+        if (!canClassChooseFightingStyle(classKey, level)) {
+          if (nextMap[classKey]) {
+            delete nextMap[classKey];
+            changed = true;
+          }
+          return;
+        }
+
+        if (!nextMap[classKey]) {
+          const defaultStyle = getDefaultFightingStyleForClass(classKey, getFightingStyleOptionsForClass(classKey));
+          if (defaultStyle) {
+            nextMap[classKey] = defaultStyle;
+            changed = true;
+          }
+        }
+      });
+
+      ["fighter", "paladin", "ranger"].forEach((classKey) => {
+        if (activeStyleClassKeys.has(classKey)) return;
+        if (nextMap[classKey]) {
+          delete nextMap[classKey];
+          changed = true;
+        }
+      });
+
+      const nextPrimaryStyle =
+        legacyPrimaryClassKey && legacyPrimaryClassKey !== NO_CLASS ? String(nextMap[legacyPrimaryClassKey] || "") : "";
+      if (String(prev?.fightingStyle || "") !== nextPrimaryStyle) {
+        changed = true;
       }
-      return;
-    }
 
-    if (characterInfo.fightingStyle || characterInfo.additionalFightingStyle) {
-      setCharacterInfo((prev) => ({ ...prev, fightingStyle: "", additionalFightingStyle: "" }));
-    }
+      const hasActiveFighterClass = activeClassConfigs.some(({ classKey }) => classKey === "fighter");
+      const nextAdditionalFightingStyle = hasActiveFighterClass ? String(prev?.additionalFightingStyle || "") : "";
+      if (String(prev?.additionalFightingStyle || "") !== nextAdditionalFightingStyle) {
+        changed = true;
+      }
+
+      if (!changed) return prev;
+
+      return {
+        ...prev,
+        fightingStylesByClass: nextMap,
+        fightingStyle: nextPrimaryStyle,
+        additionalFightingStyle: nextAdditionalFightingStyle,
+      };
+    });
   }, [
-    characterInfo.characterClass,
-    characterInfo.fightingStyle,
-    characterInfo.additionalFightingStyle,
-    fighterFightingStyleOptions,
-    paladinFightingStyleOptions,
-    rangerFightingStyleOptions,
+    characterInfo?.characterClass,
+    characterInfo?.secondaryCharacterClass,
+    characterInfo?.fightingStyle,
+    characterInfo?.additionalFightingStyle,
+    getFightingStyleOptionsForClass,
+    isMulticlassed,
+    primaryClassLevel,
+    secondaryClassLevel,
     setCharacterInfo,
   ]);
 
@@ -414,15 +495,23 @@ export const CharacterCreationForm = (props) => {
 	      if (name === "characterClass") {
           const previousClassKey = String(prev.characterClass || "");
           const carriedLevel = Math.max(1, getClassLevel(prev, previousClassKey) || Number(prev.characterLevel) || 1);
+          const fightingStylesByClass = normalizeFightingStylesByClass(prev?.fightingStylesByClass);
           if (previousClassKey && previousClassKey !== NO_CLASS) {
             delete classLevels[previousClassKey];
+            delete fightingStylesByClass[previousClassKey];
           }
           if (String(value || "") && String(value || "") !== NO_CLASS) {
             classLevels[String(value)] = carriedLevel;
           }
 	        next.subclass = NO_SUBCLASS;
           next.fightingStyle = "";
-          next.additionalFightingStyle = "";
+          next.fightingStylesByClass = fightingStylesByClass;
+          if (
+            previousClassKey === "fighter" &&
+            String(prev?.secondaryCharacterClass || "") !== "fighter"
+          ) {
+            next.additionalFightingStyle = "";
+          }
           next.genieKind = "";
 	      }
 
@@ -430,15 +519,21 @@ export const CharacterCreationForm = (props) => {
           const previousSecondaryClassKey = String(prev.secondaryCharacterClass || "");
           const carriedLevel =
             Math.max(1, getClassLevel(prev, previousSecondaryClassKey) || Number(prev.secondaryCharacterLevel) || 1);
+          const fightingStylesByClass = normalizeFightingStylesByClass(next?.fightingStylesByClass || prev?.fightingStylesByClass);
           if (previousSecondaryClassKey && previousSecondaryClassKey !== NO_CLASS) {
             delete classLevels[previousSecondaryClassKey];
+            delete fightingStylesByClass[previousSecondaryClassKey];
           }
           next.secondarySubclass = NO_SUBCLASS;
+          next.fightingStylesByClass = fightingStylesByClass;
           if (String(value || "") && String(value || "") !== NO_CLASS) {
             classLevels[String(value)] = carriedLevel;
             next.secondaryCharacterLevel = carriedLevel;
           } else {
             next.secondaryCharacterLevel = 1;
+            if (previousSecondaryClassKey === "fighter" && String(prev?.characterClass || "") !== "fighter") {
+              next.additionalFightingStyle = "";
+            }
           }
         }
 
@@ -451,18 +546,28 @@ export const CharacterCreationForm = (props) => {
           next.genieKind = "";
 	      }
 
-        if (name === "fightingStyle" && value && value === prev.additionalFightingStyle) {
+        if (
+          name === "fightingStyle" &&
+          value &&
+          value === prev.additionalFightingStyle
+        ) {
           next.additionalFightingStyle = "";
         }
 
         if (name === "multiclassEnabled" && !value) {
           const previousSecondaryClassKey = String(prev.secondaryCharacterClass || "");
+          const fightingStylesByClass = normalizeFightingStylesByClass(next?.fightingStylesByClass || prev?.fightingStylesByClass);
           if (previousSecondaryClassKey && previousSecondaryClassKey !== NO_CLASS) {
             delete classLevels[previousSecondaryClassKey];
+            delete fightingStylesByClass[previousSecondaryClassKey];
           }
           next.secondaryCharacterClass = NO_CLASS;
           next.secondarySubclass = NO_SUBCLASS;
           next.secondaryCharacterLevel = 1;
+          next.fightingStylesByClass = fightingStylesByClass;
+          if (previousSecondaryClassKey === "fighter" && String(prev?.characterClass || "") !== "fighter") {
+            next.additionalFightingStyle = "";
+          }
         }
 
         next.classLevels = classLevels;
@@ -496,9 +601,53 @@ export const CharacterCreationForm = (props) => {
     });
   }, [setCharacterInfo, updateLevelDrivenFields]);
 
+  const applyFightingStyleChange = React.useCallback((classKey, value) => {
+    const normalizedClassKey = String(classKey || "");
+    const normalizedValue = String(value || "");
+    if (!normalizedClassKey) return;
+
+    setCharacterInfo((prev) => {
+      const nextMap = normalizeFightingStylesByClass(prev?.fightingStylesByClass);
+      if (normalizedValue) {
+        nextMap[normalizedClassKey] = normalizedValue;
+      } else {
+        delete nextMap[normalizedClassKey];
+      }
+
+      const next = {
+        ...prev,
+        fightingStylesByClass: nextMap,
+        fightingStyle:
+          normalizedClassKey === String(prev?.characterClass || "")
+            ? normalizedValue
+            : String(prev?.fightingStyle || ""),
+      };
+
+      if (normalizedClassKey === "fighter" && normalizedValue && normalizedValue === prev?.additionalFightingStyle) {
+        next.additionalFightingStyle = "";
+      }
+
+      return next;
+    });
+  }, [setCharacterInfo]);
+
 	  const handleChange = (event) => {
 	    const { name, value, checked, type } = event.target;
       const nextValue = type === "checkbox" ? checked : value;
+
+    if (String(name || "").startsWith("fightingStyle:")) {
+      const targetClassKey = String(name || "").slice("fightingStyle:".length);
+      applyFightingStyleChange(targetClassKey, nextValue);
+
+      if (String(nextValue || "") === "Blessed Warrior" && targetClassKey === "paladin") {
+        setBlessedWarriorModalOpen(true);
+      }
+
+      if (String(nextValue || "") === "Druidic Warrior" && targetClassKey === "ranger") {
+        setDruidicWarriorModalOpen(true);
+      }
+      return;
+    }
 
     if (
       name === "characterClass" &&
@@ -913,27 +1062,19 @@ export const CharacterCreationForm = (props) => {
               </FormControl>
             </Box>
           ) : null}
-
-          {(characterInfo.characterClass === "fighter" && fighterFightingStyleOptions.length > 0) ||
-          (characterInfo.characterClass === "paladin" && paladinFightingStyleOptions.length > 0) ||
-          (characterInfo.characterClass === "ranger" && rangerFightingStyleOptions.length > 0) ? (
+          {showPrimaryFightingStyleSelect ? (
             <Box sx={{ mt: 1 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="fighting-style-select-label">Fighting Style</InputLabel>
                 <Select
                   labelId="fighting-style-select-label"
                   id="fighting-style-select"
-                  value={characterInfo.fightingStyle || ""}
+                  value={primaryFightingStyle || ""}
                   label="Fighting Style"
-                  name="fightingStyle"
+                  name={`fightingStyle:${characterInfo.characterClass}`}
                   onChange={handleChange}
                 >
-                  {(characterInfo.characterClass === "fighter"
-                    ? fighterFightingStyleOptions
-                    : characterInfo.characterClass === "paladin"
-                      ? paladinFightingStyleOptions
-                      : rangerFightingStyleOptions
-                  ).map((style) => (
+                  {primaryFightingStyleOptions.map((style) => (
                     <MenuItem key={style} value={style}>
                       {style}
                     </MenuItem>
@@ -942,6 +1083,28 @@ export const CharacterCreationForm = (props) => {
               </FormControl>
             </Box>
           ) : null}
+          {showSecondaryFightingStyleSelect ? (
+            <Box sx={{ mt: 1 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="secondary-fighting-style-select-label">2nd Class Fighting Style</InputLabel>
+                <Select
+                  labelId="secondary-fighting-style-select-label"
+                  id="secondary-fighting-style-select"
+                  value={secondaryFightingStyle || ""}
+                  label="2nd Class Fighting Style"
+                  name={`fightingStyle:${characterInfo.secondaryCharacterClass}`}
+                  onChange={handleChange}
+                >
+                  {secondaryFightingStyleOptions.map((style) => (
+                    <MenuItem key={style} value={style}>
+                      {style}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          ) : null}
+
 	      </Box>
 
       <BlessedWarriorCantripsModal

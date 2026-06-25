@@ -4,6 +4,7 @@ import {
   createEmptySpellLevels,
   normalizeSpellCollectionsByClass,
 } from "./spellcastingState";
+import { normalizeFightingStylesByClass } from "./fightingStyles";
 
 const normalizeObject = (value, fallback = {}) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
@@ -86,6 +87,15 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     safeOverrides.subrace,
     safeOverrides.draconicAncestry
   );
+  const fightingStylesByClass = normalizeFightingStylesByClass(safeOverrides.fightingStylesByClass);
+  const legacyFightingStyle = String(safeOverrides.fightingStyle || "");
+  if (
+    primaryCharacterClass !== "noClass" &&
+    legacyFightingStyle &&
+    !fightingStylesByClass[primaryCharacterClass]
+  ) {
+    fightingStylesByClass[primaryCharacterClass] = legacyFightingStyle;
+  }
 
   const preparedSpellsByClass = normalizeSpellCollectionsByClass(safeOverrides.preparedSpellsByClass);
   if (
@@ -121,7 +131,8 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     markOfWardingDailyCast: String(safeOverrides.markOfWardingDailyCast || ""),
     divineSoulAffinity: String(safeOverrides.divineSoulAffinity || ""),
     lunarEmbodimentPhase: String(safeOverrides.lunarEmbodimentPhase || ""),
-    fightingStyle: String(safeOverrides.fightingStyle || ""),
+    fightingStyle: String(fightingStylesByClass[primaryCharacterClass] || legacyFightingStyle || ""),
+    fightingStylesByClass,
     additionalFightingStyle: String(safeOverrides.additionalFightingStyle || ""),
     characterClass: primaryCharacterClass,
     subclass: safeOverrides.subclass || "noSubclass",

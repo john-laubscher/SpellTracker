@@ -13,6 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import { CharacterInfoContext } from "../../Contexts/Context";
 import classesData from "../../components/ClassesData";
+import { getFightingStyleForClass } from "../../utils/fightingStyles";
 import MagicalSecretsStatus from "./MagicalSecretsStatus";
 
 const AdditionalFightingStyleModal = ({ open, onClose }) => {
@@ -23,7 +24,7 @@ const AdditionalFightingStyleModal = ({ open, onClose }) => {
     return Array.isArray(raw) ? raw : [];
   }, []);
 
-  const primaryStyle = String(characterInfo?.fightingStyle || "");
+  const primaryStyle = String(getFightingStyleForClass(characterInfo, "fighter") || "");
   const selected = String(characterInfo?.additionalFightingStyle || "");
 
   const toggle = (style) => {
