@@ -41,15 +41,16 @@ import RacialCantripSelectionModal from "./RacialCantripSelectionModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
-import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
 import { getGenieExpandedSpellOptions } from "../../utils/genieData";
 import {
+  getClassEntries,
   getSpellSlotSummary,
   getSpellcastingEntries,
   getSpellcastingEntryForSlot,
 } from "../../utils/multiclassing";
+import { getFightingStyleForClass } from "../../utils/fightingStyles";
 import {
   getPreparedSpellsForClass,
   updatePreparedSpellsForClass,
@@ -442,6 +443,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   }, [baseCharacterInfo, spellcastingEntry]);
   const activeSpellClassKey = String(spellcastingEntry?.classKey || characterInfo?.characterClass || "");
   const spellSlotSummary = React.useMemo(() => getSpellSlotSummary(baseCharacterInfo), [baseCharacterInfo]);
+  const classEntries = React.useMemo(() => getClassEntries(baseCharacterInfo), [baseCharacterInfo]);
   const isUnifiedMulticlassTracker =
     !detailMode && allSpellcastingEntries.length > 1 && String(classSlot || "primary") === "primary";
   const rawClassKey = characterInfo?.characterClass;
@@ -626,15 +628,39 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     characterInfo?.subclass === "nature" &&
     Number(characterInfo?.characterLevel || 0) >= 1;
 
-  const hasBlessedWarrior =
-    characterInfo?.characterClass === "paladin" &&
-    String(characterInfo?.fightingStyle || "") === "Blessed Warrior" &&
-    Number(characterInfo?.characterLevel || 0) >= 2;
+  const activeFightingStyle = getFightingStyleForClass(baseCharacterInfo, characterInfo?.characterClass);
+  const hasBlessedWarriorAnywhere = React.useMemo(
+    () =>
+      classEntries.some(
+        (entry) =>
+          String(entry?.classKey || "") === "paladin" &&
+          Number(entry?.level || 0) >= 2 &&
+          String(getFightingStyleForClass(baseCharacterInfo, "paladin") || "") === "Blessed Warrior"
+      ),
+    [baseCharacterInfo, classEntries]
+  );
+  const hasDruidicWarriorAnywhere = React.useMemo(
+    () =>
+      classEntries.some(
+        (entry) =>
+          String(entry?.classKey || "") === "ranger" &&
+          Number(entry?.level || 0) >= 2 &&
+          String(getFightingStyleForClass(baseCharacterInfo, "ranger") || "") === "Druidic Warrior"
+      ),
+    [baseCharacterInfo, classEntries]
+  );
 
-  const hasDruidicWarrior =
-    characterInfo?.characterClass === "ranger" &&
-    String(characterInfo?.fightingStyle || "") === "Druidic Warrior" &&
-    Number(characterInfo?.characterLevel || 0) >= 2;
+  const hasBlessedWarrior = isUnifiedMulticlassTracker
+    ? hasBlessedWarriorAnywhere
+    : characterInfo?.characterClass === "paladin" &&
+      String(activeFightingStyle || "") === "Blessed Warrior" &&
+      Number(characterInfo?.characterLevel || 0) >= 2;
+
+  const hasDruidicWarrior = isUnifiedMulticlassTracker
+    ? hasDruidicWarriorAnywhere
+    : characterInfo?.characterClass === "ranger" &&
+      String(activeFightingStyle || "") === "Druidic Warrior" &&
+      Number(characterInfo?.characterLevel || 0) >= 2;
 
   const hasDraconicGift =
     characterInfo?.characterClass === "ranger" &&
@@ -5662,9 +5688,6 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     if (hasReaper) cantripFeatureSources.push("Reaper");
     if (hasAcolyteOfNature) cantripFeatureSources.push("Acolyte of Nature");
 
-    const druidicSelectedCount = druidicWarriorCantrips.length;
-    const blessedSelectedCount = blessedWarriorCantrips.length;
-
     const cantripHeading = (() => {
       if (slotCount > 0) {
         if (hasArcaneTrickster) return `Cantrips Known: ${slotCount} (includes Mage Hand)`;
@@ -5683,8 +5706,6 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
 
       const hasMultipleSources = cantripFeatureSources.length > 1 || hasExtraPreparedCantrips;
       if (!hasMultipleSources && cantripFeatureSources.length <= 1) {
-        if (hasDruidicWarrior) return `Druidic Warrior Cantrips (${druidicSelectedCount}/2)`;
-        if (hasBlessedWarrior) return `Blessed Warrior Cantrips (${blessedSelectedCount}/2)`;
         if (hasDraconicGift) return "Draconic Gift Cantrips";
         if (hasSwarmkeeperMagic) return "Swarmkeeper Magic Cantrips";
       }
@@ -5729,24 +5750,6 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
               }}>
                 {heading}
               </Typography>
-              {isCantrips && hasDruidicWarrior ? (
-                <Tooltip arrow title="Choose Druidic Warrior cantrips (druid spell list)">
-                  <IconButton
-                    size="small"
-                    aria-label="Choose Druidic Warrior cantrips"
-                    onClick={() => setDwPickerModalOpen(true)}
-                    sx={{
-                      p: 0.25,
-                      color: "rgba(93, 64, 55, 0.92)",
-                      border: "1px solid rgba(93, 64, 55, 0.22)",
-                      backgroundColor: "rgba(93, 64, 55, 0.06)",
-                      "&:hover": { backgroundColor: "rgba(93, 64, 55, 0.10)" },
-                    }}
-                  >
-                    <BowIcon fontSize="inherit" />
-                  </IconButton>
-                </Tooltip>
-              ) : null}
               {isCantrips && hasGuidingWhispers ? (
                 <Tooltip
                   arrow
@@ -5789,27 +5792,13 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
            {renderArcanaInitiateCantripsForLevel(numericalSpellLevel)}
            {renderRacialCantripsForLevel(numericalSpellLevel)}
            {renderBlessedWarriorCantripsInline(numericalSpellLevel)}
-           {isCantrips && hasBlessedWarrior ? (
-             <Box sx={{ mb: 0.5 }}>
-               <Tooltip arrow title="Choose Blessed Warrior cantrips (cleric spell list)">
-                 <Button
-                   size="small"
-                   variant="outlined"
-                   onClick={() => setBwPickerModalOpen(true)}
-                   sx={{ textTransform: "none", fontSize: "12px" }}
-                 >
-                   Choose Blessed Warrior cantrips
-                 </Button>
-               </Tooltip>
-              {isCantrips && hasCelestialBonusCantrips ? (
-                <Tooltip
-                  arrow
-                  title="Light and Sacred Flame are granted by The Celestial and don’t count against cantrips known."
-                >
-                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
-                </Tooltip>
-              ) : null}
-             </Box>
+           {isCantrips && hasCelestialBonusCantrips ? (
+             <Tooltip
+               arrow
+               title="Light and Sacred Flame are granted by The Celestial and do not count against cantrips known."
+             >
+               <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+             </Tooltip>
            ) : null}
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
            {renderReaperCantripForLevel(numericalSpellLevel)}

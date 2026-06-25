@@ -55,6 +55,7 @@ import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import AdditionalFightingStyleModal from "./AdditionalFightingStyleModal";
 import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
+import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import RuneKnightRunesModal from "./RuneKnightRunesModal";
 import WarlockInvocationsModal from "./WarlockInvocationsModal";
 import WarlockPactBoonModal from "./WarlockPactBoonModal";
@@ -99,6 +100,7 @@ import {
 } from "../warlockOptionsData";
 import { GENIE_KIND_OPTIONS, getGenieBenefitsSummaryLines, getGenieKindData } from "../../utils/genieData";
 import { getClassEntries, getTotalCharacterLevel } from "../../utils/multiclassing";
+import { getFightingStyleForClass } from "../../utils/fightingStyles";
 
 const RACIAL_SPELL_SWAP_CLASS_KEYS = ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"];
 
@@ -1716,7 +1718,6 @@ const FeaturesAndTrackables = () => {
     subrace,
     draconicAncestry,
     halfElfVersatility,
-    fightingStyle,
     additionalFightingStyle,
   } = characterInfo;
   const { auth } = useContext(AuthContext);
@@ -1786,6 +1787,7 @@ const FeaturesAndTrackables = () => {
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
   const [additionalFightingStyleModalOpen, setAdditionalFightingStyleModalOpen] = React.useState(false);
   const [blessedWarriorCantripsModalOpen, setBlessedWarriorCantripsModalOpen] = React.useState(false);
+  const [druidicWarriorCantripsModalOpen, setDruidicWarriorCantripsModalOpen] = React.useState(false);
   const [runeKnightRunesModalOpen, setRuneKnightRunesModalOpen] = React.useState(false);
   const [warlockInvocationsModalOpen, setWarlockInvocationsModalOpen] = React.useState(false);
   const [warlockPactBoonModalOpen, setWarlockPactBoonModalOpen] = React.useState(false);
@@ -1948,16 +1950,6 @@ const FeaturesAndTrackables = () => {
     characterClass === "fighter" &&
     subclass === "champion" &&
     Number(fighterLevel || 0) >= 10;
-
-  const hasBlessedWarrior =
-    characterClass === "paladin" &&
-    String(fightingStyle || "") === "Blessed Warrior" &&
-    Number(characterLevel || 0) >= 2;
-
-  const hasDruidicWarrior =
-    characterClass === "ranger" &&
-    String(fightingStyle || "") === "Druidic Warrior" &&
-    Number(characterLevel || 0) >= 2;
 
   const blessedWarriorCantripCount = Array.isArray(characterInfo?.blessedWarriorCantrips)
     ? characterInfo.blessedWarriorCantrips.length
@@ -2149,9 +2141,30 @@ const FeaturesAndTrackables = () => {
     [secondaryClassEntry]
   );
 
+  const getClassFightingStyle = React.useCallback(
+    (targetClassKey) => getFightingStyleForClass(characterInfo, targetClassKey),
+    [characterInfo]
+  );
+  const hasBlessedWarriorForClass = React.useCallback(
+    (targetClassKey, targetLevel) =>
+      targetClassKey === "paladin" &&
+      String(getClassFightingStyle(targetClassKey) || "") === "Blessed Warrior" &&
+      Number(targetLevel || 0) >= 2,
+    [getClassFightingStyle]
+  );
+  const hasDruidicWarriorForClass = React.useCallback(
+    (targetClassKey, targetLevel) =>
+      targetClassKey === "ranger" &&
+      String(getClassFightingStyle(targetClassKey) || "") === "Druidic Warrior" &&
+      Number(targetLevel || 0) >= 2,
+    [getClassFightingStyle]
+  );
+
   const augmentDisplayedClassFeatures = React.useCallback(
     (base, targetClassKey, targetLevel) => {
-      if (targetClassKey === "fighter" && (fightingStyle || additionalFightingStyle)) {
+      const selectedFightingStyle = getClassFightingStyle(targetClassKey);
+
+      if (targetClassKey === "fighter" && (selectedFightingStyle || additionalFightingStyle)) {
         return base.map((feature) => {
           if (feature?.id !== "fighting_style") return feature;
           const descLines = Array.isArray(feature?.desc)
@@ -2160,7 +2173,7 @@ const FeaturesAndTrackables = () => {
               ? [feature.desc]
               : [];
           const prefixes = [];
-          if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+          if (selectedFightingStyle) prefixes.push(`Class Fighting Style: ${selectedFightingStyle}.`);
           if (additionalFightingStyle) prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
           return {
             ...feature,
@@ -2169,7 +2182,7 @@ const FeaturesAndTrackables = () => {
         });
       }
 
-      if (targetClassKey === "paladin" && fightingStyle) {
+      if (targetClassKey === "paladin" && selectedFightingStyle) {
         const chosenCantrips = Array.isArray(characterInfo?.blessedWarriorCantrips)
           ? characterInfo.blessedWarriorCantrips
           : [];
@@ -2184,8 +2197,8 @@ const FeaturesAndTrackables = () => {
             : typeof feature?.desc === "string"
               ? [feature.desc]
               : [];
-          const prefixes = [`Fighting Style: ${fightingStyle}.`];
-          if (hasBlessedWarrior) {
+          const prefixes = [`Fighting Style: ${selectedFightingStyle}.`];
+          if (hasBlessedWarriorForClass(targetClassKey, targetLevel)) {
             prefixes.push(
               chosenNames.length > 0
                 ? `Blessed Warrior cantrips: ${chosenNames.join(", ")}.`
@@ -2286,8 +2299,8 @@ const FeaturesAndTrackables = () => {
               : [];
 
           if (feature?.id === "fighting_style") {
-            const prefixes = fightingStyle ? [`Fighting Style: ${fightingStyle}.`] : [];
-            if (hasDruidicWarrior) {
+            const prefixes = selectedFightingStyle ? [`Fighting Style: ${selectedFightingStyle}.`] : [];
+            if (hasDruidicWarriorForClass(targetClassKey, targetLevel)) {
               prefixes.push(
                 chosenNames.length > 0
                   ? `Druidic Warrior cantrips: ${chosenNames.join(", ")}.`
@@ -2344,9 +2357,9 @@ const FeaturesAndTrackables = () => {
       characterInfo?.wizardSignatureSpells,
       characterInfo?.wizardSpellMastery,
       characterInfo?.wizardSpellbook,
-      fightingStyle,
-      hasBlessedWarrior,
-      hasDruidicWarrior,
+      getClassFightingStyle,
+      hasBlessedWarriorForClass,
+      hasDruidicWarriorForClass,
       rangerFavoredEnemyOptions,
       rangerNaturalExplorerOptions,
     ]
@@ -2378,7 +2391,8 @@ const FeaturesAndTrackables = () => {
               ? [feature.desc]
               : [];
           const prefixes = [];
-          if (fightingStyle) prefixes.push(`Class Fighting Style: ${fightingStyle}.`);
+          const fighterStyle = getClassFightingStyle("fighter");
+          if (fighterStyle) prefixes.push(`Class Fighting Style: ${fighterStyle}.`);
           if (additionalFightingStyle) {
             prefixes.push(`Champion Fighting Style: ${additionalFightingStyle}.`);
           } else {
@@ -2589,7 +2603,7 @@ const FeaturesAndTrackables = () => {
       characterInfo?.arcaneArcherLoreCantrip?.name,
       characterInfo?.genieKind,
       characterInfo?.runeKnightRunes,
-      fightingStyle,
+      getClassFightingStyle,
       hasArcaneArcherLore,
       hasChampionAdditionalFightingStyle,
       hasRuneKnight,
@@ -3494,7 +3508,7 @@ const FeaturesAndTrackables = () => {
         );
       }
 
-      if (targetClassKey === "paladin" && hasBlessedWarrior && feature?.id === "fighting_style") {
+      if (targetClassKey === "paladin" && hasBlessedWarriorForClass(targetClassKey, targetLevel) && feature?.id === "fighting_style") {
         const isOver = blessedWarriorCantripCount > 2;
         const isUnder = blessedWarriorCantripCount < 2;
 
@@ -3502,6 +3516,40 @@ const FeaturesAndTrackables = () => {
           <Tooltip arrow title={`Choose Blessed Warrior cantrips (${blessedWarriorCantripCount}/2)`}>
             <IconButton size="small" aria-label="Choose Blessed Warrior cantrips" onClick={() => setBlessedWarriorCantripsModalOpen(true)} sx={{ ml: 0.25, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(93, 64, 55, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(2, 132, 199, 0.10)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)" } }}>
               <MenuBookIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        );
+      }
+
+      if (targetClassKey === "ranger" && hasDruidicWarriorForClass(targetClassKey, targetLevel) && feature?.id === "fighting_style") {
+        const selectedCount = Array.isArray(characterInfo?.druidicWarriorCantrips)
+          ? characterInfo.druidicWarriorCantrips.length
+          : 0;
+        const isOver = selectedCount > 2;
+        const isUnder = selectedCount < 2;
+
+        return (
+          <Tooltip arrow title={`Choose Druidic Warrior cantrips (${selectedCount}/2)`}>
+            <IconButton
+              size="small"
+              aria-label="Choose Druidic Warrior cantrips"
+              onClick={() => setDruidicWarriorCantripsModalOpen(true)}
+              sx={{
+                ml: 0.25,
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e",
+                border: "1px solid rgba(93, 64, 55, 0.25)",
+                backgroundColor: isOver
+                  ? "rgba(194, 65, 12, 0.10)"
+                  : isUnder
+                    ? "rgba(2, 132, 199, 0.10)"
+                    : "rgba(20, 184, 166, 0.10)",
+                "&:hover": {
+                  backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : "rgba(244, 233, 221, 0.85)",
+                },
+              }}
+            >
+              <BowIcon fontSize="inherit" />
             </IconButton>
           </Tooltip>
         );
@@ -3755,12 +3803,14 @@ const FeaturesAndTrackables = () => {
       characterInfo?.arcaneShotOptions,
       battleMasterManeuverCount,
       characterInfo?.arcaneShotBonusOptions,
+      characterInfo?.druidicWarriorCantrips,
       characterInfo?.divineSoulAffinity,
       characterInfo?.lunarEmbodimentPhase,
       characterInfo?.metamagicOptions,
       currentLandType,
       fighterLevel,
-      hasBlessedWarrior,
+      hasBlessedWarriorForClass,
+      hasDruidicWarriorForClass,
       openFeatureChoiceModal,
       openLandTypeMenu,
       renderWarlockFeatureTrailingControls,
@@ -4319,7 +4369,7 @@ const FeaturesAndTrackables = () => {
                 );
                 if (sharedControls) return sharedControls;
 
-                if (hasBlessedWarrior && feature?.id === "fighting_style") {
+                if (hasBlessedWarriorForClass(characterClass, characterLevel) && feature?.id === "fighting_style") {
                   const isOver = blessedWarriorCantripCount > 2;
                   const isUnder = blessedWarriorCantripCount < 2;
 
@@ -5333,6 +5383,11 @@ const FeaturesAndTrackables = () => {
       <BlessedWarriorCantripsModal
         open={blessedWarriorCantripsModalOpen}
         onClose={() => setBlessedWarriorCantripsModalOpen(false)}
+      />
+
+      <DruidicWarriorCantripsModal
+        open={druidicWarriorCantripsModalOpen}
+        onClose={() => setDruidicWarriorCantripsModalOpen(false)}
       />
 
       <ReaperCantripModal
