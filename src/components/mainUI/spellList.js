@@ -37,6 +37,7 @@ import BlessedWarriorCantripsModal from "./BlessedWarriorCantripsModal";
 import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
 import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import CelestialBonusCantripSwapModal from "./CelestialBonusCantripSwapModal";
+import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
 import RacialCantripSelectionModal from "./RacialCantripSelectionModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
@@ -138,6 +139,8 @@ const MARK_OF_STORM_CANTRIP_TAG = "half_elf_mark_of_storm_headwinds";
 const LOTUSDEN_CANTRIP_TAG = "halfling_lotusden_children_of_the_woods";
 const MARK_OF_HOSPITALITY_CANTRIP_TAG = "halfling_mark_of_hospitality_innkeepers_magic";
 const SPELLSMITH_CANTRIP_TAG = "human_mark_of_making_spellsmith";
+const ARCANE_ARCHER_LORE_CANTRIP_TOOLTIP =
+  "Arcane Archer Lore grants this cantrip and it does not count against cantrips known.";
 
 const humanizeSpellIndex = (idx) => {
   const raw = String(idx || "")
@@ -587,9 +590,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     : [];
 
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
-
-  const hideFighterSpellSection =
-    effectiveIsNonCaster && isFighter && !(isBattleMaster && showManeuversInSpellTracker);
+  const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
 
   const isMonk = String(characterInfo?.characterClass || "") === "monk";
 
@@ -662,6 +663,29 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
       String(activeFightingStyle || "") === "Druidic Warrior" &&
       Number(characterInfo?.characterLevel || 0) >= 2;
 
+  const hasArcaneArcherLoreAnywhere = React.useMemo(
+    () =>
+      classEntries.some(
+        (entry) =>
+          String(entry?.classKey || "") === "fighter" &&
+          String(entry?.subclassKey || "") === "arcaneArcher" &&
+          Number(entry?.level || 0) >= 3
+      ),
+    [classEntries]
+  );
+
+  const hasArcaneArcherLore =
+    hasArcaneArcherLoreAnywhere ||
+    (characterInfo?.characterClass === "fighter" &&
+      String(characterInfo?.subclass || "") === "arcaneArcher" &&
+      fighterLevel >= 3);
+
+  const hideFighterSpellSection =
+    effectiveIsNonCaster &&
+    isFighter &&
+    !(isBattleMaster && showManeuversInSpellTracker) &&
+    !hasArcaneArcherLore;
+
   const hasDraconicGift =
     characterInfo?.characterClass === "ranger" &&
     characterInfo?.subclass === "drakewarden" &&
@@ -726,6 +750,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
 
   const reaperCantrip = characterInfo?.reaperCantrip || null;
   const acolyteOfNatureCantrip = characterInfo?.acolyteOfNatureCantrip || null;
+  const arcaneArcherLoreCantrip = baseCharacterInfo?.arcaneArcherLoreCantrip || null;
   const domainSpellSwaps = characterInfo?.domainSpellSwaps || {};
   const currentDomainKey = React.useMemo(() => {
     const cls = String(characterInfo?.characterClass || "");
@@ -5529,6 +5554,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     if (!classMeta) return null;
 
     const hasRacialSpellTrackerContent =
+      hasArcaneArcherLore ||
       hasHalfElfVersatilityCantrip ||
       hasForestNaturalIllusionist ||
       hasMarkOfScribing ||
@@ -5782,6 +5808,14 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
+              {isCantrips && hasArcaneArcherLore ? (
+                <Tooltip
+                  arrow
+                  title="Your Arcane Archer Lore cantrip is tracked here and doesn’t count against cantrips known."
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
+                </Tooltip>
+              ) : null}
              </Box>
              {shouldRenderSpellCheckboxes && (
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
@@ -5802,6 +5836,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
            ) : null}
            {renderAcolyteOfNatureCantripForLevel(numericalSpellLevel)}
            {renderReaperCantripForLevel(numericalSpellLevel)}
+           {renderArcaneArcherLoreCantripForLevel(numericalSpellLevel)}
            {renderDomainSpellsForLevel(numericalSpellLevel)}
            {renderThousandFormsForLevel(numericalSpellLevel)}
             {renderPreparedSpells(numericalSpellLevel)}
@@ -7385,6 +7420,59 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     );
   };
 
+  const renderArcaneArcherLoreCantripForLevel = (numericalSpellLevel) => {
+    if (!hasArcaneArcherLore) return null;
+    if (Number(numericalSpellLevel) !== 0) return null;
+    if (!arcaneArcherLoreCantrip?.index) return null;
+
+    return (
+      <Box sx={{ mb: 0.5 }}>
+        <Box sx={{ py: 0.2 }}>
+          <SpellAccordian
+            numericalSpellLevel={0}
+            spell={arcaneArcherLoreCantrip}
+            leadingControl={
+              <Tooltip arrow title={ARCANE_ARCHER_LORE_CANTRIP_TOOLTIP}>
+                <Chip
+                  size="small"
+                  label="AAL"
+                  sx={{
+                    height: 18,
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    opacity: 0.7,
+                    backgroundColor: "rgba(0,0,0,0.06)",
+                    color: "rgba(12, 74, 110, 0.92)",
+                    border: "1px solid rgba(12, 74, 110, 0.22)",
+                    "&:hover": { opacity: 0.85 },
+                  }}
+                />
+              </Tooltip>
+            }
+            actionButton={
+              <Tooltip arrow title="Swap Arcane Archer Lore cantrip">
+                <IconButton
+                  size="small"
+                  aria-label="Swap Arcane Archer Lore cantrip"
+                  onClick={() => setArcaneArcherLoreCantripModalOpen(true)}
+                  sx={{
+                    p: 0.25,
+                    color: "rgba(12, 74, 110, 0.92)",
+                    border: "1px solid rgba(12, 74, 110, 0.22)",
+                    backgroundColor: "rgba(12, 74, 110, 0.06)",
+                    "&:hover": { backgroundColor: "rgba(12, 74, 110, 0.10)" },
+                  }}
+                >
+                  <SwapHorizIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            }
+          />
+        </Box>
+      </Box>
+    );
+  };
+
   const renderRacialCantripsForLevel = (numericalSpellLevel) => {
     if (Number(numericalSpellLevel) !== 0) return null;
 
@@ -8258,7 +8346,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
       ) : null}
       {renderPactMagicSection()}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        {effectiveIsNonCaster && isFighter ? (
+        {effectiveIsNonCaster && isFighter && !hasArcaneArcherLore ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Typography
               sx={{
@@ -8488,6 +8576,11 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
         <BattleMasterManeuversModal
           open={battleMasterManeuversModalOpen}
           onClose={() => setBattleMasterManeuversModalOpen(false)}
+        />
+
+        <ArcaneArcherLoreCantripModal
+          open={arcaneArcherLoreCantripModalOpen}
+          onClose={() => setArcaneArcherLoreCantripModalOpen(false)}
         />
     </Box>
   );
