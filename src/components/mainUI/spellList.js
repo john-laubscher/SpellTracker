@@ -578,10 +578,16 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     return 0;
   }, [characterInfo?.classLevels?.fighter, characterInfo?.characterClass, characterInfo?.characterLevel]);
 
-  const isBattleMaster =
-    characterInfo?.characterClass === "fighter" &&
-    characterInfo?.subclass === "battleMaster" &&
-    fighterLevel >= 3;
+  const hasBattleMaster = React.useMemo(
+    () =>
+      classEntries.some(
+        (entry) =>
+          String(entry?.classKey || "") === "fighter" &&
+          String(entry?.subclassKey || "") === "battleMaster" &&
+          Number(entry?.level || 0) >= 3
+      ),
+    [classEntries]
+  );
 
   const showManeuversInSpellTracker = Boolean(characterInfo?.showManeuversInSpellTracker);
 
@@ -683,7 +689,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   const hideFighterSpellSection =
     effectiveIsNonCaster &&
     isFighter &&
-    !(isBattleMaster && showManeuversInSpellTracker) &&
+    !(hasBattleMaster && showManeuversInSpellTracker) &&
     !hasArcaneArcherLore;
 
   const hasDraconicGift =
@@ -5468,7 +5474,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   };
 
   const renderBattleMasterManeuvers = () => {
-    if (!isBattleMaster) return null;
+    if (!hasBattleMaster) return null;
     if (!showManeuversInSpellTracker) return null;
 
     const allowed =
@@ -8360,7 +8366,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
             >
               Maneuvers
             </Typography>
-            {isBattleMaster ? (
+            {hasBattleMaster ? (
               <Tooltip arrow title="Choose maneuvers">
                 <IconButton
                   size="small"
