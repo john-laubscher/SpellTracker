@@ -203,6 +203,7 @@ export const createDefaultCharacterInfo = (overrides = {}) => {
     warlockMysticArcanum: normalizeSpellArray(safeOverrides.warlockMysticArcanum),
     metamagicOptions: normalizeStringArray(safeOverrides.metamagicOptions),
     showManeuversInSpellTracker: Boolean(safeOverrides.showManeuversInSpellTracker),
+    showArcaneShotsInSpellTracker: Boolean(safeOverrides.showArcaneShotsInSpellTracker),
     domainSpellSwaps: normalizeObject(safeOverrides.domainSpellSwaps),
     fourElementsDisciplines: normalizeStringArray(safeOverrides.fourElementsDisciplines),
     arcaneTricksterMageHandOptOut: Boolean(safeOverrides.arcaneTricksterMageHandOptOut),

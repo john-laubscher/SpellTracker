@@ -92,7 +92,24 @@ const BattleMasterManeuversModal = ({ open, onClose }) => {
 
       <DialogContent dividers>
         <FormControlLabel
-          sx={{ mb: 1 }}
+          sx={{
+            mb: 1.5,
+            mx: "auto",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "fit-content",
+            px: 1.5,
+            py: 0.75,
+            borderRadius: "999px",
+            border: "1px solid rgba(124, 45, 18, 0.22)",
+            backgroundColor: "rgba(124, 45, 18, 0.08)",
+            boxShadow: "0 2px 10px rgba(62, 39, 35, 0.08)",
+            "& .MuiFormControlLabel-label": {
+              display: "flex",
+              alignItems: "center",
+            },
+          }}
           control={
             <Switch
               checked={Boolean(characterInfo?.showManeuversInSpellTracker)}
@@ -105,7 +122,7 @@ const BattleMasterManeuversModal = ({ open, onClose }) => {
             />
           }
           label={
-            <Typography sx={{ fontSize: "13px", color: "#3e2723" }}>
+            <Typography sx={{ fontSize: "13px", color: "#3e2723", fontWeight: 600, textAlign: "center" }}>
               Show maneuvers in the Maneuvers tracker panel
             </Typography>
           }
