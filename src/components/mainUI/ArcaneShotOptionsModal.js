@@ -12,6 +12,8 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Divider from "@mui/material/Divider";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -101,6 +103,43 @@ const ArcaneShotOptionsModal = ({ open, onClose }) => {
       </DialogTitle>
 
       <DialogContent dividers>
+        <FormControlLabel
+          sx={{
+            mb: 1.5,
+            mx: "auto",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "fit-content",
+            px: 1.5,
+            py: 0.75,
+            borderRadius: "999px",
+            border: "1px solid rgba(124, 45, 18, 0.22)",
+            backgroundColor: "rgba(124, 45, 18, 0.08)",
+            boxShadow: "0 2px 10px rgba(62, 39, 35, 0.08)",
+            "& .MuiFormControlLabel-label": {
+              display: "flex",
+              alignItems: "center",
+            },
+          }}
+          control={
+            <Switch
+              checked={Boolean(characterInfo?.showArcaneShotsInSpellTracker)}
+              onChange={(e) =>
+                setCharacterInfo((prev) => ({
+                  ...prev,
+                  showArcaneShotsInSpellTracker: Boolean(e.target.checked),
+                }))
+              }
+            />
+          }
+          label={
+            <Typography sx={{ fontSize: "13px", color: "#3e2723", fontWeight: 600, textAlign: "center" }}>
+              Show Arcane Shots in the Arcane Shot tracker panel
+            </Typography>
+          }
+        />
+
         <Typography sx={{ fontSize: "13px", color: "#3e2723", mb: 1 }}>
           You normally know {baseAllowed} option{baseAllowed === 1 ? "" : "s"} at Fighter level {characterLevel}
           {bonusSlots > 0 ? ` (+${bonusSlots} bonus).` : "."}

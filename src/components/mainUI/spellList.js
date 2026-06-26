@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import Checkbox from "@mui/material/Checkbox";
 import Chip from '@mui/material/Chip';
 import IconButton from "@mui/material/IconButton";
 import Typography from '@mui/material/Typography';
@@ -12,7 +13,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-import { CharacterInfoContext } from "../../Contexts/Context";
+import { CharacterInfoContext, FeatureTrackersContext } from "../../Contexts/Context";
 import ClassesData from "../ClassesData";
 import { subRaceSpells, TieflingLegacyCantripData } from "../RacesData";
 import spellTables from "../spellTables";
@@ -38,10 +39,12 @@ import DruidicWarriorCantripSwapModal from "./DruidicWarriorCantripSwapModal";
 import DruidicWarriorCantripsModal from "./DruidicWarriorCantripsModal";
 import CelestialBonusCantripSwapModal from "./CelestialBonusCantripSwapModal";
 import ArcaneArcherLoreCantripModal from "./ArcaneArcherLoreCantripModal";
+import ArcaneShotOptionsModal from "./ArcaneShotOptionsModal";
 import RacialCantripSelectionModal from "./RacialCantripSelectionModal";
 import BattleMasterManeuversModal from "./BattleMasterManeuversModal";
 import ManeuverAccordian from "./ManeuverAccordian";
 import SwordIcon from "./SwordIcon";
+import BowIcon from "./BowIcon";
 import MonkKiUsesPanel from "./MonkKiUsesPanel";
 import SoulknifePsionicEnergyDieUsesPanel from "./SoulknifePsionicEnergyDieUsesPanel";
 import { getGenieExpandedSpellOptions } from "../../utils/genieData";
@@ -426,6 +429,7 @@ const TOTEM_WARRIOR_RITUAL_SPELLS = [
 
 export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   const { characterInfo: baseCharacterInfo, setCharacterInfo } = useContext(CharacterInfoContext);
+  const { featureTrackers, setFeatureTrackers } = useContext(FeatureTrackersContext);
   const allSpellcastingEntries = React.useMemo(() => getSpellcastingEntries(baseCharacterInfo), [baseCharacterInfo]);
   const spellcastingEntry = React.useMemo(() => {
     const directEntry = getSpellcastingEntryForSlot(baseCharacterInfo, classSlot);
@@ -590,13 +594,18 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   );
 
   const showManeuversInSpellTracker = Boolean(characterInfo?.showManeuversInSpellTracker);
+  const showArcaneShotsInSpellTracker = Boolean(characterInfo?.showArcaneShotsInSpellTracker);
 
   const selectedBattleMasterManeuvers = Array.isArray(characterInfo?.battleMasterManeuvers)
     ? characterInfo.battleMasterManeuvers
     : [];
+  const selectedArcaneShotOptions = Array.isArray(characterInfo?.arcaneShotOptions)
+    ? characterInfo.arcaneShotOptions
+    : [];
 
   const [battleMasterManeuversModalOpen, setBattleMasterManeuversModalOpen] = React.useState(false);
   const [arcaneArcherLoreCantripModalOpen, setArcaneArcherLoreCantripModalOpen] = React.useState(false);
+  const [arcaneShotOptionsModalOpen, setArcaneShotOptionsModalOpen] = React.useState(false);
 
   const isMonk = String(characterInfo?.characterClass || "") === "monk";
 
@@ -5551,6 +5560,135 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     );
   };
 
+  const renderArcaneShots = () => {
+    if (!hasArcaneArcherLore) return null;
+    if (!showArcaneShotsInSpellTracker) return null;
+
+    const bonusSlots = Math.max(0, Math.trunc(Number(characterInfo?.arcaneShotBonusOptions) || 0));
+    const allowed =
+      fighterLevel < 3
+        ? 0
+        : 2 +
+          (fighterLevel >= 7 ? 1 : 0) +
+          (fighterLevel >= 10 ? 1 : 0) +
+          (fighterLevel >= 15 ? 1 : 0) +
+          (fighterLevel >= 18 ? 1 : 0) +
+          bonusSlots;
+
+    const all = ClassesData?.fighter?.subclasses?.arcaneArcher?.arcaneShotOptions || [];
+    const arcaneShots = Array.isArray(all) ? all : [];
+    const byId = new Map(arcaneShots.map((shot) => [shot?.id, shot]));
+    const selected = selectedArcaneShotOptions
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+
+    const selectedCount = selectedArcaneShotOptions.length;
+    const isOver = allowed > 0 && selectedCount > allowed;
+    const isUnder = allowed > 0 && selectedCount < allowed;
+    const trackerKey = "fighter:arcane_shot";
+    const tracker = featureTrackers?.[trackerKey] || {};
+    const extraUses = Math.max(0, Math.trunc(Number(tracker?.extraUses) || 0));
+    const maxUses = Math.max(0, 2 + extraUses);
+    const spentUses = Math.max(0, Math.min(Math.trunc(Number(tracker?.spentUses) || 0), maxUses));
+
+    const setSpentUses = (nextSpentUses) => {
+      setFeatureTrackers((prev) => ({
+        ...(prev || {}),
+        [trackerKey]: {
+          ...(prev?.[trackerKey] || {}),
+          spentUses: Math.max(0, Math.min(Math.trunc(Number(nextSpentUses) || 0), maxUses)),
+        },
+      }));
+    };
+
+    return (
+      <Box
+        sx={{
+          borderLeft: `4px solid ${isOver ? "#b71c1c" : "#7c2d12"}`,
+          borderRadius: "6px",
+          backgroundColor: "rgba(255,255,255,0.45)",
+          mb: 1.5,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+          <Typography
+            sx={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              fontSize: "15px",
+              color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#7c2d12",
+            }}
+          >
+            Arcane Shots
+          </Typography>
+
+          <Tooltip arrow title="Choose Arcane Shot options">
+            <IconButton
+              size="small"
+              aria-label="Choose Arcane Shot options"
+              onClick={() => setArcaneShotOptionsModalOpen(true)}
+              sx={{
+                p: 0.25,
+                color: isOver ? "#b71c1c" : isUnder ? "#075985" : "rgba(124, 45, 18, 0.95)",
+                border: "1px solid rgba(124, 45, 18, 0.22)",
+                backgroundColor: "rgba(124, 45, 18, 0.06)",
+                "&:hover": { backgroundColor: "rgba(124, 45, 18, 0.10)" },
+              }}
+            >
+              <BowIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {maxUses > 0 ? (
+          <Box sx={{ display: "flex", alignItems: "center", mb: 0.75 }}>
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#5d4037", mr: 0.5 }}>
+              Uses
+            </Typography>
+            {Array.from({ length: maxUses }).map((_, idx) => (
+              <Checkbox
+                key={`arcane-shot:use:${idx}`}
+                checked={idx < spentUses}
+                onChange={(e) => {
+                  const nextChecked = Boolean(e.target.checked);
+                  if (nextChecked) {
+                    if (idx !== spentUses) return;
+                    setSpentUses(spentUses + 1);
+                    return;
+                  }
+                  if (idx >= spentUses) return;
+                  setSpentUses(spentUses - 1);
+                }}
+                size="small"
+                sx={{
+                  ml: idx === 0 ? 0.25 : 0,
+                  p: 0.25,
+                  color: "#8B4513",
+                  "&.Mui-checked": { color: "#8B4513" },
+                }}
+              />
+            ))}
+          </Box>
+        ) : null}
+
+        {selected.length === 0 ? (
+          <Typography sx={{ fontSize: "13px", opacity: 0.75 }}>
+            <em>No Arcane Shot options selected yet.</em>
+          </Typography>
+        ) : (
+          selected.map((shot) => (
+            <Box key={`arcane-shot:${shot.id}`} sx={{ py: 0.2 }}>
+              <ManeuverAccordian maneuver={shot} />
+            </Box>
+          ))
+        )}
+      </Box>
+    );
+  };
+
   const classes = togglePreparedSpellBtnStyle();
   // ***NEED FEATURE--CRITICAL--*** some subrace spells are not in the api, so will need a condition that instead shows a message saying that the description is not available
   //***NEED SPECIAL CONDITION*** for Warlock: "first level spells:" "second level spells" "Third level spell slots" (only use "spell slots" text for the one that matches slotLevel and add checkboxes only at that level) and will also need special rendering for mystic arcanum, but could be a separate function renderMysticArcanum().
@@ -5814,14 +5952,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
                   <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
                 </Tooltip>
               ) : null}
-              {isCantrips && hasArcaneArcherLore ? (
-                <Tooltip
-                  arrow
-                  title="Your Arcane Archer Lore cantrip is tracked here and doesn’t count against cantrips known."
-                >
-                  <InfoOutlinedIcon sx={{ fontSize: 16, opacity: 0.7, color: levelColor }} />
-                </Tooltip>
-              ) : null}
+              {/* Arcane Archer Lore uses the left-side tag instead of a duplicate info icon. */}
              </Box>
              {shouldRenderSpellCheckboxes && (
                <SpellCheckboxes textualSpellLevel={textualSpellLevel} slotCount={slotCount} />
@@ -8446,6 +8577,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
             </Typography>
           ) : null}
           {renderBattleMasterManeuvers()}
+          {renderArcaneShots()}
           {renderPCSpells("cantrips", 0)}
           {renderPCSpells("first", 1)}
           {renderPCSpells("second", 2)}
@@ -8582,6 +8714,11 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
         <BattleMasterManeuversModal
           open={battleMasterManeuversModalOpen}
           onClose={() => setBattleMasterManeuversModalOpen(false)}
+        />
+
+        <ArcaneShotOptionsModal
+          open={arcaneShotOptionsModalOpen}
+          onClose={() => setArcaneShotOptionsModalOpen(false)}
         />
 
         <ArcaneArcherLoreCantripModal

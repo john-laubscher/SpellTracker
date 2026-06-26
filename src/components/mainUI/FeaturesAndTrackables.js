@@ -3549,7 +3549,7 @@ const FeaturesAndTrackables = () => {
                 },
               }}
             >
-              <BowIcon fontSize="inherit" />
+              <MenuBookIcon fontSize="inherit" />
             </IconButton>
           </Tooltip>
         );
@@ -3604,7 +3604,7 @@ const FeaturesAndTrackables = () => {
         return (
           <Tooltip arrow title={`Choose Arcane Shot options (${selectedCount}/${allowed})`}>
             <IconButton size="small" aria-label="Choose Arcane Shot options" onClick={() => setArcaneShotOptionsModalOpen(true)} sx={{ ml: 0.5, p: 0.25, color: isOver ? "#b71c1c" : isUnder ? "#075985" : "#0f766e", border: "1px solid rgba(15, 118, 110, 0.25)", backgroundColor: isOver ? "rgba(194, 65, 12, 0.10)" : isUnder ? "rgba(244, 233, 221, 0.65)" : "rgba(20, 184, 166, 0.10)", "&:hover": { backgroundColor: isOver ? "rgba(194, 65, 12, 0.14)" : isUnder ? "rgba(244, 233, 221, 0.85)" : "rgba(20, 184, 166, 0.14)" } }}>
-              <MenuBookIcon fontSize="inherit" />
+              <BowIcon fontSize="inherit" />
             </IconButton>
           </Tooltip>
         );
@@ -4268,7 +4268,7 @@ const FeaturesAndTrackables = () => {
                           },
                         }}
                       >
-                        <MenuBookIcon fontSize="inherit" />
+                        <BowIcon fontSize="inherit" />
                       </IconButton>
                     </Tooltip>
                   );
@@ -4317,7 +4317,7 @@ const FeaturesAndTrackables = () => {
                           },
                         }}
                       >
-                        <MenuBookIcon fontSize="inherit" />
+                        <BowIcon fontSize="inherit" />
                       </IconButton>
                     </Tooltip>
                   );
@@ -4394,7 +4394,7 @@ const FeaturesAndTrackables = () => {
                           },
                         }}
                       >
-                        <MenuBookIcon fontSize="inherit" />
+              <MenuBookIcon fontSize="inherit" />
                       </IconButton>
                     </Tooltip>
                   );
@@ -4815,7 +4815,7 @@ const FeaturesAndTrackables = () => {
                             "&:hover": { backgroundColor: "rgba(244, 233, 221, 0.85)" },
                           }}
                         >
-                          <BowIcon fontSize="inherit" />
+                        <BowIcon fontSize="inherit" />
                         </IconButton>
                       </Tooltip>
                     );
