@@ -89,6 +89,11 @@ export const CharacterCreationForm = (props) => {
   );
   const totalCharacterLevel = React.useMemo(() => getTotalCharacterLevel(characterInfo), [characterInfo]);
   const isOverLevelCap = totalCharacterLevel > 20;
+  const hasLandDruidSelection =
+    (characterInfo.characterClass === "druid" && characterInfo.subclass === "land") ||
+    (isMulticlassed &&
+      characterInfo.secondaryCharacterClass === "druid" &&
+      characterInfo.secondarySubclass === "land");
 
   const missingFieldSx = (shouldHighlight) => {
     if (!shouldHighlight) return null;
@@ -286,8 +291,7 @@ export const CharacterCreationForm = (props) => {
   ]);
 
   useEffect(() => {
-    const isLandDruid = characterInfo.characterClass === "druid" && characterInfo.subclass === "land";
-    if (isLandDruid) {
+    if (hasLandDruidSelection) {
       if (!characterInfo.druidLandType && landDruidTypeOptions.length > 0) {
         setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
       }
@@ -297,7 +301,7 @@ export const CharacterCreationForm = (props) => {
     if (characterInfo.druidLandType) {
       setCharacterInfo((prev) => ({ ...prev, druidLandType: "" }));
     }
-  }, [characterInfo.characterClass, characterInfo.subclass, characterInfo.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+  }, [characterInfo.druidLandType, hasLandDruidSelection, landDruidTypeOptions, setCharacterInfo]);
 
   useEffect(() => {
     const isGenieWarlock =
@@ -1019,7 +1023,7 @@ export const CharacterCreationForm = (props) => {
           </Box>
 	        ) : null}
 
-	        {characterInfo.characterClass === "druid" && characterInfo.subclass === "land" ? (
+	        {hasLandDruidSelection ? (
 	          <Box sx={{ mt: 1 }}>
 	            <FormControl fullWidth size="small">
 	              <InputLabel id="druid-land-type-select-label">Land Type</InputLabel>

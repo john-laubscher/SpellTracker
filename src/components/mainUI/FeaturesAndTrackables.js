@@ -1817,15 +1817,19 @@ const FeaturesAndTrackables = () => {
     () => ["arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp", "underdark"],
     []
   );
+  const hasLandDruidSelection =
+    (characterClass === "druid" && subclass === "land") ||
+    (Boolean(characterInfo?.multiclassEnabled) &&
+      String(characterInfo?.secondaryCharacterClass || "") === "druid" &&
+      String(characterInfo?.secondarySubclass || "") === "land");
 
   React.useEffect(() => {
-    const isLandDruid = characterClass === "druid" && subclass === "land";
-    if (!isLandDruid) return;
+    if (!hasLandDruidSelection) return;
     if (characterInfo?.druidLandType) return;
     if (landDruidTypeOptions.length === 0) return;
 
     setCharacterInfo((prev) => ({ ...prev, druidLandType: landDruidTypeOptions[0] }));
-  }, [characterClass, subclass, characterInfo?.druidLandType, landDruidTypeOptions, setCharacterInfo]);
+  }, [characterInfo?.druidLandType, hasLandDruidSelection, landDruidTypeOptions, setCharacterInfo]);
 
   React.useEffect(() => {
     const isGenieWarlock = characterClass === "warlock" && subclass === "genie";
@@ -1838,14 +1842,14 @@ const FeaturesAndTrackables = () => {
 
   const currentLandType = characterInfo?.druidLandType || landDruidTypeOptions[0] || "arctic";
   const isLandTypeMenuOpen = Boolean(landTypeMenuAnchorEl);
-  const openLandTypeMenu = (e) => {
+  const openLandTypeMenu = React.useCallback((e) => {
     e?.stopPropagation?.();
     setLandTypeMenuAnchorEl(e.currentTarget);
-  };
-  const closeLandTypeMenu = (e) => {
+  }, []);
+  const closeLandTypeMenu = React.useCallback((e) => {
     e?.stopPropagation?.();
     setLandTypeMenuAnchorEl(null);
-  };
+  }, []);
   const hasAdditionalMagicalSecrets =
     characterClass === "bard" &&
     subclass === "lore" &&
@@ -5118,7 +5122,7 @@ const FeaturesAndTrackables = () => {
           ) : null}
 	        </Grid>
 
-	        {characterClass === "druid" && subclass === "land" ? (
+	        {hasLandDruidSelection ? (
 	          <Menu
 	            anchorEl={landTypeMenuAnchorEl}
 	            open={isLandTypeMenuOpen}
