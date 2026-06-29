@@ -378,6 +378,142 @@ const WILDFIRE_CIRCLE_SPELLS = [
   { druidLevel: 9, spellLevel: 5, spells: ["flame-strike", "mass-cure-wounds"] },
 ];
 
+const CLERIC_ALWAYS_PREPARED_CONFIG_BY_SUBCLASS = {
+  arcana: { rows: ARCANA_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "wizard", kind: "domain_spell" },
+  death: { rows: DEATH_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  forge: { rows: FORGE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  grave: { rows: GRAVE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  knowledge: { rows: KNOWLEDGE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  life: { rows: LIFE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  light: { rows: LIGHT_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  nature: { rows: NATURE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  order: { rows: ORDER_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  peace: { rows: PEACE_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  tempest: { rows: TEMPEST_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  trickery: { rows: TRICKERY_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  twilight: { rows: TWILIGHT_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+  war: { rows: WAR_DOMAIN_SPELLS, levelKey: "clericLevel", spellClassKey: "cleric", kind: "domain_spell" },
+};
+
+const DRUID_ALWAYS_PREPARED_CONFIG_BY_SUBCLASS = {
+  spores: { rows: SPORES_CIRCLE_SPELLS, levelKey: "druidLevel", spellClassKey: "druid", kind: "circle_spell" },
+  star: { rows: STARS_CIRCLE_SPELLS, levelKey: "druidLevel", spellClassKey: "druid", kind: "circle_spell" },
+  wildfire: { rows: WILDFIRE_CIRCLE_SPELLS, levelKey: "druidLevel", spellClassKey: "druid", kind: "circle_spell" },
+};
+
+const getAlwaysPreparedDomainKey = (entry = {}, characterInfo = {}) => {
+  const classKey = String(entry?.classKey || "");
+  const subclassKey = String(entry?.subclassKey || "");
+  const base = `${classKey}:${subclassKey}`;
+  if (classKey === "druid" && subclassKey === "land") {
+    const terrain = String(characterInfo?.druidLandType || "").trim() || "arctic";
+    return `${base}:${terrain}`;
+  }
+  return base;
+};
+
+const getAlwaysPreparedSubclassSources = (entries = [], characterInfo = {}) => {
+  const sources = [];
+
+  entries.forEach((entry) => {
+    const classKey = String(entry?.classKey || "");
+    const subclassKey = String(entry?.subclassKey || "");
+    const classLevel = Number(entry?.level) || 0;
+    if (!classKey || !subclassKey || classLevel <= 0) return;
+
+    const domainKey = getAlwaysPreparedDomainKey(entry, characterInfo);
+
+    if (classKey === "cleric") {
+      const config = CLERIC_ALWAYS_PREPARED_CONFIG_BY_SUBCLASS?.[subclassKey] || null;
+      if (!config) return;
+      const rows = Array.isArray(config.rows)
+        ? config.rows.filter((row) => classLevel >= Number(row?.[config.levelKey] || 0))
+        : [];
+      rows.forEach((row) => {
+        sources.push({
+          domainKey,
+          kind: config.kind,
+          spellClassKey: config.spellClassKey,
+          swapLabel: "Domain Spell",
+          spellLevel: Number(row?.spellLevel || 0),
+          spells: Array.isArray(row?.spells) ? row.spells : [],
+          names: Array.isArray(row?.names) ? row.names : [],
+        });
+      });
+      return;
+    }
+
+    if (classKey === "druid") {
+      if (subclassKey === "land") {
+        const terrainKey = (String(characterInfo?.druidLandType || "").trim() || "arctic").toLowerCase();
+        const rows = Array.isArray(LAND_CIRCLE_SPELLS_BY_TERRAIN?.[terrainKey])
+          ? LAND_CIRCLE_SPELLS_BY_TERRAIN[terrainKey].filter((row) => classLevel >= Number(row?.druidLevel || 0))
+          : [];
+        rows.forEach((row) => {
+          sources.push({
+            domainKey,
+            kind: "circle_spell",
+            spellClassKey: "druid",
+            swapLabel: "Circle Spell",
+            spellLevel: Number(row?.spellLevel || 0),
+            spells: Array.isArray(row?.spells) ? row.spells : [],
+            names: [],
+          });
+        });
+        return;
+      }
+
+      const config = DRUID_ALWAYS_PREPARED_CONFIG_BY_SUBCLASS?.[subclassKey] || null;
+      if (!config) return;
+      const rows = Array.isArray(config.rows)
+        ? config.rows.filter((row) => classLevel >= Number(row?.[config.levelKey] || 0))
+        : [];
+      rows.forEach((row) => {
+        sources.push({
+          domainKey,
+          kind: config.kind,
+          spellClassKey: config.spellClassKey,
+          swapLabel: "Circle Spell",
+          spellLevel: Number(row?.spellLevel || 0),
+          spells: Array.isArray(row?.spells) ? row.spells : [],
+          names: Array.isArray(row?.names) ? row.names : [],
+        });
+      });
+      return;
+    }
+
+    if (classKey === "paladin") {
+      const subclassMeta = ClassesData?.paladin?.subclasses?.[subclassKey] || null;
+      const subclassRowsRaw = Array.isArray(subclassMeta?.subclassSpells) ? subclassMeta.subclassSpells : [];
+      subclassRowsRaw
+        .map((row) => {
+          const paladinLevel = Math.trunc(Number(row?.level) || 0);
+          return {
+            paladinLevel,
+            spellLevel: PALADIN_OATH_SPELL_LEVEL_BY_PALADIN_LEVEL[paladinLevel],
+            spells: Array.isArray(row?.spells)
+              ? row.spells.map((spell) => String(spell || "").trim().replace(/_/g, "-")).filter(Boolean)
+              : [],
+          };
+        })
+        .filter((row) => classLevel >= Number(row?.paladinLevel || 0) && Number.isFinite(Number(row?.spellLevel)))
+        .forEach((row) => {
+          sources.push({
+            domainKey,
+            kind: "oath_spell",
+            spellClassKey: "paladin",
+            swapLabel: "Oath Spell",
+            spellLevel: Number(row.spellLevel || 0),
+            spells: Array.isArray(row?.spells) ? row.spells : [],
+            names: [],
+          });
+        });
+    }
+  });
+
+  return sources;
+};
+
 const REAPER_CANTRIP_TOOLTIP =
   "When you cast a necromancy cantrip that normally targets only one creature, the spell can instead target two creatures within range and within 5 feet of each other.";
 
@@ -959,25 +1095,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   }, [classKey, hasHalfOrcMarkOfFinding, hasHumanMarkOfFinding, hasHumanMarkOfHandling, hasHumanMarkOfMaking, hasHumanMarkOfPassage, hasHumanMarkOfSentinel, hasMarkOfDetection, hasMarkOfHealing, hasMarkOfHospitality, hasMarkOfScribing, hasMarkOfShadow, hasMarkOfStorm, race, spellListClassKey, subrace]);
   const hasActiveRaceSpellList = Boolean(activeRaceSpellListConfig) && hasActiveSpellcasting && Boolean(spellListClassKey);
 
-  const [arcanaDomainSpellsByLevel, setArcanaDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [deathDomainSpellsByLevel, setDeathDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [forgeDomainSpellsByLevel, setForgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [graveDomainSpellsByLevel, setGraveDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [knowledgeDomainSpellsByLevel, setKnowledgeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [lifeDomainSpellsByLevel, setLifeDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [lightDomainSpellsByLevel, setLightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [natureDomainSpellsByLevel, setNatureDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [orderDomainSpellsByLevel, setOrderDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [peaceDomainSpellsByLevel, setPeaceDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [tempestDomainSpellsByLevel, setTempestDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [trickeryDomainSpellsByLevel, setTrickeryDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [landCircleSpellsByLevel, setLandCircleSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [sporesCircleSpellsByLevel, setSporesCircleSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [starsCircleSpellsByLevel, setStarsCircleSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [wildfireCircleSpellsByLevel, setWildfireCircleSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [twilightDomainSpellsByLevel, setTwilightDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [warDomainSpellsByLevel, setWarDomainSpellsByLevel] = React.useState(() => emptyByLevel());
-  const [oathSpellsByLevel, setOathSpellsByLevel] = React.useState(() => emptyByLevel());
+  const [alwaysPreparedSubclassSpellsByLevel, setAlwaysPreparedSubclassSpellsByLevel] = React.useState(() => emptyByLevel());
   const [domainSwapModal, setDomainSwapModal] = React.useState({
     open: false,
     spellLevel: 0,
@@ -3746,17 +3864,18 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     setCharacterInfo,
   ]);
 
-  useEffect(() => {
-    const isArcanaCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "arcana";
-    if (!isArcanaCleric) {
-      setArcanaDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
+  const activeAlwaysPreparedSubclassSources = React.useMemo(() => {
+    const entries = isUnifiedMulticlassTracker
+      ? allSpellcastingEntries
+      : spellcastingEntry
+        ? [spellcastingEntry]
+        : [];
+    return getAlwaysPreparedSubclassSources(entries, baseCharacterInfo);
+  }, [allSpellcastingEntries, baseCharacterInfo, isUnifiedMulticlassTracker, spellcastingEntry]);
 
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = ARCANA_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setArcanaDomainSpellsByLevel(emptyByLevel());
+  useEffect(() => {
+    if (activeAlwaysPreparedSubclassSources.length === 0) {
+      setAlwaysPreparedSubclassSpellsByLevel(emptyByLevel());
       return;
     }
 
@@ -3765,721 +3884,14 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     const load = async () => {
       try {
         const byLevel = emptyByLevel();
-
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/allspells/${lvl}/wizard`).then((res) => ({ lvl, res })))
-        );
-
-        const wizardLists = new Map();
-        responses.forEach(({ lvl, res }) => {
-          wizardLists.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = wizardLists.get(spellLevel) || [];
-
-          row.names.forEach((nameCandidates) => {
-            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
-            const found =
-              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
-              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
-              null;
-
-            if (found?.index) {
-              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
-              if (!existing.has(String(found.index))) {
-                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
-              }
-            }
-          });
-        });
-
-        if (!cancelled) setArcanaDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setArcanaDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isLandDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "land";
-    if (!isLandDruid) {
-      setLandCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const terrainKey = (String(characterInfo?.druidLandType || "").trim() || "arctic").toLowerCase();
-    const rows = Array.isArray(LAND_CIRCLE_SPELLS_BY_TERRAIN?.[terrainKey])
-      ? LAND_CIRCLE_SPELLS_BY_TERRAIN[terrainKey]
-      : [];
-
-    const druidLevel = (() => {
-      const raw = characterInfo?.classLevels?.druid;
-      const numeric = Number(raw);
-      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
-      if (characterInfo?.characterClass === "druid") return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
-      return 0;
-    })();
-
-    const active = rows.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
-    if (active.length === 0) {
-      setLandCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setLandCircleSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setLandCircleSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    characterInfo?.characterClass,
-    characterInfo?.subclass,
-    characterInfo?.characterLevel,
-    characterInfo?.classLevels?.druid,
-    characterInfo?.druidLandType,
-  ]);
-
-  useEffect(() => {
-    const isPaladin = characterInfo?.characterClass === "paladin";
-    if (!isPaladin) {
-      setOathSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const subclassKey = String(characterInfo?.subclass || "").trim();
-    const subclassMeta = ClassesData?.paladin?.subclasses?.[subclassKey] || null;
-    const subclassRowsRaw = Array.isArray(subclassMeta?.subclassSpells) ? subclassMeta.subclassSpells : [];
-    if (subclassRowsRaw.length === 0) {
-      setOathSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const paladinLevel = (() => {
-      const raw = characterInfo?.classLevels?.paladin;
-      const numeric = Number(raw);
-      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
-      if (characterInfo?.characterClass === "paladin")
-        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
-      return 0;
-    })();
-
-    const subclassRows = subclassRowsRaw
-      .map((row) => {
-        const rowLevel = Math.trunc(Number(row?.level) || 0);
-        const spellLevel = PALADIN_OATH_SPELL_LEVEL_BY_PALADIN_LEVEL[rowLevel];
-        const spells = Array.isArray(row?.spells)
-          ? row.spells.map((s) => String(s || "").trim().replace(/_/g, "-")).filter(Boolean)
-          : [];
-
-        return {
-          paladinLevel: rowLevel,
-          spellLevel,
-          spells,
-        };
-      })
-      .filter((row) => Number.isFinite(Number(row?.paladinLevel)) && Number.isFinite(Number(row?.spellLevel)));
-
-    const active = subclassRows.filter((row) => paladinLevel >= Number(row?.paladinLevel || 0));
-    if (active.length === 0) {
-      setOathSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setOathSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setOathSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    characterInfo?.characterClass,
-    characterInfo?.subclass,
-    characterInfo?.characterLevel,
-    characterInfo?.classLevels?.paladin,
-  ]);
-
-  useEffect(() => {
-    const isSporesDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "spores";
-    if (!isSporesDruid) {
-      setSporesCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const druidLevel = (() => {
-      const raw = characterInfo?.classLevels?.druid;
-      const numeric = Number(raw);
-      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
-      if (characterInfo?.characterClass === "druid")
-        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
-      return 0;
-    })();
-
-    const active = SPORES_CIRCLE_SPELLS.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
-    if (active.length === 0) {
-      setSporesCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setSporesCircleSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setSporesCircleSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    characterInfo?.characterClass,
-    characterInfo?.subclass,
-    characterInfo?.characterLevel,
-    characterInfo?.classLevels?.druid,
-  ]);
-
-  useEffect(() => {
-    const isStarsDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "star";
-    if (!isStarsDruid) {
-      setStarsCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const druidLevel = (() => {
-      const raw = characterInfo?.classLevels?.druid;
-      const numeric = Number(raw);
-      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
-      if (characterInfo?.characterClass === "druid")
-        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
-      return 0;
-    })();
-
-    const active = STARS_CIRCLE_SPELLS.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
-    if (active.length === 0) {
-      setStarsCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setStarsCircleSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setStarsCircleSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    characterInfo?.characterClass,
-    characterInfo?.subclass,
-    characterInfo?.characterLevel,
-    characterInfo?.classLevels?.druid,
-  ]);
-
-  useEffect(() => {
-    const isWildfireDruid = characterInfo?.characterClass === "druid" && characterInfo?.subclass === "wildfire";
-    if (!isWildfireDruid) {
-      setWildfireCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const druidLevel = (() => {
-      const raw = characterInfo?.classLevels?.druid;
-      const numeric = Number(raw);
-      if (Number.isFinite(numeric) && numeric >= 0) return Math.trunc(numeric);
-      if (characterInfo?.characterClass === "druid")
-        return Math.max(0, Math.trunc(Number(characterInfo?.characterLevel) || 0));
-      return 0;
-    })();
-
-    const active = WILDFIRE_CIRCLE_SPELLS.filter((row) => druidLevel >= Number(row?.druidLevel || 0));
-    if (active.length === 0) {
-      setWildfireCircleSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setWildfireCircleSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setWildfireCircleSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    characterInfo?.characterClass,
-    characterInfo?.subclass,
-    characterInfo?.characterLevel,
-    characterInfo?.classLevels?.druid,
-  ]);
-
-  useEffect(() => {
-    const isDeathCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "death";
-    if (!isDeathCleric) {
-      setDeathDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = DEATH_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setDeathDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) =>
-            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
+        const uniqueSpellLevels = Array.from(
+          new Set(
+            activeAlwaysPreparedSubclassSources
+              .map((source) => Number(source?.spellLevel))
+              .filter((level) => Number.isFinite(level))
           )
         );
 
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setDeathDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setDeathDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isForgeCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "forge";
-    if (!isForgeCleric) {
-      setForgeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = FORGE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setForgeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) =>
-            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
-          )
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setForgeDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setForgeDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isGraveCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "grave";
-    if (!isGraveCleric) {
-      setGraveDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = GRAVE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setGraveDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) =>
-            axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res }))
-          )
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setGraveDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setGraveDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isKnowledgeCleric =
-      characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "knowledge";
-    if (!isKnowledgeCleric) {
-      setKnowledgeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = KNOWLEDGE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setKnowledgeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
         const responses = await Promise.all(
           uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
         );
@@ -4489,370 +3901,64 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
           listsByLevel.set(Number(lvl), res?.data?.results || []);
         });
 
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
+        activeAlwaysPreparedSubclassSources.forEach((source) => {
+          const spellLevel = Number(source?.spellLevel);
           const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
+          const seen = new Set(
+            (byLevel[spellLevel] || []).map(
+              (entry) => `${String(entry?.domainKey || "")}:${String(entry?.kind || "")}:${String(entry?.original?.index || "")}`
+            )
+          );
 
-          (row.spells || []).forEach((spellIndex) => {
+          const addSpell = (resolvedSpell) => {
+            const original = resolvedSpell?.index
+              ? resolvedSpell
+              : {
+                  index: String(resolvedSpell?.index || ""),
+                  name: humanizeSpellIndex(resolvedSpell?.index),
+                };
+            const dedupeKey = `${String(source?.domainKey || "")}:${String(source?.kind || "")}:${String(original?.index || "")}`;
+            if (!original?.index || seen.has(dedupeKey)) return;
+            seen.add(dedupeKey);
+            byLevel[spellLevel] = [
+              ...(byLevel[spellLevel] || []),
+              {
+                original,
+                domainKey: String(source?.domainKey || ""),
+                kind: String(source?.kind || "domain_spell"),
+                spellClassKey: String(source?.spellClassKey || ""),
+                swapLabel: String(source?.swapLabel || "Domain Spell"),
+              },
+            ];
+          };
+
+          (Array.isArray(source?.spells) ? source.spells : []).forEach((spellIndex) => {
             const key = String(spellIndex || "").trim();
             if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
+            const found = all.find((spell) => String(spell?.index || "") === key) || { index: key };
+            addSpell(found);
           });
-        });
 
-        if (!cancelled) setKnowledgeDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setKnowledgeDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isLifeCleric =
-      characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "life";
-    if (!isLifeCleric) {
-      setLifeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = LIFE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setLifeDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setLifeDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setLifeDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-        cancelled = true;
-      };
-    }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isLightCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "light";
-    if (!isLightCleric) {
-      setLightDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = LIGHT_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setLightDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setLightDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setLightDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isNatureCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "nature";
-    if (!isNatureCleric) {
-      setNatureDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = NATURE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setNatureDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setNatureDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setNatureDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isOrderCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "order";
-    if (!isOrderCleric) {
-      setOrderDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = ORDER_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setOrderDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setOrderDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setOrderDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isPeaceCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "peace";
-    if (!isPeaceCleric) {
-      setPeaceDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = PEACE_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setPeaceDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-
-          (row.names || []).forEach((nameCandidates) => {
-            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
+          (Array.isArray(source?.names) ? source.names : []).forEach((nameCandidates) => {
+            const candidates = Array.isArray(nameCandidates)
+              ? nameCandidates.map((name) => String(name || "")).filter(Boolean)
+              : [];
+            if (candidates.length === 0) return;
             const found =
-              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
-              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
+              all.find((spell) =>
+                candidates.some((candidate) => String(spell?.name || "").toLowerCase() === candidate.toLowerCase())
+              ) ||
+              all.find((spell) =>
+                candidates.some((candidate) => normalizeCompareName(spell?.name) === normalizeCompareName(candidate))
+              ) ||
               null;
-
-            if (found?.index) {
-              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
-              if (!existing.has(String(found.index))) {
-                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
-              }
-            }
+            if (found?.index) addSpell(found);
           });
         });
 
-        if (!cancelled) setPeaceDomainSpellsByLevel(byLevel);
+        if (!cancelled) setAlwaysPreparedSubclassSpellsByLevel(byLevel);
       } catch {
-        if (!cancelled) setPeaceDomainSpellsByLevel(emptyByLevel());
+        if (!cancelled) setAlwaysPreparedSubclassSpellsByLevel(emptyByLevel());
       }
     };
 
@@ -4861,276 +3967,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
     return () => {
       cancelled = true;
     };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isTempestCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "tempest";
-    if (!isTempestCleric) {
-      setTempestDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = TEMPEST_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setTempestDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-
-          (row.names || []).forEach((nameCandidates) => {
-            const candidates = (nameCandidates || []).map((n) => String(n || "")).filter(Boolean);
-            const found =
-              all.find((s) => candidates.some((c) => String(s?.name || "").toLowerCase() === String(c).toLowerCase())) ||
-              all.find((s) => candidates.some((c) => normalizeCompareName(s?.name) === normalizeCompareName(c))) ||
-              null;
-
-            if (found?.index) {
-              const existing = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index)));
-              if (!existing.has(String(found.index))) {
-                byLevel[spellLevel] = [...(byLevel[spellLevel] || []), found];
-              }
-            }
-          });
-        });
-
-        if (!cancelled) setTempestDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setTempestDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isTrickeryCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "trickery";
-    if (!isTrickeryCleric) {
-      setTrickeryDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = TRICKERY_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setTrickeryDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setTrickeryDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setTrickeryDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isTwilightCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "twilight";
-    if (!isTwilightCleric) {
-      setTwilightDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = TWILIGHT_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setTwilightDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setTwilightDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setTwilightDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
-
-  useEffect(() => {
-    const isWarCleric = characterInfo?.characterClass === "cleric" && characterInfo?.subclass === "war";
-    if (!isWarCleric) {
-      setWarDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    const clericLevel = Number(characterInfo?.characterLevel || 0);
-    const active = WAR_DOMAIN_SPELLS.filter((row) => clericLevel >= row.clericLevel);
-    if (active.length === 0) {
-      setWarDomainSpellsByLevel(emptyByLevel());
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const byLevel = emptyByLevel();
-        const uniqueSpellLevels = Array.from(new Set(active.map((r) => Number(r.spellLevel)))).filter((n) =>
-          Number.isFinite(n)
-        );
-
-        const responses = await Promise.all(
-          uniqueSpellLevels.map((lvl) => axios.get(`/spellsbylevel/${lvl}`).then((res) => ({ lvl, res })))
-        );
-
-        const listsByLevel = new Map();
-        responses.forEach(({ lvl, res }) => {
-          listsByLevel.set(Number(lvl), res?.data?.results || []);
-        });
-
-        active.forEach((row) => {
-          const spellLevel = Number(row.spellLevel);
-          const all = listsByLevel.get(spellLevel) || [];
-          const seen = new Set((byLevel[spellLevel] || []).map((s) => String(s?.index || "")));
-
-          (row.spells || []).forEach((spellIndex) => {
-            const key = String(spellIndex || "").trim();
-            if (!key) return;
-            const found = all.find((s) => String(s?.index || "") === key) || null;
-            const toAdd = found?.index
-              ? found
-              : {
-                  index: key,
-                  name: humanizeSpellIndex(key),
-                };
-
-            if (toAdd?.index && !seen.has(String(toAdd.index))) {
-              seen.add(String(toAdd.index));
-              byLevel[spellLevel] = [...(byLevel[spellLevel] || []), toAdd];
-            }
-          });
-        });
-
-        if (!cancelled) setWarDomainSpellsByLevel(byLevel);
-      } catch {
-        if (!cancelled) setWarDomainSpellsByLevel(emptyByLevel());
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterInfo?.characterClass, characterInfo?.subclass, characterInfo?.characterLevel]);
+  }, [activeAlwaysPreparedSubclassSources]);
 
   const toggleModal = (numericalSpellLevel) => {
     setSpells(spells => ({
@@ -8201,137 +7038,20 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
   };
 
   const renderDomainSpellsForLevel = (numericalSpellLevel) => {
-    const arcanaAtLevel = Array.isArray(arcanaDomainSpellsByLevel?.[numericalSpellLevel])
-      ? arcanaDomainSpellsByLevel[numericalSpellLevel]
+    const domainSourcesAtLevel = Array.isArray(alwaysPreparedSubclassSpellsByLevel?.[numericalSpellLevel])
+      ? alwaysPreparedSubclassSpellsByLevel[numericalSpellLevel]
       : [];
-
-    const deathAtLevel = Array.isArray(deathDomainSpellsByLevel?.[numericalSpellLevel])
-      ? deathDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const forgeAtLevel = Array.isArray(forgeDomainSpellsByLevel?.[numericalSpellLevel])
-      ? forgeDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const graveAtLevel = Array.isArray(graveDomainSpellsByLevel?.[numericalSpellLevel])
-      ? graveDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const knowledgeAtLevel = Array.isArray(knowledgeDomainSpellsByLevel?.[numericalSpellLevel])
-      ? knowledgeDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const lifeAtLevel = Array.isArray(lifeDomainSpellsByLevel?.[numericalSpellLevel])
-      ? lifeDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const lightAtLevel = Array.isArray(lightDomainSpellsByLevel?.[numericalSpellLevel])
-      ? lightDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const natureAtLevel = Array.isArray(natureDomainSpellsByLevel?.[numericalSpellLevel])
-      ? natureDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const orderAtLevel = Array.isArray(orderDomainSpellsByLevel?.[numericalSpellLevel])
-      ? orderDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const peaceAtLevel = Array.isArray(peaceDomainSpellsByLevel?.[numericalSpellLevel])
-      ? peaceDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const tempestAtLevel = Array.isArray(tempestDomainSpellsByLevel?.[numericalSpellLevel])
-      ? tempestDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const trickeryAtLevel = Array.isArray(trickeryDomainSpellsByLevel?.[numericalSpellLevel])
-      ? trickeryDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const twilightAtLevel = Array.isArray(twilightDomainSpellsByLevel?.[numericalSpellLevel])
-      ? twilightDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const oathAtLevelRaw = Array.isArray(oathSpellsByLevel?.[numericalSpellLevel])
-      ? oathSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const oathAtLevel = oathAtLevelRaw.map((s) => ({
-      ...(s || {}),
-      spelltrackerAlwaysPreparedKind: "oath_spell",
-    }));
-
-    const landCircleAtLevelRaw = Array.isArray(landCircleSpellsByLevel?.[numericalSpellLevel])
-      ? landCircleSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const landCircleAtLevel = landCircleAtLevelRaw.map((s) => ({
-      ...(s || {}),
-      spelltrackerAlwaysPreparedKind: "circle_spell",
-    }));
-
-    const sporesCircleAtLevelRaw = Array.isArray(sporesCircleSpellsByLevel?.[numericalSpellLevel])
-      ? sporesCircleSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const sporesCircleAtLevel = sporesCircleAtLevelRaw.map((s) => ({
-      ...(s || {}),
-      spelltrackerAlwaysPreparedKind: "circle_spell",
-    }));
-
-    const starsCircleAtLevelRaw = Array.isArray(starsCircleSpellsByLevel?.[numericalSpellLevel])
-      ? starsCircleSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const starsCircleAtLevel = starsCircleAtLevelRaw.map((s) => ({
-      ...(s || {}),
-      spelltrackerAlwaysPreparedKind: "circle_spell",
-    }));
-
-    const wildfireCircleAtLevelRaw = Array.isArray(wildfireCircleSpellsByLevel?.[numericalSpellLevel])
-      ? wildfireCircleSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const wildfireCircleAtLevel = wildfireCircleAtLevelRaw.map((s) => ({
-      ...(s || {}),
-      spelltrackerAlwaysPreparedKind: "circle_spell",
-    }));
-
-    const warAtLevel = Array.isArray(warDomainSpellsByLevel?.[numericalSpellLevel])
-      ? warDomainSpellsByLevel[numericalSpellLevel]
-      : [];
-
-    const domainAtLevel = [
-      ...arcanaAtLevel,
-      ...deathAtLevel,
-      ...forgeAtLevel,
-      ...graveAtLevel,
-      ...knowledgeAtLevel,
-      ...lifeAtLevel,
-      ...lightAtLevel,
-      ...natureAtLevel,
-      ...orderAtLevel,
-      ...peaceAtLevel,
-      ...tempestAtLevel,
-      ...trickeryAtLevel,
-      ...twilightAtLevel,
-      ...warAtLevel,
-      ...oathAtLevel,
-      ...landCircleAtLevel,
-      ...sporesCircleAtLevel,
-      ...starsCircleAtLevel,
-      ...wildfireCircleAtLevel,
-    ];
-    const swapsForCurrentDomain = domainSpellSwaps?.[currentDomainKey] || {};
-    const domainSlotsAtLevel = domainAtLevel.map((original) => {
-      const kind = String(original?.spelltrackerAlwaysPreparedKind || "");
+    const domainSlotsAtLevel = domainSourcesAtLevel.map((entry) => {
+      const kind = String(entry?.kind || "");
+      const original = entry?.original || null;
       if (kind === "oath_spell") {
-        return { original, spell: original };
+        return { ...entry, original, spell: original };
       }
       const originalIndex = String(original?.index || "");
-      const swapped = originalIndex ? swapsForCurrentDomain?.[originalIndex] : null;
+      const swapsForDomain = domainSpellSwaps?.[entry?.domainKey] || {};
+      const swapped = originalIndex ? swapsForDomain?.[originalIndex] : null;
       return {
+        ...entry,
         original,
         spell: swapped?.index ? swapped : original,
       };
@@ -8361,10 +7081,7 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
 
     return (
       <Box sx={{ mb: 0.5 }}>
-        {uniqueDomain.map(({ original, spell }) => {
-          const kind =
-            String(original?.spelltrackerAlwaysPreparedKind || spell?.spelltrackerAlwaysPreparedKind || "") ||
-            "domain_spell";
+        {uniqueDomain.map(({ original, spell, kind, domainKey, spellClassKey: entrySpellClassKey, swapLabel }) => {
           const isCircleSpell = kind === "circle_spell";
           const isOathSpell = kind === "oath_spell";
           const chipLabel = isOathSpell ? "OS" : isCircleSpell ? "CS" : "DS";
@@ -8406,8 +7123,10 @@ export const SpellList = ({ classSlot = "primary", detailMode = false }) => {
                       setDomainSwapModal({
                         open: true,
                         spellLevel: Number(numericalSpellLevel),
-                        domainKey: currentDomainKey,
+                        domainKey: String(domainKey || ""),
                         originalSpell: original || spell,
+                        spellClassKey: String(entrySpellClassKey || characterInfo?.characterClass || "cleric"),
+                        swapLabel: String(swapLabel || (isCircleSpell ? "Circle Spell" : "Domain Spell")),
                       })
                     }
                     sx={{
